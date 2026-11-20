@@ -17,8 +17,8 @@ export function SavedFiltersBar({ current, onApply }: { current: Current; onAppl
   const same = !!saved && sameFilters(saved, current)
 
   const save = () => {
-    if (saveFilters(current)) toast.success(saved ? "Actualicé tus filtros" : "Guardé tus filtros: los aplicas con un toque")
-    else toast.error("Tu navegador no permite guardar los filtros.")
+    if (saveFilters(current)) toast.success(saved ? "Filtros actualizados" : "Filtros guardados")
+    else toast.error("No se pudieron guardar los filtros.")
   }
 
   return (
@@ -32,10 +32,10 @@ export function SavedFiltersBar({ current, onApply }: { current: Current; onAppl
         )}
         <Button size="sm" variant="outline" disabled={same} onClick={save}>
           <BookmarkIcon data-icon="inline-start" aria-hidden />
-          {saved ? "Actualizar mis filtros" : "Guardar estos filtros"}
+          {saved ? "Actualizar" : "Guardar filtros"}
         </Button>
         {saved && (
-          <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => (clearFilters() ? toast.success("Quité tus filtros guardados") : toast.error("No pude quitarlos."))}>
+          <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => (clearFilters() ? toast.success("Filtros quitados") : toast.error("No se pudo quitar."))}>
             Quitar
           </Button>
         )}
@@ -43,8 +43,7 @@ export function SavedFiltersBar({ current, onApply }: { current: Current; onAppl
       {saved && (
         <div className="flex items-center justify-between gap-3 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-150">
           <label htmlFor="filtros-auto" className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm font-medium">Aplicar mis filtros al abrir</span>
-            <span className="text-xs text-muted-foreground">El buscador arranca ya con tu región, área, modalidad y orden.</span>
+            <span className="text-sm font-medium">Aplicar al abrir</span>
           </label>
           <Switch id="filtros-auto" checked={saved.auto} onCheckedChange={(v) => setAutoApply(v)} />
         </div>

@@ -31,7 +31,7 @@ export function SearchProfilePanel() {
     try {
       const r = await parseCvFileSafe(file, setStage)
       setSearchProfile(r.cv, r.fileId)
-      toast.success("Listo: ahora cada oferta muestra cuánto encaja con tu CV")
+      toast.success("CV listo: ya ves el encaje de cada oferta")
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -59,7 +59,6 @@ export function SearchProfilePanel() {
       {profile ? (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <p className="min-w-0 flex-1">
-            <span className="text-muted-foreground">Comparando con tu CV: </span>
             <span className="font-medium">{profile.label}</span>
           </p>
           <div className="flex gap-1">
@@ -73,9 +72,8 @@ export function SearchProfilePanel() {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium">Sube tu CV para ver cuánto encaja cada oferta</p>
-          <p className="text-sm text-muted-foreground">Lo leemos aquí mismo con el modelo local; no sale de tu equipo. Formatos: {ACCEPT_LABEL}.</p>
-          <Button variant="secondary" className="self-start" onClick={() => input.current?.click()}>
+          <p className="text-sm text-muted-foreground">Para ver cuánto encaja cada oferta. Se lee en tu equipo. {ACCEPT_LABEL}.</p>
+          <Button className="self-start" onClick={() => input.current?.click()}>
             Subir mi CV
           </Button>
         </div>

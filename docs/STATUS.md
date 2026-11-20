@@ -734,3 +734,18 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 ### Para revisar por Juan
 1. Reinicia `pnpm dev`. La gráfica de tendencia aparecerá en la ficha de las fuentes a partir del tercer día de fotos (hoy hay una); no hay nada nuevo que ver hasta entonces salvo que todo siga funcionando.
 2. Dato curioso a mirar: Get on Board solo publica salario en 1 de 973 ofertas; Chiletrabajos en 0 de 129.
+
+## Ajuste de UI: pantalla de búsqueda más limpia, hojas de tamaño fijo y color principal blanco (20-nov-2026)
+
+### Qué se hizo
+- **Cabecera como la de inicio**: marca a la izquierda y acciones a la derecha, a todo el ancho y pegadas arriba. Las acciones son íconos: **Subir mi CV** (con un punto cuando ya hay uno cargado), **Fuentes** y tema.
+- **Pantalla de búsqueda limpia**: una barra de búsqueda centrada con el botón de **Filtros** dentro (con el número de filtros activos), una sola línea con lo que está activo («Tecnología · Latinoamérica · Híbrido») y, debajo, solo las ofertas. Se quitó el título, el subtítulo, el bloque del CV, los selects y los interruptores de la pantalla.
+- **Hojas** (`components/jobs/responsive-sheet.tsx`): Filtros, Mi CV y Fuentes comparten **un tamaño fijo**: en escritorio, ventana de ancho 3xl y 3/4 de la altura; en móvil, panel inferior de 4/5 de la altura. La cabecera no se mueve y el contenido se desplaza. Filtros reúne Área, Región, Modalidad, Orden, «Solo con match», «Solo mis guardadas» y «Mis filtros» (guardar/aplicar/aplicar al abrir), con un botón «Ver ofertas».
+- **Textos**: se quitaron las descripciones sobrantes (títulos de pantalla, explicaciones de los interruptores, frases largas del CV y de Fuentes).
+- **Color principal blanco** (`app/globals.css`): en oscuro `--primary` es blanco (texto oscuro encima). En claro el principal es el casi negro neutro: un botón blanco sobre fondo blanco no se vería. También se neutralizaron los tonos morados de acento, anillo de foco y gráficas.
+
+### Qué se verificó
+- lint, tsc, build y 557 pruebas en verde (se actualizaron 2 pruebas por los textos nuevos).
+
+### Para revisar por Juan
+1. Reinicia `pnpm dev`. `/ofertas` en oscuro y claro, escritorio y 375 px: cabecera pegada arriba con íconos; barra centrada; botón de filtros con contador; abre Filtros, Mi CV y Fuentes y compara que midan lo mismo; el interruptor y los botones principales ahora son blancos en oscuro (casi negros en claro).

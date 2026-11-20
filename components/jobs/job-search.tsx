@@ -2,27 +2,25 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { SearchIcon } from "lucide-react"
+import { FileUpIcon, SearchIcon, SlidersHorizontalIcon } from "lucide-react"
+import { useAutoAnimate } from "@formkit/auto-animate/react"
 import { Logo } from "@/components/brand/logo"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ConsentBanner } from "@/components/privacy/consent-banner"
 import { PrivacyLink } from "@/components/privacy/privacy-dialog"
 import { JobCard } from "@/components/jobs/job-card"
-import { useAutoAnimate } from "@formkit/auto-animate/react"
-import { SourcesStatus } from "@/components/jobs/sources-status"
-import { SavedFiltersBar } from "@/components/jobs/saved-filters-bar"
+import { ResponsiveSheet } from "@/components/jobs/responsive-sheet"
+import { AREA_LABEL, MODE_LABEL, SearchFiltersSheet } from "@/components/jobs/search-filters-sheet"
 import { SearchProfilePanel } from "@/components/jobs/search-profile-panel"
+import { SourcesStatus } from "@/components/jobs/sources-status"
 import { markFirstSearch, shouldAsk, track, useConsent } from "@/lib/events/consent"
 import { useMarks } from "@/lib/profile/job-marks"
 import { getFilters, type SavedFilters } from "@/lib/profile/saved-filters"
 import { useSearchProfile } from "@/lib/profile/search-profile"
-import { Field, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Switch } from "@/components/ui/switch"
-import { MATCH_MIN } from "@/lib/jobs/match"
 import { REGION_OPTIONS } from "@/lib/jobs/geo"
 import { ALL_REGIONS, defaultRegion, isRegion } from "@/lib/jobs/region"
 import type { RankedJob } from "@/lib/jobs/rank"
@@ -30,7 +28,6 @@ import type { RankedJob } from "@/lib/jobs/rank"
 const REGION_KEY = "sooosh:region"
 const AREA_KEY = "sooosh:area"
 type Area = "tecnologia" | "todas"
-const MODE: Record<string, string> = { remoto: "Remoto", hibrido: "Híbrido", presencial: "Presencial" }
 type Sort = "relevancia" | "recientes" | "encaje"
 
 /** Región inicial: la que la persona eligió antes o, si no, la deducida de su zona horaria e idioma (sin pedir permiso de ubicación). */
@@ -54,6 +51,8 @@ export function JobSearch() {
   const [search, setSearch] = useState<{ q: string; fast: boolean }>({ q: "", fast: false })
   const { q, fast } = search
   const [typed, setTyped] = useState("")
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [cvOpen, setCvOpen] = useState(false)
   const [settled, setSettled] = useState("") // clave de la última petición terminada: mientras no coincida con la actual, se está buscando
   const [mode, setMode] = useState("")
   const [area, setArea] = useState<Area>("tecnologia") // el buscador abre en Tecnología
@@ -191,161 +190,146 @@ export function JobSearch() {
     setOnlyMatches(f.onlyMatches)
   }
 
-  const regionName = useMemo(() => (region === ALL_REGIONS ? "todas las regiones" : (REGION_OPTIONS.find((r) => r.code === region)?.name ?? "")), [region])
+  const regionName = useMemo(() => (region === ALL_REGIONS ? "Todas las regiones" : (REGION_OPTIONS.find((r) => r.code === region)?.name ?? "")), [region])
+  // Resumen de lo que está activo (la pantalla no muestra los filtros, solo esta línea) y cuántos difieren del arranque.
+  const summary = [AREA_LABEL[area], regionName, mode ? MODE_LABEL[mode] : null, onlySaved ? "Guardadas" : null, cv && onlyMatches ? "Solo match" : null].filter(Boolean).join(" · ")
+  const activeFilters = (mode ? 1 : 0) + (onlySaved ? 1 : 0) + (cv && onlyMatches ? 1 : 0) + (area !== "tecnologia" ? 1 : 0) + (sort !== "relevancia" ? 1 : 0)
 
   return (
-    <div className={`mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6 ${shouldAsk(consent) ? "pb-72" : ""}`}>
-      <header className="flex items-center justify-between">
+    <div className={`flex min-h-dvh w-full flex-col ${shouldAsk(consent) ? "pb-72" : ""}`}>
+      {/* Cabecera igual a la de inicio: marca a la izquierda, acciones a la derecha, pegadas arriba. */}
+      <header className="flex items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="flex items-center gap-2 text-sm font-medium">
           <Logo className="size-5" />
           Sooosh
         </Link>
         <div className="flex items-center">
+          <Button variant="ghost" size="icon" aria-label={cv ? "Mi CV (cargado)" : "Subir mi CV"} className="relative" onClick={() => setCvOpen(true)}>
+            <FileUpIcon aria-hidden />
+            {cv && <span className="absolute top-2 right-2 size-1.5 rounded-full bg-primary" aria-hidden />}
+          </Button>
           <SourcesStatus />
           <ThemeToggle />
         </div>
       </header>
 
-      <div className="flex flex-col gap-1">
-        <h1 className="text-lg font-medium">Buscar ofertas</h1>
-        <p className="text-sm text-muted-foreground">
-          {region === null ? "Detectando tu región…" : `Mostrando ofertas para ${regionName}. Cámbiala cuando quieras.`}
-        </p>
-      </div>
+      <main id="contenido" className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 pt-6 pb-10 sm:px-6">
+        <h1 className="sr-only">Buscar ofertas</h1>
 
-      <SearchProfilePanel />
-
-      <Field>
-        <FieldLabel htmlFor="buscar">Qué buscas</FieldLabel>
-        <div className="relative">
-          <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input id="buscar" type="search" className="pl-9" placeholder="Cargo, empresa o habilidad (p. ej. diseñador UX, SQL)" value={typed} onChange={(e) => setTyped(e.target.value)} onKeyDown={(e) => e.key === "Enter" && commit()} enterKeyHint="search" />
-        </div>
-      </Field>
-
-      {trending.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2" aria-label="Búsquedas populares">
-          <span className="text-xs text-muted-foreground">Populares:</span>
-          {trending.map((t) => (
-            <Button key={t.q} variant="secondary" size="sm" onClick={() => setTyped(t.q)}>
-              {t.q}
+        <div className="flex flex-col items-center gap-2">
+          <div className="relative w-full max-w-xl">
+            <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input
+              id="buscar"
+              type="search"
+              aria-label="Buscar ofertas"
+              className="h-11 pr-14 pl-11"
+              placeholder="Cargo, empresa o habilidad"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && commit()}
+              enterKeyHint="search"
+            />
+            <Button variant="ghost" size="icon" aria-label={activeFilters > 0 ? `Filtros (${activeFilters} activos)` : "Filtros"} className="absolute top-1/2 right-1.5 -translate-y-1/2" onClick={() => setFiltersOpen(true)}>
+              <SlidersHorizontalIcon aria-hidden />
+              {activeFilters > 0 && (
+                <Badge className="absolute -top-1 -right-1 size-4 justify-center px-0 text-xs" aria-hidden>
+                  {activeFilters}
+                </Badge>
+              )}
             </Button>
-          ))}
-        </div>
-      )}
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Field>
-          <FieldLabel htmlFor="area">Área</FieldLabel>
-          <NativeSelect id="area" className="w-full" value={area} onChange={(e) => changeArea(e.target.value as Area)}>
-            <NativeSelectOption value="tecnologia">Tecnología</NativeSelectOption>
-            <NativeSelectOption value="todas">Todas las áreas</NativeSelectOption>
-          </NativeSelect>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="region">Región</FieldLabel>
-          <NativeSelect id="region" className="w-full" value={region ?? ALL_REGIONS} onChange={(e) => changeRegion(e.target.value)} disabled={region === null}>
-            <NativeSelectOption value={ALL_REGIONS}>Todas las regiones</NativeSelectOption>
-            {REGION_OPTIONS.map((r) => (
-              <NativeSelectOption key={r.code} value={r.code}>
-                {r.name}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="modalidad">Modalidad</FieldLabel>
-          <NativeSelect id="modalidad" className="w-full" value={mode} onChange={(e) => setMode(e.target.value)}>
-            <NativeSelectOption value="">Todas</NativeSelectOption>
-            {Object.entries(MODE).map(([k, v]) => (
-              <NativeSelectOption key={k} value={k}>
-                {v}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="orden">Ordenar por</FieldLabel>
-          <NativeSelect id="orden" className="w-full" value={effectiveSort} onChange={(e) => setSort(e.target.value as Sort)}>
-            <NativeSelectOption value="relevancia">Relevancia</NativeSelectOption>
-            <NativeSelectOption value="recientes">Más recientes</NativeSelectOption>
-            <NativeSelectOption value="encaje" disabled={!cv}>
-              {cv ? "Encaje con mi CV" : "Encaje con mi CV (sube tu CV arriba)"}
-            </NativeSelectOption>
-          </NativeSelect>
-        </Field>
-      </div>
-
-      <div className="flex items-center justify-between gap-3">
-        <label htmlFor="solo-match" className="flex min-w-0 flex-col gap-0.5">
-          <span className="text-sm font-medium">Solo los que hacen match</span>
-          <span className="text-xs text-muted-foreground">{cv ? `Encaje de ${MATCH_MIN} % o más con tu CV.` : "Sube tu CV arriba para activarlo."}</span>
-        </label>
-        <Switch id="solo-match" checked={!!cv && onlyMatches} disabled={!cv} onCheckedChange={setOnlyMatches} />
-      </div>
-
-      {region !== null && <SavedFiltersBar current={{ region, area, mode: mode as SavedFilters["mode"], sort, onlyMatches }} onApply={applyFilters} />}
-
-      {marks.saved.length > 0 && (
-        <div className="flex items-center justify-between gap-3">
-          <label htmlFor="solo-guardadas" className="flex min-w-0 flex-col gap-0.5">
-            <span className="text-sm font-medium">Solo mis guardadas</span>
-            <span className="text-xs text-muted-foreground">
-              {marks.saved.length} {marks.saved.length === 1 ? "oferta guardada" : "ofertas guardadas"} en este navegador.
-            </span>
-          </label>
-          <Switch id="solo-guardadas" checked={onlySaved} onCheckedChange={setOnlySaved} />
-        </div>
-      )}
-
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
-
-      <section aria-label="Resultados" aria-live="polite" aria-busy={loading} className={`flex flex-col transition-opacity duration-150 ${loading && jobs ? "opacity-60" : "opacity-100"}`}>
-        {jobs === null && !error ? (
-          <div className="flex flex-col gap-4" aria-hidden>
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="flex flex-col gap-2 py-3">
-                <Skeleton className="h-4 w-2/3" />
-                <Skeleton className="h-3 w-1/3" />
-              </div>
-            ))}
           </div>
-        ) : jobs && jobs.length === 0 ? (
-          <div className="flex flex-col gap-1 py-8">
-            <p className="text-sm font-medium">No encontramos ofertas con esos filtros.</p>
-            <p className="text-sm text-muted-foreground">Prueba con otra región, otra área, sin la modalidad o con otras palabras{cv && onlyMatches ? ", o desactiva «Solo los que hacen match»" : ""}.</p>
-          </div>
-        ) : (
+          <button type="button" onClick={() => setFiltersOpen(true)} className="text-xs text-muted-foreground transition-colors hover:text-foreground">
+            {region === null ? "…" : summary}
+          </button>
+          {trending.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-2" aria-label="Búsquedas populares">
+              {trending.map((t) => (
+                <Button key={t.q} variant="secondary" size="sm" onClick={() => setTyped(t.q)}>
+                  {t.q}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+
+        <section aria-label="Resultados" aria-live="polite" aria-busy={loading} className={`flex flex-col transition-opacity duration-150 ${loading && jobs ? "opacity-60" : "opacity-100"}`}>
+          {jobs === null && !error ? (
+            <div className="flex flex-col gap-4" aria-hidden>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex flex-col gap-2 py-3">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              ))}
+            </div>
+          ) : jobs && jobs.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">Sin resultados. Prueba otras palabras o ajusta los filtros.</p>
+          ) : (
+            <>
+              <p className="pb-2 text-xs text-muted-foreground">
+                {jobs?.length} {jobs?.length === 1 ? "oferta" : "ofertas"}
+                {meta.matches !== null && meta.scored !== null && ` · ${meta.matches} ${meta.matches === 1 ? "hace" : "hacen"} match`}
+              </p>
+              <ul ref={listRef} className="flex flex-col gap-3 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200">
+                {jobs
+                  ?.filter((j) => onlySaved || !marks.dismissed.includes(j.id))
+                  .map((j, i) => (
+                    <JobCard
+                      key={j.id}
+                      job={j}
+                      saved={marks.saved.includes(j.id)}
+                      onOpen={() => track("open", { jobId: j.id, position: i, score: j.fit?.score ?? null, match: j.fit ? j.fit.match : null })}
+                    />
+                  ))}
+              </ul>
+              {cv && <p className="pt-3 text-xs text-muted-foreground">Encaje estimado con reglas, sin IA.</p>}
+            </>
+          )}
+        </section>
+
+        <footer className="flex justify-center pt-2">
+          <PrivacyLink />
+        </footer>
+      </main>
+
+      {region !== null && (
+        <SearchFiltersSheet
+          open={filtersOpen}
+          onOpenChange={setFiltersOpen}
+          values={{ region, area, mode: mode as SavedFilters["mode"], sort, onlyMatches, onlySaved }}
+          hasCv={!!cv}
+          savedCount={marks.saved.length}
+          onChange={(patch) => {
+            if (patch.region !== undefined) changeRegion(patch.region)
+            if (patch.area !== undefined) changeArea(patch.area)
+            if (patch.mode !== undefined) setMode(patch.mode)
+            if (patch.sort !== undefined) setSort(patch.sort)
+            if (patch.onlyMatches !== undefined) setOnlyMatches(patch.onlyMatches)
+            if (patch.onlySaved !== undefined) setOnlySaved(patch.onlySaved)
+          }}
+          onApplySaved={applyFilters}
+        />
+      )}
+
+      <ResponsiveSheet open={cvOpen} onOpenChange={setCvOpen}>
+        {({ Header, Title }) => (
           <>
-            <p className="pb-2 text-xs text-muted-foreground">
-              {jobs?.length} {jobs?.length === 1 ? "oferta" : "ofertas"}
-              {meta.matches !== null && meta.scored !== null && ` · ${meta.matches} ${meta.matches === 1 ? "hace" : "hacen"} match entre las ${meta.scored} mejores candidatas`}
-            </p>
-            <ul ref={listRef} className="flex flex-col gap-3 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200">
-              {jobs
-                ?.filter((j) => onlySaved || !marks.dismissed.includes(j.id))
-                .map((j, i) => (
-                  <JobCard
-                    key={j.id}
-                    job={j}
-                    saved={marks.saved.includes(j.id)}
-                    onOpen={() => track("open", { jobId: j.id, position: i, score: j.fit?.score ?? null, match: j.fit ? j.fit.match : null })}
-                  />
-                ))}
-            </ul>
-            {cv && <p className="pt-3 text-xs text-muted-foreground">El encaje es una estimación con reglas (sin IA) de cuánto de lo que pide la oferta muestra tu CV.</p>}
+            <Header className="text-left">
+              <Title className="text-lg">Mi CV</Title>
+            </Header>
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+              <SearchProfilePanel />
+            </div>
           </>
         )}
-      </section>
-
-
-      <footer className="flex justify-center pt-2">
-        <PrivacyLink />
-      </footer>
+      </ResponsiveSheet>
       <ConsentBanner />
     </div>
   )

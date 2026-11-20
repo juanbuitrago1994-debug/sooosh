@@ -34,7 +34,7 @@ describe("estado público de las fuentes", () => {
   })
   it("el botón del panel está en el buscador y el panel no se pinta hasta abrirlo", () => {
     const html = renderToStaticMarkup(<SourcesStatus />)
-    expect(html).toContain("Fuentes")
-    expect(html).not.toContain("Fuentes de ofertas")
+    expect(html).toContain('aria-label="Fuentes de ofertas"')
+    expect(html).not.toContain("Revisando")
   })
 })

@@ -1,11 +1,10 @@
 "use client"
 
-import { useEffect, useState, useSyncExternalStore, type ComponentType, type ReactNode } from "react"
+import { useEffect, useState } from "react"
 import { AlertTriangleIcon, ArrowLeftIcon, CheckIcon, CircleAlertIcon, CircleCheckIcon, ExternalLinkIcon, FlameIcon, RadioTowerIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
+import { ResponsiveSheet, type SheetShell } from "@/components/jobs/responsive-sheet"
 import { Item, ItemContent, ItemDescription, ItemTitle } from "@/components/ui/item"
 import { Area, AreaChart } from "recharts"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
@@ -37,15 +36,7 @@ function StateBadge({ state }: { state: SourceState }) {
   )
 }
 
-// Escritorio: ventana (Dialog). Móvil: panel que sube desde abajo (Drawer). Patrón «Responsive» de shadcn.
-const wide = () => (typeof window === "undefined" ? false : window.matchMedia("(min-width: 640px)").matches)
-const subscribeWide = (cb: () => void) => {
-  const m = window.matchMedia("(min-width: 640px)")
-  m.addEventListener("change", cb)
-  return () => m.removeEventListener("change", cb)
-}
-
-type Shell = { Header: ComponentType<{ className?: string; children?: ReactNode }>; Title: ComponentType<{ className?: string; children?: ReactNode }>; Description: ComponentType<{ children?: ReactNode }> }
+type Shell = SheetShell
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -135,7 +126,7 @@ function Detail({ s, at, onBack, shell }: { s: SourceStatus; at: number; onBack:
         )}
         {st.families.length > 0 && (
           <section className="flex flex-col gap-2" aria-label="Cargos principales">
-            <h3 className="text-sm font-medium">Cargos que más trae</h3>
+            <h3 className="text-sm font-medium">Cargos principales</h3>
             <ul className="flex flex-wrap gap-1.5">
               {st.families.map((f) => (
                 <li key={f.name}>
@@ -195,14 +186,14 @@ function Grid({ data, failed, problems, onSelect, shell }: { data: { sources: So
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <Header className="text-left">
-        <Title className="text-lg">Fuentes de ofertas</Title>
-        <Description>{data === null ? "Revisando el estado de cada fuente…" : problems === 0 ? "Todas las fuentes están al día." : `${problems} ${problems === 1 ? "fuente necesita" : "fuentes necesitan"} atención. Las ofertas de las demás siguen al día.`}</Description>
+        <Title className="text-lg">Fuentes</Title>
+        <Description>{data === null ? "Revisando…" : problems === 0 ? "Todas al día." : `${problems} ${problems === 1 ? "necesita" : "necesitan"} atención.`}</Description>
       </Header>
       {/* Con muchas fuentes, la cuadrícula se desplaza dentro del panel. */}
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
         {failed && (
           <p role="alert" className="text-sm text-destructive">
-            No pudimos leer el estado de las fuentes ahora. Inténtalo de nuevo en un momento.
+            No se pudo cargar el estado. Inténtalo de nuevo.
           </p>
         )}
         {data === null && !failed && (
@@ -245,7 +236,6 @@ function Grid({ data, failed, problems, onSelect, shell }: { data: { sources: So
             ))}
           </ul>
         )}
-        <p className="text-xs text-muted-foreground">Cada oferta enlaza a su fuente original. Si una fuente falla, mantenemos las ofertas que ya trajo hasta que venzan.</p>
       </div>
     </div>
   )
@@ -261,7 +251,6 @@ export function SourcesStatus() {
   const [data, setData] = useState<{ sources: SourceStatus[]; at: number } | null>(null)
   const [failed, setFailed] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
-  const isWide = useSyncExternalStore(subscribeWide, wide, () => false)
 
   useEffect(() => {
     if (!open) return
@@ -293,21 +282,12 @@ export function SourcesStatus() {
 
   return (
     <>
-      <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setOpen(true)}>
-        <RadioTowerIcon data-icon="inline-start" aria-hidden />
-        Fuentes
+      <Button variant="ghost" size="icon" aria-label="Fuentes de ofertas" onClick={() => setOpen(true)}>
+        <RadioTowerIcon aria-hidden />
       </Button>
-      {isWide ? (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-          <DialogContent className="flex max-h-4/5 flex-col sm:max-w-2xl">{content({ Header: DialogHeader, Title: DialogTitle, Description: DialogDescription })}</DialogContent>
-        </Dialog>
-      ) : (
-        <Drawer open={open} onOpenChange={onOpenChange}>
-          <DrawerContent>
-            <div className="flex min-h-0 flex-1 flex-col p-4 pt-0">{content({ Header: DrawerHeader, Title: DrawerTitle, Description: DrawerDescription })}</div>
-          </DrawerContent>
-        </Drawer>
-      )}
+      <ResponsiveSheet open={open} onOpenChange={onOpenChange}>
+        {content}
+      </ResponsiveSheet>
     </>
   )
 }

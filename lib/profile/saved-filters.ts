@@ -67,7 +67,7 @@ function write(f: SavedFilters | null): boolean {
 }
 
 /** Guarda los filtros actuales conservando la preferencia de «aplicar al abrir». Devuelve false si el navegador no deja guardar. */
-export const saveFilters = (f: Omit<SavedFilters, "auto">): boolean => write({ ...f, auto: getFilters()?.auto ?? false })
+export const saveFilters = (f: Omit<SavedFilters, "auto">): boolean => write({ region: f.region, area: f.area, mode: f.mode, sort: f.sort, onlyMatches: f.onlyMatches, auto: getFilters()?.auto ?? false })
 export const clearFilters = (): boolean => write(null)
 export function setAutoApply(auto: boolean): boolean {
   const cur = getFilters()

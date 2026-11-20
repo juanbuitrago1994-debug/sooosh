@@ -43,7 +43,7 @@ describe("mis filtros (guardados en el navegador)", () => {
   })
   it("sin guardados la barra ofrece guardar; no muestra «aplicar» ni la opción de abrir", () => {
     const html = renderToStaticMarkup(<SavedFiltersBar current={base} onApply={() => {}} />)
-    expect(html).toContain("Guardar estos filtros")
+    expect(html).toContain("Guardar filtros")
     expect(html).not.toContain("Aplicar mis filtros")
   })
 })
