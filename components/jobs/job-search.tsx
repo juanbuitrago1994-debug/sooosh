@@ -58,6 +58,9 @@ export function JobSearch() {
   const [filtersOpen, setFiltersOpen] = useState(false)
   // Total de ofertas que cumplen los filtros y el texto (el número del distintivo inferior).
   const [total, setTotal] = useState<number | null>(null)
+  // Antes de que la persona busque o cambie un filtro, el distintivo muestra el total de TODA la plataforma.
+  const [platformTotal, setPlatformTotal] = useState<number | null | "error">(null)
+  const [filtersTouched, setFiltersTouched] = useState(false)
   const [cvOpen, setCvOpen] = useState(false)
   const [settled, setSettled] = useState("") // clave de la última petición terminada: mientras no coincida con la actual, se está buscando
   const [mode, setMode] = useState("")
@@ -116,6 +119,17 @@ export function JobSearch() {
       clearTimeout(full)
     }
   }, [typed])
+
+  useEffect(() => {
+    let alive = true
+    fetch("/api/jobs/count")
+      .then((r) => r.json())
+      .then((d: { total?: number }) => alive && setPlatformTotal(typeof d.total === "number" ? d.total : "error"))
+      .catch(() => alive && setPlatformTotal("error"))
+    return () => {
+      alive = false
+    }
+  }, [])
 
   // Enter confirma ya la búsqueda completa (sin esperar la pausa).
   const commit = () => setSearch({ q: typed.trim(), fast: false })
@@ -194,6 +208,10 @@ export function JobSearch() {
     setSort(f.sort)
     setOnlyMatches(f.onlyMatches)
   }
+
+  // Sin texto ni filtros tocados: total de la plataforma (si no se pudo contar, el de la lista). Después: el de lo que se ve.
+  const untouched = typed.trim() === "" && !filtersTouched
+  const shown = untouched ? (typeof platformTotal === "number" ? platformTotal : platformTotal === "error" ? total : null) : total
 
   const regionName = useMemo(() => (region === ALL_REGIONS ? "Todas las regiones" : (REGION_OPTIONS.find((r) => r.code === region)?.name ?? "")), [region])
   // Resumen de lo que está activo (la pantalla no muestra los filtros, solo esta línea) y cuántos difieren del arranque.
@@ -309,12 +327,12 @@ export function JobSearch() {
       </main>
 
       {/* Distintivo inferior: cuántas ofertas cumplen lo que se ve ahora (cambia con cada búsqueda o filtro). */}
-      {total !== null && (
+      {shown !== null && (
         <div className="pointer-events-none fixed inset-x-0 bottom-6 z-20 flex justify-center px-4" role="status" aria-live="polite">
           <BeamBadge>
             <span className="flex items-center gap-1.5 whitespace-nowrap">
-              <DrumNumber value={total} className="font-medium" />
-              <span className="text-muted-foreground">{total === 1 ? "Oferta encontrada" : "Ofertas encontradas"}</span>
+              <DrumNumber value={shown} className="font-medium" />
+              <span className="text-muted-foreground">{shown === 1 ? "Oferta encontrada" : "Ofertas encontradas"}</span>
             </span>
           </BeamBadge>
         </div>
@@ -328,6 +346,7 @@ export function JobSearch() {
           hasCv={!!cv}
           savedCount={marks.saved.length}
           onChange={(patch) => {
+            setFiltersTouched(true)
             if (patch.region !== undefined) changeRegion(patch.region)
             if (patch.area !== undefined) changeArea(patch.area)
             if (patch.mode !== undefined) setMode(patch.mode)
@@ -335,7 +354,10 @@ export function JobSearch() {
             if (patch.onlyMatches !== undefined) setOnlyMatches(patch.onlyMatches)
             if (patch.onlySaved !== undefined) setOnlySaved(patch.onlySaved)
           }}
-          onApplySaved={applyFilters}
+          onApplySaved={(f) => {
+            setFiltersTouched(true)
+            applyFilters(f)
+          }}
         />
       )}
 

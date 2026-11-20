@@ -799,3 +799,6 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Para revisar por Juan
 1. Reinicia `pnpm dev`. Abre una oferta desde `/ofertas`: cabecera pegada arriba con flecha + marca y los íconos guardar/compartir/tema; los bloques suben escalonados; guarda la oferta (marcador relleno) y vuelve con la flecha; claro/oscuro, escritorio y 375 px (la barra Postular/Adaptar debe seguir abajo).
+
+### Número inicial del distintivo: total de toda la plataforma (20-nov-2026)
+- Mientras la persona no escriba nada ni cambie un filtro, el distintivo muestra el **total de ofertas activas de toda la plataforma** (hoy 2.625; `GET /api/jobs/count`, público, cacheable 60 s). En cuanto busca o cambia un filtro, pasa al total de lo que ve (con el efecto de tambor). Los filtros que se aplican solos al abrir (los guardados en «Aplicar al abrir») no cuentan como «tocados». Si el conteo falla, usa el de la lista.

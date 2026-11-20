@@ -153,6 +153,9 @@ export async function searchJobs(db: Db, p: SearchParams): Promise<SearchResult>
   return { jobs: merged.map(toCard), semantic: !!p.embedding?.length, total: Math.max(lexicalTotal, merged.length) }
 }
 
+/** Total de ofertas activas y vigentes de toda la plataforma (sin región, área ni modalidad): el número del distintivo antes de que alguien busque o filtre. */
+export const countPlatformJobs = (db: Db): Promise<number> => countWhere(db, base({ region: ALL_REGIONS, area: "todas" }))
+
 /** Varias ofertas activas por id (las guardadas de una persona), en el orden pedido. */
 export async function getJobCards(db: Db, ids: string[]): Promise<JobCard[]> {
   if (ids.length === 0) return []
