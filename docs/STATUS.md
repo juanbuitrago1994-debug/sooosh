@@ -856,3 +856,4 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Distintivo sin borde (20-nov-2026)
 - Se quitó el borde del distintivo: el anillo de 1 px que tapa el trazo del haz de la librería ahora es del **mismo color que el fondo**, así no se ve ni borde ni haz de borde; solo queda el resplandor interior.
+- El fondo del distintivo es ahora el token `card` (en oscuro, un gris ligeramente más claro que el fondo de la app: 0,21 frente a 0,182), no el mismo `background`; el anillo que tapa el trazo del haz usa ese mismo color.
