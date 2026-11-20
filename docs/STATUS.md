@@ -780,3 +780,6 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Ajuste de la portada del buscador tras la revisión de Juan (20-nov-2026)
 - Las ofertas **no se ocultan**: la portada ya no ocupa toda la primera pantalla. Título, subtítulo y barra bajan hacia el centro (`pt-28` en móvil, `pt-40` desde `sm`) y las tarjetas empiezan justo debajo, visibles desde el inicio y con el mismo diseño de antes. Se quitó el desplazamiento automático al escribir (ya no hace falta). El distintivo inferior sigue fijo sobre el borde de abajo.
+
+### Ajuste del cambio de número (20-nov-2026)
+- Los dígitos del distintivo ya no rebotan: entran desde abajo desenfocándose hasta quedar nítidos y el anterior sale hacia arriba difuminándose, con una sola curva de desaceleración suave (0,5 s de entrada y 0,32 s de salida), un giro de tambor leve (35°) y 35 ms de retardo entre dígitos, de derecha a izquierda. Sin movimiento si se pidió reducirlo.
