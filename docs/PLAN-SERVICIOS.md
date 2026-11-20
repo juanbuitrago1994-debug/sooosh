@@ -6,7 +6,8 @@ Cuatro frentes, cada uno con **objetivo medible**, pasos, qué necesito de ti, r
 - **Se empieza por B (cola de IA) y por A1–A2 con Colombia como país prioritario.**
 - **A4 «Publica tu oferta» queda en pausa**: Juan no quiere abrir ese producto al público por ahora. No se construye.
 - **Frente D (legal): cubierto por Juan.** Dice que habló con un abogado y que están cubiertos en todos los puntos legales. No hay nada técnico pendiente salvo, si el abogado lo pide, ajustar textos del consentimiento (el sistema ya vuelve a preguntar si cambia la versión). Se recomienda guardar el visto bueno por escrito fuera del repositorio.
-- A5 (feed de socio con portales) y el resto del frente C siguen como propuesta.
+- **A5 (feed de socio con Computrabajo, elempleo, Bumeran y similares) queda DESCARTADO por Juan (20-nov-2026): no se trabaja con esas plataformas ni se contemplan en análisis futuros.** Para Colombia: Torre.co (investigación a fondo), plataformas con datos públicos (BambooHR, Teamtailor, Workday) y fuentes públicas oficiales.
+- El resto del frente C sigue como propuesta.
 
 ## Orden recomendado
 | # | Frente | Esfuerzo | Por qué en este orden |
