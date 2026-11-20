@@ -13,7 +13,7 @@ import { PrivacyLink } from "@/components/privacy/privacy-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { applyCta, applyHint, applyLabel } from "@/lib/jobs/apply"
+import { applyChannels, applyCta, applyHint, applyLabel, channelHref } from "@/lib/jobs/apply"
 import { buildFacts } from "@/lib/jobs/facts"
 import { savePrefill } from "@/lib/jobs/prefill"
 import { track } from "@/lib/events/consent"
@@ -71,6 +71,7 @@ export function JobDetail({ job }: { job: JobCard }) {
   const apply = job.apply
   const isMail = apply?.method === "correo"
   const external = apply?.url ?? (job.sourceUrl.startsWith("http") ? job.sourceUrl : undefined)
+  const others = applyChannels(apply).slice(1)
 
   const save = () => {
     const now = toggleSaved(job.id)
@@ -156,6 +157,25 @@ export function JobDetail({ job }: { job: JobCard }) {
             <div className="flex flex-col gap-0.5">
               <p className="text-sm font-medium">{applyLabel(apply)}</p>
               <p className="text-sm text-muted-foreground">{applyHint(apply)}</p>
+              {others.length > 0 && (
+                <div className="mt-2 flex flex-col gap-2">
+                  <p className="text-sm text-muted-foreground">También puedes postular así:</p>
+                  <ul className="flex flex-wrap gap-2">
+                    {others.map((c) => (
+                      <li key={`${c.method}-${c.email ?? c.url}`}>
+                        <a
+                          href={channelHref(c)}
+                          onClick={() => track("apply_click", { jobId: job.id, method: c.method })}
+                          {...(c.method === "correo" ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+                          className={buttonVariants({ variant: "outline", size: "sm" })}
+                        >
+                          {c.method === "correo" ? `Por correo a ${c.email}` : applyCta(c)}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </section>
         </Rise>

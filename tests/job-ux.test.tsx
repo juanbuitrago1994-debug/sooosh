@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { JobCard } from "@/components/jobs/job-card"
-import { applyCta, applyHint, applyLabel, detectApply } from "@/lib/jobs/apply"
+import { applyChannels, applyCta, applyHint, applyLabel, channelHref, detectApply, isFormUrl } from "@/lib/jobs/apply"
 import { buildDraft } from "@/lib/jobs/draft"
 import { ago, buildFacts, yearsLabel } from "@/lib/jobs/facts"
 import { detectSalary, formatSalary, parseAmount } from "@/lib/jobs/salary"
@@ -43,6 +43,38 @@ describe("cómo se postula", () => {
     expect(applyCta({ method: "plataforma", platform: "Indeed" })).toBe("Postular en Indeed")
     expect(applyHint({ method: "correo", email: "a@b.co" })).toContain("a@b.co")
     expect(applyHint({ method: "plataforma", platform: "LinkedIn" })).toContain("iniciar sesión")
+  })
+})
+
+describe("varias vías de postulación por oferta", () => {
+  const post = "Estamos seleccionando diseñadora UX/UI. Envía tu CV a talento@acme.com o postúlate aquí: https://docs.google.com/forms/d/e/1FAIpQLSesC1qUkXrOmDoZw56L3UqaycGhdyLm5GuFOFVjmMZADEuNNQ/viewform."
+  it("correo + Google Form en el texto: la principal es el correo y el formulario queda como alternativa (sin el punto final)", () => {
+    const a = detectApply({ sourceUrl: "texto:abc", text: post })
+    expect(a.method).toBe("correo")
+    expect(a.email).toBe("talento@acme.com")
+    expect(a.alt).toEqual([{ method: "formulario", url: "https://docs.google.com/forms/d/e/1FAIpQLSesC1qUkXrOmDoZw56L3UqaycGhdyLm5GuFOFVjmMZADEuNNQ/viewform" }])
+    expect(applyChannels(a).map((c) => c.method)).toEqual(["correo", "formulario"])
+  })
+  it("desde un portal: la principal sigue siendo el portal y se suman correo y formulario", () => {
+    const a = detectApply({ sourceUrl: "https://www.linkedin.com/posts/x", text: post })
+    expect(a.method).toBe("plataforma")
+    expect(applyChannels(a).map((c) => c.method)).toEqual(["plataforma", "correo", "formulario"])
+  })
+  it("solo un formulario en el texto: es la vía principal; sin otras pistas no hay alternativas", () => {
+    expect(detectApply({ sourceUrl: "texto:abc", text: "Postula en https://forms.gle/abc123" })).toEqual({ method: "formulario", url: "https://forms.gle/abc123" })
+    expect(detectApply({ sourceUrl: "https://careers.acme.com/1" })).toEqual({ method: "sitio", url: "https://careers.acme.com/1" })
+  })
+  it("no repite la misma vía ni cuenta un enlace que no es formulario", () => {
+    const a = detectApply({ sourceUrl: "texto:abc", text: "Postula en https://forms.gle/abc123", applyUrl: "https://forms.gle/abc123" })
+    expect(a.alt).toBeUndefined()
+    expect(detectApply({ sourceUrl: "texto:abc", text: "Mira https://acme.com/nosotros" }).method).toBe("desconocido")
+  })
+  it("reconoce formularios y usa mailto: cuando una vía solo tiene correo", () => {
+    expect(isFormUrl("https://docs.google.com/forms/d/e/x/viewform")).toBe(true)
+    expect(isFormUrl("https://docs.google.com/document/d/x")).toBe(false)
+    expect(channelHref({ method: "correo", email: "a@b.co" })).toBe("mailto:a@b.co")
+    expect(applyChannels({ method: "desconocido" })).toEqual([])
+    expect(applyChannels({ method: "correo", email: "a@b.co", alt: [{ method: "formulario" }] }).length).toBe(1) // la vía vacía no cuenta
   })
 })
 

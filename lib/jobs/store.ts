@@ -12,6 +12,7 @@ export const JOB_STATUSES = ["activa", "cerrada", "oculta"] as const
 export type JobStatus = (typeof JOB_STATUSES)[number]
 
 const opt = (max: number) => z.string().trim().max(max).optional().transform((v) => (v ? v : undefined))
+const applyChannelSchema = z.object({ method: z.enum(APPLY_METHODS), platform: opt(60), url: opt(600), email: opt(200) })
 
 /** Lo que el panel de administración envía para guardar una tarjeta (ya revisada y posiblemente corregida por Juan). */
 export const jobDraftSchema = z.object({
@@ -29,8 +30,8 @@ export const jobDraftSchema = z.object({
   language: z.enum(["es", "en", "otro"]),
   offer: offerSchema,
   skills: z.array(z.string().trim().min(1).max(60)).max(30).default([]),
-  apply: z
-    .object({ method: z.enum(APPLY_METHODS), platform: opt(60), url: opt(600), email: opt(200) })
+  apply: applyChannelSchema
+    .extend({ alt: z.array(applyChannelSchema).max(3).optional() })
     .default({ method: "desconocido", platform: undefined, url: undefined, email: undefined }),
   salary: z
     .object({ min: z.number().positive().optional(), max: z.number().positive().optional(), currency: z.enum(CURRENCIES), period: z.enum(PERIODS) })

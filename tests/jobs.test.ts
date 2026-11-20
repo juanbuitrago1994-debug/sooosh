@@ -105,6 +105,12 @@ describe("borrador de tarjeta", () => {
   it("el borrador pasa el esquema de guardado", () => {
     expect(jobDraftSchema.safeParse(buildDraft({ offer, text, fallbackHash: "h" })).success).toBe(true)
   })
+  it("las otras vías de postulación (correo y formulario) sobreviven al guardado", () => {
+    const d = buildDraft({ offer, text: `${text}\nEnvía tu CV a talento@acme.com o postula en https://forms.gle/abc123`, fallbackHash: "h" })
+    const r = jobDraftSchema.safeParse(d)
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.apply.alt?.length).toBeGreaterThan(0)
+  })
 })
 
 describe("JSON-LD de la oferta", () => {

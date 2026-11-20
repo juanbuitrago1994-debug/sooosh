@@ -877,3 +877,10 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Distintivo en el tema claro: fondo grisáceo y haz rosa → naranja (20-nov-2026)
 - **Tema claro**: el fondo del distintivo es un gris ligero (`muted`, 0,95 frente a 0,994 del fondo de la app) y el haz funde **rosa → naranja** (tokens `beam-rose` `oklch(0.76 0.15 8)` y `beam-orange` `oklch(0.78 0.15 55)`, documentados con prueba). **Tema oscuro**: sin cambios (fondo `card`, haz azul hielo → lila pálido). El movimiento no cambia. La prueba comprueba que cada tema usa su par de colores.
+
+### Postulación P0: varias vías por oferta (20-nov-2026)
+- `detectApply` ya no pierde vías: la principal sigue siendo la de siempre, y se suman en `apply.alt` (máx. 3) el **correo** de postulación y los **enlaces a formularios** (Google Forms, Microsoft Forms, Typeform, Tally, Jotform, sistemas de selección) que aparezcan en el texto. Un formulario en el texto sin otra pista pasa a ser la vía principal. Sin migración de base: `apply` ya era JSON.
+- Ficha de oferta: bajo «Cómo se postula» aparece «También puedes postular así:» con un botón por vía alternativa (correo → `mailto:`, formulario → pestaña nueva).
+- Editor del administrador: lista de «Otra vía» (correo o enlace) con «Quitar» y botones «Agregar otro correo / otro enlace».
+- Verificado: lint (0 errores), `tsc`, `build` y 586 pruebas en verde (nuevas: oferta con correo + Google Form, desde un portal, solo formulario, sin duplicados, `mailto:`, y que las alternativas sobreviven al esquema de guardado).
+- **Para revisar por Juan**: (1) en el editor de ofertas, pega el texto de la oferta de la diseñadora UX/UI y comprueba que aparecen el correo y el enlace del formulario; (2) abre esa oferta ya guardada: bajo «Cómo se postula» deben verse los botones alternativos (claro/oscuro, escritorio y 375 px); (3) una oferta con una sola vía no debe mostrar «También puedes postular así».

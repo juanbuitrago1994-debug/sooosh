@@ -378,6 +378,37 @@ export function JobsAdmin() {
                   </Field>
                 )
               )}
+              {(d.apply.alt ?? []).map((c, i) => {
+                const isMail = c.method === "correo"
+                const setAlt = (next: Apply | null) => patch({ apply: { ...d.apply, alt: (d.apply.alt ?? []).flatMap((x, j) => (j === i ? (next ? [next] : []) : [x])) } })
+                return (
+                  <div key={i} className="flex items-end gap-2">
+                    <Field className="flex-1">
+                      <FieldLabel htmlFor={`d-alt-${i}`}>{isMail ? "Otra vía: correo" : "Otra vía: enlace"}</FieldLabel>
+                      <Input
+                        id={`d-alt-${i}`}
+                        type={isMail ? "email" : "url"}
+                        value={(isMail ? c.email : c.url) ?? ""}
+                        placeholder={isMail ? "" : "https://"}
+                        onChange={(e) => setAlt(isMail ? { ...c, email: e.target.value || undefined, url: e.target.value ? `mailto:${e.target.value}` : undefined } : { ...c, url: e.target.value || undefined })}
+                      />
+                    </Field>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setAlt(null)}>
+                      Quitar
+                    </Button>
+                  </div>
+                )
+              })}
+              {(d.apply.alt?.length ?? 0) < 3 && (
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => patch({ apply: { ...d.apply, alt: [...(d.apply.alt ?? []), { method: "correo" }] } })}>
+                    Agregar otro correo
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => patch({ apply: { ...d.apply, alt: [...(d.apply.alt ?? []), { method: "formulario" }] } })}>
+                    Agregar otro enlace
+                  </Button>
+                </div>
+              )}
             </div>
             <Field>
               <FieldLabel id="d-salary">Salario (solo si la oferta lo dice)</FieldLabel>
