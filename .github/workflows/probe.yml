@@ -4,12 +4,18 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
       - run: |
-          UA="SoooshBot/0.1 (buscador de ofertas; lectura de APIs publicas)"
-          B="https://www.getonbrd.com/api/v0/search/jobs"
-          E="expand%5B%5D=company&expand%5B%5D=seniority&expand%5B%5D=modality&expand%5B%5D=tags"
-          for u in "$B?query=&per_page=100&page=1&$E" "$B?query=&per_page=100&page=1" "$B?query=&per_page=50&page=1&expand%5B%5D=company" "$B?query=&per_page=10&page=1&$E"; do
-            echo "=== $u"; curl -s -m 40 -A "$UA" -H "Accept: application/json" -D /tmp/h.txt -o /tmp/b.txt "$u"; head -1 /tmp/h.txt; grep -iE "^(server|cf-mitigated|retry-after|content-type)" /tmp/h.txt | tr '\n' ' '; head -c 140 /tmp/b.txt | tr '\n' ' '; echo; sleep 4
-          done
-          echo "=== ashby x6 seguidas"
-          for t in addi mural nubank toku belvo paxos; do printf "$t "; curl -s -m 25 -A "$UA" -o /dev/null -w "%{http_code}\n" "https://api.ashbyhq.com/posting-api/job-board/$t"; sleep 1.5; done
+          cat > /tmp/p.mjs <<'JS'
+          const UA = "SoooshBot/0.1 (buscador de ofertas; lectura de APIs publicas)"
+          const urls = ["https://www.getonbrd.com/api/v0/search/jobs?query=&per_page=10&page=1", "https://api.ashbyhq.com/posting-api/job-board/addi", "https://apply.workable.com/api/v1/widget/accounts/platzi?details=true"]
+          for (const u of urls) {
+            for (const [name, headers] of [["node UA+Accept", { "User-Agent": UA, Accept: "application/json" }], ["node solo UA", { "User-Agent": UA }], ["node sin cabeceras", {}]]) {
+              const r = await fetch(u, { headers }); console.log(new URL(u).hostname, name, r.status, r.headers.get("cf-mitigated") ?? "", r.headers.get("server") ?? "")
+              await new Promise((x) => setTimeout(x, 2500))
+            }
+          }
+          JS
+          node /tmp/p.mjs
