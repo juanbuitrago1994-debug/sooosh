@@ -846,3 +846,6 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Compensación del tema claro en `Beam` (20-nov-2026)
 - Los presets de `border-beam` son mucho más tenues en claro (en `pulse-inner`: borde 0,32 en claro frente a 1,54 en oscuro). `Beam` ahora usa por defecto una intensidad de **0,5 en oscuro y 1 en claro** (`beamStrength`, con prueba); si un componente pasa `strength`, manda ese valor.
+
+### Variante de color del haz: `ice` en el distintivo (20-nov-2026)
+- `Beam` acepta `colorVariant` (por defecto `mono`, gris). El distintivo «Ofertas encontradas» usa la paleta **`ice`** (cian y azul pálido) de `border-beam`. Volver a gris es cambiar esa palabra en `components/magic/beam-badge.tsx`. Nota: el azul en el modo oscuro es una excepción consciente a la regla de oscuro neutro (decisión de Juan para este efecto).
