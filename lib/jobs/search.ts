@@ -76,10 +76,12 @@ export const jobCols = {
  */
 export function regionFilter(region: string): SQL | undefined {
   if (!region || region === ALL_REGIONS) return undefined
-  if (region === "LATAM") return sql`${jobs.regions} @> ARRAY['LATAM']::text[]`
+  // Una tarjeta marcada «TODAS» (cargada a mano, sin región conocida) aparece en cualquier región.
+  const open = sql`${jobs.regions} @> ARRAY[${ALL_REGIONS}]::text[]`
+  if (region === "LATAM") return sql`(${jobs.regions} @> ARRAY['LATAM']::text[] OR ${open})`
   // Las ofertas remotas «para toda Latinoamérica» solo valen para quien busca desde un país latinoamericano (no desde EE. UU. ni España).
-  if (!LATAM_CODES.has(region)) return sql`${jobs.regions} @> ARRAY[${region}]::text[]`
-  return sql`(${jobs.regions} @> ARRAY[${region}]::text[] OR (${jobs.workMode} = 'remoto' AND ${jobs.country} IS NULL AND ${jobs.regions} @> ARRAY['LATAM']::text[]))`
+  if (!LATAM_CODES.has(region)) return sql`(${jobs.regions} @> ARRAY[${region}]::text[] OR ${open})`
+  return sql`(${jobs.regions} @> ARRAY[${region}]::text[] OR ${open} OR (${jobs.workMode} = 'remoto' AND ${jobs.country} IS NULL AND ${jobs.regions} @> ARRAY['LATAM']::text[]))`
 }
 
 const base = (p: SearchParams) =>

@@ -44,7 +44,7 @@ describe("filtro de región (SQL)", () => {
     expect(co.params).toContain("CO")
     const us = sqlText(regionFilter("US"))!
     expect(us.sql).not.toContain("LATAM")
-    expect(us.params).toEqual(["US"])
+    expect(us.params).toEqual(["US", "TODAS"]) // «TODAS» = tarjetas cargadas a mano sin región conocida: abiertas a cualquiera
   })
   it("el valor va como parámetro, nunca pegado en el SQL", () => {
     expect(sqlText(regionFilter("CO"))!.sql).not.toContain("CO'")

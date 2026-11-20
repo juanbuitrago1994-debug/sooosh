@@ -43,3 +43,13 @@ export function buildFacts(job: Pick<JobCard, "offer" | "workMode" | "remoteScop
   if (when) out.push({ key: "publicada", label: "Publicada", value: when })
   return out
 }
+
+const SOURCE_NAMES: Record<string, string> = { linkedin: "LinkedIn", indeed: "Indeed", getonboard: "Get on Board", greenhouse: "Greenhouse", lever: "Lever" }
+
+/** Quién ofrece el puesto: la empresa, o —si la oferta no la nombra— dónde se publicó («Publicado en LinkedIn»). Una oferta cargada a mano sin fuente conocida no muestra nada. */
+export function companyLine(job: { company?: string | null; sourceName?: string | null }): string | undefined {
+  if (job.company) return job.company
+  const s = job.sourceName
+  if (!s || s === "manual") return undefined
+  return `Publicado en ${SOURCE_NAMES[s] ?? s.charAt(0).toUpperCase() + s.slice(1)}`
+}

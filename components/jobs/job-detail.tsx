@@ -14,7 +14,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { applyChannels, applyCta, applyHint, applyLabel, channelHref } from "@/lib/jobs/apply"
-import { buildFacts } from "@/lib/jobs/facts"
+import { buildFacts, companyLine } from "@/lib/jobs/facts"
 import { savePrefill } from "@/lib/jobs/prefill"
 import { track } from "@/lib/events/consent"
 import { dismissJob, toggleSaved, useMarks } from "@/lib/profile/job-marks"
@@ -48,7 +48,7 @@ export function JobDetail({ job }: { job: JobCard }) {
   const [fit, setFit] = useState<Fit | null>(null)
   const facts = buildFacts(job)
   const o = job.offer
-  const subtitle = [job.company, job.locationText].filter(Boolean).join(" · ")
+  const subtitle = [companyLine(job), job.locationText].filter(Boolean).join(" · ")
 
   // Con el perfil de búsqueda de la persona se calcula el encaje de esta oferta (reglas, sin IA).
   const profileCv = useSearchProfile()?.cv ?? null

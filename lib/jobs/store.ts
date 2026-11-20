@@ -57,12 +57,13 @@ export async function upsertJob(db: Db, d: JobDraft): Promise<{ id: string; crea
     employmentType: d.employmentType ?? null,
     seniority: d.seniority ?? null,
     language: d.language,
-    offer: d.offer,
+    offer: { ...d.offer, title: d.title },
     skills: d.skills,
     apply: d.apply,
     salary: d.salary ?? null,
-    roleFamily: (d.roleFamily ?? classifyRole({ title: d.title, skills: d.skills }).family) as string,
-    isTech: isTechFamily(d.roleFamily ?? classifyRole({ title: d.title, skills: d.skills }).family),
+    // Siempre se deduce del título y las habilidades FINALES: si se corrigió el título al revisar, la familia (y «tecnología») se recalcula.
+    roleFamily: classifyRole({ title: d.title, skills: d.skills }).family as string,
+    isTech: isTechFamily(classifyRole({ title: d.title, skills: d.skills }).family),
     postedAt: d.postedAt ?? null,
     validThrough: d.validThrough ?? null,
     // El contenido cambió: el embedding viejo ya no vale (se recalcula en el paso del buscador).

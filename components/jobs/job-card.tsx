@@ -5,7 +5,7 @@ import { ApplyIcon } from "@/components/jobs/apply-icon"
 import { GlassPanel } from "@/components/glass-panel"
 import { Badge } from "@/components/ui/badge"
 import { applyLabel } from "@/lib/jobs/apply"
-import { ago, buildFacts } from "@/lib/jobs/facts"
+import { ago, buildFacts, companyLine } from "@/lib/jobs/facts"
 import type { RankedJob } from "@/lib/jobs/rank"
 
 /**
@@ -15,7 +15,7 @@ import type { RankedJob } from "@/lib/jobs/rank"
 export function JobCard({ job, saved, onOpen }: { job: RankedJob; saved?: boolean; onOpen?: () => void }) {
   const facts = buildFacts(job).filter((f) => f.key !== "publicada").slice(0, 3)
   const when = ago(job.postedAt)
-  const subtitle = [job.company, job.locationText, when].filter(Boolean).join(" · ")
+  const subtitle = [companyLine(job), job.locationText, when].filter(Boolean).join(" · ")
   return (
     <li>
       <Link href={`/ofertas/${job.id}`} onClick={onOpen} className="group block rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50">

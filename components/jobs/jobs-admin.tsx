@@ -293,7 +293,16 @@ export function JobsAdmin() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field>
                 <FieldLabel htmlFor="d-title">Título</FieldLabel>
-                <Input id="d-title" value={d.title} onChange={(e) => patch({ title: e.target.value })} />
+                <Input id="d-title" value={d.title} onChange={(e) => patch({ title: e.target.value, titleSource: "texto" })} aria-invalid={d.titleSource === "falta" || d.titleSource === "inferido"} />
+                {d.titleSource === "inferido" && (
+                  <FieldDescription>
+                    El texto no trae el cargo: esta es una sugerencia sacada de la publicación.{" "}
+                    <button type="button" className="text-foreground underline underline-offset-4" onClick={() => patch({ titleSource: "texto" })}>
+                      Confirmar título
+                    </button>
+                  </FieldDescription>
+                )}
+                {d.titleSource === "falta" && <FieldDescription>El texto no trae el cargo: escríbelo para poder guardar.</FieldDescription>}
               </Field>
               <Field>
                 <FieldLabel htmlFor="d-company">Empresa</FieldLabel>
@@ -435,13 +444,16 @@ export function JobsAdmin() {
             <Field>
               <FieldLabel id="d-regions">Regiones donde se puede postular</FieldLabel>
               <ToggleGroup aria-labelledby="d-regions" multiple variant="outline" spacing={1} className="flex-wrap justify-start" value={d.regions} onValueChange={(v) => patch({ regions: v })}>
+                <ToggleGroupItem value="TODAS" aria-label="Todas las regiones">
+                  Todas
+                </ToggleGroupItem>
                 {REGION_OPTIONS.map((r) => (
                   <ToggleGroupItem key={r.code} value={r.code} aria-label={r.name}>
                     {r.code === "LATAM" ? "LATAM" : r.code}
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
-              <FieldDescription>{d.regions.length ? d.regions.map((c) => REGION_OPTIONS.find((r) => r.code === c)?.name ?? c).join(", ") : "Ninguna: la tarjeta no aparecerá al filtrar por región."}</FieldDescription>
+              <FieldDescription>{d.regions.length ? d.regions.map((c) => (c === "TODAS" ? "Todas las regiones" : (REGION_OPTIONS.find((r) => r.code === c)?.name ?? c))).join(", ") : "Ninguna: la tarjeta no aparecerá al filtrar por región."}</FieldDescription>
             </Field>
           </FieldGroup>
           <div className="flex flex-col gap-2 text-sm">
@@ -463,7 +475,7 @@ export function JobsAdmin() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => void save()} disabled={saving || !d.title.trim()}>
+            <Button onClick={() => void save()} disabled={saving || !d.title.trim() || d.titleSource === "inferido"}>
               {saving ? <Spinner data-icon="inline-start" /> : null}
               {analysis.existing ? "Actualizar tarjeta" : "Guardar tarjeta"}
             </Button>

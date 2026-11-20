@@ -2,10 +2,12 @@ import { skillsIn } from "@/lib/analysis/offer-profile"
 import { fold } from "@/lib/keywords/normalize"
 import type { JobLd } from "@/lib/offer/html"
 import type { Offer } from "@/lib/schemas/offer"
+import { refineIdentity, type TitleSource } from "@/lib/offer/identity"
 import { detectApply, type Apply } from "./apply"
 import { classifyRole, type Family } from "./classify"
 import { countryFromName, detectGeo, regionsFor } from "./geo"
 import { CURRENCIES, detectSalary, type Salary } from "./salary"
+import { ALL_REGIONS } from "./region"
 import { normalizeSourceUrl } from "./url"
 
 /**
@@ -20,6 +22,8 @@ export type JobDraft = {
   sourceUrl: string
   sourceName: string
   title: string
+  /** de dónde salió el cargo: texto (escrito en la oferta), inferido (hay que confirmarlo) o falta (se escribe a mano) */
+  titleSource?: TitleSource
   company?: string
   locationText?: string
   country?: string
@@ -38,6 +42,9 @@ export type JobDraft = {
   postedAt?: string
   validThrough?: string
 }
+
+/** Palabras sueltas que las reglas confunden con herramientas («Trabajo», «Systems»): no son habilidades. */
+const GENERIC_SKILLS = new Set(["trabajo", "systems", "system", "equipo", "equipos", "experiencia", "proyecto", "proyectos", "empresa", "cliente", "clientes", "usuario", "usuarios", "proceso", "procesos", "herramientas", "conocimientos", "habilidades", "team", "work", "solid", "strong"])
 
 export function detectWorkMode(text: string, ld?: JobLd): WorkMode | undefined {
   const t = fold(text)
@@ -123,15 +130,19 @@ export function buildDraft(input: { offer: Offer; text: string; url?: string; li
       : [...new Set([ldCountry, ...(ld?.applicantCountries ?? []).map(countryFromName), ...geo.countries].filter((x): x is string => !!x))].slice(0, 4)
   const ldCurrency = ld?.salary?.currency as Salary["currency"] | undefined
   const ldSalary: Salary | undefined = ld?.salary && ldCurrency && (CURRENCIES as readonly string[]).includes(ldCurrency) ? { min: ld.salary.min, max: ld.salary.max, currency: ldCurrency, period: ld.salary.period } : undefined
-  const skills = [...new Set([...(offer.tools ?? []), ...skillsIn(text).filter((s) => s.category === "tool" || s.category === "tech").map((s) => s.label)])].slice(0, 20)
+  const skills = [...new Set([...(offer.tools ?? []), ...skillsIn(text).filter((s) => s.category === "tool" || s.category === "tech").map((s) => s.label)])].filter((s) => !GENERIC_SKILLS.has(fold(s))).slice(0, 20)
+  const id = refineIdentity(offer, text)
+  const regions = regionsFor({ countries, latam: geo.latam })
   return {
     sourceUrl,
     sourceName,
-    title: offer.title,
-    company: offer.company,
+    title: id.title,
+    titleSource: id.titleSource,
+    company: id.company,
     locationText: ld?.location ?? labeledLocation(text),
     country,
-    regions: regionsFor({ countries, latam: geo.latam }),
+    // Sin país ni región conocidos, una tarjeta cargada a mano no se pierde: queda abierta a todas las regiones (se puede cambiar al revisarla).
+    regions: regions.length ? regions : [ALL_REGIONS],
     workMode,
     remoteScope: workMode === "remoto" ? detectRemoteScope(text) : undefined,
     employmentType: detectEmploymentType(text, ld),
@@ -139,7 +150,7 @@ export function buildDraft(input: { offer: Offer; text: string; url?: string; li
     language: offer.language,
     offer,
     skills,
-    roleFamily: classifyRole({ title: offer.title, skills }).family,
+    roleFamily: classifyRole({ title: id.title, skills }).family,
     apply: detectApply({ sourceUrl, text, applyUrl: input.applyUrl }),
     salary: ldSalary ?? detectSalary(text) ?? undefined,
     postedAt: isoDate(ld?.datePosted),
