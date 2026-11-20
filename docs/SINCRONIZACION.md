@@ -34,3 +34,11 @@ Un candado en la base (`sync_locks`, caduca a los 90 min) impide que dos corrida
 - **Tu Mac** (`pnpm sync:install`, cada 3 h mientras esté encendido): todo lo anterior si toca, más el estructurado con el LLM local (lo único que necesita tu Mac).
 - **Get on Board** responde 403 al cliente HTTP de Node desde GitHub, pero 200 a `curl` con la misma identificación SoooshBot. Con autorización de Juan (20-nov-2026) su adaptador reintenta una vez con `curl` (`fetchWithCurlFallback`), así que corre también en la nube. Para desactivarlo: `SYNC_CURL_FALLBACK=0`.
 - Los 403 de Ashby/Workable y el 429 de Himalayas de la primera corrida eran de ráfaga (con pausas y reintentos cortés pasan): Himalayas ya trajo 147 ofertas nuevas desde GitHub.
+
+## Reloj propio en Supabase (20-nov-2026)
+GitHub no disparó su cron programado en este repositorio (sondas de 28 min y la ventana de las 15:17 UTC sin corridas; las manuales sí funcionan). Por eso la base de datos lanza el workflow:
+- `pg_cron` ejecuta `public.trigger_sync_workflow()` a los minutos 17 de cada tercera hora (UTC, trabajo `sooosh-sync-dispatch`), que llama con `pg_net` a la API de GitHub (`workflow_dispatch` de `sync.yml`, respuesta 204). Migración `0015`.
+- El token de GitHub (fine-grained, solo el repo `sooosh`, permiso *Actions: Read and write*) está en **Supabase Vault** con el nombre `github_dispatch_token`; nunca en el repositorio. Sin el secreto la función no hace nada. Prueba real del 20-nov-2026: 204 y una corrida lanzada.
+- Si GitHub vuelve a disparar su propio cron, no pasa nada: cada fuente tiene su cadencia y el candado impide corridas simultáneas.
+- Para quitarlo: `select cron.unschedule('sooosh-sync-dispatch');` y revocar el token en GitHub.
+- Pendiente recomendado: el token se creó sin fecha de caducidad; conviene reemplazarlo por uno con caducidad (y actualizar el secreto en el Vault).
