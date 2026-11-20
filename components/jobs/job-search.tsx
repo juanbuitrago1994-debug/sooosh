@@ -331,7 +331,7 @@ export function JobSearch() {
       <BlurReveal show={shown !== null && jobs !== null} className="pointer-events-none fixed inset-x-0 bottom-6 z-20 flex justify-center px-4">
         <div role="status" aria-live="polite">
           <BeamBadge>
-            <span className="flex items-center gap-1.5 whitespace-nowrap">
+            <span className="flex items-center gap-1 whitespace-nowrap">
               <DrumNumber value={shown ?? 0} className="font-medium" />
               <span className="text-muted-foreground">{shown === 1 ? "Oferta encontrada" : "Ofertas encontradas"}</span>
             </span>

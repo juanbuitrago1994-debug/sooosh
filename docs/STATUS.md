@@ -830,3 +830,8 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Hojas con carga: solo el cargador, centrado (20-nov-2026)
 - **Fuentes**: mientras llega el estado, la hoja muestra únicamente el cargador con sus frases, centrado en vertical y horizontal (sin título ni «Revisando…»; el título queda para lectores de pantalla). **Mi CV**: mientras se lee el archivo, igual (las frases son el avance real de la lectura, con el mismo cambio de movimiento y desenfoque cuando cambia la etapa). Regla documentada en `docs/DESIGN-TOKENS.md` y en la memoria del proyecto.
+
+### Distintivo más pequeño y con resplandor interior sutil (20-nov-2026)
+- **15 % más pequeño** (texto `text-xs`, relleno `px-4 py-2`; antes `text-sm`, `px-5 py-2.5`: unos 14 % menos de ancho de texto y 20 % menos de alto).
+- **Resplandor interior sutil** (`components/magic/beam-badge.tsx`), a partir de la descripción del «Get Pro button» de transitions.dev («gradient glows in from the pill's rim»): además del haz del borde, un resplandor difuminado y enmascarado que entra del borde hacia el centro (mismo giro de 6 s), de **un solo color** (el principal del tema, con 32 % de opacidad). *Nota:* esa transición figura como «Pro» en transitions.dev y su código no es público, así que **no se copió ni se intentó leer**: es una interpretación propia de su descripción.
+- **El ancho del distintivo se anima** (300 ms con la curva de la app, idea de la transición «Card resize» que Juan compartió: `transition: width`) cuando el número cambia de largo (p. ej. 999 → 1.000). Con «reducir movimiento» cambia sin animar.
