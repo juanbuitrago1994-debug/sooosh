@@ -2,18 +2,20 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { motion, useReducedMotion } from "motion/react"
+import { EFFECT_COLORS } from "@/lib/design-tokens"
 import { MOTION } from "@/lib/motion"
 
 /** Relleno horizontal del distintivo (px-4 = 16 px por lado): sirve para fijar su ancho a lo que mide el contenido. */
 const CHROME = 2 * 16
 
-/** Un solo color: el principal del tema (blanco en oscuro) a poca opacidad, con la cola del haz desvaneciéndose. Sin manchas ni varios tonos. */
-const LIGHT = "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, color-mix(in oklab, var(--primary) 55%, transparent) 360deg)"
+/** Un solo haz con DOS colores fríos que se funden entre sí: la cola nace transparente, pasa por el azul hielo y termina (la cabeza) en lila pálido. */
+const tint = (color: string) => `color-mix(in oklab, ${color} 62%, transparent)`
+const LIGHT = `conic-gradient(in oklab from 0deg, transparent 0deg, transparent 245deg, ${tint(EFFECT_COLORS["beam-ice"])} 305deg, ${tint(EFFECT_COLORS["beam-lilac"])} 360deg)`
 const RIM = "radial-gradient(ellipse farthest-side at center, transparent 30%, black 100%)"
 
 /**
  * Distintivo de fondo SÓLIDO y ligeramente distinto al de la app (`card`), SIN borde, con una luz que **recorre el borde por dentro** (una vuelta cada 6 s, la
- * misma que tenía el haz original): un arco de luz difuminado que gira y que una máscara radial deja ver solo junto al borde. Un solo color, sin manchas
+ * misma que tenía el haz original): un arco de luz difuminado que gira y que una máscara radial deja ver solo junto al borde. Un solo haz con dos colores fríos fundidos (azul hielo → lila pálido), sin manchas
  * ni anillo. El ancho se anima (300 ms, la curva de la app) cuando el contenido cambia de largo. Con «reducir movimiento» no gira y queda un resplandor
  * interior quieto. Decorativo: no recibe clics.
  */

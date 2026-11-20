@@ -11,6 +11,14 @@ export const TOKENS = {
   "hero-stack": "flex max-w-2xl flex-col items-center gap-1.5",
 } as const
 
+/** Colores de efectos (solo para `components/magic/*`); el resto de la app usa únicamente los colores del tema. */
+export const EFFECT_COLORS = {
+  /** azul hielo: el color con el que arranca el haz del distintivo «Ofertas encontradas» */
+  "beam-ice": "oklch(0.82 0.09 235)",
+  /** lila pálido: el color con el que termina (la cabeza) del haz */
+  "beam-lilac": "oklch(0.78 0.11 305)",
+} as const
+
 export type TokenName = keyof typeof TOKENS
 /** Clases de un token. */
 export const token = (name: TokenName): string => TOKENS[name]
