@@ -5,6 +5,7 @@ import Link from "next/link"
 import { FileUpIcon, SearchIcon, SlidersHorizontalIcon } from "lucide-react"
 import { useAutoAnimate } from "@formkit/auto-animate/react"
 import { Logo } from "@/components/brand/logo"
+import { Rise } from "@/components/motion/rise"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -216,7 +217,7 @@ export function JobSearch() {
       <main id="contenido" className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 pt-6 pb-10 sm:px-6">
         <h1 className="sr-only">Buscar ofertas</h1>
 
-        <div className="flex flex-col items-center gap-2">
+        <Rise className="flex flex-col items-center gap-2">
           <div className="relative w-full max-w-xl">
             <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <Input
@@ -251,7 +252,7 @@ export function JobSearch() {
               ))}
             </div>
           )}
-        </div>
+        </Rise>
 
         {error && (
           <p role="alert" className="text-sm text-destructive">
@@ -272,12 +273,12 @@ export function JobSearch() {
           ) : jobs && jobs.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">Sin resultados. Prueba otras palabras o ajusta los filtros.</p>
           ) : (
-            <>
+            <Rise step={1}>
               <p className="pb-2 text-xs text-muted-foreground">
                 {jobs?.length} {jobs?.length === 1 ? "oferta" : "ofertas"}
                 {meta.matches !== null && meta.scored !== null && ` · ${meta.matches} ${meta.matches === 1 ? "hace" : "hacen"} match`}
               </p>
-              <ul ref={listRef} className="flex flex-col gap-3 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200">
+              <ul ref={listRef} className="flex flex-col gap-3">
                 {jobs
                   ?.filter((j) => onlySaved || !marks.dismissed.includes(j.id))
                   .map((j, i) => (
@@ -290,7 +291,7 @@ export function JobSearch() {
                   ))}
               </ul>
               {cv && <p className="pt-3 text-xs text-muted-foreground">Encaje estimado con reglas, sin IA.</p>}
-            </>
+            </Rise>
           )}
         </section>
 

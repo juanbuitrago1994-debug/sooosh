@@ -6,6 +6,7 @@ import { ThinkingTicker } from "@/components/ai/thinking-ticker"
 import { useAiWork } from "@/components/ai/ai-work"
 import { useCvDropzone } from "@/components/dropzone"
 import { AppHeader, SkipLink, type HeaderActions } from "./app-header"
+import { Rise } from "@/components/motion/rise"
 import { Button } from "@/components/ui/button"
 import { MAX_UPLOAD_BYTES, formatBytes, type UploadedFile } from "@/lib/uploads"
 import { STEPS } from "@/lib/steps"
@@ -45,10 +46,14 @@ export function EntryScreen({
 
       <main id="contenido" className="flex flex-1 items-center pb-24">
         <div className="mx-auto flex w-full max-w-sm flex-col gap-5 px-6">
-          <p className="text-xs text-muted-foreground" aria-label={`Paso 1 de ${STEPS.length}: ${STEPS[0].label}`}>
-            1 de {STEPS.length}
-          </p>
+          <Rise>
+            <p className="text-xs text-muted-foreground" aria-label={`Paso 1 de ${STEPS.length}: ${STEPS[0].label}`}>
+              1 de {STEPS.length}
+            </p>
+          </Rise>
 
+          {/* Cada estado (soltar, subiendo, leyendo, error) sube al aparecer: la clave lo vuelve a montar al cambiar de estado. */}
+          <Rise key={phase === "upload" ? state.status : phase} step={1}>
           {phase === "parsing" ? (
             <section aria-label="Leyendo tu CV" className="flex flex-col gap-3">
               <h1 className="sr-only">Leyendo tu CV</h1>
@@ -103,6 +108,7 @@ export function EntryScreen({
               )}
             </section>
           )}
+          </Rise>
         </div>
       </main>
     </div>

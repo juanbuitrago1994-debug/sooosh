@@ -749,3 +749,16 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Para revisar por Juan
 1. Reinicia `pnpm dev`. `/ofertas` en oscuro y claro, escritorio y 375 px: cabecera pegada arriba con íconos; barra centrada; botón de filtros con contador; abre Filtros, Mi CV y Fuentes y compara que midan lo mismo; el interruptor y los botones principales ahora son blancos en oscuro (casi negros en claro).
+
+## Microinteracción: entrada de abajo hacia arriba entre vistas (20-nov-2026)
+
+### Qué se hizo
+- Nuevo componente reutilizable `components/motion/rise.tsx` (`Rise`, con la librería `motion` ya instalada y las constantes de `lib/motion`): los elementos de una vista aparecen con un fundido mientras **suben 16 px**, en **0,42 s**, con la curva de desaceleración suave de toda la app y **70 ms de retardo entre un elemento y el siguiente**. Solo anima opacidad y desplazamiento; con «reducir movimiento» no anima.
+- **Inicio (soltar CV)**: sube primero «1 de 5» y después el bloque de soltar/subiendo/leyendo/error (cada estado vuelve a subir al cambiar).
+- **Búsqueda**: la cabecera queda fija (es el marco común de las dos vistas); suben la barra de búsqueda con su resumen y, después, el conteo con la lista de ofertas cuando llegan los resultados. Los cambios posteriores de la lista siguen con la animación de auto-animate (sin repetir la subida).
+
+### Qué se verificó
+- lint, tsc, build y 559 pruebas en verde (nueva `tests/rise.test.tsx`: arranca invisible y desplazado, y respeta los límites de duración, recorrido y retardo).
+
+### Para revisar por Juan
+1. Reinicia `pnpm dev`. Ve de inicio a `/ofertas` (ícono de buscar) y de vuelta (logo): los elementos deben subir suave y escalonados, sin saltos; la cabecera no se mueve. Con «reducir movimiento» activado no debe moverse nada.
