@@ -849,3 +849,7 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Variante de color del haz: `ice` en el distintivo (20-nov-2026)
 - `Beam` acepta `colorVariant` (por defecto `mono`, gris). El distintivo «Ofertas encontradas» usa la paleta **`ice`** (cian y azul pálido) de `border-beam`. Volver a gris es cambiar esa palabra en `components/magic/beam-badge.tsx`. Nota: el azul en el modo oscuro es una excepción consciente a la regla de oscuro neutro (decisión de Juan para este efecto).
+
+### Distintivo: `ice` fijo y pálido, y borde propio sin beam (20-nov-2026)
+- **Causa del cambio de colores**: la librería hace girar el tono (`hue-rotate`, ~12 s) en todas las paletas excepto `mono`; por eso el `ice` pasaba por rosa y verde. Ahora el distintivo usa `staticColors` (sin ciclo de tono) y `saturation={0.4}` (poco saturado): solo grises fríos y azules pálidos.
+- **Borde sin efecto beam y casi transparente**: la librería pinta su trazo de haz sobre el borde del elemento y no deja apagarlo. El distintivo dibuja encima un anillo de 1 px **opaco** del color «10 % del texto sobre el fondo» (se ve casi transparente, en claro y oscuro), así que el borde no lleva haz y solo queda el resplandor interior.
