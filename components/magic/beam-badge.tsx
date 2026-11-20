@@ -7,12 +7,15 @@ import { MOTION } from "@/lib/motion"
 /** Relleno horizontal del distintivo (px-4 = 16 px por lado): sirve para fijar su ancho a lo que mide el contenido. */
 const CHROME = 2 * 16
 
+/** Un solo color: el principal del tema (blanco en oscuro) a poca opacidad, con la cola del haz desvaneciéndose. Sin manchas ni varios tonos. */
+const LIGHT = "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, color-mix(in oklab, var(--primary) 55%, transparent) 360deg)"
+const RIM = "radial-gradient(ellipse farthest-side at center, transparent 30%, black 100%)"
+
 /**
- * Distintivo de fondo SÓLIDO y ligeramente distinto al de la app (`card`), SIN borde, con un resplandor interior uniforme que respira muy despacio
- * (una sombra interior suave que sube y baja de opacidad, del color del texto del tema). Reemplaza a `Beam`/`border-beam` en este componente: esa librería
- * dibuja manchas de color ancladas al borde (de ahí los «puntos de color») y obligaba a tapar su trazo con un anillo, que dejaba un contorno oscuro.
- * El ancho se anima (300 ms, la curva de la app) cuando el contenido cambia de largo (idea de «Card resize» de transitions.dev). Con «reducir
- * movimiento» el resplandor queda quieto y el ancho cambia sin animar. Decorativo: no recibe clics.
+ * Distintivo de fondo SÓLIDO y ligeramente distinto al de la app (`card`), SIN borde, con una luz que **recorre el borde por dentro** (una vuelta cada 6 s, la
+ * misma que tenía el haz original): un arco de luz difuminado que gira y que una máscara radial deja ver solo junto al borde. Un solo color, sin manchas
+ * ni anillo. El ancho se anima (300 ms, la curva de la app) cuando el contenido cambia de largo. Con «reducir movimiento» no gira y queda un resplandor
+ * interior quieto. Decorativo: no recibe clics.
  */
 export function BeamBadge({ children, className }: { children: ReactNode; className?: string }) {
   const reduce = useReducedMotion()
@@ -32,17 +35,21 @@ export function BeamBadge({ children, className }: { children: ReactNode; classN
       className={`relative flex justify-center overflow-hidden rounded-full bg-card px-4 py-2 text-xs ${className ?? ""}`}
       style={{ width: width === null ? undefined : width + CHROME, transition: reduce ? undefined : `width 300ms cubic-bezier(${MOTION.ease.join(",")})` }}
     >
+      {reduce ? (
+        <span aria-hidden className="pointer-events-none absolute inset-0 rounded-full" style={{ boxShadow: "inset 0 0 10px 1px color-mix(in oklab, var(--foreground) 14%, transparent)" }} />
+      ) : (
+        <div aria-hidden className="pointer-events-none absolute inset-0 rounded-full" style={{ maskImage: RIM, WebkitMaskImage: RIM }}>
+          <motion.span
+            className="absolute"
+            style={{ left: "50%", top: "50%", width: 320, height: 320, marginLeft: -160, marginTop: -160, background: LIGHT, filter: "blur(8px)" }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 6, ease: "linear", repeat: Infinity }}
+          />
+        </div>
+      )}
       <span ref={content} className="relative inline-flex shrink-0">
         {children}
       </span>
-      <motion.span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-full"
-        style={{ boxShadow: "inset 0 0 12px 1px color-mix(in oklab, var(--foreground) 20%, transparent)" }}
-        initial={{ opacity: reduce ? 0.6 : 0.35 }}
-        animate={reduce ? undefined : { opacity: [0.35, 1, 0.35] }}
-        transition={{ duration: MOTION.wave, ease: "easeInOut", repeat: Infinity }}
-      />
     </div>
   )
 }
