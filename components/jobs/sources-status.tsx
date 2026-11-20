@@ -7,6 +7,8 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Item, ItemContent, ItemDescription, ItemTitle } from "@/components/ui/item"
+import { Area, AreaChart } from "recharts"
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { SourceState, SourceStatus } from "@/lib/sources/status"
 
@@ -54,6 +56,30 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
+const TREND_CONFIG = { n: { label: "Ofertas activas", color: "var(--chart-1)" } } satisfies ChartConfig
+
+/** Evolución de las ofertas activas de la fuente (foto diaria). Con menos de 3 días de datos no se muestra: no diría nada. */
+function Trend({ trend }: { trend: SourceStatus["trend"] }) {
+  if (trend.length < 3) return null
+  const first = trend[0]
+  const last = trend[trend.length - 1]
+  const delta = last.n - first.n
+  return (
+    <section className="flex flex-col gap-2" aria-label="Tendencia">
+      <h3 className="text-sm font-medium">Ofertas activas ({trend.length} días)</h3>
+      <ChartContainer config={TREND_CONFIG} className="h-16 w-full">
+        <AreaChart data={trend} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+          <Area dataKey="n" type="monotone" stroke="var(--color-n)" fill="var(--color-n)" fillOpacity={0.15} strokeWidth={1.5} isAnimationActive={false} />
+        </AreaChart>
+      </ChartContainer>
+      <p className="text-xs text-muted-foreground">
+        De {first.n} a {last.n} ({delta >= 0 ? "+" : ""}
+        {delta}) desde el {new Date(first.day + "T00:00:00").toLocaleDateString("es", { day: "numeric", month: "short" })}.
+      </p>
+    </section>
+  )
+}
+
 function Detail({ s, at, onBack, shell }: { s: SourceStatus; at: number; onBack: () => void; shell: Shell }) {
   const { Header, Title, Description } = shell
   const st = s.stats
@@ -90,6 +116,8 @@ function Detail({ s, at, onBack, shell }: { s: SourceStatus; at: number; onBack:
           <Stat label="Con salario publicado" value={`${st.salaryPct} %`} />
           <Stat label="Remotas" value={`${st.remotePct} %`} />
         </dl>
+
+        <Trend trend={s.trend} />
 
         {st.countries.length > 0 && (
           <section className="flex flex-col gap-2" aria-label="Países principales">

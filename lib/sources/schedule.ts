@@ -7,6 +7,7 @@ import { embedMissing } from "@/lib/jobs/embed"
 import { expireStale } from "./expire"
 import { effective, listCatalog, type CatalogRow } from "./catalog"
 import { acquireLock, releaseLock } from "./lock"
+import { snapshotSourceStats } from "./snapshots"
 import { PORTALS, REMOTE_SOURCES, syncAllCompanies, syncGetOnBoard, syncPortal, syncRemote } from "./sync"
 import type { SyncReport } from "./types"
 
@@ -131,6 +132,10 @@ export async function runDaily(db: Db, opts: DailyOptions = {}): Promise<DailySu
       summary.expired = await expireStale(db).catch(() => summary.expired)
       log(`Vencimiento: ${summary.expired.vencidas} por vigencia, ${summary.expired.remotas} remotas sin verse, ${summary.expired.portales} de portales muy antiguas`)
       summary.purgedEvents = await purgeOld(db, true).catch(() => 0)
+      // Foto diaria por fuente (idempotente: la última lectura del día queda como la foto); se conserva 400 días.
+      const snap = await snapshotSourceStats(db).catch(() => 0)
+      log(`Foto diaria: ${snap} fuentes`)
+      await db.execute(sql`delete from public.source_daily_stats where day < (now() at time zone 'utc')::date - 400`).catch(() => {})
       // El historial de lecturas que ve el público dura 30 días.
       await db.delete(syncRuns).where(lt(syncRuns.finishedAt, sql`now() - interval '30 days'`)).catch(() => {})
     }

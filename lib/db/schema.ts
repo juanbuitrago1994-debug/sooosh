@@ -198,3 +198,25 @@ export const sources = pgTable("sources", {
   createdAt: ts("created_at").notNull().defaultNow(),
   updatedAt: ts("updated_at").notNull().defaultNow(),
 })
+
+/** Foto diaria por fuente (tendencias y calidad); ver migración 0014. */
+export const sourceDailyStats = pgTable(
+  "source_daily_stats",
+  {
+    day: text("day").notNull(),
+    sourceKey: text("source_key").notNull(),
+    activeOffers: integer("active_offers").notNull().default(0),
+    techOffers: integer("tech_offers").notNull().default(0),
+    salaryOffers: integer("salary_offers").notNull().default(0),
+    remoteOffers: integer("remote_offers").notNull().default(0),
+    structuredOffers: integer("structured_offers").notNull().default(0),
+    avgAgeDays: text("avg_age_days"),
+    runs: integer("runs").notNull().default(0),
+    runsOk: integer("runs_ok").notNull().default(0),
+    fetched: integer("fetched").notNull().default(0),
+    added: integer("added").notNull().default(0),
+    closed: integer("closed").notNull().default(0),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [unique("source_daily_stats_pk").on(t.day, t.sourceKey)],
+)

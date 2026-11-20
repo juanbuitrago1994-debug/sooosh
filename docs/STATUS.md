@@ -716,3 +716,21 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 ### Para revisar por Juan
 1. `/admin/ofertas`: interruptor junto a cada fuente (pausa/reanuda; avisa con un toast). En `/ofertas` → Fuentes: una pausada aparece como «Pausada», y en su ficha se ve el texto de atribución.
 2. Siguiente aprobado: tabla `source_daily_stats` (foto diaria por fuente).
+
+## Foto diaria por fuente — tabla `source_daily_stats` (20-nov-2026)
+
+### Qué se hizo
+- **Tabla `source_daily_stats`** (migración `0014`, aplicada en Supabase; RLS activa, sin permisos para anónimos): una fila por día (UTC) y fuente con ofertas activas, de tecnología, con salario, remotas, **completas** (≥ 2 elementos entre requisitos, deseables y tareas), edad media en días y las lecturas del día (cuántas, cuántas con éxito, ofertas leídas, nuevas y cerradas). Sin datos personales; se conserva 400 días.
+- `lib/sources/snapshots.ts`: `snapshotSourceStats` (idempotente: cada corrida sobrescribe la fila del día; la última lectura queda como la foto) se ejecuta al final de la fase `fetch` de la sincronización (GitHub y Mac). `activeTrend` devuelve la evolución de 30 días.
+- Ficha pública de cada fuente («Fuentes»): una **gráfica de tendencia** de ofertas activas (shadcn Chart; aparece cuando hay ≥ 3 días de fotos) con «De X a Y (+Z) desde el …».
+
+### Qué se verificó
+- lint, tsc, build y 557 pruebas en verde (nueva `tests/source-snapshots.test.ts` sobre PGlite con una tabla `jobs` mínima: agrupa las empresas de los 7 sistemas en «companies», cuenta tecnología/salario/remotas/completas, ignora cerradas, toma las lecturas del día de `sync_runs`, no duplica al repetir y limita la ventana de la tendencia).
+- Foto real contra Supabase (7 fuentes), p. ej. Get on Board: 973 activas, 713 de tecnología, 897 completas, edad media 81 días; Himalayas: 366 activas, 275 completas, edad media 1,3 días.
+
+### Impacto en la app y la experiencia
+- Desde hoy se acumula historia: en unos días la ficha de cada fuente mostrará su tendencia, y el negocio podrá comparar calidad (frescura, % completas, % con salario) y rendimiento de cada fuente; siguiente paso posible: cruzar con eventos de abrir/postular (solo «Para todos», k ≥ 5).
+
+### Para revisar por Juan
+1. Reinicia `pnpm dev`. La gráfica de tendencia aparecerá en la ficha de las fuentes a partir del tercer día de fotos (hoy hay una); no hay nada nuevo que ver hasta entonces salvo que todo siga funcionando.
+2. Dato curioso a mirar: Get on Board solo publica salario en 1 de 973 ofertas; Chiletrabajos en 0 de 129.

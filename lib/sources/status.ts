@@ -4,6 +4,7 @@ import { jobs, syncRuns } from "@/lib/db/schema"
 import { FAMILIES } from "@/lib/jobs/classify"
 import { COUNTRIES } from "@/lib/jobs/geo"
 import { listCatalog } from "./catalog"
+import { activeTrend } from "./snapshots"
 import { syncHealth, TARGETS, type Health } from "./schedule"
 
 /**
@@ -44,6 +45,8 @@ export type SourceStatus = {
   /** texto de atribución que piden los términos de la fuente */
   attribution: string
   stats: SourceStats
+  /** ofertas activas por día (últimos 30 días, de la foto diaria) */
+  trend: { day: string; n: number }[]
   log: LogEntry[]
   /** solo para «Empresas»: ofertas activas por empresa */
   breakdown?: { name: string; offers: number }[]
@@ -103,6 +106,7 @@ const groupOf = (key: string | null): string | null => {
 export async function sourceStatuses(db: Db, now = new Date()): Promise<SourceStatus[]> {
   const active = eq(jobs.status, "activa")
   const catalog = await listCatalog(db)
+  const trend = await activeTrend(db).catch(() => new Map<string, { day: string; n: number }[]>())
   const [health, counts, countries, families, runs] = await Promise.all([
     syncHealth(db, now, catalog),
     db
@@ -176,6 +180,7 @@ export async function sourceStatuses(db: Db, now = new Date()): Promise<SourceSt
         countries: top(countries, t.id, countryName),
         families: top(families, t.id, familyName),
       },
+      trend: trend.get(t.id) ?? [],
       log,
       breakdown: t.id === "companies" ? companies.sort((x, y) => y.offers - x.offers).slice(0, 40) : undefined,
     }
