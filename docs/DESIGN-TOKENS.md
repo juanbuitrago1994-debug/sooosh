@@ -18,3 +18,6 @@ Uso: `components/jobs/job-search.tsx` (portada). El título de portada es la ún
 1. Cambia el valor en `lib/design-tokens.ts`.
 2. Actualiza la fila de esta tabla (misma cadena de clases).
 3. Corre `pnpm test`: la prueba falla si el código y este documento no coinciden.
+
+## Regla de las hojas con carga (20-nov-2026, pedido por Juan)
+En cualquier hoja (Dialog en escritorio o Drawer en móvil) que tarde en mostrar su contenido, **mientras carga solo aparece el cargador con sus frases (`LoadingState`), centrado en vertical y en horizontal respecto a la hoja; todo lo demás se oculta** (título, descripciones, botones). El título se conserva solo para lectores de pantalla (`sr-only`). Aplica hoy a **Fuentes** (mientras llega el estado) y a **Mi CV** (mientras se lee el archivo); toda hoja nueva con carga debe seguirla.

@@ -827,3 +827,6 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 ### Ajustes de la carga de la búsqueda (20-nov-2026)
 - **«Privacidad»** y el **distintivo «Ofertas encontradas»** ya no se ven mientras carga: aparecen solo cuando hay resultados a la vista, con movimiento + desenfoque (`BlurReveal`, `components/motion/blur-reveal.tsx`: sube desde abajo pasando de borroso a nítido; al ocultarse se difumina; mismas curvas y duraciones de `lib/motion`; sin animar con «reducir movimiento»).
 - **Cargador con frases** de la búsqueda: alineado a la izquierda, donde empieza la barra de búsqueda (mismo ancho de 42 rem), y más cerca del contenido de arriba (menos margen).
+
+### Hojas con carga: solo el cargador, centrado (20-nov-2026)
+- **Fuentes**: mientras llega el estado, la hoja muestra únicamente el cargador con sus frases, centrado en vertical y horizontal (sin título ni «Revisando…»; el título queda para lectores de pantalla). **Mi CV**: mientras se lee el archivo, igual (las frases son el avance real de la lectura, con el mismo cambio de movimiento y desenfoque cuando cambia la etapa). Regla documentada en `docs/DESIGN-TOKENS.md` y en la memoria del proyecto.

@@ -66,6 +66,7 @@ export function JobSearch() {
   const [platformTotal, setPlatformTotal] = useState<number | null | "error">(null)
   const [filtersTouched, setFiltersTouched] = useState(false)
   const [cvOpen, setCvOpen] = useState(false)
+  const [cvBusy, setCvBusy] = useState(false)
   const [settled, setSettled] = useState("") // clave de la última petición terminada: mientras no coincida con la actual, se está buscando
   const [mode, setMode] = useState("")
   const [area, setArea] = useState<Area>("tecnologia") // el buscador abre en Tecnología
@@ -364,11 +365,12 @@ export function JobSearch() {
       <ResponsiveSheet open={cvOpen} onOpenChange={setCvOpen}>
         {({ Header, Title }) => (
           <>
-            <Header className="text-left">
+            {/* Mientras se lee el CV, solo el cargador centrado: el título queda solo para lectores de pantalla. */}
+            <Header className={cvBusy ? "sr-only" : "text-left"}>
               <Title className="text-lg">Mi CV</Title>
             </Header>
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-              <SearchProfilePanel />
+              <SearchProfilePanel onBusyChange={setCvBusy} />
             </div>
           </>
         )}

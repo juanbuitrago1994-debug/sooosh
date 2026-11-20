@@ -185,11 +185,22 @@ function Detail({ s, at, onBack, shell }: { s: SourceStatus; at: number; onBack:
 
 function Grid({ data, failed, problems, onSelect, shell }: { data: { sources: SourceStatus[] } | null; failed: boolean; problems: number; onSelect: (id: string) => void; shell: Shell }) {
   const { Header, Title, Description } = shell
+  // Regla de las hojas: mientras carga, SOLO el cargador, centrado en vertical y en horizontal; todo lo demás se oculta (el título queda solo para lectores de pantalla).
+  if (data === null && !failed) {
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <Header className="sr-only">
+          <Title>Fuentes</Title>
+        </Header>
+        <LoadingState messages={SOURCES_MESSAGES} />
+      </div>
+    )
+  }
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <Header className="text-left">
         <Title className="text-lg">Fuentes</Title>
-        <Description>{data === null ? "Revisando…" : problems === 0 ? "Todas al día." : `${problems} ${problems === 1 ? "necesita" : "necesitan"} atención.`}</Description>
+        <Description>{problems === 0 ? "Todas al día." : `${problems} ${problems === 1 ? "necesita" : "necesitan"} atención.`}</Description>
       </Header>
       {/* Con muchas fuentes, la cuadrícula se desplaza dentro del panel. */}
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
@@ -197,9 +208,6 @@ function Grid({ data, failed, problems, onSelect, shell }: { data: { sources: So
           <p role="alert" className="text-sm text-destructive">
             No se pudo cargar el estado. Inténtalo de nuevo.
           </p>
-        )}
-        {data === null && !failed && (
-          <LoadingState className="py-16" messages={SOURCES_MESSAGES} />
         )}
         {data && (
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">

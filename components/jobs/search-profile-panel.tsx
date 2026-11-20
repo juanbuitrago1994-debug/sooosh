@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
+import { LoadingState } from "@/components/ai/loading-state"
 import { parseCvFileSafe } from "@/components/jobs/parse-cv-file"
 import { clearSearchProfile, setSearchProfile, useSearchProfile } from "@/lib/profile/search-profile"
 import { ACCEPT_LABEL, validateFile } from "@/lib/uploads"
@@ -12,7 +12,7 @@ import { ACCEPT_LABEL, validateFile } from "@/lib/uploads"
  * El CV con el que se compara cada oferta. Es una elección explícita: se sube aquí (o se marca en el flujo de adaptación) y las
  * adaptaciones que la persona haga a otros CV no lo cambian.
  */
-export function SearchProfilePanel() {
+export function SearchProfilePanel({ onBusyChange }: { onBusyChange?: (busy: boolean) => void } = {}) {
   const profile = useSearchProfile()
   const input = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
@@ -27,6 +27,7 @@ export function SearchProfilePanel() {
       return
     }
     setBusy(true)
+    onBusyChange?.(true)
     setError("")
     try {
       const r = await parseCvFileSafe(file, setStage)
@@ -36,6 +37,7 @@ export function SearchProfilePanel() {
       setError((e as Error).message)
     } finally {
       setBusy(false)
+      onBusyChange?.(false)
       setStage("")
       if (input.current) input.current.value = ""
     }
@@ -46,11 +48,8 @@ export function SearchProfilePanel() {
   )
 
   if (busy) {
-    return (
-      <p className="flex items-center gap-2 text-sm text-muted-foreground" role="status">
-        <Spinner /> {stage || "Leyendo tu CV…"}
-      </p>
-    )
+    // Solo el cargador, centrado en la hoja; las frases son el avance real de la lectura (o, mientras llega, unas genéricas).
+    return <LoadingState className="flex-1" messages={stage ? [stage] : ["Leyendo tu CV…", "Reconociendo tu experiencia…", "Preparando el encaje…"]} />
   }
 
   return (

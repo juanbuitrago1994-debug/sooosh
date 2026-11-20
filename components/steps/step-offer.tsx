@@ -1,11 +1,9 @@
 "use client"
 
-import { useRef, useState } from "react"
-import { AlertCircleIcon, ChevronDownIcon, LinkIcon } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { ChevronDownIcon, LinkIcon } from "lucide-react"
 import { useAiWork } from "@/components/ai/ai-work"
 import { StepHeader } from "@/components/wizard/step-header"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -114,6 +112,12 @@ export function StepOffer({ value, onChange }: { value: OfferState; onChange: (v
     }
   }
 
+  // El análisis automático al pegar necesita el texto ya actualizado: se llama tras el siguiente ciclo.
+  const analyzeRef = useRef(analyze)
+  useEffect(() => {
+    analyzeRef.current = analyze
+  })
+
   const o = analyzed ? value.offer : null
 
   return (
@@ -128,14 +132,12 @@ export function StepOffer({ value, onChange }: { value: OfferState; onChange: (v
       </Tabs>
 
       {error && (
-        <Alert variant="destructive">
-          <AlertCircleIcon />
-          <AlertTitle>No pudimos continuar</AlertTitle>
-          <AlertDescription className="whitespace-pre-line">{error}</AlertDescription>
-        </Alert>
+        <p role="alert" className="text-sm whitespace-pre-line text-destructive">
+          No pudimos continuar. {error}
+        </p>
       )}
       {error && tab === "url" && (
-        <Button variant="outline" className="h-11" onClick={() => setTab("text")}>
+        <Button variant="outline" className="self-start" onClick={() => setTab("text")}>
           Pegar texto
         </Button>
       )}
@@ -151,6 +153,11 @@ export function StepOffer({ value, onChange }: { value: OfferState; onChange: (v
               value={value.text}
               placeholder="Pega aquí la oferta completa: requisitos, funciones y lo que se valora."
               onChange={(e) => onChange({ ...value, text: e.target.value, cleaned: false, note: undefined })}
+              // Pegar es la acción habitual: si el texto pegado ya alcanza el mínimo, se analiza solo (un clic menos).
+              onPaste={(e) => {
+                const pasted = e.clipboardData.getData("text")
+                if (pasted.trim().length >= OFFER_MIN_CHARS && !analyzed) setTimeout(() => void analyzeRef.current(), 0)
+              }}
             />
             <FieldDescription>
               {len} caracteres{short ? ` · mínimo ${OFFER_MIN_CHARS} para continuar` : ""}
@@ -158,7 +165,7 @@ export function StepOffer({ value, onChange }: { value: OfferState; onChange: (v
             </FieldDescription>
           </Field>
           {!analyzed && (
-            <Button size="lg" className="h-11" disabled={short} onClick={analyze}>
+            <Button className="self-start" disabled={short} onClick={analyze}>
               Analizar oferta
             </Button>
           )}
@@ -167,10 +174,10 @@ export function StepOffer({ value, onChange }: { value: OfferState; onChange: (v
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="offer-url">Enlace de la oferta</FieldLabel>
-            <Input id="offer-url" type="url" inputMode="url" className="h-11" placeholder="https://empresa.com/empleos/123" value={url} onChange={(e) => setUrl(e.target.value)} />
+            <Input id="offer-url" type="url" inputMode="url" placeholder="https://empresa.com/empleos/123" value={url} onChange={(e) => setUrl(e.target.value)} />
             <FieldDescription>Algunos sitios (LinkedIn, por ejemplo) exigen iniciar sesión; en ese caso pega el texto.</FieldDescription>
           </Field>
-          <Button variant="outline" size="lg" className="h-11" disabled={!url.trim() || fetching} onClick={fetchUrl}>
+          <Button variant="outline" className="self-start" disabled={!url.trim() || fetching} onClick={fetchUrl}>
             {fetching ? <Spinner aria-label="Cargando" data-icon="inline-start" /> : <LinkIcon data-icon="inline-start" />}
             {fetching ? "Trayendo la oferta…" : "Traer oferta"}
           </Button>
@@ -178,14 +185,13 @@ export function StepOffer({ value, onChange }: { value: OfferState; onChange: (v
       )}
 
       {o && (
-        <Collapsible className="rounded-2xl bg-muted p-4">
+        <Collapsible>
           <div className="flex flex-col gap-1">
-            <p className="font-medium">{o.title}</p>
-            <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <p className="text-base font-medium">{o.title}</p>
+            <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {o.company && <span>{o.company}</span>}
-              <Badge variant="secondary">{LANG[o.language]}</Badge>
               <span>
-                {o.requirements.length} requisitos · {o.niceToHave.length} deseables
+                {LANG[o.language]} · {o.requirements.length} requisitos · {o.niceToHave.length} deseables
               </span>
             </p>
           </div>
