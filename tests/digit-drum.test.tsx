@@ -42,3 +42,15 @@ describe("intensidad del haz por tema", () => {
     expect(beamStrength("dark", 0.9)).toBe(0.9)
   })
 })
+
+describe("colores del haz por tema", () => {
+  it("fríos en oscuro (hielo → lila) y cálidos en claro (rosa → naranja), cada uno un par distinto", async () => {
+    const { beamColors, beamGradient } = await import("@/components/magic/beam-badge")
+    const { EFFECT_COLORS } = await import("@/lib/design-tokens")
+    expect(beamColors("dark")).toEqual([EFFECT_COLORS["beam-ice"], EFFECT_COLORS["beam-lilac"]])
+    expect(beamColors("light")).toEqual([EFFECT_COLORS["beam-rose"], EFFECT_COLORS["beam-orange"]])
+    expect(beamGradient("light")).toContain(EFFECT_COLORS["beam-rose"])
+    expect(beamGradient("light")).not.toContain(EFFECT_COLORS["beam-ice"])
+    expect(beamGradient("dark")).toContain(EFFECT_COLORS["beam-lilac"])
+  })
+})

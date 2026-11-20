@@ -874,3 +874,6 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Distintivo: haz con dos colores fríos fundidos (20-nov-2026)
 - Con el movimiento aprobado (arco de luz que recorre el borde por dentro, una vuelta cada 6 s), el haz ahora lleva **dos colores fríos que se funden entre sí a lo largo del arco**: la cola nace transparente, pasa por **azul hielo** (`beam-ice`) y termina en **lila pálido** (`beam-lilac`), con interpolación `in oklab` (sin cortes). Sigue siendo **un solo haz**, no dos luces. Colores como tokens documentados en `docs/DESIGN-TOKENS.md` (con prueba). Opacidad de los colores: 62 %.
+
+### Distintivo en el tema claro: fondo grisáceo y haz rosa → naranja (20-nov-2026)
+- **Tema claro**: el fondo del distintivo es un gris ligero (`muted`, 0,95 frente a 0,994 del fondo de la app) y el haz funde **rosa → naranja** (tokens `beam-rose` `oklch(0.76 0.15 8)` y `beam-orange` `oklch(0.78 0.15 55)`, documentados con prueba). **Tema oscuro**: sin cambios (fondo `card`, haz azul hielo → lila pálido). El movimiento no cambia. La prueba comprueba que cada tema usa su par de colores.

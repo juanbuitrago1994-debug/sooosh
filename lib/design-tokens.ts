@@ -17,6 +17,10 @@ export const EFFECT_COLORS = {
   "beam-ice": "oklch(0.82 0.09 235)",
   /** lila pálido: el color con el que termina (la cabeza) del haz */
   "beam-lilac": "oklch(0.78 0.11 305)",
+  /** rosa: el color con el que arranca el haz en el tema claro */
+  "beam-rose": "oklch(0.76 0.15 8)",
+  /** naranja: el color con el que termina (la cabeza) del haz en el tema claro */
+  "beam-orange": "oklch(0.78 0.15 55)",
 } as const
 
 export type TokenName = keyof typeof TOKENS
