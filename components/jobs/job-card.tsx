@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { ArrowRightIcon, BookmarkIcon, CheckIcon } from "lucide-react"
+import { NewBadge } from "@/components/jobs/new-badge"
 import { ApplyIcon } from "@/components/jobs/apply-icon"
 import { GlassPanel } from "@/components/glass-panel"
 import { Badge } from "@/components/ui/badge"
@@ -33,11 +34,16 @@ export function JobCard({ job, saved, onOpen }: { job: RankedJob; saved?: boolea
               </h2>
               {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
             </div>
-            {job.fit && (
-              <Badge variant={job.fit.match ? "default" : "secondary"} className="shrink-0">
-                {job.fit.match && <CheckIcon data-icon="inline-start" aria-hidden />}
-                {job.fit.match ? `Match ${job.fit.score} %` : `${job.fit.score} % encaje`}
-              </Badge>
+            {(job.fit || job.isNew) && (
+              <div className="flex shrink-0 flex-col items-end gap-1.5">
+                {job.isNew && <NewBadge />}
+                {job.fit && (
+                  <Badge variant={job.fit.match ? "default" : "secondary"}>
+                    {job.fit.match && <CheckIcon data-icon="inline-start" aria-hidden />}
+                    {job.fit.match ? `Match ${job.fit.score} %` : `${job.fit.score} % encaje`}
+                  </Badge>
+                )}
+              </div>
             )}
           </div>
 

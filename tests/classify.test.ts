@@ -90,7 +90,7 @@ describe("match = encaje de 75 % o más", () => {
   const cv = cvSchema.parse({ header: { fullName: "Ana" }, summary: "Diseñadora de producto.", experience: [{ company: "Acme", role: "Product Designer", startDate: "2020", bullets: ["Diseñé un design system en Figma usado por 4 equipos."] }], skills: [{ items: ["Figma", "Design systems"] }] })
   const job = (id: string, reqs: string[]): JobCard => ({
     id, title: "Cargo " + id, company: "X", locationText: null, country: null, regions: ["LATAM"], workMode: "remoto", remoteScope: null, employmentType: null, seniority: null, language: "es", skills: [], apply: null, salary: null,
-    sourceName: "manual", sourceUrl: "https://x/" + id, postedAt: null, createdAt: "2026-11-01T00:00:00Z", roleFamily: "diseno-digital", isTech: true,
+    sourceName: "manual", sourceUrl: "https://x/" + id, postedAt: null, isNew: false, createdAt: "2026-11-01T00:00:00Z", roleFamily: "diseno-digital", isTech: true,
     offer: offerSchema.parse({ title: "Cargo " + id, language: "es", requirements: reqs, tools: reqs }),
   })
   it("marca match solo cuando el encaje llega al mínimo, y es coherente con el puntaje", () => {

@@ -73,7 +73,7 @@ describe("salario solo con moneda explícita", () => {
 const offer = (extra: object = {}) => offerSchema.parse({ title: "Product Designer", company: "Acme", language: "es", requirements: ["Figma"], ...extra })
 const job = (over: Partial<Job> = {}): Job => ({
   id: "11111111-1111-4111-8111-111111111111", title: "Product Designer", company: "Acme", locationText: "Bogotá, Colombia", country: "CO", regions: ["CO", "LATAM"], workMode: null, remoteScope: null,
-  employmentType: null, seniority: null, language: "es", skills: [], apply: null, salary: null, roleFamily: null, isTech: true, sourceName: "linkedin", sourceUrl: "https://www.linkedin.com/jobs/view/1/", postedAt: null, createdAt: "2026-11-19T00:00:00Z", offer: offer(), ...over,
+  isNew: false, employmentType: null, seniority: null, language: "es", skills: [], apply: null, salary: null, roleFamily: null, isTech: true, sourceName: "linkedin", sourceUrl: "https://www.linkedin.com/jobs/view/1/", postedAt: null, createdAt: "2026-11-19T00:00:00Z", offer: offer(), ...over,
 })
 
 describe("datos que sí tenemos", () => {
@@ -137,5 +137,13 @@ describe("borrador con camino de postulación y salario", () => {
     const d = buildDraft({ offer: o, text: "Buscamos diseñador. Salario competitivo.", fallbackHash: "h" })
     expect(d.apply.method).toBe("desconocido")
     expect(d.salary).toBeUndefined()
+  })
+})
+
+describe("insignia «Nueva»", () => {
+  const rank = (isNew: boolean) => ({ ...job({ isNew }), fit: null }) as unknown as Parameters<typeof JobCard>[0]["job"]
+  it("la tarjeta la muestra solo si la oferta entró hace menos de 48 h (isNew)", () => {
+    expect(renderToStaticMarkup(<JobCard job={rank(true)} />)).toContain("Nueva")
+    expect(renderToStaticMarkup(<JobCard job={rank(false)} />)).not.toContain("Nueva")
   })
 })

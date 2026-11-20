@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeftIcon, BookmarkIcon, CheckIcon, LinkIcon } from "lucide-react"
 import { toast } from "sonner"
 import { ApplyIcon } from "@/components/jobs/apply-icon"
+import { NewBadge } from "@/components/jobs/new-badge"
 import { Logo } from "@/components/brand/logo"
 import { PrivacyLink } from "@/components/privacy/privacy-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -122,7 +123,8 @@ export function JobDetail({ job }: { job: JobCard }) {
         </div>
       </header>
 
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col items-start gap-1">
+        {job.isNew && <NewBadge />}
         <h1 className="text-lg font-medium">{job.title}</h1>
         {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
         {job.remoteScope && <p className="text-sm text-muted-foreground">{job.remoteScope}</p>}

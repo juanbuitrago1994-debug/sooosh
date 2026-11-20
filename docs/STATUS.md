@@ -611,3 +611,18 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 1. `! pnpm sync:install` para que el Mac lea Get on Board (y estructure con el LLM) cada 3 h.
 2. Mañana: pestaña Actions (corridas cada 3 h en verde) y `/admin/ofertas` → «Sincronización automática».
 3. Decidir si se autoriza `curl` para Get on Board y llevarlo a la nube.
+
+## Mejoras de diseño y experiencia — 1: insignia «Nueva» (20-nov-2026)
+
+### Qué se hizo
+- Get on Board ya corre en la nube: su adaptador reintenta una vez con `curl` (autorizado por Juan); la corrida de GitHub lo leyó con éxito.
+- Insignia **«Nueva»** con llama (`components/jobs/new-badge.tsx`) en la tarjeta y en la ficha de la oferta mientras haya entrado a Sooosh hace menos de 48 h. El servidor lo calcula en la base (`isNew`), no el navegador; la llama entra con un acercamiento de 300 ms solo si no se pidió reducir el movimiento.
+
+### Qué se verificó
+- lint, tsc, build y 536 pruebas en verde (incluye la de la tarjeta con y sin `isNew`).
+
+### Impacto en la app y la experiencia
+- Se ve de un vistazo qué ofertas son frescas. Hoy muchas llevarán la insignia porque la importación masiva ocurrió en las últimas 48 h; con el tiempo solo la tendrán las que entren en cada sincronización.
+
+### Para revisar por Juan
+1. Reinicia `pnpm dev`. En `/ofertas`: tarjetas con «🔥 Nueva» arriba a la derecha (junto al encaje) en claro/oscuro, escritorio y 375 px; y la insignia sobre el título en la ficha de una oferta reciente.

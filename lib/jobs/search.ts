@@ -28,6 +28,7 @@ export type JobCard = {
   sourceUrl: string
   postedAt: string | null
   createdAt: string
+  isNew: boolean
   roleFamily: string | null
   isTech: boolean
   offer: Offer
@@ -61,6 +62,8 @@ export const jobCols = {
   sourceUrl: jobs.sourceUrl,
   postedAt: jobs.postedAt,
   createdAt: jobs.createdAt,
+  /** entró a Sooosh hace menos de 48 h (se calcula en la base: así no depende del reloj del navegador) */
+  isNew: sql<boolean>`${jobs.createdAt} > now() - interval '48 hours'`,
   roleFamily: jobs.roleFamily,
   isTech: jobs.isTech,
   offer: jobs.offer,
