@@ -1,12 +1,15 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { ExternalLinkIcon, InfoIcon, Trash2Icon } from "lucide-react"
+import { ExternalLinkIcon, InfoIcon, SearchIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 import { Logo } from "@/components/brand/logo"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { LoadingState } from "@/components/ai/loading-state"
+import { ResponsiveSheet } from "@/components/jobs/responsive-sheet"
 import { SourcesAdmin } from "@/components/jobs/sources-admin"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -32,6 +35,9 @@ type Analysis = { draft: JobDraft; evidence?: FieldEvidence[]; existing: { id: s
 const TOKEN_KEY = "sooosh-admin-token"
 const MODE = { remoto: "Remoto", hibrido: "Híbrido", presencial: "Presencial" } as const
 const LEVEL: Record<string, string> = { practicante: "Practicante", junior: "Junior", "semi-senior": "Semi-senior", senior: "Senior", lead: "Líder", directivo: "Directivo" }
+
+/** Qué datos le faltan a una tarjeta guardada (para la lista y el filtro «Incompletas»). */
+const missing = (r: Row): string[] => [!r.company && "empresa", !r.locationText && !r.country && "ubicación", r.regions.length === 0 && "región"].filter((x): x is string => !!x)
 
 const readToken = () => {
   try {
@@ -59,6 +65,10 @@ export function JobsAdmin() {
   const [error, setError] = useState("")
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [confirmed, setConfirmed] = useState<ReadonlySet<FieldKey>>(new Set())
+  const [total, setTotal] = useState(0)
+  const [q, setQ] = useState("")
+  const [only, setOnly] = useState<"" | "incompletas" | "ocultas">("")
+  const abort = useRef<AbortController | null>(null)
 
   const api = useCallback(
     async (path: string, tok: string, init: RequestInit = {}) => {
@@ -73,9 +83,10 @@ export function JobsAdmin() {
   const sourcesApi = useCallback((path: string, init?: RequestInit) => api(path, token, init), [api, token])
 
   const load = useCallback(
-    async (tok: string) => {
-      const data = await api("/api/jobs", tok)
+    async (tok: string, query = "", filter = "") => {
+      const data = await api(`/api/jobs?${new URLSearchParams({ q: query, only: filter })}`, tok)
       setRows(data.jobs)
+      setTotal(data.total ?? data.jobs.length)
     },
     [api],
   )
@@ -109,6 +120,7 @@ export function JobsAdmin() {
       .then((data) => {
         if (!alive) return
         setRows(data.jobs)
+        setTotal(data.total ?? data.jobs.length)
         setToken(saved)
         setAuthed(true)
       })
@@ -119,18 +131,29 @@ export function JobsAdmin() {
   }, [api])
 
   const analyze = async () => {
+    abort.current?.abort()
+    const ctrl = new AbortController()
+    abort.current = ctrl
     setBusy(true)
     setError("")
     setAnalysis(null)
     setConfirmed(new Set())
     try {
       const body = tab === "url" ? { url: url.trim() } : { text, link: link.trim() || undefined }
-      setAnalysis(await api("/api/jobs/analyze", token, { method: "POST", body: JSON.stringify(body) }))
+      const result = await api("/api/jobs/analyze", token, { method: "POST", body: JSON.stringify(body), signal: ctrl.signal })
+      if (!ctrl.signal.aborted) setAnalysis(result)
     } catch (e) {
-      setError((e as Error).message)
+      if (!ctrl.signal.aborted) setError((e as Error).message)
     } finally {
-      setBusy(false)
+      if (!ctrl.signal.aborted) setBusy(false)
     }
+  }
+
+  /** Cierra la hoja: si el análisis seguía en curso, se cancela y su resultado se ignora. */
+  const discard = () => {
+    abort.current?.abort()
+    setBusy(false)
+    setAnalysis(null)
   }
 
   const save = async () => {
@@ -145,13 +168,20 @@ export function JobsAdmin() {
       setUrl("")
       setText("")
       setLink("")
-      await load(token)
+      await load(token, q, only)
     } catch (e) {
       setError((e as Error).message)
     } finally {
       setSaving(false)
     }
   }
+
+  // Buscador y filtro de la lista: consulta al servidor tras una breve pausa al escribir.
+  useEffect(() => {
+    if (!authed) return
+    const t = setTimeout(() => void load(token, q, only).catch((e) => toast.error((e as Error).message)), 250)
+    return () => clearTimeout(t)
+  }, [authed, token, q, only, load])
 
   const patch = (p: Partial<JobDraft>) => setAnalysis((a) => (a ? { ...a, draft: { ...a.draft, ...p } } : a))
   // El salario se edita completo (moneda y período incluidos); al guardar, si no tiene monto, se omite.
@@ -169,7 +199,7 @@ export function JobsAdmin() {
       await api(`/api/jobs/${r.id}`, token, { method: "PATCH", body: JSON.stringify({ status }) })
     } catch (e) {
       toast.error((e as Error).message)
-      await load(token)
+      await load(token, q, only)
     }
   }
 
@@ -183,33 +213,33 @@ export function JobsAdmin() {
     }
   }
 
+  // Misma cabecera que inicio y búsqueda: marca a la izquierda, acciones a la derecha, pegadas a los bordes.
   const header = (
-    <header className="flex items-center justify-between">
-      <p className="flex items-center gap-2 text-sm font-medium">
+    <header className="flex items-center justify-between px-4 py-3 sm:px-6">
+      <Link href="/" className="flex items-center gap-2 text-sm font-medium">
         <Logo className="size-5" />
         Sooosh · Ofertas
-      </p>
-      <Link href="/" className={buttonVariants({ variant: "ghost", size: "sm", className: "text-muted-foreground" })}>
-        Volver a la app
       </Link>
+      <div className="flex items-center">
+        <Link href="/ofertas" className={buttonVariants({ variant: "ghost", size: "sm", className: "text-muted-foreground" })}>
+          Volver a la app
+        </Link>
+        <ThemeToggle />
+      </div>
     </header>
   )
 
   if (!authed) {
     return (
-      <div className="mx-auto flex w-full max-w-md flex-col gap-8 px-4 py-8 sm:px-6">
+      <div className="flex min-h-dvh w-full flex-col">
         {header}
         <form
-          className="flex flex-col gap-4"
+          className="mx-auto flex w-full max-w-sm flex-col gap-4 px-4 py-16 sm:px-6"
           onSubmit={(e) => {
             e.preventDefault()
             void enter(typed.trim())
           }}
         >
-          <div className="flex flex-col gap-1">
-            <h1 className="text-lg font-medium">Administrar ofertas</h1>
-            <p className="text-sm text-muted-foreground">Escribe la clave de administrador (la variable ADMIN_TOKEN de tu archivo .env.local).</p>
-          </div>
           <Field>
             <FieldLabel htmlFor="admin-token">Clave de administrador</FieldLabel>
             <Input id="admin-token" type="password" autoComplete="off" value={typed} onChange={(e) => setTyped(e.target.value)} />
@@ -230,63 +260,66 @@ export function JobsAdmin() {
   const d = analysis?.draft
   const canAnalyze = tab === "url" ? url.trim().length > 8 : text.trim().length >= 200
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-10 px-4 py-8 sm:px-6">
+    <div className="flex min-h-dvh w-full flex-col">
       {header}
-
-      <section className="flex flex-col gap-4" aria-labelledby="nueva-oferta">
-        <div className="flex flex-col gap-1">
-          <h1 id="nueva-oferta" className="text-lg font-medium">
-            Cargar una oferta
-          </h1>
-          <p className="text-sm text-muted-foreground">Pega el enlace (LinkedIn, Indeed, la página de la empresa…) o el texto. Revisas la tarjeta y la guardas.</p>
-        </div>
-        <Tabs value={tab} onValueChange={(v) => setTab(v as "url" | "text")}>
-          <TabsList className="w-full">
-            <TabsTrigger value="url">Enlace</TabsTrigger>
-            <TabsTrigger value="text">Pegar texto</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        {tab === "url" ? (
-          <Field>
-            <FieldLabel htmlFor="job-url">Enlace de la oferta</FieldLabel>
-            <Input id="job-url" type="url" inputMode="url" placeholder="https://" value={url} onChange={(e) => setUrl(e.target.value)} />
-            <FieldDescription>Si el sitio pide iniciar sesión (LinkedIn suele hacerlo), el análisis fallará: usa «Pegar texto» y deja aquí el enlace.</FieldDescription>
-          </Field>
-        ) : (
-          <FieldGroup>
+      <main className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-4 py-6 sm:px-6">
+        <section className="flex flex-col gap-4" aria-label="Cargar una oferta">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as "url" | "text")}>
+            <TabsList className="w-full">
+              <TabsTrigger value="url">Enlace</TabsTrigger>
+              <TabsTrigger value="text">Pegar texto</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          {tab === "url" ? (
             <Field>
-              <FieldLabel htmlFor="job-text">Texto de la oferta</FieldLabel>
-              <Textarea id="job-text" rows={10} value={text} onChange={(e) => setText(e.target.value)} />
-              <FieldDescription>Mínimo 200 caracteres.</FieldDescription>
+              <FieldLabel htmlFor="job-url" className="sr-only">
+                Enlace de la oferta
+              </FieldLabel>
+              <Input id="job-url" type="url" inputMode="url" placeholder="Enlace de la oferta (LinkedIn, Indeed, sitio de la empresa…)" value={url} onChange={(e) => setUrl(e.target.value)} />
             </Field>
-            <Field>
-              <FieldLabel htmlFor="job-link">Enlace original (opcional)</FieldLabel>
-              <Input id="job-link" type="url" inputMode="url" placeholder="https://" value={link} onChange={(e) => setLink(e.target.value)} />
-              <FieldDescription>Es el botón «Postular» de la tarjeta y evita guardar la misma oferta dos veces.</FieldDescription>
-            </Field>
-          </FieldGroup>
-        )}
-        <Button className="self-start" onClick={() => void analyze()} disabled={!canAnalyze || busy}>
-          {busy ? (
-            <>
-              <Spinner data-icon="inline-start" /> Analizando con el modelo local…
-            </>
           ) : (
-            "Analizar oferta"
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="job-text" className="sr-only">
+                  Texto de la oferta
+                </FieldLabel>
+                <Textarea id="job-text" rows={10} placeholder="Pega aquí el texto de la oferta" value={text} onChange={(e) => setText(e.target.value)} />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="job-link" className="sr-only">
+                  Enlace original (opcional)
+                </FieldLabel>
+                <Input id="job-link" type="url" inputMode="url" placeholder="Enlace original (opcional): será el botón «Postular»" value={link} onChange={(e) => setLink(e.target.value)} />
+              </Field>
+            </FieldGroup>
           )}
-        </Button>
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
-      </section>
+          <Button className="self-start" onClick={() => void analyze()} disabled={!canAnalyze || busy}>
+            Analizar oferta
+          </Button>
+          {error && !analysis && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+        </section>
 
-      {analysis && d && (
-        <section className="flex flex-col gap-5" aria-labelledby="revisar-tarjeta">
-          <h2 id="revisar-tarjeta" className="text-lg font-medium">
-            Revisa la tarjeta
-          </h2>
+      <ResponsiveSheet open={busy || !!analysis} onOpenChange={(o) => !o && !saving && discard()}>
+        {({ Header, Title, Description }) =>
+          busy ? (
+            <>
+              <Header className="sr-only">
+                <Title>Analizando la oferta</Title>
+                <Description>Leyendo la oferta con el modelo local.</Description>
+              </Header>
+              <LoadingState className="flex-1" messages={["Leyendo la oferta…", "Separando cargo, requisitos y contacto…", "Verificando cada dato contra el texto…"]} />
+            </>
+          ) : analysis && d ? (
+            <>
+              <Header className="text-left">
+                <Title className="text-lg">Revisa la oferta</Title>
+                <Description className="sr-only">Revisa cada dato antes de guardar la tarjeta.</Description>
+              </Header>
+              <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
           {analysis.existing && (
             <p className="flex items-start gap-2 text-sm text-muted-foreground">
               <InfoIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
@@ -374,8 +407,7 @@ export function JobsAdmin() {
               <Field>
                 <FieldLabel htmlFor="d-scope">Restricción del puesto remoto</FieldLabel>
                 <Input id="d-scope" value={d.remoteScope ?? ""} onChange={(e) => patch({ remoteScope: e.target.value || undefined })} placeholder="Solo residentes en Colombia, GMT-5…" />
-                <FieldDescription>Tal como lo dice la oferta. Déjalo vacío si no hay restricción.</FieldDescription>
-              </Field>
+                </Field>
             )}
             <div className="grid gap-4 sm:grid-cols-2">
               <Field>
@@ -459,7 +491,6 @@ export function JobsAdmin() {
                   ))}
                 </NativeSelect>
               </div>
-              <FieldDescription>Sin monto no se muestra salario en la tarjeta.</FieldDescription>
             </Field>
             <Field>
               <FieldLabel id="d-regions">Regiones donde se puede postular</FieldLabel>
@@ -473,13 +504,10 @@ export function JobsAdmin() {
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
-              <FieldDescription>{d.regions.length ? d.regions.map((c) => (c === "TODAS" ? "Todas las regiones" : (REGION_OPTIONS.find((r) => r.code === c)?.name ?? c))).join(", ") : "Ninguna: la tarjeta no aparecerá al filtrar por región."}</FieldDescription>
+              {d.regions.length === 0 && <FieldDescription>Sin región, la tarjeta no aparece al filtrar por región.</FieldDescription>}
             </Field>
           </FieldGroup>
           <div className="flex flex-col gap-2 text-sm">
-            <p className="text-muted-foreground">
-              {d.offer.requirements.length} requisitos · {d.offer.niceToHave.length} deseables · {d.offer.responsibilities.length} responsabilidades · {d.language === "es" ? "en español" : d.language === "en" ? "en inglés" : "otro idioma"}
-            </p>
             {d.skills.length > 0 && (
               <ul className="flex flex-wrap gap-2" aria-label="Habilidades detectadas">
                 {d.skills.map((s) => (
@@ -494,31 +522,52 @@ export function JobsAdmin() {
               {d.sourceUrl.startsWith("texto:") ? " (texto pegado, sin enlace)" : ` · ${d.sourceUrl}`}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={() => void save()} disabled={saving || !d.title.trim() || d.titleSource === "inferido"}>
-              {saving ? <Spinner data-icon="inline-start" /> : null}
-              {analysis.existing ? "Actualizar tarjeta" : "Guardar tarjeta"}
-            </Button>
-            <Button variant="ghost" onClick={() => setAnalysis(null)} disabled={saving}>
-              Descartar
-            </Button>
-          </div>
-        </section>
-      )}
+              </div>
+              {error && (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => void save()} disabled={saving || !d.title.trim() || d.titleSource === "inferido"}>
+                  {saving ? <Spinner data-icon="inline-start" /> : null}
+                  {analysis.existing ? "Actualizar tarjeta" : "Guardar tarjeta"}
+                </Button>
+                <Button variant="ghost" onClick={discard} disabled={saving}>
+                  Descartar
+                </Button>
+              </div>
+            </>
+          ) : null
+        }
+      </ResponsiveSheet>
 
-      <section className="flex flex-col gap-3" aria-labelledby="guardadas">
-        <h2 id="guardadas" className="text-lg font-medium">
-          Tarjetas guardadas ({rows.length})
-        </h2>
-        {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Todavía no hay ofertas. Carga la primera arriba.</p>
-        ) : (
-          <ul className="flex flex-col divide-y">
+        <section className="flex flex-col gap-3" aria-labelledby="guardadas">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <h2 id="guardadas" className="text-lg font-medium">
+              Tarjetas
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                {rows.length < total ? `${rows.length} de ${total}` : total}
+              </span>
+            </h2>
+            <ToggleGroup value={[only || "todas"]} onValueChange={(v) => v[0] && setOnly(v[0] === "todas" ? "" : (v[0] as "incompletas" | "ocultas"))} variant="outline" size="sm" className="ml-auto">
+              <ToggleGroupItem value="todas">Todas</ToggleGroupItem>
+              <ToggleGroupItem value="incompletas">Incompletas</ToggleGroupItem>
+              <ToggleGroupItem value="ocultas">Ocultas</ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+          <div className="relative">
+            <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input type="search" aria-label="Buscar tarjetas por cargo o empresa" placeholder="Buscar por cargo o empresa" className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
+          {rows.length === 0 ? <p className="text-sm text-muted-foreground">Sin tarjetas.</p> : (
+          <ul className="flex flex-col divide-y divide-border/40">
             {rows.map((r) => (
               <li key={r.id} className="flex items-start gap-3 py-3">
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <p className="truncate text-sm font-medium">{r.title}</p>
                   <p className="truncate text-xs text-muted-foreground">{[r.company, r.locationText ?? r.country].filter(Boolean).join(" · ") || "Sin empresa ni ubicación"}</p>
+                  {missing(r).length > 0 && <p className="text-xs text-muted-foreground">Falta: {missing(r).join(", ")}</p>}
                   <ul className="flex flex-wrap gap-1.5" aria-label="Etiquetas">
                     {r.workMode && (
                       <li>
@@ -527,7 +576,7 @@ export function JobsAdmin() {
                     )}
                     {r.regions.map((x) => (
                       <li key={x}>
-                        <Badge variant="secondary">{x}</Badge>
+                        <Badge variant="secondary">{x === "TODAS" ? "Todas" : x}</Badge>
                       </li>
                     ))}
                     <li>
@@ -561,10 +610,11 @@ export function JobsAdmin() {
               </li>
             ))}
           </ul>
-        )}
-      </section>
+          )}
+        </section>
 
-      <SourcesAdmin api={sourcesApi} />
+        <SourcesAdmin api={sourcesApi} />
+      </main>
     </div>
   )
 }

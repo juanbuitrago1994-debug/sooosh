@@ -3,14 +3,18 @@ import { getDb } from "@/lib/db"
 import { requireAdmin } from "@/lib/jobs/admin"
 import { embedJob } from "@/lib/jobs/embed"
 import { addCompany, parseAtsUrl } from "@/lib/sources/companies"
-import { jobDraftSchema, listJobs, upsertJob } from "@/lib/jobs/store"
+import { countJobs, jobDraftSchema, listJobs, upsertJob, type JobListFilter } from "@/lib/jobs/store"
 
 /** Lista de tarjetas (todas, también ocultas y cerradas). Solo administrador. */
 export async function GET(request: Request) {
   const denied = requireAdmin(request)
   if (denied) return denied
   try {
-    return NextResponse.json({ jobs: await listJobs(getDb()) })
+    const p = new URL(request.url).searchParams
+    const only = p.get("only")
+    const filter: JobListFilter = { q: p.get("q")?.slice(0, 80) || undefined, only: only === "incompletas" || only === "ocultas" ? only : undefined }
+    const [list, total] = await Promise.all([listJobs(getDb(), filter), countJobs(getDb(), filter)])
+    return NextResponse.json({ jobs: list, total })
   } catch (e) {
     console.error("[jobs GET]", e)
     return NextResponse.json({ error: "No se pudo leer la base de datos de ofertas." }, { status: 502 })

@@ -1,4 +1,4 @@
-import { desc, eq, inArray } from "drizzle-orm"
+import { and, count, desc, eq, inArray, ne, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import type { Db } from "@/lib/db"
 import { jobs } from "@/lib/db/schema"
@@ -82,8 +82,26 @@ export async function findJobByUrl(db: Db, sourceUrl: string): Promise<{ id: str
   return r ?? null
 }
 
-/** Listado para el panel (todas las tarjetas, las más nuevas primero). No trae la oferta completa ni el embedding. */
-export async function listJobs(db: Db, opts: { status?: JobStatus[]; limit?: number } = {}) {
+export type JobListFilter = { status?: JobStatus[]; limit?: number; /** texto en el título o la empresa */ q?: string; /** incompletas: sin empresa, sin región o sin ubicación · ocultas: apagadas o cerradas */ only?: "incompletas" | "ocultas" }
+
+const listWhere = (o: JobListFilter) => {
+  const like = o.q?.trim() ? `%${o.q.trim().replace(/[\\%_]/g, (c) => `\\${c}`)}%` : undefined
+  return and(
+    o.status?.length ? inArray(jobs.status, o.status) : undefined,
+    like ? sql`public.f_unaccent(${jobs.title} || ' ' || coalesce(${jobs.company}, '')) ilike public.f_unaccent(${like})` : undefined,
+    o.only === "incompletas" ? or(sql`${jobs.company} is null`, sql`cardinality(${jobs.regions}) = 0`, sql`(${jobs.locationText} is null and ${jobs.country} is null)`) : undefined,
+    o.only === "ocultas" ? ne(jobs.status, "activa") : undefined,
+  )
+}
+
+/** Cuántas tarjetas cumplen el filtro (el listado trae solo las primeras). */
+export async function countJobs(db: Db, o: JobListFilter = {}): Promise<number> {
+  const [r] = await db.select({ n: count() }).from(jobs).where(listWhere(o))
+  return Number(r?.n ?? 0)
+}
+
+/** Listado para el panel (las más nuevas primero). No trae la oferta completa ni el embedding. */
+export async function listJobs(db: Db, opts: JobListFilter = {}) {
   const q = db
     .select({
       id: jobs.id,
@@ -99,9 +117,10 @@ export async function listJobs(db: Db, opts: { status?: JobStatus[]; limit?: num
       createdAt: jobs.createdAt,
     })
     .from(jobs)
+    .where(listWhere(opts))
     .orderBy(desc(jobs.createdAt))
     .limit(Math.min(opts.limit ?? 100, 200))
-  return opts.status?.length ? q.where(inArray(jobs.status, opts.status)) : q
+  return q
 }
 
 export async function setJobStatus(db: Db, id: string, status: JobStatus): Promise<boolean> {
