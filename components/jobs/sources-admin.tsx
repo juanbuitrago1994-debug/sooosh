@@ -31,6 +31,7 @@ export function SourcesAdmin({ api }: { api: Api }) {
   const [enrich, setEnrich] = useState<Enrich | null>(null)
   const [enrichReport, setEnrichReport] = useState<EnrichReport | null>(null)
   const [health, setHealth] = useState<Health[]>([])
+  const [queue, setQueue] = useState<{ pending: number; oldestHours: number | null; alert: boolean } | null>(null)
 
   const load = useCallback(async () => {
     const d = await api("/api/sources")
@@ -46,7 +47,11 @@ export function SourcesAdmin({ api }: { api: Api }) {
       .then((d) => alive && setEnrich(d as unknown as Enrich))
       .catch(() => {})
     api("/api/sources/health")
-      .then((d) => alive && setHealth(d.sources as Health[]))
+      .then((d) => {
+        if (!alive) return
+        setHealth(d.sources as Health[])
+        setQueue(d.queue as { pending: number; oldestHours: number | null; alert: boolean })
+      })
       .catch(() => {})
     return () => {
       alive = false
@@ -163,6 +168,11 @@ export function SourcesAdmin({ api }: { api: Api }) {
           <p className="text-xs text-muted-foreground">
             {health.some((h) => h.stale) ? `${health.filter((h) => h.stale).length} fuente(s) atrasada(s).` : "Todas las fuentes al día."} Última lectura con éxito de cada una:
           </p>
+          {queue && (
+            <p className={`text-xs ${queue.alert ? "text-destructive" : "text-muted-foreground"}`}>
+              Cola de IA: {queue.pending} pendientes{queue.oldestHours !== null ? ` · la más antigua hace ${queue.oldestHours} h` : ""}
+            </p>
+          )}
           <ul className="flex flex-col gap-1 text-sm">
             {health.map((h) => (
               <li key={h.id} className="flex items-center justify-between gap-3">

@@ -21,6 +21,7 @@ const log = (line) => {
 
 const { getDb } = await import("../lib/db/index.ts")
 const { runDaily, syncHealth, pendingVectors } = await import("../lib/sources/schedule.ts")
+const { queueDepth } = await import("../lib/enrich/queue.ts")
 try {
   if (process.argv.includes("--pending")) {
     // Para el workflow: imprime cuántas ofertas activas no tienen vector (0 = no hace falta instalar Ollama).
@@ -30,6 +31,8 @@ try {
   if (process.argv.includes("--check")) {
     const h = (await syncHealth(getDb()))
     for (const x of h) log(`${x.stale ? "✗ ATRASADA" : "✓"} ${x.label}: último éxito ${x.lastOkAt ?? "nunca"}${x.lastError ? ` · error: ${x.lastError}` : ""}`)
+    const q = await queueDepth(getDb())
+    log(`${q.alert ? "✗ AVISO" : "✓"} Cola de IA: ${q.pending} pendientes${q.oldestHours !== null ? `, la más antigua hace ${q.oldestHours} h` : ""}`)
     // Solo las fuentes clave hacen fallar la revisión (y con ello el aviso de GitHub): una remota caída no es una emergencia.
     process.exit(h.some((x) => x.stale && ["getonboard", "companies"].includes(x.id)) ? 1 : 0)
   }

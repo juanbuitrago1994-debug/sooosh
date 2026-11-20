@@ -93,9 +93,11 @@ export async function runDaily(db: Db, opts: DailyOptions = {}): Promise<DailySu
   const phases = opts.phases?.length ? opts.phases : ALL_PHASES
   const summary: DailySummary = { targets: [], expired: { vencidas: 0, remotas: 0, portales: 0 }, enriched: 0, embedded: 0, purgedEvents: 0, ms: 0 }
 
-  // Una sola corrida a la vez (GitHub Actions y el Mac comparten la base): si otra está en curso, esta se retira sin error.
+  // Una sola corrida de lectura a la vez (GitHub Actions y el Mac comparten la base): si otra está en curso, esta se retira sin error.
+  // La IA que estructura ofertas tiene su PROPIO candado: una tanda larga en el Mac no frena la lectura de fuentes en la nube.
   const holder = opts.holder ?? `run-${process.pid}-${Date.now()}`
-  if (!(await acquireLock(db, holder))) {
+  const needsMain = phases.includes("fetch") || phases.includes("vectors")
+  if (needsMain && !(await acquireLock(db, holder))) {
     log("Otra sincronización está en curso: esta corrida se retira.")
     return { ...summary, locked: true, ms: Date.now() - t0 }
   }
@@ -148,32 +150,42 @@ export async function runDaily(db: Db, opts: DailyOptions = {}): Promise<DailySu
       }
       log(`Vectores: ${summary.embedded} nuevos`)
     }
+  } finally {
+    if (needsMain) await releaseLock(db, holder).catch(() => {})
+  }
 
-    if (phases.includes("enrich")) {
-      // IA local con presupuesto de tiempo: rondas de 5 hasta agotarlo, hasta que no queden pendientes o Ollama no responda.
-      const deadline = Date.now() + (opts.enrichMinutes ?? 20) * 60_000
-      while (Date.now() < deadline) {
-        const r = await enrichPending(db, 5).catch(() => null)
-        if (!r || r.processed === 0) {
-          if (r?.stoppedBy) log(`IA local: se detuvo (${r.stoppedBy})`)
-          break
+  if (phases.includes("enrich")) {
+    const enrichHolder = `${holder}:enrich`
+    const enrichTtl = (opts.enrichMinutes ?? 20) + 30
+    if (!(await acquireLock(db, enrichHolder, enrichTtl, "sync-enrich"))) {
+      log("Ya hay otra tanda de IA en curso: se omite.")
+    } else {
+      try {
+        // IA local con presupuesto de tiempo: rondas de 5 hasta agotarlo, hasta que no queden pendientes o Ollama no responda.
+        const deadline = Date.now() + (opts.enrichMinutes ?? 20) * 60_000
+        while (Date.now() < deadline) {
+          const r = await enrichPending(db, 5).catch(() => null)
+          if (!r || r.processed === 0) {
+            if (r?.stoppedBy) log(`IA local: se detuvo (${r.stoppedBy})`)
+            break
+          }
+          summary.enriched += r.processed
+          if (r.stoppedBy) {
+            log(`IA local: se detuvo (${r.stoppedBy})`)
+            break
+          }
         }
-        summary.enriched += r.processed
-        if (r.stoppedBy) {
-          log(`IA local: se detuvo (${r.stoppedBy})`)
-          break
+        log(`IA local: ${summary.enriched} ofertas estructuradas`)
+        // Lo que cambió al estructurar necesita vector nuevo.
+        for (let i = 0; i < 10; i++) {
+          const r = await embedMissing(db, 120).catch(() => ({ done: 0, pending: 0 }))
+          summary.embedded += r.done
+          if (r.done === 0) break
         }
-      }
-      log(`IA local: ${summary.enriched} ofertas estructuradas`)
-      // Lo que cambió al estructurar necesita vector nuevo.
-      for (let i = 0; i < 10; i++) {
-        const r = await embedMissing(db, 120).catch(() => ({ done: 0, pending: 0 }))
-        summary.embedded += r.done
-        if (r.done === 0) break
+      } finally {
+        await releaseLock(db, enrichHolder, "sync-enrich").catch(() => {})
       }
     }
-  } finally {
-    await releaseLock(db, holder).catch(() => {})
   }
   summary.ms = Date.now() - t0
   return summary

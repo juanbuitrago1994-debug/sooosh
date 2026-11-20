@@ -51,12 +51,25 @@ export async function enrichStats(db: Db): Promise<EnrichStats> {
   return out
 }
 
-/** Las siguientes en la cola (las más antiguas primero; las que ya fallaron 3 veces no se reintentan). */
+/** Profundidad de la cola: cuántas esperan y cuántas horas lleva la más antigua. Aviso si pasan de 500 pendientes o 48 h. */
+export const QUEUE_ALERT = { pending: 500, hours: 48 } as const
+export async function queueDepth(db: Db): Promise<{ pending: number; oldestHours: number | null; alert: boolean }> {
+  const r = (await db.select({ n: sql<number>`count(*)::int`, oldest: sql<number | null>`extract(epoch from now() - min(${jobEnrichment.queuedAt})) / 3600` }).from(jobEnrichment).where(and(eq(jobEnrichment.status, "pendiente"), lt(jobEnrichment.attempts, 3))))[0]
+  const pending = Number(r?.n ?? 0)
+  const oldestHours = r?.oldest === null || r?.oldest === undefined ? null : Math.round(Number(r.oldest))
+  return { pending, oldestHours, alert: pending > QUEUE_ALERT.pending || (oldestHours ?? 0) > QUEUE_ALERT.hours }
+}
+
+/**
+ * Las siguientes en la cola, por prioridad: primero tecnología, luego Colombia y Argentina, luego lo más reciente (las que ya fallaron 3 veces no se
+ * reintentan). Así lo que más valor da a quien busca se estructura antes.
+ */
 export async function nextPending(db: Db, limit: number) {
   return db
     .select({ jobId: jobEnrichment.jobId, text: jobEnrichment.text, attempts: jobEnrichment.attempts })
     .from(jobEnrichment)
+    .innerJoin(jobs, eq(jobs.id, jobEnrichment.jobId))
     .where(and(eq(jobEnrichment.status, "pendiente"), lt(jobEnrichment.attempts, 3)))
-    .orderBy(jobEnrichment.queuedAt)
+    .orderBy(sql`${jobs.isTech} desc`, sql`case when ${jobs.country} in ('CO', 'AR') then 0 else 1 end`, sql`${jobEnrichment.queuedAt} desc`)
     .limit(limit)
 }
