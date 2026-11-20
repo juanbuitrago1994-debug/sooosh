@@ -8,6 +8,7 @@ import { Logo } from "@/components/brand/logo"
 import { BeamBadge } from "@/components/magic/beam-badge"
 import { DrumNumber } from "@/components/magic/digit-drum"
 import { LoadingState } from "@/components/ai/loading-state"
+import { BlurReveal } from "@/components/motion/blur-reveal"
 import { Rise } from "@/components/motion/rise"
 import { token } from "@/lib/design-tokens"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -241,7 +242,7 @@ export function JobSearch() {
 
       <main id="contenido" className="flex flex-1 flex-col">
         {/* Portada: título, subtítulo y buscador, bajados hacia el centro de la pantalla; las ofertas empiezan justo debajo y se ven desde el inicio. */}
-        <section className="flex flex-col items-center gap-8 px-4 pt-28 pb-10 text-center sm:px-6 sm:pt-40">
+        <section className="flex flex-col items-center gap-8 px-4 pt-28 pb-6 text-center sm:px-6 sm:pt-40">
           <Rise className={token("hero-stack")}>
             <h1 className={token("hero-title")}>Tu próximo trabajo, más cerca</h1>
             <p className={`max-w-xl ${token("hero-subtitle")}`}>Juntamos ofertas de muchas empresas y portales en un solo lugar, las actualizamos varias veces al día y te mostramos cómo postular a cada una.</p>
@@ -294,7 +295,9 @@ export function JobSearch() {
 
         <section aria-label="Resultados" aria-live="polite" aria-busy={loading} className={`flex flex-col transition-opacity duration-150 ${loading && jobs ? "opacity-60" : "opacity-100"}`}>
           {jobs === null && !error ? (
-            <LoadingState className="py-20" messages={SEARCH_MESSAGES} />
+            <div className="mx-auto w-full max-w-2xl">
+              <LoadingState className="justify-start py-2" messages={SEARCH_MESSAGES} />
+            </div>
           ) : jobs && jobs.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">Sin resultados. Prueba otras palabras o ajusta los filtros.</p>
           ) : (
@@ -316,23 +319,24 @@ export function JobSearch() {
           )}
         </section>
 
-        <footer className="flex justify-center pt-2">
+        {/* «Privacidad» y el distintivo aparecen solo cuando ya hay resultados a la vista. */}
+        <BlurReveal show={jobs !== null} className="flex justify-center pt-2">
           <PrivacyLink />
-        </footer>
+        </BlurReveal>
         </div>
       </main>
 
       {/* Distintivo inferior: cuántas ofertas cumplen lo que se ve ahora (cambia con cada búsqueda o filtro). */}
-      {shown !== null && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-6 z-20 flex justify-center px-4" role="status" aria-live="polite">
+      <BlurReveal show={shown !== null && jobs !== null} className="pointer-events-none fixed inset-x-0 bottom-6 z-20 flex justify-center px-4">
+        <div role="status" aria-live="polite">
           <BeamBadge>
             <span className="flex items-center gap-1.5 whitespace-nowrap">
-              <DrumNumber value={shown} className="font-medium" />
+              <DrumNumber value={shown ?? 0} className="font-medium" />
               <span className="text-muted-foreground">{shown === 1 ? "Oferta encontrada" : "Ofertas encontradas"}</span>
             </span>
           </BeamBadge>
         </div>
-      )}
+      </BlurReveal>
 
       {region !== null && (
         <SearchFiltersSheet

@@ -823,3 +823,7 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Cargador y frases en línea (20-nov-2026)
 - El cargador y su frase van **siempre en la misma línea** (el punto a la izquierda y la frase a su derecha, centrados verticalmente), en escritorio y en móvil. La frase tiene un ancho fijo (16 rem) alineada a la izquierda para que el conjunto no se mueva cuando cambia la frase.
+
+### Ajustes de la carga de la búsqueda (20-nov-2026)
+- **«Privacidad»** y el **distintivo «Ofertas encontradas»** ya no se ven mientras carga: aparecen solo cuando hay resultados a la vista, con movimiento + desenfoque (`BlurReveal`, `components/motion/blur-reveal.tsx`: sube desde abajo pasando de borroso a nítido; al ocultarse se difumina; mismas curvas y duraciones de `lib/motion`; sin animar con «reducir movimiento»).
+- **Cargador con frases** de la búsqueda: alineado a la izquierda, donde empieza la barra de búsqueda (mismo ancho de 42 rem), y más cerca del contenido de arriba (menos margen).
