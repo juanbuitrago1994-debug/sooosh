@@ -37,7 +37,8 @@ export type JobCard = {
 /** `tecnologia` = solo cargos de tecnología (desarrollo, datos, diseño digital, producto, infraestructura…); `todas` = sin filtro. */
 export type Area = "tecnologia" | "todas"
 export type SearchParams = { region: string; q?: string; mode?: WorkMode; area?: Area; limit?: number; embedding?: number[]; /** vector del CV: sin texto de búsqueda, trae primero las ofertas más cercanas a la persona */ profileEmbedding?: number[] }
-export type SearchResult = { jobs: JobCard[]; semantic: boolean }
+/** `total` = cuántas ofertas activas cumplen los filtros y el texto (no solo las de la página): es el número del distintivo «Ofertas encontradas». */
+export type SearchResult = { jobs: JobCard[]; semantic: boolean; total: number }
 
 /** Distancia coseno máxima para que un resultado semántico cuente como relacionado (bge-m3). Calibrado con 5 ofertas y 12 consultas (docs/BENCHMARKS.md): lo relevante queda en 0,39–0,52 y lo que no tiene relación en ≥ 0,57. Reajustar con ofertas reales. */
 export const MAX_SEMANTIC_DISTANCE = 0.54
@@ -90,6 +91,8 @@ const base = (p: SearchParams) =>
     p.area === "tecnologia" ? eq(jobs.isTech, true) : undefined,
   )
 
+const countWhere = async (db: Db, where: SQL | undefined): Promise<number> => (await db.select({ n: sql<number>`count(*)::int` }).from(jobs).where(where))[0]?.n ?? 0
+
 /** Columna generada `jobs.search` (tsvector): vive solo en la base, no en el esquema tipado. */
 const SEARCH = sql.raw("jobs.search")
 
@@ -116,19 +119,25 @@ export async function searchJobs(db: Db, p: SearchParams): Promise<SearchResult>
   const q = p.q?.trim().slice(0, 120)
   if (!q) {
     const byProfile = p.profileEmbedding?.length ? sql`${jobs.embedding} <=> ${sql`${JSON.stringify(p.profileEmbedding)}::extensions.vector`} asc nulls last` : null
-    const rows = await db.select(jobCols).from(jobs).where(base(p)).orderBy(byProfile ?? sql`coalesce(${jobs.postedAt}, ${jobs.createdAt}) desc`).limit(limit)
-    return { jobs: rows.map(toCard), semantic: false }
+    const [rows, total] = await Promise.all([
+      db.select(jobCols).from(jobs).where(base(p)).orderBy(byProfile ?? sql`coalesce(${jobs.postedAt}, ${jobs.createdAt}) desc`).limit(limit),
+      countWhere(db, base(p)),
+    ])
+    return { jobs: rows.map(toCard), semantic: false, total }
   }
   // Texto: palabras (sin tildes, con raíces en español) o fragmento del título/empresa («dise» encuentra «Diseñador»).
   const tsq = sql`websearch_to_tsquery('spanish', ${unaccent(q)})`
   const like = `%${q.replace(/[\\%_]/g, "\\$&")}%`
   const textWhere = or(sql`${SEARCH} @@ ${tsq}`, sql`${unaccent(sql`${jobs.title} || ' ' || coalesce(${jobs.company}, '')`)} ilike ${unaccent(like)}`)
-  const lexical = await db
-    .select(jobCols)
-    .from(jobs)
-    .where(and(base(p), textWhere))
-    .orderBy(sql`ts_rank(${SEARCH}, ${tsq}) desc`, desc(jobs.createdAt))
-    .limit(limit)
+  const [lexical, lexicalTotal] = await Promise.all([
+    db
+      .select(jobCols)
+      .from(jobs)
+      .where(and(base(p), textWhere))
+      .orderBy(sql`ts_rank(${SEARCH}, ${tsq}) desc`, desc(jobs.createdAt))
+      .limit(limit),
+    countWhere(db, and(base(p), textWhere)),
+  ])
   let semantic: typeof lexical = []
   if (p.embedding?.length) {
     const vec = sql`${JSON.stringify(p.embedding)}::extensions.vector`
@@ -140,7 +149,8 @@ export async function searchJobs(db: Db, p: SearchParams): Promise<SearchResult>
       .limit(limit)
   }
   const merged = fuse([lexical, semantic]).slice(0, limit)
-  return { jobs: merged.map(toCard), semantic: !!p.embedding?.length }
+  // El conteo es el del texto; si el significado trajo más de lo que el texto encontró, no se muestra un total menor que lo que se ve.
+  return { jobs: merged.map(toCard), semantic: !!p.embedding?.length, total: Math.max(lexicalTotal, merged.length) }
 }
 
 /** Varias ofertas activas por id (las guardadas de una persona), en el orden pedido. */

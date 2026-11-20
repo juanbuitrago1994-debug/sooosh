@@ -762,3 +762,18 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Para revisar por Juan
 1. Reinicia `pnpm dev`. Ve de inicio a `/ofertas` (ícono de buscar) y de vuelta (logo): los elementos deben subir suave y escalonados, sin saltos; la cabecera no se mueve. Con «reducir movimiento» activado no debe moverse nada.
+
+## Portada del buscador y distintivo «Ofertas encontradas» (20-nov-2026)
+
+### Qué se hizo
+- **Buscador 20 % más grande** (definido): escritorio hasta `max-w-2xl` (672 px, antes 576) y altura `h-13` (52 px, antes 44), texto `text-base`, ícono `size-5`; móvil: todo el ancho útil (`px-4`) con la misma altura de 52 px.
+- **Título y subtítulo** sobre la barra («Tu próximo trabajo, más cerca» / «Juntamos ofertas de muchas empresas y portales en un solo lugar, las actualizamos varias veces al día y te mostramos cómo postular a cada una.»): `text-3xl` en móvil y `text-4xl` desde `sm`, peso 500 (excepción tipográfica anotada en `CLAUDE.md`). El bloque título + subtítulo + barra queda **centrado verticalmente en la primera pantalla** (cabecera superpuesta arriba); los resultados quedan debajo. Al escribir la primera letra la página sube suave hasta dejar la barra arriba con los resultados a la vista.
+- **Distintivo inferior «N Ofertas encontradas»**: fijo, centrado y cerca del borde inferior; el número es el **total de ofertas que cumplen lo que se ve** (filtros + texto), no solo las 30 de la página (el conteo sale de la base: `total` en la API). Ya no se muestra el conteo dentro de la lista. Efectos (`components/magic/*`, excepción documentada en `CLAUDE.md`): **haz de luz** que recorre el borde una vuelta cada 6 s con el color principal del tema (`BeamBadge`) y **dígitos que giran en tambor 3D con un rebote corto** al cambiar (`DrumNumber`, «number pop-in» de transitions.dev: solo gira el dígito que cambia). Con «reducir movimiento» queda el borde tenue y el número cambia sin animar; el lector de pantalla oye el número completo una vez. Miles con punto (1.450).
+- Totales reales de hoy contra Supabase: tecnología en Latinoamérica 1.511; todas las áreas 2.625; solo híbrido 536; «diseñador» 10; sin coincidencias 0.
+
+### Qué se verificó
+- lint, tsc, build y 562 pruebas en verde (nuevas: formato de miles, número anunciado una vez, el total viaja en la API).
+
+### Para revisar por Juan
+1. Reinicia `pnpm dev`. `/ofertas` en escritorio y 375 px: título, subtítulo y barra centrados en la pantalla; el distintivo inferior con el haz; al escribir, el número gira dígito a dígito; cambia un filtro y mira el número; claro/oscuro.
+2. Decisión pendiente: hoy en el estado inicial el número es el de las ofertas que cumplen los filtros por defecto (Tecnología + tu región: 1.511 en LATAM). Si prefieres el total de TODA la plataforma (2.625+) hasta que alguien busque o filtre, es un cambio pequeño.
