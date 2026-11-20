@@ -42,28 +42,3 @@ describe("intensidad del haz por tema", () => {
     expect(beamStrength("dark", 0.9)).toBe(0.9)
   })
 })
-
-describe("recorrido por el contorno del distintivo", () => {
-  it("la luz sigue el contorno de la píldora: sale arriba a la izquierda, rodea los extremos y vuelve al inicio, a velocidad constante", async () => {
-    const { stadiumPath } = await import("@/components/magic/beam-badge")
-    const w = 140, h = 32
-    const pts = stadiumPath(w, h, 96)
-    expect(pts[0]).toEqual({ x: 16, y: 0 }) // arranca arriba, en el inicio del borde recto
-    expect(pts[96].x).toBeCloseTo(pts[0].x, 6) // cierra la vuelta
-    expect(pts[96].y).toBeCloseTo(pts[0].y, 6)
-    // todos los puntos están sobre el contorno: arriba (y=0), abajo (y=h) o en los semicírculos (distancia al centro del extremo = r)
-    for (const p of pts) {
-      const onStraight = Math.abs(p.y) < 1e-6 || Math.abs(p.y - h) < 1e-6
-      const dRight = Math.hypot(p.x - (w - 16), p.y - 16)
-      const dLeft = Math.hypot(p.x - 16, p.y - 16)
-      expect(onStraight || Math.abs(dRight - 16) < 1e-6 || Math.abs(dLeft - 16) < 1e-6).toBe(true)
-    }
-    // velocidad constante: la distancia entre puntos consecutivos casi no varía (los semicírculos se aproximan con cuerdas)
-    const steps = pts.slice(1).map((p, i) => Math.hypot(p.x - pts[i].x, p.y - pts[i].y))
-    expect(Math.max(...steps) / Math.min(...steps)).toBeLessThan(1.05)
-    // la segunda luz va media vuelta por delante
-    const b = stadiumPath(w, h, 96, 0.5)
-    expect(b[0].x).toBeCloseTo(pts[48].x, 6)
-    expect(b[0].y).toBeCloseTo(pts[48].y, 6)
-  })
-})

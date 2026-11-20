@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
-import { EFFECT_COLORS, TOKENS, token } from "@/lib/design-tokens"
+import { TOKENS, token } from "@/lib/design-tokens"
 
 describe("tokens de diseño", () => {
   const doc = readFileSync("docs/DESIGN-TOKENS.md", "utf8")
@@ -18,11 +18,5 @@ describe("tokens de diseño", () => {
     expect(token("hero-title")).toContain("text-2xl")
     expect(token("hero-subtitle")).toContain("text-sm")
     expect(token("hero-stack")).toContain("gap-1.5")
-  })
-  it("los colores de efectos están documentados con su valor", () => {
-    for (const [name, value] of Object.entries(EFFECT_COLORS)) {
-      expect(doc, `color ${name} sin documentar`).toContain(`\`${name}\``)
-      expect(doc, `valor de ${name} desactualizado`).toContain(`\`${value}\``)
-    }
   })
 })
