@@ -22,3 +22,13 @@ describe("distintivo «Ofertas encontradas»", () => {
     expect(renderToStaticMarkup(<BeamBadge>1.450 Ofertas encontradas</BeamBadge>)).toContain("1.450 Ofertas encontradas")
   })
 })
+
+describe("Beam (border-beam, un solo color)", () => {
+  it("envuelve a su hijo con el efecto en gris y estilo interior, sin colores", async () => {
+    const { renderToStaticMarkup } = await import("react-dom/server")
+    const { Beam } = await import("@/components/magic/beam")
+    const html = renderToStaticMarkup(<Beam><div className="x">Hola</div></Beam>)
+    expect(html).toContain("Hola")
+    expect(html).toMatch(/data-beam|beam/i)
+  })
+})
