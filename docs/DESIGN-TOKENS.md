@@ -21,3 +21,11 @@ Uso: `components/jobs/job-search.tsx` (portada). El título de portada es la ún
 
 ## Regla de las hojas con carga (20-nov-2026, pedido por Juan)
 En cualquier hoja (Dialog en escritorio o Drawer en móvil) que tarde en mostrar su contenido, **mientras carga solo aparece el cargador con sus frases (`LoadingState`), centrado en vertical y en horizontal respecto a la hoja; todo lo demás se oculta** (título, descripciones, botones). El título se conserva solo para lectores de pantalla (`sr-only`). Aplica hoy a **Fuentes** (mientras llega el estado) y a **Mi CV** (mientras se lee el archivo); toda hoja nueva con carga debe seguirla.
+
+## Colores de efectos (20-nov-2026, pedidos por Juan)
+Solo para `components/magic/*` (excepción documentada en `CLAUDE.md`); el resto de la app usa únicamente los colores del tema. Definidos en `lib/design-tokens.ts` (`EFFECT_COLORS`).
+
+| Token | Valor | Uso |
+|---|---|---|
+| `beam-ice` | `oklch(0.82 0.09 235)` | azul hielo: una de las dos luces que recorren el borde del distintivo «Ofertas encontradas» |
+| `beam-lilac` | `oklch(0.78 0.11 305)` | lila pálido: la otra luz, desfasada media vuelta |
