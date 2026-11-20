@@ -596,3 +596,18 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 ### Para revisar por Juan
 1. Decidir cómo publicar el historial (ver el informe): recomendado empezar con historial limpio.
 2. Pasos en GitHub (crear repo público, secreto `DATABASE_URL`, activar Actions) — en el informe.
+
+## Plan de sincronización automática — Fase 3: primera verificación en GitHub (20-nov-2026)
+
+### Qué se hizo
+- Repositorio público publicado (historial limpio), secreto `DATABASE_URL` y workflow `Sincronizar ofertas` (cron `17 */3 * * *`). Cuatro corridas manuales; la cuarta terminó en verde.
+- Hallazgos de las corridas reales: (1) un módulo mal armado en el código comiteado (función dentro de un arreglo) rompía la carga: corregido; (2) los 403 de Ashby/Workable y el 429 de Himalayas eran de ráfaga: se añadió lectura cortés (reintento con espera, pausas de 1,2 s entre empresas y 3 s en Himalayas) y Himalayas trajo 147 ofertas nuevas; (3) **Get on Board responde 403 al cliente de Node desde GitHub** (con `curl` y la misma identificación, 200): no se rodea el bloqueo, esa fuente se lee desde el Mac (`runner: "home"`, launchd cada 3 h).
+- Medido en GitHub: leer fuentes 145–593 s; vectores 147–237 en 164–176 s (Ollama + bge-m3 en el runner).
+
+### Qué falta verificar
+- 24 y 48 h de corridas programadas sin intervención (`sync_runs` y la pestaña Actions). La Fase 3 no se da por cerrada hasta entonces.
+
+### Para revisar por Juan
+1. `! pnpm sync:install` para que el Mac lea Get on Board (y estructure con el LLM) cada 3 h.
+2. Mañana: pestaña Actions (corridas cada 3 h en verde) y `/admin/ofertas` → «Sincronización automática».
+3. Decidir si se autoriza `curl` para Get on Board y llevarlo a la nube.
