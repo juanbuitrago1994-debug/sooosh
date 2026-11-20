@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { ConsentBanner } from "@/components/privacy/consent-banner"
 import { PrivacyLink } from "@/components/privacy/privacy-dialog"
 import { JobCard } from "@/components/jobs/job-card"
+import { SourcesStatus } from "@/components/jobs/sources-status"
 import { SavedFiltersBar } from "@/components/jobs/saved-filters-bar"
 import { SearchProfilePanel } from "@/components/jobs/search-profile-panel"
 import { markFirstSearch, shouldAsk, track, useConsent } from "@/lib/events/consent"
@@ -196,7 +197,10 @@ export function JobSearch() {
           <Logo className="size-5" />
           Sooosh
         </Link>
-        <ThemeToggle />
+        <div className="flex items-center">
+          <SourcesStatus />
+          <ThemeToggle />
+        </div>
       </header>
 
       <div className="flex flex-col gap-1">

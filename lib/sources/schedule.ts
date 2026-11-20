@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, sql } from "drizzle-orm"
+import { and, desc, eq, isNull, lt, sql } from "drizzle-orm"
 import type { Db } from "@/lib/db"
 import { jobs, syncRuns } from "@/lib/db/schema"
 import { enrichPending } from "@/lib/enrich/worker"
@@ -119,6 +119,8 @@ export async function runDaily(db: Db, opts: DailyOptions = {}): Promise<DailySu
       summary.expired = await expireStale(db).catch(() => summary.expired)
       log(`Vencimiento: ${summary.expired.vencidas} por vigencia, ${summary.expired.remotas} remotas sin verse, ${summary.expired.portales} de portales muy antiguas`)
       summary.purgedEvents = await purgeOld(db, true).catch(() => 0)
+      // El historial de lecturas que ve el público dura 30 días.
+      await db.delete(syncRuns).where(lt(syncRuns.finishedAt, sql`now() - interval '30 days'`)).catch(() => {})
     }
 
     if (phases.includes("vectors")) {

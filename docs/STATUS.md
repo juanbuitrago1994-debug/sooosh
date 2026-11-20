@@ -658,3 +658,20 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Para revisar por Juan
 1. Reinicia `pnpm dev`. En `/ofertas`: cambia región/área/modalidad/orden → «Guardar estos filtros» (toast). Cambia algo y pulsa «Aplicar mis filtros» (vuelve a lo guardado; el botón queda «Mis filtros aplicados»). Activa «Aplicar mis filtros al abrir», cambia otros filtros, recarga: debe abrir con los guardados. Prueba «Quitar». Mira claro/oscuro, escritorio y 375 px.
+
+## Mejoras de diseño y experiencia — 4: estado de las fuentes (20-nov-2026)
+
+### Qué se hizo
+- Botón **«Fuentes»** en la cabecera del buscador que abre un panel (Drawer de shadcn; lateral en pantallas anchas, desde abajo en el móvil) con las 7 fuentes agrupadas: Get on Board, Empresas con tablero público, Chiletrabajos, Trabajando.cl, Remotive, Jobicy y Himalayas. Cada fila muestra su estado (Al día / Con incidencias / Atrasada / En pausa / Sin lecturas), el tipo y cuántas ofertas activas aporta.
+- Al tocar una fuente: estado, ofertas activas, última lectura con éxito, **historial de 30 días** («Extrajo 16 ofertas · 3 nuevas, 13 actualizadas» con fecha y hora; o «La fuente bloqueó la lectura»), y para «Empresas» el desglose por empresa.
+- `GET /api/sources/status` (público, cacheable 60 s; `lib/sources/status.ts`): **los errores técnicos nunca se muestran** (se traducen a mensajes simples). El historial se purga a los 30 días en cada corrida de sincronización.
+- Contenedor: GlassPanel (5.º uso aprobado) aplicado al panel; entrada de las filas con fundido de 150 ms y cambio lista↔detalle con deslizamiento de 200 ms (sin movimiento si se pidió reducirlo).
+
+### Qué se verificó
+- lint, tsc, build y 547 pruebas en verde (nueva `tests/sources-status.test.tsx`: traducción de errores —incluido que una cadena con contraseña no se filtra—, frases del historial, los 5 estados y el botón). Lectura real contra Supabase: 7 fuentes, todas «Al día», con 10 a 973 ofertas activas.
+
+### Impacto en la app y la experiencia
+- Transparencia: la persona ve de dónde salen las ofertas y si alguna fuente falla (sin tecnicismos), y sabe que las ofertas ya traídas siguen mientras no venzan.
+
+### Para revisar por Juan
+1. Reinicia `pnpm dev`. En `/ofertas` pulsa **Fuentes** (arriba a la derecha): lista de fuentes con estado y conteos; toca una → detalle e historial; vuelve con la flecha; cierra con deslizar/Escape. Mira claro/oscuro, escritorio (panel derecho) y 375 px (desde abajo).
