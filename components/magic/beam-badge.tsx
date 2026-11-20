@@ -6,16 +6,27 @@ import { MOTION } from "@/lib/motion"
 
 /** Relleno horizontal del distintivo (px-4 = 16 px por lado): sirve para fijar su ancho a lo que mide el contenido. */
 const CHROME = 2 * 16
+/** Ciclo del destello (s): cruza el distintivo en el último 28 % y descansa el resto. Ancho de la banda y margen para que entre y salga por completo. */
+const CYCLE = 4.2
+const SWEEP_SHARE = 0.28
+const BAND = 34
+const MARGIN = 48
 
-/** Un solo color: el principal del tema (blanco en oscuro) a poca opacidad, con la cola del haz desvaneciéndose. Sin manchas ni varios tonos. */
-const LIGHT = "conic-gradient(from 0deg, transparent 0deg, transparent 250deg, color-mix(in oklab, var(--primary) 55%, transparent) 360deg)"
-const RIM = "radial-gradient(ellipse farthest-side at center, transparent 30%, black 100%)"
+/** Una banda de luz suave, de un solo color: el principal del tema (blanco en oscuro) con los bordes desvaneciéndose. */
+const BAND_GRADIENT = "linear-gradient(90deg, transparent, color-mix(in oklab, var(--primary) 34%, transparent), transparent)"
 
 /**
- * Distintivo de fondo SÓLIDO y ligeramente distinto al de la app (`card`), SIN borde, con una luz que **recorre el borde por dentro** (una vuelta cada 6 s, la
- * misma que tenía el haz original): un arco de luz difuminado que gira y que una máscara radial deja ver solo junto al borde. Un solo color, sin manchas
- * ni anillo. El ancho se anima (300 ms, la curva de la app) cuando el contenido cambia de largo. Con «reducir movimiento» no gira y queda un resplandor
- * interior quieto. Decorativo: no recibe clics.
+ * Cuadros de la animación del destello para un distintivo de ancho `w`: la banda espera fuera (a la izquierda) durante el descanso y luego cruza hasta
+ * salir por la derecha. `times` reparte el ciclo: descanso hasta `1 - SWEEP_SHARE` y barrido en el resto.
+ */
+export function sweepFrames(w: number): { x: number[]; times: number[] } {
+  return { x: [-MARGIN, -MARGIN, w + MARGIN], times: [0, 1 - SWEEP_SHARE, 1] }
+}
+
+/**
+ * Distintivo de fondo SÓLIDO y ligeramente distinto al de la app (`card`), SIN borde, con un **destello diagonal**: una sola banda de luz inclinada que
+ * cruza el distintivo de izquierda a derecha, como el brillo sobre un vidrio, y luego descansa unos 3 s antes de repetir. El ancho se anima (300 ms, la
+ * curva de la app) cuando el contenido cambia de largo. Con «reducir movimiento» no hay destello. Decorativo: no recibe clics.
  */
 export function BeamBadge({ children, className }: { children: ReactNode; className?: string }) {
   const reduce = useReducedMotion()
@@ -30,22 +41,23 @@ export function BeamBadge({ children, className }: { children: ReactNode; classN
     return () => ro.disconnect()
   }, [])
 
+  const total = width === null ? null : width + CHROME
+  const frames = total === null ? null : sweepFrames(total)
   return (
     <div
       className={`relative flex justify-center overflow-hidden rounded-full bg-card px-4 py-2 text-xs ${className ?? ""}`}
-      style={{ width: width === null ? undefined : width + CHROME, transition: reduce ? undefined : `width 300ms cubic-bezier(${MOTION.ease.join(",")})` }}
+      style={{ width: total ?? undefined, transition: reduce ? undefined : `width 300ms cubic-bezier(${MOTION.ease.join(",")})` }}
     >
-      {reduce ? (
-        <span aria-hidden className="pointer-events-none absolute inset-0 rounded-full" style={{ boxShadow: "inset 0 0 10px 1px color-mix(in oklab, var(--foreground) 14%, transparent)" }} />
-      ) : (
-        <div aria-hidden className="pointer-events-none absolute inset-0 rounded-full" style={{ maskImage: RIM, WebkitMaskImage: RIM }}>
-          <motion.span
-            className="absolute"
-            style={{ left: "50%", top: "50%", width: 320, height: 320, marginLeft: -160, marginTop: -160, background: LIGHT, filter: "blur(8px)" }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 6, ease: "linear", repeat: Infinity }}
-          />
-        </div>
+      {!reduce && frames && (
+        <motion.span
+          key={total}
+          aria-hidden
+          className="pointer-events-none absolute"
+          style={{ top: -8, left: 0, width: BAND, height: 48, skewX: -22, background: BAND_GRADIENT, filter: "blur(1.5px)" }}
+          initial={{ x: frames.x[0] }}
+          animate={{ x: frames.x }}
+          transition={{ duration: CYCLE, times: frames.times, ease: ["linear", "easeInOut"], repeat: Infinity }}
+        />
       )}
       <span ref={content} className="relative inline-flex shrink-0">
         {children}
