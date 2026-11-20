@@ -9,7 +9,7 @@ import { MOTION } from "@/lib/motion"
 const CHROME = 2 * 16 + 2
 
 /**
- * Distintivo con un resplandor interior sutil que respira (`Beam` en estilo `pulse-inner`, un solo color). El ancho se anima (300 ms, la curva de la app)
+ * Distintivo de fondo SÓLIDO (no deja ver lo que pasa por detrás) con un resplandor interior sutil que respira (`Beam` en estilo `pulse-inner`, un solo color). El ancho se anima (300 ms, la curva de la app)
  * cuando el contenido cambia de largo, p. ej. de 999 a 1.000 ofertas (idea de la transición «Card resize» de transitions.dev). Con «reducir movimiento»
  * el ancho cambia sin animar. Decorativo: no recibe clics.
  */
@@ -29,7 +29,7 @@ export function BeamBadge({ children, className }: { children: ReactNode; classN
   return (
     <Beam size="pulse-inner">
       <div
-        className={`flex justify-center overflow-hidden rounded-full border border-border/60 bg-background/85 px-4 py-2 text-xs backdrop-blur-xl ${className ?? ""}`}
+        className={`flex justify-center overflow-hidden rounded-full border border-border/60 bg-background px-4 py-2 text-xs ${className ?? ""}`}
         style={{ width: width === null ? undefined : width + CHROME, transition: reduce ? undefined : `width 300ms cubic-bezier(${MOTION.ease.join(",")})` }}
       >
         <span ref={content} className="inline-flex shrink-0">
