@@ -1,5 +1,6 @@
 // Programa la sincronización diaria en macOS (launchd): `pnpm sync:install` (instalar) · `pnpm sync:uninstall` (quitar).
-// Corre todos los días a las 03:30; si el equipo estaba dormido o apagado, launchd la ejecuta al despertar. No usa servidores ni cuentas.
+// Corre cada 3 horas (y al iniciar sesión) mientras el Mac esté encendido: lee lo que GitHub no puede (Get on Board) y estructura ofertas con IA local.
+// Cada fuente tiene su cadencia, así que repetir la corrida no vuelve a leer de más. No usa servidores ni cuentas.
 import { execFileSync } from "node:child_process"
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
@@ -35,7 +36,8 @@ const plist = `<?xml version="1.0" encoding="UTF-8"?>
     <string>${process.execPath}</string><string>--env-file=.env.local</string><string>scripts/sync.mjs</string>
   </array>
   <key>WorkingDirectory</key><string>${root}</string>
-  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>3</integer><key>Minute</key><integer>30</integer></dict>
+  <key>StartInterval</key><integer>10800</integer>
+  <key>RunAtLoad</key><true/>
   <key>StandardOutPath</key><string>${join(root, "data", "sync-launchd.log")}</string>
   <key>StandardErrorPath</key><string>${join(root, "data", "sync-launchd.log")}</string>
 </dict></plist>
@@ -44,4 +46,4 @@ writeFileSync(plistPath, plist)
 launchctl("bootout", `gui/${uid}/${LABEL}`) // por si ya estaba instalada
 const err = launchctl("bootstrap", `gui/${uid}`, plistPath)
 if (err) { console.error("No se pudo activar:", err); process.exit(1) }
-console.log(`Sincronización diaria instalada (03:30). Archivo: ${plistPath}\nRegistro: data/sync.log · Probar ya: pnpm sync · Quitar: pnpm sync:uninstall`)
+console.log(`Sincronización instalada (cada 3 h mientras el Mac esté encendido). Archivo: ${plistPath}\nRegistro: data/sync.log · Probar ya: pnpm sync · Quitar: pnpm sync:uninstall`)

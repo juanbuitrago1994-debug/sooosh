@@ -25,6 +25,8 @@ describe("sincronización automática", () => {
     expect(ids[0]).toBe("getonboard")
     expect(ids).toEqual(expect.arrayContaining(["companies", "portal:chiletrabajos", "portal:trabajando", "remote:remotive", "remote:jobicy", "remote:himalayas"]))
     expect(new Set(ids).size).toBe(ids.length)
+    // Get on Board solo se lee desde casa (GitHub recibe 403 y no se rodea); el resto puede ir a la nube
+    expect(TARGETS.filter((t) => t.runner === "home").map((t) => t.id)).toEqual(["getonboard"])
     // Remotive permite ≤ 4 lecturas al día: nunca más de 24/cadencia
     expect(24 / TARGETS.find((t) => t.id === "remote:remotive")!.everyHours).toBeLessThanOrEqual(4)
   })

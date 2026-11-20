@@ -4,6 +4,7 @@
 //   pnpm sync --only=remote:jobicy → solo esas fuentes (separadas por coma)
 //   pnpm sync --phase=fetch,vectors → solo esas fases (fetch = leer fuentes y vencer; vectors = vectores; enrich = IA que estructura)
 //   pnpm sync --minutes=30         → presupuesto de tiempo para la IA local (por defecto 20)
+//   pnpm sync --runner=cloud       → omite las fuentes que solo se pueden leer desde casa (lo usa GitHub Actions)
 //   pnpm sync --pending            → imprime cuántas ofertas activas no tienen vector
 //   pnpm sync --check              → solo revisa la salud: sale con error si una fuente lleva demasiado sin sincronizar
 // No necesita el servidor de desarrollo: habla directo con Supabase y con Ollama usando .env.local.
@@ -27,12 +28,12 @@ try {
     process.exit(0)
   }
   if (process.argv.includes("--check")) {
-    const h = await syncHealth(getDb())
+    const h = (await syncHealth(getDb())).filter((x) => arg("runner") !== "cloud" || !["getonboard"].includes(x.id))
     for (const x of h) log(`${x.stale ? "✗ ATRASADA" : "✓"} ${x.label}: último éxito ${x.lastOkAt ?? "nunca"}${x.lastError ? ` · error: ${x.lastError}` : ""}`)
     // Solo las fuentes clave hacen fallar la revisión (y con ello el aviso de GitHub): una remota caída no es una emergencia.
     process.exit(h.some((x) => x.stale && ["getonboard", "companies"].includes(x.id)) ? 1 : 0)
   }
-  const s = await runDaily(getDb(), { phases: arg("phase")?.split(","), force: process.argv.includes("--force"), only: arg("only")?.split(","), enrichMinutes: arg("minutes") ? Number(arg("minutes")) : undefined, log })
+  const s = await runDaily(getDb(), { runner: arg("runner") === "cloud" ? "cloud" : "home", phases: arg("phase")?.split(","), force: process.argv.includes("--force"), only: arg("only")?.split(","), enrichMinutes: arg("minutes") ? Number(arg("minutes")) : undefined, log })
   log(`Listo en ${Math.round(s.ms / 1000)} s`)
   process.exit(0)
 } catch (e) {

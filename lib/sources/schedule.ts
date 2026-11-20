@@ -22,10 +22,12 @@ export const SLACK_MINUTES = 20
 export const FAILURES_BEFORE_BACKOFF = 3
 export const BACKOFF_HOURS = 12
 
-export type Target = { id: string; label: string; everyHours: number; run: (db: Db) => Promise<SyncReport[]> }
+/** `home` = solo desde una conexión residencial (el Mac): Get on Board responde 403 al cliente de Node desde GitHub y no se rodea ese bloqueo. */
+export type Runner = "cloud" | "home"
+export type Target = { id: string; label: string; everyHours: number; runner?: "home"; run: (db: Db) => Promise<SyncReport[]> }
 
 export const TARGETS: Target[] = [
-  { id: "getonboard", label: "Get on Board", everyHours: 3, run: async (db) => [await syncGetOnBoard(db)] },
+  { id: "getonboard", label: "Get on Board", everyHours: 3, runner: "home", run: async (db) => [await syncGetOnBoard(db)] },
   { id: "companies", label: "Empresas (Greenhouse, Lever, Ashby, Workable, Recruitee, SmartRecruiters, Personio)", everyHours: 6, run: (db) => syncAllCompanies(db) },
   ...PORTALS.map((p): Target => ({ id: `portal:${p.key}`, label: p.name, everyHours: 12, run: async (db) => [await syncPortal(db, p)] })),
   ...REMOTE_SOURCES.map((s): Target => ({ id: `remote:${s.key}`, label: s.name, everyHours: 12, run: async (db) => [await syncRemote(db, s.key)] })),
@@ -75,7 +77,7 @@ export async function pendingVectors(db: Db): Promise<number> {
   return r?.n ?? 0
 }
 
-export type DailyOptions = { force?: boolean; only?: string[]; phases?: Phase[]; holder?: string; enrichMinutes?: number; log?: (line: string) => void; now?: () => Date }
+export type DailyOptions = { runner?: Runner; force?: boolean; only?: string[]; phases?: Phase[]; holder?: string; enrichMinutes?: number; log?: (line: string) => void; now?: () => Date }
 export type DailySummary = { locked?: boolean;  targets: { id: string; skipped?: boolean; ok?: boolean; created?: number; updated?: number; closed?: number; error?: string }[]; expired: Awaited<ReturnType<typeof expireStale>>; enriched: number; embedded: number; purgedEvents: number; ms: number }
 
 export async function runDaily(db: Db, opts: DailyOptions = {}): Promise<DailySummary> {
@@ -93,7 +95,7 @@ export async function runDaily(db: Db, opts: DailyOptions = {}): Promise<DailySu
   }
   try {
     if (phases.includes("fetch")) {
-      for (const t of TARGETS.filter((x) => !opts.only?.length || opts.only.includes(x.id))) {
+      for (const t of TARGETS.filter((x) => (!opts.only?.length || opts.only.includes(x.id)) && !(opts.runner === "cloud" && x.runner === "home"))) {
         if (!isDue(t.everyHours, await recentRuns(db, t.id), now(), opts.force)) {
           log(`· ${t.label}: no toca todavía (cada ${t.everyHours} h) o está en pausa por fallos`)
           summary.targets.push({ id: t.id, skipped: true })
