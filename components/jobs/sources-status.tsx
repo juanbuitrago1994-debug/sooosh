@@ -8,8 +8,10 @@ import { ResponsiveSheet, type SheetShell } from "@/components/jobs/responsive-s
 import { Item, ItemContent, ItemDescription, ItemTitle } from "@/components/ui/item"
 import { Area, AreaChart } from "recharts"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
-import { Skeleton } from "@/components/ui/skeleton"
+import { LoadingState } from "@/components/ai/loading-state"
 import type { SourceState, SourceStatus } from "@/lib/sources/status"
+
+const SOURCES_MESSAGES = ["Revisando el estado de cada fuente…", "Contando las ofertas activas…", "Mirando el historial de lecturas…"]
 
 const STATE: Record<SourceState, { label: string; variant: "secondary" | "outline" | "destructive"; icon: typeof CheckIcon }> = {
   ok: { label: "Al día", variant: "secondary", icon: CheckIcon },
@@ -197,11 +199,7 @@ function Grid({ data, failed, problems, onSelect, shell }: { data: { sources: So
           </p>
         )}
         {data === null && !failed && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-hidden>
-            {[0, 1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="aspect-4/3 min-h-32 rounded-lg" />
-            ))}
-          </div>
+          <LoadingState className="py-16" messages={SOURCES_MESSAGES} />
         )}
         {data && (
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">

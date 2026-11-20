@@ -3,7 +3,7 @@ import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { z } from "zod"
 import { JobDetail } from "@/components/jobs/job-detail"
-import { Skeleton } from "@/components/ui/skeleton"
+import { LoadingState } from "@/components/ai/loading-state"
 import { getDb } from "@/lib/db"
 import { getJobCard } from "@/lib/jobs/search"
 
@@ -21,10 +21,8 @@ export default function OfertaPage({ params }: { params: Promise<{ id: string }>
   return (
     <Suspense
       fallback={
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 pt-6 sm:px-6" aria-hidden>
-          <Skeleton className="h-8 w-1/3" />
-          <Skeleton className="h-6 w-2/3" />
-          <Skeleton className="h-24 w-full" />
+        <div className="flex min-h-dvh items-center justify-center px-4">
+          <LoadingState messages={["Abriendo la oferta…", "Leyendo los requisitos…", "Preparando cómo postular…"]} />
         </div>
       }
     >

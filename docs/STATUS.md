@@ -802,3 +802,16 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Número inicial del distintivo: total de toda la plataforma (20-nov-2026)
 - Mientras la persona no escriba nada ni cambie un filtro, el distintivo muestra el **total de ofertas activas de toda la plataforma** (hoy 2.625; `GET /api/jobs/count`, público, cacheable 60 s). En cuanto busca o cambia un filtro, pasa al total de lo que ve (con el efecto de tambor). Los filtros que se aplican solos al abrir (los guardados en «Aplicar al abrir») no cuentan como «tocados». Si el conteo falla, usa el de la lista.
+
+## Cargadores con frases dinámicas en lugar de esqueletos (20-nov-2026)
+
+### Qué se hizo
+- Nuevo `LoadingState` (`components/ai/loading-state.tsx`): la **matriz de puntos de referencia** (nuevo tamaño `lg` de `MatrixLoader`: 6 px por punto y 4 px de separación ≈ 36 px, puntos casi cuadrados) y debajo una **frase que cambia sola cada 2,4 s** para contar qué hace la plataforma. La frase entra desde abajo desenfocándose hasta quedar nítida y la anterior sale hacia arriba difuminándose: **la misma animación (movimiento + desenfoque) del número de «Ofertas encontradas»**, con las constantes de `lib/motion` (0,5 s de entrada y 0,28 s de salida).
+- **Se quitaron todos los esqueletos** del buscador: resultados (`Buscando entre las ofertas… / Revisando las fuentes más recientes… / Ordenando los resultados… / Preparando las tarjetas…`), ficha de la oferta (`Abriendo la oferta… / Leyendo los requisitos… / Preparando cómo postular…`) y panel Fuentes (`Revisando el estado de cada fuente… / Contando las ofertas activas… / Mirando el historial de lecturas…`). Al buscar de nuevo con resultados a la vista, la lista se atenúa suave (sin cargador) para no parpadear.
+- Con «reducir movimiento»: puntos quietos y frases sin animar. Lectores de pantalla: se oye solo la primera frase, una vez.
+
+### Qué se verificó
+- lint, tsc, build y 570 pruebas en verde (nueva `tests/loading-state.test.tsx`; las reglas de movimiento de `components/ai` siguen pasando: solo opacidad, desplazamiento y desenfoque, sin escalas ni duraciones sueltas).
+
+### Para revisar por Juan
+1. Reinicia `pnpm dev`. Recarga `/ofertas` (cargador con frases en el área de resultados), abre una oferta (cargador a pantalla completa) y el panel Fuentes. Mira el tamaño de la matriz frente al de transitions.dev; si lo quieres más grande o más chico, es el tamaño `lg` de `MatrixLoader`.

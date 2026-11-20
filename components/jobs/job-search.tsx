@@ -7,13 +7,13 @@ import { useAutoAnimate } from "@formkit/auto-animate/react"
 import { Logo } from "@/components/brand/logo"
 import { BeamBadge } from "@/components/magic/beam-badge"
 import { DrumNumber } from "@/components/magic/digit-drum"
+import { LoadingState } from "@/components/ai/loading-state"
 import { Rise } from "@/components/motion/rise"
 import { token } from "@/lib/design-tokens"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
 import { ConsentBanner } from "@/components/privacy/consent-banner"
 import { PrivacyLink } from "@/components/privacy/privacy-dialog"
 import { JobCard } from "@/components/jobs/job-card"
@@ -28,6 +28,9 @@ import { useSearchProfile } from "@/lib/profile/search-profile"
 import { REGION_OPTIONS } from "@/lib/jobs/geo"
 import { ALL_REGIONS, defaultRegion, isRegion } from "@/lib/jobs/region"
 import type { RankedJob } from "@/lib/jobs/rank"
+
+// Frases del cargador de resultados: cuentan, sin tecnicismos, lo que hace la plataforma mientras llegan las ofertas.
+const SEARCH_MESSAGES = ["Buscando entre las ofertas…", "Revisando las fuentes más recientes…", "Ordenando los resultados…", "Preparando las tarjetas…"]
 
 const REGION_KEY = "sooosh:region"
 const AREA_KEY = "sooosh:area"
@@ -291,14 +294,7 @@ export function JobSearch() {
 
         <section aria-label="Resultados" aria-live="polite" aria-busy={loading} className={`flex flex-col transition-opacity duration-150 ${loading && jobs ? "opacity-60" : "opacity-100"}`}>
           {jobs === null && !error ? (
-            <div className="flex flex-col gap-4" aria-hidden>
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="flex flex-col gap-2 py-3">
-                  <Skeleton className="h-4 w-2/3" />
-                  <Skeleton className="h-3 w-1/3" />
-                </div>
-              ))}
-            </div>
+            <LoadingState className="py-20" messages={SEARCH_MESSAGES} />
           ) : jobs && jobs.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">Sin resultados. Prueba otras palabras o ajusta los filtros.</p>
           ) : (
