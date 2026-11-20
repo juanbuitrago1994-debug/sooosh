@@ -91,7 +91,7 @@ describe("parseOfferText", () => {
   })
   it("devuelve la oferta ya filtrada por la guardia y lo descartado", async () => {
     output = offerSchema.parse({ ...base(), requirements: ["Dominio de SQL y Excel avanzado", "Experiencia con Spark"], tools: ["SQL", "Spark"] })
-    const r = await parseOfferText(SOURCE)
+    const r = await parseOfferText(SOURCE, undefined, { reconcile: false }) // solo la guardia: sin completar las listas con los bloques del texto
     expect(r.data.requirements).toEqual(["Dominio de SQL y Excel avanzado"])
     expect(r.data.tools).toEqual(["SQL"])
     expect(r.dropped).toEqual(expect.arrayContaining(["Experiencia con Spark", "Spark"]))

@@ -39,6 +39,16 @@ export function prefilterLines(text: string): string[] {
 
 export const keepSchema = z.object({ keep: z.array(z.number().int().min(0)) })
 
+/**
+ * El modelo a veces descarta una línea suelta de la oferta (un requisito entre dos requisitos). Si UNA sola línea quedó fuera entre dos que se
+ * conservaron, se recupera: un comentario ajeno suele venir en bloque al final, no aislado en medio de la oferta. Huecos de dos o más líneas se respetan.
+ */
+export function fillSingleGaps(keep: ReadonlySet<number>, total: number): Set<number> {
+  const out = new Set(keep)
+  for (let i = 1; i < total - 1; i++) if (!keep.has(i) && keep.has(i - 1) && keep.has(i + 1)) out.add(i)
+  return out
+}
+
 export const CLEAN_SYSTEM_PROMPT = `Eres un filtro de contenido. Recibes las líneas NUMERADAS de una publicación o página de empleo (a veces con ruido alrededor).
 Devuelve los números de las líneas que son contenido PROPIO de la oferta: título, empresa, ubicación, modalidad, descripción, funciones, requisitos, deseables, herramientas, beneficios, salario, condiciones y cómo postular.
 EXCLUYE: comentarios y respuestas de otras personas (aunque hablen de la oferta o pidan información), reacciones y contadores, nombres y titulares de otros usuarios, navegación y menús, avisos de cookies, publicidad, ofertas relacionadas o similares, texto de inicio de sesión.
@@ -88,7 +98,8 @@ export async function cleanOfferText(text: string, opts: { signal?: AbortSignal;
       for (const n of data.keep) if (n >= start && n < end) keep.add(n)
       start = end
     }
-    const kept = lines.filter((_, i) => keep.has(i))
+    const filled = fillSingleGaps(keep, lines.length)
+    const kept = lines.filter((_, i) => filled.has(i))
     // Salvaguarda: si el modelo no dejó casi nada, probablemente se equivocó → no tirar la oferta.
     if (kept.length === 0 || kept.join("\n").length < Math.min(200, text.length * 0.1)) {
       return done(lines, false, "La limpieza con el modelo dejó muy poco texto; se conservó el texto sin ese paso.")

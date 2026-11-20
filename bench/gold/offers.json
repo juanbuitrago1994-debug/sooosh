@@ -1,0 +1,143 @@
+[
+  {
+    "id": "linkedin-sin-titulo",
+    "nota": "Sintética, con la estructura de la publicación de LinkedIn de la diseñadora UX/UI: sin cargo, sin empresa, encabezado «Experiencia comprobable», correo y formulario.",
+    "text": "Estamos seleccionando diseñadora UX/UI para un proyecto remoto con una consultora aliada.\n\n🔹 Experiencia comprobable\n- Diseño de interfaces (UI) e investigación de experiencia de usuario\n- Dominio de Figma y Design Systems\n- Portafolio con casos reales\n\n🔹 Funciones\n- Diseñar flujos y prototipos de alta fidelidad\n- Validar con usuarios\n\n🔹 Ofrecemos\n- Contrato por prestación de servicios\n- Horario flexible\n\nEnvía tu hoja de vida a candidatos@consultoravos.com o postula en https://forms.gle/abc123\n#diseño #ux #hiring",
+    "expect": {
+      "title": "Diseñadora UX/UI",
+      "titleSource": "inferido",
+      "company": null,
+      "requirements": [
+        "Dominio de Figma y Design Systems",
+        "Portafolio con casos reales"
+      ],
+      "responsibilities": [
+        "Validar con usuarios"
+      ],
+      "niceToHave": [],
+      "mustNot": [
+        "candidatos@consultoravos.com",
+        "Horario flexible",
+        "#diseño #ux #hiring"
+      ],
+      "email": "candidatos@consultoravos.com",
+      "form": true
+    }
+  },
+  {
+    "id": "linkedin-con-titulo",
+    "nota": "Sintética: título y empresa en la primera línea, secciones con emoji.",
+    "text": "🚀 Analista de Datos Semi Senior en Initech (híbrido, Lima)\n\n📌 Requisitos\n- 3 a 5 años de experiencia en análisis de datos\n- Dominio de SQL y Excel avanzado\n- Inglés intermedio (B1)\n\n📌 Responsabilidades\n- Construir tableros de ventas en Power BI\n- Preparar reportes semanales\n\nSe valora: conocimientos de Python\n\n📌 Beneficios\n- Seguro de salud\n- Bono anual\n\nPostula escribiendo a talento@initech.example\n#datos #hiring",
+    "expect": {
+      "title": "Analista de Datos Semi Senior",
+      "titleSource": "texto",
+      "company": "Initech",
+      "requirements": [
+        "Dominio de SQL y Excel avanzado",
+        "Inglés intermedio (B1)"
+      ],
+      "responsibilities": [
+        "Construir tableros de ventas en Power BI"
+      ],
+      "niceToHave": [
+        "conocimientos de Python"
+      ],
+      "mustNot": [
+        "talento@initech.example",
+        "Seguro de salud",
+        "Bono anual"
+      ],
+      "email": "talento@initech.example"
+    }
+  },
+  {
+    "id": "linkedin-ingles",
+    "nota": "Sintética, en inglés.",
+    "text": "We're hiring a Senior Backend Engineer at Acme Payments (remote, LATAM).\n\nWhat you'll do\n- Design and operate payment APIs\n- Improve reliability and observability\n\nWhat you bring\n- 5+ years building backend services\n- Strong Python and PostgreSQL\n\nNice to have\n- Experience with Kubernetes\n\nBenefits\n- Stock options\n- Home office budget\n\nApply at https://jobs.acme.example/backend or email talent@acme.example",
+    "expect": {
+      "title": "Senior Backend Engineer",
+      "titleSource": "inferido",
+      "company": "Acme Payments",
+      "requirements": [
+        "5+ years building backend services",
+        "Strong Python and PostgreSQL"
+      ],
+      "responsibilities": [
+        "Design and operate payment APIs"
+      ],
+      "niceToHave": [
+        "Experience with Kubernetes"
+      ],
+      "mustNot": [
+        "talent@acme.example",
+        "Stock options",
+        "Home office budget",
+        "What you'll do",
+        "What you bring",
+        "Nice to have"
+      ],
+      "email": "talent@acme.example"
+    }
+  },
+  {
+    "id": "linkedin-parrafo-sin-secciones",
+    "nota": "Sintética: una publicación en prosa, sin encabezados, con el correo al final.",
+    "text": "Se busca Community Manager para una marca de moda en Medellín. Buscamos a alguien creativo, con al menos 2 años gestionando redes sociales, manejo de Canva y de herramientas de programación de contenido. Trabajarás de forma híbrida tres días en la oficina. Interesados enviar hoja de vida al correo rrhh@modaviva.example con el asunto Community Manager.",
+    "expect": {
+      "title": "Community Manager",
+      "titleSource": "texto",
+      "company": null,
+      "requirements": [],
+      "responsibilities": [],
+      "niceToHave": [],
+      "mustNot": [
+        "rrhh@modaviva.example"
+      ],
+      "email": "rrhh@modaviva.example"
+    }
+  },
+  {
+    "id": "linkedin-hilo-con-ruido",
+    "nota": "Fixture existente (tests/fixtures/offers/linkedin-post-hilo.txt): publicación con comentarios, reacciones y respuestas de otras personas.",
+    "file": "offers/linkedin-post-hilo.txt",
+    "expect": {
+      "title": "Analista de Datos Semi Senior",
+      "titleSource": "texto",
+      "company": "Initech",
+      "requirements": [
+        "Dominio de SQL y Excel avanzado",
+        "Experiencia con Power BI o Tableau"
+      ],
+      "responsibilities": [
+        "Construir y mantener tableros de ventas"
+      ],
+      "niceToHave": [],
+      "mustNot": [
+        "10 años de experiencia en Spark",
+        "talento@initech.example",
+        "124 reacciones"
+      ],
+      "email": "talento@initech.example"
+    }
+  },
+  {
+    "id": "pagina-limpia",
+    "nota": "Fixture existente (tests/fixtures/offers/texto.txt): oferta limpia y estructurada.",
+    "file": "offers/texto.txt",
+    "expect": {
+      "title": "Analista de Datos Junior",
+      "titleSource": "texto",
+      "company": "Initech",
+      "requirements": [
+        "Dominio de Excel y SQL",
+        "Estudios en estadística, ingeniería o afines"
+      ],
+      "responsibilities": [],
+      "niceToHave": [
+        "Power BI o Tableau",
+        "Nociones de Python"
+      ],
+      "mustNot": []
+    }
+  }
+]

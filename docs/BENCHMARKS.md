@@ -204,3 +204,20 @@ Lectura honesta: con las reglas solas (sin el juez de IA) casi ninguna oferta ll
 | Vectores (bge-m3) de las que cambiaron | 159 calculados, 0 pendientes; las 1 294 tienen vector |
 
 Revisión a ojo de una muestra: los requisitos y tareas son frases literales del aviso (p. ej. «Título profesional de Ingeniería Civil Industrial…», «Gestionar el ciclo completo de incentivos…»). Hay avisos con solo tareas y sin requisitos (el aviso no los separa).
+
+## Analizador de ofertas A4 — bloques, conciliación y conjunto de prueba (20-nov-2026)
+
+Conjunto de desarrollo: 6 publicaciones con la respuesta esperada (`bench/gold/offers.json`; **5 escritas por nosotros** con la estructura de publicaciones de LinkedIn —sin cargo, con encabezados en español e inglés, en prosa— y 1 fixture existente con comentarios), 2 repeticiones por caso, `qwen2.5:7b-instruct` real, pipeline completo (limpieza + estructura). Es un conjunto pequeño de desarrollo, no una medida de precisión en el mundo real: crecerá con las publicaciones reales que se guarden. Ejecutar: `pnpm exec vitest run --config vitest.bench.config.mts bench/offers-gold.test.ts` (resultado en `docs/bench-offers.json`).
+
+| Medición (12 muestras) | Antes de A4 | Después, sin conciliar | Después, con conciliación |
+|---|---|---|---|
+| Cargo correcto | 83 % | 100 % | 100 % |
+| Empresa correcta | 100 % | 100 % | 100 % |
+| Recall de las listas (requisitos, funciones, se valora) | 94 % | 100 % | 100 % |
+| Líneas intrusas en las listas (encabezados, contacto, beneficios, hashtags) | 2 de 26 posibles | 4 de 32 | **0 de 32** |
+| Vías de postulación detectadas (correo y formulario) | 83 % | 100 % | 100 % |
+| Tiempo medio por publicación (limpieza + estructura, modelo local) | 12,8 s | 12,2 s | 12,2 s (la conciliación son reglas, sin llamadas al modelo) |
+
+Qué movió cada cifra (hallazgos de la propia medición): (1) el correo tras un enlace con puntos («Apply at https://… or email talent@…») no se detectaba → nueva pista «email/correo» en `detectApply` (postulación 83 → 100 %); (2) la limpieza con el modelo descartaba a veces **una línea suelta** entre dos conservadas (un requisito de la sección) → se recupera (recall 94 → 100 %); (3) el modelo metía encabezados en inglés («What you'll do») y líneas de contacto en las listas, y mezclaba listas → la conciliación con los bloques las corrige (intrusos 4 → 0 de 32); (4) «Experiencia con Power BI o Tableau» se confundía con un encabezado → los rótulos débiles solo cuentan si son la línea completa. El «cargo» 83 → 100 % combina una expectativa corregida (un cargo sacado de «We're hiring a …» es **inferido**, no escrito) y no es mejora de código. Entre repeticiones el modelo varía (los intrusos sin conciliar fueron 8 y luego 4 en dos corridas), por eso se compara sobre la misma salida del modelo.
+
+No se añadió una segunda pasada del modelo para verificar cada dato: con este conjunto la verificación determinista de A2 (cada dato con su frase de evidencia) ya cubre lo medido, y una pasada extra costaría otros ≈ 10 s por oferta. Se reconsidera si el conjunto, ya con publicaciones reales, muestra errores que las reglas no atrapan.

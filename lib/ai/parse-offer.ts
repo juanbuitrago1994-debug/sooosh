@@ -1,5 +1,6 @@
 import { fold } from "@/lib/keywords/normalize"
 import { existsInSource, guardList } from "@/lib/offer/guard"
+import { reconcileOffer } from "@/lib/offer/segment"
 import { offerSchema, OFFER_MAX_CHARS, type Offer } from "@/lib/schemas/offer"
 import { labelOffer } from "./parse-offer-lines"
 import { getProvider } from "./index"
@@ -82,14 +83,18 @@ export function guardOffer(offer: Offer, source: string): { offer: Offer; droppe
   return { offer: out, dropped }
 }
 
-export async function parseOfferText(text: string, signal?: AbortSignal): Promise<OfferParseResult & { via: "lineas" | "json" }> {
+/** Concilia las listas del modelo con los bloques del texto (encabezados, contacto, hashtags). `reconcile: false` solo sirve para medir el antes y el después. */
+const finish = (offer: Offer, input: string, reconcile: boolean) => (reconcile ? reconcileOffer(offer, input).offer : offer)
+
+export async function parseOfferText(text: string, signal?: AbortSignal, opts: { reconcile?: boolean } = {}): Promise<OfferParseResult & { via: "lineas" | "json" }> {
+  const reconcile = opts.reconcile ?? true
   const input = text.slice(0, OFFER_MAX_CHARS)
   // Camino rápido: el modelo etiqueta cada línea (≈ 50 tokens) y el resto se deriva sin IA. Si no es utilizable, JSON completo.
   try {
     const r = await labelOffer(input, signal)
     if (r.offer && r.meta) {
       const g = guardOffer(r.offer, input)
-      return { data: g.offer, meta: { ...r.meta, ms: r.ms }, dropped: g.dropped, via: "lineas" }
+      return { data: finish(g.offer, input, reconcile), meta: { ...r.meta, ms: r.ms }, dropped: g.dropped, via: "lineas" }
     }
   } catch (e) {
     if ((e as Error).name === "AbortError") throw e
@@ -102,5 +107,5 @@ export async function parseOfferText(text: string, signal?: AbortSignal): Promis
     signal,
   })
   const g = guardOffer(data, input)
-  return { data: g.offer, meta, dropped: g.dropped, via: "json" }
+  return { data: finish(g.offer, input, reconcile), meta, dropped: g.dropped, via: "json" }
 }

@@ -32,6 +32,11 @@ describe("cómo se postula", () => {
     expect(detectApply({ sourceUrl: "https://careers.acme.com/1", text: "Envía tu CV a talento@acme.com" }).method).toBe("correo")
     expect(detectApply({ sourceUrl: "https://www.linkedin.com/jobs/view/3912345678/", text: "Envía tu CV a talento@acme.com" }).method).toBe("plataforma")
   })
+  it("correo con «email» o «correo» como pista, aunque antes haya un enlace con puntos", () => {
+    const a = detectApply({ sourceUrl: "texto:abc", text: "Apply at https://jobs.acme.example/backend or email talent@acme.example" })
+    expect(a.email).toBe("talent@acme.example")
+    expect(a.alt?.some((c) => c.method === "correo" && c.email === "talent@acme.example") || a.method === "correo").toBe(true)
+  })
   it("sin información no adivina", () => {
     expect(detectApply({ sourceUrl: "texto:abc", text: "Buscamos diseñador." })).toEqual({ method: "desconocido" })
   })

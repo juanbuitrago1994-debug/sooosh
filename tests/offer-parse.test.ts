@@ -42,7 +42,8 @@ describe("parseOfferText: camino rápido por líneas", () => {
     expect(generate).toHaveBeenCalledTimes(1)
     expect(r.via).toBe("lineas")
     expect(r.data.title).toBe("Analista de Datos Junior")
-    expect(r.data.requirements.length).toBe(2)
+    // el modelo eligió 2 de los 3 requisitos de la sección «Requisitos»; la conciliación con los bloques agrega el que omitió
+    expect(r.data.requirements.length).toBe(3)
     for (const x of [...r.data.requirements, ...r.data.niceToHave, ...r.data.responsibilities]) expect(texto).toContain(x)
   })
   it("ignora índices fuera de rango y, sin título válido, usa el respaldo JSON", () => {

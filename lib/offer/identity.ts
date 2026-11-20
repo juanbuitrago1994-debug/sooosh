@@ -10,8 +10,11 @@ import type { Offer } from "@/lib/schemas/offer"
  */
 export type TitleSource = "texto" | "inferido" | "falta"
 
-const HEADINGS =
-  /^(requisitos?|requerimientos?|responsabilidades|funciones|ofrecemos|beneficios|perfil|experiencia( comprobable| requerida| laboral)?|habilidades|conocimientos|que haras|sobre (nosotros|el cargo|el puesto|la empresa)|about (us|the role|the job)|requirements|responsibilities|benefits|nice to have|se valora|deseable|postulacion|como (aplicar|postular)|formacion|educacion|idiomas|modalidad|ubicacion|horario|salario)\b/
+// Rótulos fuertes: valen aunque sigan con más palabras («Requisitos mínimos», «Funciones del cargo»).
+const STRONG = "requisitos?|requerimientos?|responsabilidades|funciones|ofrecemos|beneficios|que ofrecemos|que haras|sobre (?:nosotros|el cargo|el puesto|la empresa)|about (?:us|the role|the job)|requirements|responsibilities|benefits|nice to have|se valora|valorable|deseables?|postulacion|como (?:aplicar|postular)|what you.?ll do|what you bring|what we offer|qualifications|must have|how to apply|lo que buscamos"
+// Rótulos débiles: solo cuentan si son TODA la línea. Con más palabras ya es un requisito («Experiencia con Power BI o Tableau»).
+const WEAK = "perfil(?: del candidato| buscado)?|experiencia(?: comprobable| requerida| laboral)?|habilidades|conocimientos|formacion|educacion|idiomas|modalidad|ubicacion|horario|salario|actividades|tu rol|el rol|tus retos|the role|perks|contacto"
+export const HEADING_RE = new RegExp(`^(?:(?:${STRONG})\\b|(?:${WEAK})$)`)
 
 const symbols = (s: string) => s.replace(/^[^\p{L}\p{N}]+/u, "").trim()
 const wordsOf = (s: string) => s.replace(/[^\p{L}\p{N}\s/+#.-]/gu, " ").trim().split(/\s+/).filter(Boolean)
@@ -22,7 +25,12 @@ export function isSectionHeading(line: string): boolean {
   const n = wordsOf(t).length
   if (n === 0 || n > 6) return false
   if (/[:：]$/.test(t)) return true
-  return HEADINGS.test(fold(symbols(t)))
+  return HEADING_RE.test(fold(symbols(t)).replace(/[:：]\s*$/, "").trim())
+}
+
+/** Encabezado «pelado»: sin contenido tras los dos puntos («Se valora:» sí, «Se valora: Python» no, porque ahí hay un dato). */
+export function isBareHeading(line: string): boolean {
+  return isSectionHeading(line) && !/[:：]\s*\S/.test(line.trim())
 }
 
 const HOOK_START = /^(estamos\s+(seleccionando|buscando|contratando|reclutando)|buscamos|se\s+busca|se\s+necesita|necesitamos|requerimos|we(?:'re|\s+are)\s+(hiring|looking))/i

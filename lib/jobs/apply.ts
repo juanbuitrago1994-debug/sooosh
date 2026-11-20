@@ -39,7 +39,7 @@ const hostOf = (u: string) => {
   }
 }
 
-const EMAIL_APPLY = /(?:env[ií]a(?:r|nos)?|mand(?:a|ar)|remite|postula(?:te)?|aplica(?:r)?|escr[ií]be(?:nos)?|send (?:us )?(?:your )?(?:cv|resume|application)|apply (?:by|via|at|to))[^.\n@]{0,70}?([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/i
+const EMAIL_APPLY = /(?:env[ií]a(?:r|nos)?|mand(?:a|ar)|remite|postula(?:te)?|aplica(?:r)?|escr[ií]be(?:nos)?|e-?mail(?: us)?|correo(?: electr[oó]nico)?|send (?:us )?(?:your )?(?:cv|resume|application)|apply (?:by|via|at|to))[^.\n@]{0,70}?([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/i
 
 /** Enlaces a formularios que aparecen en el texto de la oferta (Google Forms, Microsoft Forms, Typeform, Tally… o un sistema de selección). */
 const FORM_HOSTS = /(^|\.)(forms\.gle|forms\.office\.com|forms\.microsoft\.com|typeform\.com|tally\.so|jotform\.com|forms\.zohopublic\.com|surveymonkey\.com)$/
