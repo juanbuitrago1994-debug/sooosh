@@ -8,6 +8,7 @@ import { personalize } from "@/lib/events/personalize"
 import { MATCH_MIN } from "@/lib/jobs/match"
 import { rankByFit } from "@/lib/jobs/rank"
 import { isRegion } from "@/lib/jobs/region"
+import { withDbTimeout } from "@/lib/db/timeout"
 import { getJobCards, searchJobs } from "@/lib/jobs/search"
 import { cvSchema } from "@/lib/schemas/cv"
 
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
     const wide = !!profile && (sort === "encaje" || onlyMatches)
     // Sin texto de búsqueda, las candidatas son las más cercanas al CV (vectores); con texto, las del texto y el significado.
     const profileEmbedding = wide && !q && profile ? await embedProfile(profile, AbortSignal.timeout(8000)).catch(() => null) : null
-    const { jobs, semantic, total } = await searchJobs(getDb(), { region, q, mode, area, limit: wide ? POOL : PAGE, embedding: embedding ?? undefined, profileEmbedding: profileEmbedding ?? undefined })
+    const { jobs, semantic, total } = await withDbTimeout(searchJobs(getDb(), { region, q, mode, area, limit: wide ? POOL : PAGE, embedding: embedding ?? undefined, profileEmbedding: profileEmbedding ?? undefined }))
     let ranked = rankByFit(jobs, profile, sort)
     // «Para mí»: con consentimiento personal y suficientes señales, la lista por relevancia se reordena suavemente según su gusto.
     let personalized = false

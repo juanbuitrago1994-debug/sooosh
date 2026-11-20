@@ -80,6 +80,8 @@ export function JobSearch() {
   const cv = useSearchProfile()?.cv ?? null
   const [jobs, setJobs] = useState<RankedJob[] | null>(null)
   const [error, setError] = useState("")
+  // «Reintentar» tras un error o una espera demasiado larga: cambia este número para repetir la misma búsqueda.
+  const [attempt, setAttempt] = useState(0)
   // Altas, bajas y cambios de orden de la lista (búsqueda en vivo, descartar una oferta) se animan solos; respeta «reducir movimiento».
   const [listRef] = useAutoAnimate({ duration: 180, easing: "ease-out" })
 
@@ -150,7 +152,8 @@ export function JobSearch() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ region, q: q || undefined, fast: fast || undefined, mode: mode || undefined, area, sort: effectiveSort, onlyMatches: !!cv && onlyMatches, cv: cv ?? undefined, anonId: anonId ?? undefined, savedIds: onlySaved ? marks.saved : undefined }),
-      signal: ctrl.signal,
+      // Si el servidor no responde en 20 s se avisa (con «Reintentar») en vez de dejar el cargador para siempre.
+      signal: AbortSignal.any([ctrl.signal, AbortSignal.timeout(20_000)]),
     })
       .then(async (r) => {
         const d = await r.json()
@@ -167,13 +170,16 @@ export function JobSearch() {
         setError("")
       })
       .catch((e: Error) => {
-        if (e.name !== "AbortError") {
+        if (e.name === "TimeoutError") {
+          setError("La búsqueda está tardando demasiado. Inténtalo de nuevo en unos segundos.")
+          setSettled(requestKey)
+        } else if (e.name !== "AbortError") {
           setError(e.message)
           setSettled(requestKey)
         }
       })
     return () => ctrl.abort()
-  }, [region, q, fast, mode, area, effectiveSort, onlyMatches, cv, anonId, onlySaved, marks.saved, requestKey])
+  }, [region, q, fast, mode, area, effectiveSort, onlyMatches, cv, anonId, onlySaved, marks.saved, requestKey, attempt])
 
   // Búsquedas populares de la región (solo las que hicieron 5 o más personas distintas que aceptaron «Para todos»; casi siempre vacío al inicio).
   useEffect(() => {
@@ -289,9 +295,12 @@ export function JobSearch() {
 
         <div className={`mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 pb-28 sm:px-6 ${shouldAsk(consent) ? "pb-72" : ""}`}>
         {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
+          <div role="alert" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-destructive">
+            <p>{error}</p>
+            <Button variant="ghost" size="sm" onClick={() => { setError(""); setSettled(""); setAttempt((n) => n + 1) }}>
+              Reintentar
+            </Button>
+          </div>
         )}
 
         <section aria-label="Resultados" aria-live="polite" aria-busy={loading} className={`flex flex-col transition-opacity duration-150 ${loading && jobs ? "opacity-60" : "opacity-100"}`}>
