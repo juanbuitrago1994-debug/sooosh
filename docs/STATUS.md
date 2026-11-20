@@ -853,3 +853,6 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 ### Distintivo: `ice` fijo y pálido, y borde propio sin beam (20-nov-2026)
 - **Causa del cambio de colores**: la librería hace girar el tono (`hue-rotate`, ~12 s) en todas las paletas excepto `mono`; por eso el `ice` pasaba por rosa y verde. Ahora el distintivo usa `staticColors` (sin ciclo de tono) y `saturation={0.4}` (poco saturado): solo grises fríos y azules pálidos.
 - **Borde sin efecto beam y casi transparente**: la librería pinta su trazo de haz sobre el borde del elemento y no deja apagarlo. El distintivo dibuja encima un anillo de 1 px **opaco** del color «10 % del texto sobre el fondo» (se ve casi transparente, en claro y oscuro), así que el borde no lleva haz y solo queda el resplandor interior.
+
+### Distintivo sin borde (20-nov-2026)
+- Se quitó el borde del distintivo: el anillo de 1 px que tapa el trazo del haz de la librería ahora es del **mismo color que el fondo**, así no se ve ni borde ni haz de borde; solo queda el resplandor interior.
