@@ -868,6 +868,3 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Se descartan las dos luces; vuelve el haz que recorre el borde (20-nov-2026)
 - Las dos luces de colores que recorrían el contorno (c4bf469) se descartaron por decisión de Juan («perdimos total enfoque del efecto beam») y el commit se revirtió: el distintivo vuelve al arco de luz de un solo color que da una vuelta cada 6 s por dentro del borde (fondo `card`, sin borde). Si se retoma la idea de dos colores, que sea **dentro del mismo haz** (un arco con degradado hielo → lila), no como dos luces separadas.
-
-### Distintivo: destello diagonal (20-nov-2026)
-- Nuevo movimiento elegido por Juan (opción 1): un **destello diagonal** de **una sola** banda de luz suave (el color principal del tema al 34 %, inclinada −22°, bordes desvaneciéndose) que cruza el distintivo de izquierda a derecha en ≈ 1,2 s y **descansa ≈ 3 s** antes de repetir (ciclo de 4,2 s). Fondo `card` sólido, sin borde, ancho animado; sin destello con «reducir movimiento». La prueba verifica que la banda entra y sale por completo y que descansa el 72 % del ciclo.

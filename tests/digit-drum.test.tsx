@@ -42,15 +42,3 @@ describe("intensidad del haz por tema", () => {
     expect(beamStrength("dark", 0.9)).toBe(0.9)
   })
 })
-
-describe("destello diagonal del distintivo", () => {
-  it("la banda espera fuera a la izquierda, cruza todo el ancho y sale por la derecha; descansa el 72 % del ciclo", async () => {
-    const { sweepFrames } = await import("@/components/magic/beam-badge")
-    const f = sweepFrames(150)
-    expect(f.x[0]).toBeLessThan(0) // empieza fuera, a la izquierda
-    expect(f.x[2]).toBeGreaterThan(150) // termina fuera, a la derecha
-    expect(f.x[1]).toBe(f.x[0]) // durante el descanso no se mueve
-    expect(f.times).toEqual([0, 0.72, 1])
-    expect(f.x).toHaveLength(f.times.length)
-  })
-})
