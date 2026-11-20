@@ -1,0 +1,76 @@
+{
+  "model": "qwen2.5:7b-instruct",
+  "rows": [
+    {
+      "cv": "fuerte",
+      "proposals": 4,
+      "changed": 4,
+      "generationMs": 21743,
+      "improveMs": 29924,
+      "regenCalls": 7,
+      "report": {
+        "weakBefore": 4,
+        "weakAfter": 2,
+        "regenerated": 7,
+        "improved": 1,
+        "dropped": 1,
+        "rounds": 2
+      },
+      "impacts": [
+        [
+          "exp.0.0",
+          "changed",
+          0
+        ],
+        [
+          "exp.0.1",
+          "changed",
+          0
+        ],
+        [
+          "exp.0.2",
+          "unchanged",
+          -5
+        ],
+        [
+          "exp.0.3",
+          "changed",
+          1
+        ]
+      ]
+    },
+    {
+      "cv": "medio",
+      "proposals": 3,
+      "changed": 2,
+      "generationMs": 4912,
+      "improveMs": 17,
+      "regenCalls": 0,
+      "report": {
+        "weakBefore": 0,
+        "weakAfter": 0,
+        "regenerated": 0,
+        "improved": 0,
+        "dropped": 0,
+        "rounds": 0
+      },
+      "impacts": [
+        [
+          "exp.0.0",
+          "changed",
+          1
+        ],
+        [
+          "exp.0.1",
+          "unchanged",
+          null
+        ],
+        [
+          "exp.0.2",
+          "changed",
+          1
+        ]
+      ]
+    }
+  ]
+}

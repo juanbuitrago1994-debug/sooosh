@@ -1,0 +1,69 @@
+import type { WorkMode } from "@/lib/jobs/draft"
+import type { Salary } from "@/lib/jobs/salary"
+
+/**
+ * Una oferta tal como la entrega una fuente, ya con campos comunes. Cada adaptador (Get on Board, Greenhouse, Lever, Ashby…) traduce
+ * su formato a esto; `normalize.ts` la convierte en una tarjeta. Nada de aquí se inventa: lo que la fuente no dice queda vacío.
+ */
+export type ExternalJob = {
+  /** `getonboard`, `greenhouse:cabify`… (clave de la fuente; sirve para cerrar lo que desaparece) */
+  sourceKey: string
+  /** nombre corto de la plataforma (`getonboard`, `greenhouse`…) */
+  sourceName: string
+  externalId: string
+  /** enlace público de la oferta */
+  url: string
+  /** enlace de postulación, si la fuente lo da aparte */
+  applyUrl?: string
+  title: string
+  company?: string
+  locationText?: string
+  /** países o lugares tal como los nombra la fuente («Chile», «Remote», «CO») */
+  countries?: string[]
+  remote?: boolean
+  workMode?: WorkMode
+  employmentType?: string
+  seniority?: string
+  /** área o equipo que declara la fuente («Engineering», «Programming»…): ayuda a clasificar el cargo */
+  department?: string
+  salary?: Salary
+  postedAt?: string
+  /** hasta cuándo está vigente, si la fuente lo dice (JSON-LD `validThrough`) */
+  validThrough?: string
+  /** texto completo de la oferta, plano, con las listas como «• elemento» (ver `htmlToLines`) */
+  description: string
+  /** secciones que la fuente ya separa (si no, se deducen del texto) */
+  structured?: { requirements?: string[]; responsibilities?: string[]; niceToHave?: string[]; skills?: string[] }
+  language?: "es" | "en" | "otro"
+  /** para fuentes de alcance latinoamericano (Get on Board): «remoto» se toma como abierto a Latinoamérica */
+  assumeRemoteLatam?: boolean
+}
+
+export type FetchResult = {
+  /** avisos del lector (p. ej. «se detuvo: el sitio respondió 403») */
+  notes?: string[]
+  jobs: ExternalJob[]
+  /** true si se leyó TODO lo que la fuente tiene: solo entonces se cierra lo que ya no aparece */
+  complete: boolean
+}
+
+export type SyncReport = {
+  source: string
+  fetched: number
+  /** descartadas por no ser de Latinoamérica ni remotas para la región */
+  outOfRegion: number
+  /** descartadas por ser la misma oferta que ya llegó de otra fuente */
+  duplicates: number
+  created: number
+  updated: number
+  closed: number
+  /** ofertas pobres puestas en la cola de enriquecimiento con IA */
+  queued?: number
+  error?: string
+  ms: number
+}
+
+/** Cabeceras de todas las lecturas a fuentes: identifican a Sooosh y no fingen ser un navegador. */
+export const SOURCE_HEADERS = { "User-Agent": "SoooshBot/0.1 (buscador de ofertas; lectura de APIs públicas)", Accept: "application/json" }
+
+export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))

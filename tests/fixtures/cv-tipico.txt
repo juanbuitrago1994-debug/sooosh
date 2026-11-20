@@ -1,0 +1,43 @@
+Laura Mendoza Ríos
+Analista de Datos
+laura.mendoza@example.com | +51 987 654 321 | Lima, Perú | linkedin.com/in/laura-mendoza-ejemplo
+
+PERFIL
+Analista de datos con 6 años de experiencia en reportería comercial, modelado en SQL y tableros de gestión. Me enfoco en convertir datos de ventas en decisiones para las áreas de negocio.
+
+EXPERIENCIA
+Analista de Datos Senior — Initech S.A.
+Lima, Perú | Mar 2021 - Actual
+- Reduje en 35% el tiempo de preparación de reportes semanales automatizando consultas en SQL y Python.
+- Diseñé 12 tableros en Power BI usados por la gerencia comercial para seguir ventas y márgenes.
+- Coordiné a un equipo de 3 analistas en la migración de informes desde Excel a un almacén de datos.
+- Responsable de la calidad de los datos del área comercial.
+
+Analista de Datos — Globex Perú
+Lima, Perú | Ene 2018 - Feb 2021
+- Construí un modelo de proyección de demanda que mejoró la precisión del pronóstico en 18%.
+- Elaboré informes mensuales de ventas para 5 sucursales.
+- Capacité a 10 usuarios del área comercial en el uso de tableros.
+
+Practicante de Inteligencia Comercial — Hooli
+Jun 2017 - Dic 2017
+- Apoyé en la limpieza y consolidación de bases de clientes.
+- Preparé presentaciones para el comité comercial.
+
+EDUCACIÓN
+Universidad Nacional de Ingeniería — Ingeniería Estadística (2012 - 2017)
+Diplomado en Ciencia de Datos, Pontificia Universidad Católica del Perú (2019)
+
+HABILIDADES
+Lenguajes: SQL, Python, R
+Herramientas: Power BI, Excel avanzado, Tableau, dbt, Git
+Habilidades blandas: comunicación, trabajo en equipo, liderazgo
+
+IDIOMAS
+Español (nativo), Inglés (B2)
+
+PROYECTOS
+Panel de seguimiento de ventas
+Tableros de ventas diarias con alertas por correo para el equipo comercial.
+Tecnologías: Python, Power BI, SQL
+- Automaticé la carga diaria de datos desde el ERP.

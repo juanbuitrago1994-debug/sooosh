@@ -1,0 +1,62 @@
+# Sincronización automática de ofertas de Sooosh (ver docs/SINCRONIZACION.md y docs/PLAN-SYNC-AUTOMATICA.md).
+# Cada 3 horas lee las fuentes públicas (cada una con su propia cadencia), vence lo viejo y calcula los vectores que falten.
+# Solo maneja ofertas públicas y la clave de la base (secreto DATABASE_URL): ningún CV ni dato personal pasa por aquí.
+name: Sincronizar ofertas
+
+on:
+  schedule:
+    - cron: "17 */3 * * *" # minuto 17 (no :00): a la hora en punto GitHub se satura y retrasa los crons
+  workflow_dispatch:
+
+# Una sola corrida a la vez (el candado de la base también lo garantiza).
+concurrency:
+  group: sync-ofertas
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      OLLAMA_URL: http://127.0.0.1:11434
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Fase 1: leer fuentes, vencer ofertas y purgar eventos viejos (sin IA).
+      - name: Leer fuentes
+        run: pnpm sync --phase=fetch
+
+      # Fase 2: vectores. Ollama solo se instala si hay ofertas sin vector (lo normal es que haya pocas).
+      - name: ¿Hay vectores pendientes?
+        id: pending
+        run: echo "n=$(pnpm --silent sync --pending)" >> "$GITHUB_OUTPUT"
+      - name: Cache del modelo de vectores
+        if: steps.pending.outputs.n != '0'
+        uses: actions/cache@v4
+        with:
+          path: ~/.ollama
+          key: ollama-bge-m3-v1
+      - name: Instalar Ollama y bge-m3
+        if: steps.pending.outputs.n != '0'
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          (ollama serve > /tmp/ollama.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:11434/api/tags >/dev/null && break; sleep 2; done
+          ollama pull bge-m3
+      - name: Calcular vectores
+        if: steps.pending.outputs.n != '0'
+        run: pnpm sync --phase=vectors
+
+      # Si Get on Board o las empresas llevan demasiado sin sincronizar, este paso falla y GitHub avisa por correo.
+      - name: Revisar salud
+        run: pnpm sync --check

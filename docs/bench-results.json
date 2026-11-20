@@ -1,0 +1,192 @@
+{
+  "at": "2026-11-17T12:17:40.834Z",
+  "ollamaUrl": "local",
+  "models": [
+    "qwen2.5:7b-instruct",
+    "gemma4:e4b",
+    "qwen3.5:9b"
+  ],
+  "ps": {
+    "qwen2.5:7b-instruct": "qwen2.5:7b-instruct · 5.1 GB · 100% GPU · ctx 8192",
+    "gemma4:e4b": "gemma4:e4b · 10.0 GB · 100% GPU · ctx 8192",
+    "qwen3.5:9b": "qwen3.5:9b · 9.0 GB · 100% GPU · ctx 8192"
+  },
+  "rows": [
+    {
+      "model": "qwen2.5:7b-instruct",
+      "task": "CV",
+      "input": "cv-tipico.txt",
+      "ms": 1787,
+      "quality": 1,
+      "detail": "estructurado, 1 llamadas LLM, 3 puestos, fortalezas ancladas 4/4",
+      "llmCalls": 1
+    },
+    {
+      "model": "qwen2.5:7b-instruct",
+      "task": "CV",
+      "input": "cv-english.txt",
+      "ms": 2392,
+      "quality": 1,
+      "detail": "estructurado, 1 llamadas LLM, 2 puestos, fortalezas ancladas 3/3",
+      "llmCalls": 1
+    },
+    {
+      "model": "qwen2.5:7b-instruct",
+      "task": "CV",
+      "input": "cv-sin-secciones.txt",
+      "ms": 36850,
+      "quality": 1,
+      "detail": "clasico, 1 llamadas LLM, 2 puestos, fortalezas ancladas 2/2",
+      "llmCalls": 1
+    },
+    {
+      "model": "qwen2.5:7b-instruct",
+      "task": "Oferta",
+      "input": "texto.txt (limpia)",
+      "ms": 11838,
+      "quality": 1,
+      "detail": "limpieza 6510 ms + estructura 5326 ms (lineas); 3 req, 2 des, 4 func; descartados 0"
+    },
+    {
+      "model": "qwen2.5:7b-instruct",
+      "task": "Oferta",
+      "input": "linkedin-post-hilo (con ruido)",
+      "ms": 13282,
+      "quality": 1,
+      "detail": "limpieza 8413 ms + estructura 4867 ms (lineas); 4 req, 1 des, 3 func; descartados 0"
+    },
+    {
+      "model": "qwen2.5:7b-instruct",
+      "task": "Oferta",
+      "input": "main.html (página web)",
+      "ms": 10413,
+      "quality": 1,
+      "detail": "limpieza 4911 ms + estructura 5501 ms (lineas); 4 req, 1 des, 3 func; descartados 0"
+    },
+    {
+      "model": "qwen2.5:7b-instruct",
+      "task": "Carga",
+      "input": "primera carga en memoria",
+      "ms": 41,
+      "quality": 1,
+      "detail": ""
+    },
+    {
+      "model": "gemma4:e4b",
+      "task": "CV",
+      "input": "cv-tipico.txt",
+      "ms": 2069,
+      "quality": 1,
+      "detail": "estructurado, 1 llamadas LLM, 3 puestos, fortalezas ancladas 4/4",
+      "llmCalls": 1
+    },
+    {
+      "model": "gemma4:e4b",
+      "task": "CV",
+      "input": "cv-english.txt",
+      "ms": 1153,
+      "quality": 1,
+      "detail": "estructurado, 1 llamadas LLM, 2 puestos, fortalezas ancladas 3/3",
+      "llmCalls": 1
+    },
+    {
+      "model": "gemma4:e4b",
+      "task": "CV",
+      "input": "cv-sin-secciones.txt",
+      "ms": 489622,
+      "quality": 0,
+      "detail": "FALLÓ: The operation was aborted due to timeout"
+    },
+    {
+      "model": "gemma4:e4b",
+      "task": "Oferta",
+      "input": "texto.txt (limpia)",
+      "ms": 8075,
+      "quality": 1,
+      "detail": "limpieza 4057 ms + estructura 4017 ms (lineas); 3 req, 2 des, 3 func; descartados 0"
+    },
+    {
+      "model": "gemma4:e4b",
+      "task": "Oferta",
+      "input": "linkedin-post-hilo (con ruido)",
+      "ms": 6220,
+      "quality": 1,
+      "detail": "limpieza 3226 ms + estructura 2992 ms (lineas); 4 req, 1 des, 3 func; descartados 0"
+    },
+    {
+      "model": "gemma4:e4b",
+      "task": "Oferta",
+      "input": "main.html (página web)",
+      "ms": 5820,
+      "quality": 1,
+      "detail": "limpieza 2839 ms + estructura 2981 ms (lineas); 3 req, 1 des, 2 func; descartados 0"
+    },
+    {
+      "model": "gemma4:e4b",
+      "task": "Carga",
+      "input": "primera carga en memoria",
+      "ms": 8083,
+      "quality": 1,
+      "detail": ""
+    },
+    {
+      "model": "qwen3.5:9b",
+      "task": "CV",
+      "input": "cv-tipico.txt",
+      "ms": 4638,
+      "quality": 1,
+      "detail": "estructurado, 1 llamadas LLM, 3 puestos, fortalezas ancladas 4/4",
+      "llmCalls": 1
+    },
+    {
+      "model": "qwen3.5:9b",
+      "task": "CV",
+      "input": "cv-english.txt",
+      "ms": 3064,
+      "quality": 1,
+      "detail": "estructurado, 1 llamadas LLM, 2 puestos, fortalezas ancladas 3/3",
+      "llmCalls": 1
+    },
+    {
+      "model": "qwen3.5:9b",
+      "task": "CV",
+      "input": "cv-sin-secciones.txt",
+      "ms": 19886,
+      "quality": 0.6666666666666666,
+      "detail": "clasico, 1 llamadas LLM, 0 puestos, fortalezas ancladas 0/0",
+      "llmCalls": 1
+    },
+    {
+      "model": "qwen3.5:9b",
+      "task": "Oferta",
+      "input": "texto.txt (limpia)",
+      "ms": 14284,
+      "quality": 1,
+      "detail": "limpieza 6770 ms + estructura 7513 ms (lineas); 3 req, 2 des, 3 func; descartados 0"
+    },
+    {
+      "model": "qwen3.5:9b",
+      "task": "Oferta",
+      "input": "linkedin-post-hilo (con ruido)",
+      "ms": 15465,
+      "quality": 1,
+      "detail": "limpieza 7725 ms + estructura 7737 ms (lineas); 4 req, 1 des, 2 func; descartados 0"
+    },
+    {
+      "model": "qwen3.5:9b",
+      "task": "Oferta",
+      "input": "main.html (página web)",
+      "ms": 9891,
+      "quality": 1,
+      "detail": "limpieza 3697 ms + estructura 6194 ms (lineas); 3 req, 2 des, 3 func; descartados 0"
+    },
+    {
+      "model": "qwen3.5:9b",
+      "task": "Carga",
+      "input": "primera carga en memoria",
+      "ms": 4278,
+      "quality": 1,
+      "detail": ""
+    }
+  ]
+}

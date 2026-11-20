@@ -1,0 +1,28 @@
+Daniel Ortega
+Senior Software Engineer
+daniel.ortega@example.com · +1 415 555 0134 · Austin, USA
+github.com/dortega-example
+
+SUMMARY
+Backend engineer with 9 years of experience building payment APIs and data pipelines.
+
+WORK EXPERIENCE
+Globex Corp — Senior Software Engineer
+2020 - Present
+• Led a team of 5 engineers migrating a monolith to services, cutting deploy time by 60%.
+• Built a fraud detection pipeline processing 2M events per day.
+• Responsible for on-call rotations.
+
+Initech | Software Engineer
+Jan 2016 - Dec 2019
+• Developed REST APIs in Java and Go.
+• Improved test coverage from 40% to 85%.
+
+EDUCATION
+B.Sc. Computer Science, University of Texas at Austin (2011 - 2015)
+
+SKILLS
+Go, Java, Python, PostgreSQL, Kafka, AWS
+
+LANGUAGES
+English (native), Spanish (C1)

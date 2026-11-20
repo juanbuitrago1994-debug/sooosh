@@ -1,0 +1,38 @@
+SOSA OSE 0.5.05 LLISTA
+III ITALIA TIA
+Ana Paredes 9
+Product designer
+Quito, Ecuador
+Acerca de mí
+Diseñadora de producto con enfoque en experiencias digitales centradas en el usuario. Me apasiona simplificar procesos complejos.
+Más de 7 años trabajando con equipos de producto en startups. Disponible para tiempo completo y freelance.
+Stack de trabajo
+Tal mB AY > E
+F q «e N
+Experiencia
+Nubela 11ago 2025 - 06 nov 2026 Tecnología
+Empresa de producto digital con clientes en la región. Participé en dos cuentas como disefiadora de producto: Rappel y Banco Sur.
+Product designer, Banco Sur Sep 2026 - Nov 2026
+Banca digital
+Dos meses en el equipo de Usuarios de Banco Sur.
++ Diseño de nuevos componentes con medición de su impacto (conversión y tiempo en tarea).
++ Rediseño de secciones de cuentas: jerarquía de información
+y estados vacíos, de carga y de error.
+Ssr. Product designer, Rappel 1 Ago 2025 - Sep 2026
+Delivery
+Responsable del diseño de punta a punta.
+* Design system: arquitectura de componentes, variables y tokens.
+* Mantenimiento y versionado del sistema; auditorías de consistencia.
+Senior UI Designer, Movix — 2024 - Actualidad Movilidad
+Plataforma de movilidad inteligente.
+Design system designer, Alumnex — 2021-2024 Edtech
+Plataforma con IA para clases en vivo.
+Junior UX & UI Designer, Aseguradora Andina — 2016-2021 Seguros
+Filial de un grupo asegurador.
+Diseñadora freelance — Actualidad Multisectorial
+Educación
+Universidad Central del Ecuador
+Contacto
+Email ana.paredes@example.com
+Teléfono +593 99 123 4567
+Figma Jira Notion Slack GitHub Hotjar

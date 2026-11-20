@@ -1,0 +1,92 @@
+{
+  "model": "qwen2.5:7b-instruct",
+  "rows": [
+    {
+      "cv": "fuerte",
+      "runs": [
+        {
+          "ms": 36192,
+          "verdicts": "resumen-formula:cumple logro-formula:cumple soft-demostradas:cumple",
+          "judged": 3,
+          "literal": 3,
+          "warnings": 0,
+          "overall": 99
+        },
+        {
+          "ms": 25877,
+          "verdicts": "resumen-formula:cumple logro-formula:cumple soft-demostradas:cumple",
+          "judged": 3,
+          "literal": 3,
+          "warnings": 0,
+          "overall": 99
+        },
+        {
+          "ms": 25618,
+          "verdicts": "resumen-formula:cumple logro-formula:cumple soft-demostradas:cumple",
+          "judged": 3,
+          "literal": 3,
+          "warnings": 0,
+          "overall": 99
+        }
+      ]
+    },
+    {
+      "cv": "medio",
+      "runs": [
+        {
+          "ms": 20788,
+          "verdicts": "resumen-formula:no-cumple logro-formula:cumple soft-demostradas:no-cumple",
+          "judged": 3,
+          "literal": 1,
+          "warnings": 0,
+          "overall": 65
+        },
+        {
+          "ms": 15187,
+          "verdicts": "resumen-formula:no-cumple logro-formula:cumple soft-demostradas:no-cumple",
+          "judged": 3,
+          "literal": 1,
+          "warnings": 0,
+          "overall": 65
+        },
+        {
+          "ms": 14063,
+          "verdicts": "resumen-formula:no-cumple logro-formula:cumple soft-demostradas:no-cumple",
+          "judged": 3,
+          "literal": 1,
+          "warnings": 0,
+          "overall": 65
+        }
+      ]
+    },
+    {
+      "cv": "débil",
+      "runs": [
+        {
+          "ms": 8860,
+          "verdicts": "logro-formula:no-cumple soft-demostradas:no-cumple",
+          "judged": 2,
+          "literal": 0,
+          "warnings": 0,
+          "overall": 14
+        },
+        {
+          "ms": 8476,
+          "verdicts": "logro-formula:no-cumple soft-demostradas:no-cumple",
+          "judged": 2,
+          "literal": 0,
+          "warnings": 0,
+          "overall": 14
+        },
+        {
+          "ms": 8375,
+          "verdicts": "logro-formula:no-cumple soft-demostradas:no-cumple",
+          "judged": 2,
+          "literal": 0,
+          "warnings": 0,
+          "overall": 14
+        }
+      ]
+    }
+  ]
+}

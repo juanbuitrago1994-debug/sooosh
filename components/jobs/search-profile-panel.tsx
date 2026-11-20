@@ -1,0 +1,90 @@
+"use client"
+
+import { useRef, useState } from "react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
+import { parseCvFileSafe } from "@/components/jobs/parse-cv-file"
+import { clearSearchProfile, setSearchProfile, useSearchProfile } from "@/lib/profile/search-profile"
+import { ACCEPT_LABEL, validateFile } from "@/lib/uploads"
+
+/**
+ * El CV con el que se compara cada oferta. Es una elección explícita: se sube aquí (o se marca en el flujo de adaptación) y las
+ * adaptaciones que la persona haga a otros CV no lo cambian.
+ */
+export function SearchProfilePanel() {
+  const profile = useSearchProfile()
+  const input = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+  const [stage, setStage] = useState("")
+  const [error, setError] = useState("")
+
+  const onFile = async (file: File | undefined) => {
+    if (!file) return
+    const invalid = validateFile({ name: file.name, size: file.size })
+    if (invalid) {
+      setError(invalid)
+      return
+    }
+    setBusy(true)
+    setError("")
+    try {
+      const r = await parseCvFileSafe(file, setStage)
+      setSearchProfile(r.cv, r.fileId)
+      toast.success("Listo: ahora cada oferta muestra cuánto encaja con tu CV")
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+      setStage("")
+      if (input.current) input.current.value = ""
+    }
+  }
+
+  const picker = (
+    <input ref={input} type="file" className="sr-only" tabIndex={-1} aria-hidden accept={`.${["pdf", "docx", "doc", "odt", "rtf", "txt", "md", "jpg", "jpeg", "png"].join(",.")}`} onChange={(e) => void onFile(e.target.files?.[0])} />
+  )
+
+  if (busy) {
+    return (
+      <p className="flex items-center gap-2 text-sm text-muted-foreground" role="status">
+        <Spinner /> {stage || "Leyendo tu CV…"}
+      </p>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {picker}
+      {profile ? (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <p className="min-w-0 flex-1">
+            <span className="text-muted-foreground">Comparando con tu CV: </span>
+            <span className="font-medium">{profile.label}</span>
+          </p>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="sm" onClick={() => input.current?.click()}>
+              Cambiar CV
+            </Button>
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={clearSearchProfile}>
+              Quitar
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">Sube tu CV para ver cuánto encaja cada oferta</p>
+          <p className="text-sm text-muted-foreground">Lo leemos aquí mismo con el modelo local; no sale de tu equipo. Formatos: {ACCEPT_LABEL}.</p>
+          <Button variant="secondary" className="self-start" onClick={() => input.current?.click()}>
+            Subir mi CV
+          </Button>
+        </div>
+      )}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}

@@ -1,0 +1,17 @@
+Analista de Datos Junior — Initech
+
+Initech busca una persona analista de datos para el área comercial.
+
+Requisitos
+- Estudios en estadística, ingeniería o afines
+- Dominio de Excel y SQL
+- Capacidad de comunicar resultados a equipos no técnicos
+
+Deseable
+- Power BI o Tableau
+- Nociones de Python
+
+Responsabilidades
+- Preparar reportes semanales de ventas
+- Mantener tableros y consultas existentes
+- Apoyar análisis ad hoc solicitados por el equipo comercial

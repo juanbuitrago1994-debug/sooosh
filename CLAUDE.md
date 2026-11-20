@@ -1,0 +1,49 @@
+@AGENTS.md
+
+# CV Tailor — reglas permanentes
+
+Estas reglas aplican a toda fase y toda tarea. No se negocian.
+
+## UI
+- Solo componentes de shadcn (`components/ui/*`, añadidos con `pnpm dlx shadcn@latest add`) y sus **tokens semánticos** (`bg-background`, `text-muted-foreground`, `border`, `bg-primary`, etc.).
+- Prohibido: tokens propios, CSS propio (más allá de `app/globals.css` generado por shadcn), colores literales (`bg-blue-500`, `#fff`) y **valores arbitrarios** de Tailwind (`w-[480px]`, `text-[13px]`, `p-[7px]`).
+- Antes de crear un componente a mano, busca en shadcn (MCP `shadcn` o `shadcn add`). Compón con Sidebar, Empty, Field, Progress, Sonner, Card, etc.
+- Web **responsiva**: móvil (375), tableta (768) y escritorio (1280). Sin scroll horizontal en ningún ancho. Objetivos táctiles ≥ 44 px (`size-11`/`min-h-11`).
+- Tema claro y oscuro deben verse bien.
+- **Excepción documentada a "solo shadcn"** (la única): `components/ai/*` (movimiento de IA, p. ej. `AiAura`, `MatrixLoader`). Fondo de la app: color sólido del tema (`--background`), sin degradados ni valores arbitrarios de Tailwind.
+- **Contenedores (UI v2)**: `components/glass-panel.tsx` (`GlassPanel`: blur, fondo semitransparente, borde muy tenue, sin sombra) es el único contenedor permitido y solo en esta lista cerrada: (1) línea de tiempo del análisis, (2) tarjeta de cambio en la revisión, (3) menús y diálogos, (4) tarjeta de oferta del buscador (aprobado por Juan el 19-nov-2026). En cualquier otro lugar `Card` está prohibido (las pantallas aún no rediseñadas lo conservan hasta que les toque).
+- **Tipografía (UI v2)**: una sola familia sans (Geist) en toda la app; prohibido `font-serif`/`font-heading` con serifa. Escala: `text-xs`, `text-sm` (cuerpo), `text-base` y `text-lg font-medium` como máximo para títulos; nada sobre `text-xl`. Pesos 400 y 500. Botones `h-9` por defecto y radio completo; el área táctil de 44 px en móvil se conserva ampliando el área de toque, sin agrandar el texto.
+
+## Idioma
+- Todo texto visible de la interfaz (etiquetas, errores, toasts, vacíos, aria-label) va en **español**. Código, nombres y commits pueden ir en inglés o español, pero consistentes.
+
+## Costo cero
+- Solo **Ollama local** para IA. Ninguna API de pago ni servicio de IA en la nube. Playwright y librerías open source son válidos.
+- **Datos**: Supabase (plan gratuito, proyecto `Sooosh`) está permitido SOLO para guardar datos (memoria de preferencias y ofertas). Decisión de Juan del 19-nov-2026. Claves y contraseñas solo en `.env.local` (nunca en el repositorio ni en el chat); todas las tablas con RLS activo. Los CV y su caché (datos personales) se quedan locales hasta que existan cuentas de usuario.
+
+## Datos del CV
+- **Nunca inventar datos del CV**: ni empleos, fechas, cifras, títulos, herramientas ni logros. Todo lo que aparezca en el CV adaptado debe poder rastrearse al CV original del usuario. Si falta información, se deja vacía o se pregunta.
+
+## Next.js
+- Esta versión de Next tiene cambios incompatibles: lee la guía relevante en `node_modules/next/dist/docs/` antes de escribir código (ver AGENTS.md).
+
+## Servidores
+- No arranques otro servidor de desarrollo. El servidor de Juan corre en el puerto 3000 con `pnpm dev`. Si necesitas probar algo, usa ese. Si no responde, avísame en vez de iniciar otro. `pnpm shots` usa ese servidor y falla con aviso si no responde.
+
+## Definición de "fase terminada"
+Una fase solo termina cuando, en este orden, **todo** está en verde:
+1. `pnpm lint`
+2. `pnpm exec tsc --noEmit`
+3. `pnpm build`
+4. `pnpm test`
+
+
+**La auditoría visual es de Juan, no mía** (regla del 17-nov-2026, sustituye a la del mismo día sobre capturas). No tomo capturas para revisarlas, no leo imágenes, no ejecuto `pnpm shots` ni `pnpm a11y` y no hago matrices de viewport o tema, salvo que Juan lo pida en un mensaje. Los scripts `shots` y `a11y` se conservan sin tocar, solo para uso bajo petición. Verificación permitida: lint, tsc, test, build y aserciones de DOM en texto (p. ej. fuente calculada del body). Las imágenes de `docs/referencias/` se leyeron una vez y se sintetizaron en `docs/DESIGN-PATTERNS.md`; se trabaja solo con ese documento. Ahorro de contexto: no leer archivos grandes completos (grep y rangos), no repetir suites completas más de una vez por entrega, diffs mínimos.
+
+Cada fase deja en `docs/STATUS.md` qué se hizo, qué se verificó con resultados reales y una lista "Para revisar por Juan" con las pantallas y estados exactos a mirar (claro/oscuro, escritorio y 375 px). Si algo falla, se corrige; no se marca la fase como hecha. Luego: commit claro. **Todo dato de rendimiento que se cite sale de una medición propia registrada en `docs/BENCHMARKS.md`.**
+
+## Flujo
+- **Fase UI-2** (rediseño v2, 17-nov-2026) se inserta antes de la Fase G; se rediseña una pantalla por vez y se espera la aprobación de Juan antes de pasar a la siguiente.
+- **Fase K** (análisis profundo, 18-nov-2026) tiene prioridad sobre G y H; se avanza K1→K8 un paso por vez (ver `docs/PLAN.md`, rúbrica en `docs/RUBRICA.md`). Ya no se busca reproducir el diseño del CV original: se reconstruye con plantilla propia y se muestra una vista previa antes de descargar (PDF, Word, TXT, Markdown).
+- Plan: `docs/PLAN.md`. Estado: `docs/STATUS.md`. Comando: `/siguiente-fase`.
+- Fases A–E se hicieron de corrido (16-nov-2026). Desde la tanda F–J (17-nov-2026): **una fase por vez**; al terminar, detenerse y esperar `/siguiente-fase`.

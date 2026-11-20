@@ -1,0 +1,52 @@
+{
+  "data": [
+    {
+      "id": "ingeniero-datos-acme-santiago-1",
+      "type": "job",
+      "attributes": {
+        "title": "Ingeniero de Datos Senior",
+        "description_headline": "Requisitos para tener éxito en el cargo:",
+        "description": "<ul><li>Entre 4 y 6 años de experiencia en ingeniería de datos.</li><li>Dominio de SQL y Python.</li></ul>",
+        "functions_headline": "Responsabilidades:",
+        "functions": "<ul><li>Construir pipelines de datos en la nube.</li><li>Mantener el almacén de datos.</li></ul>",
+        "desirable_headline": "Deseable:",
+        "desirable": "<ul><li>Experiencia con Airflow.</li></ul>",
+        "benefits": "<ul><li>Seguro de salud</li></ul>",
+        "remote_modality": "hybrid",
+        "countries": ["Chile"],
+        "lang": "es",
+        "published_at": 1794847607,
+        "min_salary": 3200,
+        "max_salary": 4000,
+        "seniority": { "data": { "id": "4", "type": "seniority", "attributes": { "name": "Senior", "locale_key": "senior" } } },
+        "modality": { "data": { "id": "1", "type": "modality", "attributes": { "name": "Full time", "locale_key": "full_time" } } },
+        "company": { "data": { "id": "acme", "type": "company", "attributes": { "name": "Acme Datos" } } },
+        "tags": { "data": [{ "id": "data-engineering", "type": "tag", "attributes": { "name": "Data Engineering" } }] }
+      },
+      "links": { "public_url": "https://www.getonbrd.com/jobs/ingeniero-datos-acme-santiago-1" }
+    },
+    {
+      "id": "designer-remote-2",
+      "type": "job",
+      "attributes": {
+        "title": "Product Designer",
+        "description_headline": "Requisitos",
+        "description": "<ul><li>Portafolio con casos reales.</li></ul>",
+        "functions_headline": "Funciones",
+        "functions": "<ul><li>Diseñar flujos de producto.</li></ul>",
+        "remote_modality": "fully_remote",
+        "countries": ["Remote"],
+        "lang": "en",
+        "company": { "data": { "id": "globex", "type": "company", "attributes": { "name": "Globex" } } }
+      },
+      "links": { "public_url": "https://www.getonbrd.com/jobs/designer-remote-2" }
+    },
+    {
+      "id": "texas-dev-3",
+      "type": "job",
+      "attributes": { "title": "Software Engineer", "description": "<ul><li>5 years</li></ul>", "functions": "", "remote_modality": "no_remote", "countries": ["United States"], "lang": "en", "company": { "data": { "id": "x", "type": "company", "attributes": { "name": "Texas Inc" } } } },
+      "links": { "public_url": "https://www.getonbrd.com/jobs/texas-dev-3" }
+    }
+  ],
+  "meta": { "page": 1, "per_page": 100, "total_pages": 1 }
+}
