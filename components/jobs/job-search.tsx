@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button"
 import { ConsentBanner } from "@/components/privacy/consent-banner"
 import { PrivacyLink } from "@/components/privacy/privacy-dialog"
 import { JobCard } from "@/components/jobs/job-card"
+import { SavedFiltersBar } from "@/components/jobs/saved-filters-bar"
 import { SearchProfilePanel } from "@/components/jobs/search-profile-panel"
 import { markFirstSearch, shouldAsk, track, useConsent } from "@/lib/events/consent"
 import { useMarks } from "@/lib/profile/job-marks"
+import { getFilters, type SavedFilters } from "@/lib/profile/saved-filters"
 import { useSearchProfile } from "@/lib/profile/search-profile"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -76,6 +78,15 @@ export function JobSearch() {
         if (a === "todas" || a === "tecnologia") setArea(a)
       } catch {
         /* sin almacenamiento */
+      }
+      // «Aplicar mis filtros al abrir»: lo guardado manda sobre la región y el área recordadas por separado.
+      const mine = getFilters()
+      if (mine?.auto) {
+        setRegion(mine.region)
+        setArea(mine.area)
+        setMode(mine.mode)
+        setSort(mine.sort)
+        setOnlyMatches(mine.onlyMatches)
       }
     })
     return () => {
@@ -168,6 +179,14 @@ export function JobSearch() {
     }
   }
 
+  const applyFilters = (f: Omit<SavedFilters, "auto">) => {
+    changeRegion(f.region)
+    changeArea(f.area)
+    setMode(f.mode)
+    setSort(f.sort)
+    setOnlyMatches(f.onlyMatches)
+  }
+
   const regionName = useMemo(() => (region === ALL_REGIONS ? "todas las regiones" : (REGION_OPTIONS.find((r) => r.code === region)?.name ?? "")), [region])
 
   return (
@@ -257,6 +276,8 @@ export function JobSearch() {
         </label>
         <Switch id="solo-match" checked={!!cv && onlyMatches} disabled={!cv} onCheckedChange={setOnlyMatches} />
       </div>
+
+      {region !== null && <SavedFiltersBar current={{ region, area, mode: mode as SavedFilters["mode"], sort, onlyMatches }} onApply={applyFilters} />}
 
       {marks.saved.length > 0 && (
         <div className="flex items-center justify-between gap-3">

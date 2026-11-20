@@ -642,3 +642,19 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Para revisar por Juan
 1. Reinicia `pnpm dev`. En `/ofertas` escribe despacio «diseñ…»: los resultados deben ir cambiando mientras escribes, sin parpadeos; al hacer una pausa pueden reordenarse un poco (se suma el significado). Prueba Enter, borrar todo el texto, y claro/oscuro y 375 px. Con «reducir movimiento» activado en el sistema no debe haber animación de entrada.
+
+## Mejoras de diseño y experiencia — 3: filtros guardados (20-nov-2026)
+
+### Qué se hizo
+- **«Mis filtros»** (`components/jobs/saved-filters-bar.tsx`, `lib/profile/saved-filters.ts`): botón «Guardar estos filtros» (región, área, modalidad, orden y «solo match»); una vez guardados aparecen «Aplicar mis filtros» (un toque; queda como «Mis filtros aplicados» y desactivado cuando ya coinciden), «Actualizar mis filtros» y «Quitar», más el interruptor **«Aplicar mis filtros al abrir»** para que el buscador arranque ya con ellos.
+- Solo en este navegador (sin cuentas ni consentimiento; no sale de aquí). No guarda el texto buscado ni «solo guardadas». Un valor roto o una región desconocida se descarta entero (mejor sin filtros que con filtros rotos). Avisos con Sonner y aparición con fundido de 150 ms (sin movimiento si se pidió reducirlo).
+
+### Qué se verificó
+- lint, tsc, build y 543 pruebas en verde (nueva `tests/saved-filters.test.tsx`: guardar/leer, conservar «al abrir» al actualizar, quitar, validación de valores raros, comparación, y la barra sin guardados).
+
+### Impacto en la app y la experiencia
+- Se acabó reconfigurar todo cada vez que se recarga la página: configuras una vez y vuelves a tus filtros con un toque, o ni eso.
+- Mientras no existan cuentas viven en el navegador (otro dispositivo no los ve); con cuentas pasarán a Supabase.
+
+### Para revisar por Juan
+1. Reinicia `pnpm dev`. En `/ofertas`: cambia región/área/modalidad/orden → «Guardar estos filtros» (toast). Cambia algo y pulsa «Aplicar mis filtros» (vuelve a lo guardado; el botón queda «Mis filtros aplicados»). Activa «Aplicar mis filtros al abrir», cambia otros filtros, recarga: debe abrir con los guardados. Prueba «Quitar». Mira claro/oscuro, escritorio y 375 px.
