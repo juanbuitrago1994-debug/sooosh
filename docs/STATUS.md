@@ -626,3 +626,19 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Para revisar por Juan
 1. Reinicia `pnpm dev`. En `/ofertas`: tarjetas con «🔥 Nueva» arriba a la derecha (junto al encaje) en claro/oscuro, escritorio y 375 px; y la insignia sobre el título en la ficha de una oferta reciente.
+
+## Mejoras de diseño y experiencia — 2: búsqueda en vivo (20-nov-2026)
+
+### Qué se hizo
+- Búsqueda **en dos tiempos**: con 2 o más letras, ~200 ms después de la última tecla aparecen los resultados por texto (`fast`: sin tocar Ollama); tras una pausa de 700 ms o al pulsar **Enter** se suma la búsqueda por significado. Cada petición cancela la anterior.
+- Medición: solo la búsqueda completa cuenta como «búsqueda» (antes cada pausa corta de escritura podía registrarse); no se guardan las teclas intermedias.
+- Mientras llega una respuesta, los resultados anteriores se quedan visibles con una atenuación suave (150 ms) en vez de saltar al esqueleto. Las tarjetas nuevas entran con un fundido y un desplazamiento mínimo, escalonadas 20 ms (las primeras 8); sin movimiento si el sistema pide reducirlo.
+
+### Qué se verificó
+- lint, tsc, build y 538 pruebas en verde (nueva `tests/search-fast.test.ts`: la ruta no calcula el vector en modo `fast` y sí en el completo).
+
+### Impacto en la app y la experiencia
+- Se siente inmediata: sin esperar a que Ollama calcule un vector por cada pausa; el significado «enriquece» la lista un instante después. Menos carga en Ollama y en Supabase.
+
+### Para revisar por Juan
+1. Reinicia `pnpm dev`. En `/ofertas` escribe despacio «diseñ…»: los resultados deben ir cambiando mientras escribes, sin parpadeos; al hacer una pausa pueden reordenarse un poco (se suma el significado). Prueba Enter, borrar todo el texto, y claro/oscuro y 375 px. Con «reducir movimiento» activado en el sistema no debe haber animación de entrada.

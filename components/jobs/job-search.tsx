@@ -46,8 +46,11 @@ function initialRegion(): string {
  */
 export function JobSearch() {
   const [region, setRegion] = useState<string | null>(null)
-  const [q, setQ] = useState("")
+  // Búsqueda en vivo en dos tiempos: `fast` (solo texto, ~200 ms tras la última tecla) y completa (suma el significado, tras una pausa o con Enter).
+  const [search, setSearch] = useState<{ q: string; fast: boolean }>({ q: "", fast: false })
+  const { q, fast } = search
   const [typed, setTyped] = useState("")
+  const [settled, setSettled] = useState("") // clave de la última petición terminada: mientras no coincida con la actual, se está buscando
   const [mode, setMode] = useState("")
   const [area, setArea] = useState<Area>("tecnologia") // el buscador abre en Tecnología
   const [onlyMatches, setOnlyMatches] = useState(false)
@@ -80,13 +83,27 @@ export function JobSearch() {
     }
   }, [])
 
-  // El texto se envía 350 ms después de la última tecla.
   useEffect(() => {
-    const t = setTimeout(() => setQ(typed.trim()), 350)
-    return () => clearTimeout(t)
+    const text = typed.trim()
+    if (text === "") {
+      const t = setTimeout(() => setSearch({ q: "", fast: false }), 0)
+      return () => clearTimeout(t)
+    }
+    // Con 2+ letras aparecen resultados de texto casi al instante; la búsqueda por significado llega tras una pausa.
+    const quick = text.length >= 2 ? setTimeout(() => setSearch((s) => (s.q === text && !s.fast ? s : { q: text, fast: true })), 200) : null
+    const full = setTimeout(() => setSearch({ q: text, fast: false }), 700)
+    return () => {
+      if (quick) clearTimeout(quick)
+      clearTimeout(full)
+    }
   }, [typed])
 
+  // Enter confirma ya la búsqueda completa (sin esperar la pausa).
+  const commit = () => setSearch({ q: typed.trim(), fast: false })
+
   const effectiveSort: Sort = sort === "encaje" && !cv ? "relevancia" : sort
+  const requestKey = [region, q, fast, mode, area, effectiveSort, onlyMatches, !!cv, onlySaved, marks.saved.join(",")].join("|")
+  const loading = region !== null && settled !== requestKey
 
   useEffect(() => {
     if (region === null) return
@@ -94,15 +111,16 @@ export function JobSearch() {
     fetch("/api/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ region, q: q || undefined, mode: mode || undefined, area, sort: effectiveSort, onlyMatches: !!cv && onlyMatches, cv: cv ?? undefined, anonId: anonId ?? undefined, savedIds: onlySaved ? marks.saved : undefined }),
+      body: JSON.stringify({ region, q: q || undefined, fast: fast || undefined, mode: mode || undefined, area, sort: effectiveSort, onlyMatches: !!cv && onlyMatches, cv: cv ?? undefined, anonId: anonId ?? undefined, savedIds: onlySaved ? marks.saved : undefined }),
       signal: ctrl.signal,
     })
       .then(async (r) => {
         const d = await r.json()
         if (!r.ok) throw new Error(d.error ?? "No se pudo buscar.")
         setJobs(d.jobs)
-        if (!onlySaved) {
-          // Medición (solo con consentimiento; `track` no hace nada si no lo hay) y primera búsqueda para pedir el permiso.
+        setSettled(requestKey)
+        if (!onlySaved && !fast) {
+          // Solo la búsqueda completa cuenta como búsqueda (no cada tecla). Medición (solo con consentimiento; `track` no hace nada si no lo hay) y primera búsqueda para pedir el permiso.
           markFirstSearch()
           track("search", { region, area, mode: (mode || null) as "remoto" | "hibrido" | "presencial" | null, sort: effectiveSort, onlyMatches: !!cv && onlyMatches, q: q || null, results: d.jobs.length })
           if (d.jobs.length > 0) track("impressions", { jobIds: d.jobs.slice(0, 60).map((j: { id: string }) => j.id) })
@@ -111,10 +129,13 @@ export function JobSearch() {
         setError("")
       })
       .catch((e: Error) => {
-        if (e.name !== "AbortError") setError(e.message)
+        if (e.name !== "AbortError") {
+          setError(e.message)
+          setSettled(requestKey)
+        }
       })
     return () => ctrl.abort()
-  }, [region, q, mode, area, effectiveSort, onlyMatches, cv, anonId, onlySaved, marks.saved])
+  }, [region, q, fast, mode, area, effectiveSort, onlyMatches, cv, anonId, onlySaved, marks.saved, requestKey])
 
   // Búsquedas populares de la región (solo las que hicieron 5 o más personas distintas que aceptaron «Para todos»; casi siempre vacío al inicio).
   useEffect(() => {
@@ -172,7 +193,7 @@ export function JobSearch() {
         <FieldLabel htmlFor="buscar">Qué buscas</FieldLabel>
         <div className="relative">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input id="buscar" type="search" className="pl-9" placeholder="Cargo, empresa o habilidad (p. ej. diseñador UX, SQL)" value={typed} onChange={(e) => setTyped(e.target.value)} />
+          <Input id="buscar" type="search" className="pl-9" placeholder="Cargo, empresa o habilidad (p. ej. diseñador UX, SQL)" value={typed} onChange={(e) => setTyped(e.target.value)} onKeyDown={(e) => e.key === "Enter" && commit()} enterKeyHint="search" />
         </div>
       </Field>
 
@@ -255,7 +276,7 @@ export function JobSearch() {
         </p>
       )}
 
-      <section aria-label="Resultados" aria-live="polite" className="flex flex-col">
+      <section aria-label="Resultados" aria-live="polite" aria-busy={loading} className={`flex flex-col transition-opacity duration-150 ${loading && jobs ? "opacity-60" : "opacity-100"}`}>
         {jobs === null && !error ? (
           <div className="flex flex-col gap-4" aria-hidden>
             {[0, 1, 2].map((i) => (
@@ -283,6 +304,7 @@ export function JobSearch() {
                   <JobCard
                     key={j.id}
                     job={j}
+                    index={i}
                     saved={marks.saved.includes(j.id)}
                     onOpen={() => track("open", { jobId: j.id, position: i, score: j.fit?.score ?? null, match: j.fit ? j.fit.match : null })}
                   />

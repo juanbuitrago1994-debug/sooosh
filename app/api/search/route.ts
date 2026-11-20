@@ -14,6 +14,8 @@ import { cvSchema } from "@/lib/schemas/cv"
 const bodySchema = z.object({
   region: z.string().refine(isRegion, "Región desconocida"),
   q: z.string().trim().max(120).optional(),
+  /** búsqueda «mientras escribe»: solo texto (milisegundos); el significado (vector en Ollama) se suma cuando la persona hace una pausa */
+  fast: z.boolean().default(false),
   mode: z.enum(WORK_MODES).optional(),
   /** `tecnologia` = solo cargos de tecnología; `todas` = sin filtro */
   area: z.enum(["tecnologia", "todas"]).default("todas"),
@@ -40,7 +42,7 @@ const POOL = 80
 export async function POST(request: Request) {
   const parsed = bodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "Búsqueda inválida." }, { status: 400 })
-  const { region, q, mode, area, sort, onlyMatches } = parsed.data
+  const { region, q, mode, area, sort, onlyMatches, fast } = parsed.data
   const cv = parsed.data.cv ? cvSchema.safeParse(parsed.data.cv) : null
   const profile = cv?.success ? cv.data : null
   try {
@@ -48,7 +50,7 @@ export async function POST(request: Request) {
       const saved = rankByFit(await getJobCards(getDb(), parsed.data.savedIds), profile, "relevancia")
       return NextResponse.json({ jobs: saved, semantic: false, hasCv: !!profile, matches: null, matchMin: MATCH_MIN, scored: null })
     }
-    const embedding = q ? await embedQuery(q, AbortSignal.timeout(8000)).catch(() => null) : null
+    const embedding = q && !fast ? await embedQuery(q, AbortSignal.timeout(8000)).catch(() => null) : null
     const wide = !!profile && (sort === "encaje" || onlyMatches)
     // Sin texto de búsqueda, las candidatas son las más cercanas al CV (vectores); con texto, las del texto y el significado.
     const profileEmbedding = wide && !q && profile ? await embedProfile(profile, AbortSignal.timeout(8000)).catch(() => null) : null
