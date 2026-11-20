@@ -183,3 +183,18 @@ export const syncLocks = pgTable("sync_locks", {
   holder: text("holder").notNull(),
   lockedUntil: ts("locked_until").notNull(),
 })
+
+/** Catálogo de fuentes de ofertas: datos para mostrar, atribución, interruptor «activa» y cadencia propia (ver migración 0013). */
+export const sources = pgTable("sources", {
+  key: text("key").primaryKey(),
+  name: text("name").notNull(),
+  kind: text("kind").notNull(),
+  homeUrl: text("home_url"),
+  description: text("description").notNull().default(""),
+  attribution: text("attribution").notNull().default(""),
+  cadenceHours: integer("cadence_hours"),
+  active: boolean("active").notNull().default(true),
+  termsReviewedOn: text("terms_reviewed_on"),
+  createdAt: ts("created_at").notNull().defaultNow(),
+  updatedAt: ts("updated_at").notNull().defaultNow(),
+})

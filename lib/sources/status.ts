@@ -3,6 +3,7 @@ import type { Db } from "@/lib/db"
 import { jobs, syncRuns } from "@/lib/db/schema"
 import { FAMILIES } from "@/lib/jobs/classify"
 import { COUNTRIES } from "@/lib/jobs/geo"
+import { listCatalog } from "./catalog"
 import { syncHealth, TARGETS, type Health } from "./schedule"
 
 /**
@@ -13,7 +14,8 @@ import { syncHealth, TARGETS, type Health } from "./schedule"
 export const LOG_DAYS = 30
 const LOG_PER_SOURCE = 12
 
-export type SourceState = "ok" | "warn" | "late" | "paused" | "new"
+/** `off` = pausada a propósito en el catálogo de fuentes */
+export type SourceState = "ok" | "warn" | "late" | "paused" | "new" | "off"
 export type LogEntry = { at: string; ok: boolean; message: string }
 /** Datos útiles de una fuente para quien busca: qué tan frescas son sus ofertas y qué suelen traer. */
 export type SourceStats = {
@@ -39,6 +41,8 @@ export type SourceStatus = {
   /** qué es la fuente, en una frase, y su sitio (para «Visitar la fuente») */
   description: string
   home: string | null
+  /** texto de atribución que piden los términos de la fuente */
+  attribution: string
   stats: SourceStats
   log: LogEntry[]
   /** solo para «Empresas»: ofertas activas por empresa */
@@ -67,7 +71,8 @@ export function describeRun(r: { ok: boolean; fetched: number; created: number; 
   return failedPart > 0 ? `${base} · ${failedPart} ${failedPart === 1 ? "empresa no respondió" : "empresas no respondieron"}` : base
 }
 
-export function stateOf(h: Pick<Health, "failing" | "stale" | "lastError" | "lastOkAt">): SourceState {
+export function stateOf(h: Pick<Health, "failing" | "stale" | "lastError" | "lastOkAt"> & { active?: boolean }): SourceState {
+  if (h.active === false) return "off"
   if (!h.lastOkAt && !h.lastError) return "new"
   if (h.failing) return "paused"
   if (h.stale) return "late"
@@ -97,8 +102,9 @@ const groupOf = (key: string | null): string | null => {
 
 export async function sourceStatuses(db: Db, now = new Date()): Promise<SourceStatus[]> {
   const active = eq(jobs.status, "activa")
+  const catalog = await listCatalog(db)
   const [health, counts, countries, families, runs] = await Promise.all([
-    syncHealth(db, now),
+    syncHealth(db, now, catalog),
     db
       .select({
         key: jobs.sourceKey,
@@ -144,6 +150,7 @@ export async function sourceStatuses(db: Db, now = new Date()): Promise<SourceSt
   }
   return TARGETS.map((t) => {
     const h = health.find((x) => x.id === t.id)!
+    const row = catalog.find((r) => r.key === t.id)
     const a = acc.get(t.id) ?? { n: 0, new48: 0, tech: 0, salary: 0, remote: 0, latest: null }
     const log = runs
       .filter((r) => r.target === t.id && r.finishedAt)
@@ -151,14 +158,15 @@ export async function sourceStatuses(db: Db, now = new Date()): Promise<SourceSt
       .map((r) => ({ at: new Date(r.finishedAt as string).toISOString(), ok: r.ok, message: describeRun(r) }))
     return {
       id: t.id,
-      name: t.id === "companies" ? "Empresas con tablero público" : t.label,
-      kind: kindOf(t.id),
+      name: row?.name ?? (t.id === "companies" ? "Empresas con tablero público" : t.label),
+      kind: row?.kind ?? kindOf(t.id),
       state: stateOf(h),
       activeOffers: a.n,
       lastOkAt: h.lastOkAt,
       everyHours: t.everyHours,
-      description: INFO[t.id]?.description ?? "",
-      home: INFO[t.id]?.home ?? null,
+      description: row?.description ?? INFO[t.id]?.description ?? "",
+      home: row ? row.homeUrl : (INFO[t.id]?.home ?? null),
+      attribution: row?.attribution ?? "",
       stats: {
         new48: a.new48,
         techPct: pct(a.tech, a.n),

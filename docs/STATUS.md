@@ -698,3 +698,21 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Para revisar por Juan
 1. Reinicia `pnpm dev`. En `/ofertas`: escribe en el buscador y mira cómo la lista se reacomoda; cambia Región/Modalidad/Orden; descarta una oferta («No me interesa» en su ficha) y vuelve; pasa el cursor y pulsa una tarjeta; guarda una oferta en su ficha. Con «reducir movimiento» activado en el sistema no debe moverse nada.
+
+## Catálogo de fuentes — tabla `sources` (20-nov-2026)
+
+### Qué se hizo
+- **Tabla `sources`** (migración `0013`, ya aplicada en Supabase; RLS activa y sin permisos para anónimos): clave (el id de la fuente en la sincronización), nombre, tipo, sitio, descripción, **atribución** que piden los términos, **cadencia propia** (1–168 h o la del código), **interruptor «activa»** y fecha de la última revisión de términos. Sembrada con las 7 fuentes. El adaptador sigue en el código; la tabla manda sobre lo que se muestra y sobre dos mandos de operación.
+- La sincronización lee el catálogo en cada corrida: una fuente **pausada se omite** (y nunca se marca «atrasada»); la cadencia propia manda sobre la del código; sin tabla o sin fila todo sigue como antes (valores del código).
+- El panel público «Fuentes» toma nombre, descripción, sitio y atribución del catálogo, y muestra «Pausada» para las pausadas.
+- En `/admin/ofertas` → «Sincronización automática», cada fuente tiene un **interruptor para pausarla o reanudarla** (`PATCH /api/sources/catalog`, solo administrador; también acepta la cadencia).
+
+### Qué se verificó
+- lint, tsc, build y 554 pruebas en verde (nueva `tests/sources-catalog.test.ts` con una base PGlite que aplica la migración: siembra de las 7 fuentes, pausar/reanudar, rango de cadencia, cadencia efectiva, estado «off» y RLS activa). `pnpm sync --check` contra Supabase funciona con el catálogo.
+
+### Impacto en la app y la experiencia
+- Se puede pausar una fuente que moleste o falle sin publicar código, y añadir una fuente nueva es una fila más (más su adaptador). Cada fuente muestra la atribución que exigen sus términos.
+
+### Para revisar por Juan
+1. `/admin/ofertas`: interruptor junto a cada fuente (pausa/reanuda; avisa con un toast). En `/ofertas` → Fuentes: una pausada aparece como «Pausada», y en su ficha se ve el texto de atribución.
+2. Siguiente aprobado: tabla `source_daily_stats` (foto diaria por fuente).

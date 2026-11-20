@@ -5,6 +5,7 @@ import { enrichPending } from "@/lib/enrich/worker"
 import { purgeOld } from "@/lib/events/server"
 import { embedMissing } from "@/lib/jobs/embed"
 import { expireStale } from "./expire"
+import { effective, listCatalog, type CatalogRow } from "./catalog"
 import { acquireLock, releaseLock } from "./lock"
 import { PORTALS, REMOTE_SOURCES, syncAllCompanies, syncGetOnBoard, syncPortal, syncRemote } from "./sync"
 import type { SyncReport } from "./types"
@@ -48,24 +49,28 @@ async function recentRuns(db: Db, target: string) {
   return rows.filter((r) => r.at).map((r) => ({ ok: r.ok, at: new Date(r.at as string) }))
 }
 
-export type Health = { id: string; label: string; everyHours: number; lastOkAt: string | null; agoHours: number | null; lastError: string | null; failing: boolean; stale: boolean }
+export type Health = { id: string; label: string; everyHours: number; active: boolean; lastOkAt: string | null; agoHours: number | null; lastError: string | null; failing: boolean; stale: boolean }
 /** Estado de cada fuente para el panel y para que el workflow falle si algo clave lleva demasiado sin sincronizar. */
-export async function syncHealth(db: Db, now = new Date()): Promise<Health[]> {
+export async function syncHealth(db: Db, now = new Date(), catalog?: CatalogRow[]): Promise<Health[]> {
   const out: Health[] = []
+  const cat = new Map((catalog ?? (await listCatalog(db))).map((r) => [r.key, r]))
   for (const t of TARGETS) {
+    const eff = effective(cat.get(t.id), t.everyHours)
     const recent = await recentRuns(db, t.id)
     const lastOk = recent.find((r) => r.ok)
     const lastBad = (await db.select({ e: syncRuns.error }).from(syncRuns).where(and(eq(syncRuns.target, t.id), eq(syncRuns.ok, false))).orderBy(desc(syncRuns.finishedAt)).limit(1))[0]
     out.push({
       id: t.id,
       label: t.label,
-      everyHours: t.everyHours,
+      everyHours: eff.everyHours,
+      active: eff.active,
       lastOkAt: lastOk?.at.toISOString() ?? null,
       agoHours: lastOk ? Math.max(1, Math.round((now.getTime() - lastOk.at.getTime()) / 3_600_000)) : null,
       lastError: recent[0] && !recent[0].ok ? (lastBad?.e ?? "sin detalle") : null,
       failing: recent.length >= FAILURES_BEFORE_BACKOFF && recent.every((r) => !r.ok),
       // «Atrasada» = sin éxito en 3 ciclos de su cadencia (mínimo 12 h).
-      stale: !lastOk || now.getTime() - lastOk.at.getTime() > Math.max(12, t.everyHours * 3) * 3_600_000,
+      // Una fuente pausada a propósito nunca se marca «atrasada».
+      stale: eff.active && (!lastOk || now.getTime() - lastOk.at.getTime() > Math.max(12, eff.everyHours * 3) * 3_600_000),
     })
   }
   return out
@@ -95,9 +100,16 @@ export async function runDaily(db: Db, opts: DailyOptions = {}): Promise<DailySu
   }
   try {
     if (phases.includes("fetch")) {
+      const catalog = new Map((await listCatalog(db)).map((r) => [r.key, r]))
       for (const t of TARGETS.filter((x) => (!opts.only?.length || opts.only.includes(x.id)) && !(opts.runner === "cloud" && x.runner === "home"))) {
-        if (!isDue(t.everyHours, await recentRuns(db, t.id), now(), opts.force)) {
-          log(`· ${t.label}: no toca todavía (cada ${t.everyHours} h) o está en pausa por fallos`)
+        const eff = effective(catalog.get(t.id), t.everyHours)
+        if (!eff.active) {
+          log(`· ${t.label}: pausada en el catálogo de fuentes, se omite`)
+          summary.targets.push({ id: t.id, skipped: true })
+          continue
+        }
+        if (!isDue(eff.everyHours, await recentRuns(db, t.id), now(), opts.force)) {
+          log(`· ${t.label}: no toca todavía (cada ${eff.everyHours} h) o está en pausa por fallos`)
           summary.targets.push({ id: t.id, skipped: true })
           continue
         }

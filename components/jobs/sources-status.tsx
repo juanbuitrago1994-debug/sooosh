@@ -16,6 +16,7 @@ const STATE: Record<SourceState, { label: string; variant: "secondary" | "outlin
   late: { label: "Atrasada", variant: "destructive", icon: CircleAlertIcon },
   paused: { label: "En pausa", variant: "outline", icon: CircleAlertIcon },
   new: { label: "Sin lecturas", variant: "outline", icon: CircleAlertIcon },
+  off: { label: "Pausada", variant: "outline", icon: CircleAlertIcon },
 }
 
 const when = (iso: string) => new Date(iso).toLocaleString("es", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
@@ -132,6 +133,8 @@ function Detail({ s, at, onBack, shell }: { s: SourceStatus; at: number; onBack:
             </ul>
           </section>
         )}
+
+        {s.attribution && <p className="text-xs text-muted-foreground">{s.attribution}</p>}
 
         <section className="flex flex-col gap-2" aria-label="Historial">
           <h3 className="text-sm font-medium">Historial (30 días)</h3>
@@ -250,7 +253,7 @@ export function SourcesStatus() {
     }
   }, [open])
 
-  const problems = (data?.sources ?? []).filter((s) => s.state !== "ok").length
+  const problems = (data?.sources ?? []).filter((s) => s.state === "late" || s.state === "paused" || s.state === "warn").length
   const current = data?.sources.find((s) => s.id === selected) ?? null
   const onOpenChange = (o: boolean) => {
     setOpen(o)

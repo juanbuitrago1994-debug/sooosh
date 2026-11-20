@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { ATS_LIST, ATS_NAME, type Ats } from "@/lib/sources/companies"
 import type { SyncReport } from "@/lib/sources/types"
 
-type Health = { id: string; label: string; everyHours: number; lastOkAt: string | null; agoHours: number | null; lastError: string | null; failing: boolean; stale: boolean }
+type Health = { id: string; label: string; everyHours: number; active: boolean; lastOkAt: string | null; agoHours: number | null; lastError: string | null; failing: boolean; stale: boolean }
 type Company = { id: string; ats: Ats; token: string; name: string | null; active: boolean; lastSyncedAt: string | null; lastStatus: string | null; lastCount: number | null }
 type Api = (path: string, init?: RequestInit) => Promise<Record<string, unknown>>
 type Enrich = { pendiente: number; hecho: number; omitido: number; fallido: number }
@@ -64,6 +64,17 @@ export function SourcesAdmin({ api }: { api: Api }) {
       toast.error((e as Error).message)
     } finally {
       setBusy(null)
+    }
+  }
+
+  // Pausar o reanudar una fuente (catálogo de fuentes): la sincronización automática la omite mientras esté pausada.
+  const toggleSource = async (key: string, active: boolean) => {
+    try {
+      await api("/api/sources/catalog", { method: "PATCH", body: JSON.stringify({ key, active }) })
+      setHealth((hs) => hs.map((h) => (h.id === key ? { ...h, active, stale: active ? h.stale : false } : h)))
+      toast.success(active ? "Fuente reanudada" : "Fuente pausada: no se sincroniza hasta que la reanudes")
+    } catch (e) {
+      toast.error((e as Error).message)
     }
   }
 
@@ -154,11 +165,15 @@ export function SourcesAdmin({ api }: { api: Api }) {
           </p>
           <ul className="flex flex-col gap-1 text-sm">
             {health.map((h) => (
-              <li key={h.id} className="flex flex-wrap items-baseline justify-between gap-x-3">
-                <span className={h.stale ? "text-destructive" : undefined}>{h.label}</span>
-                <span className="text-xs text-muted-foreground">
-                  {h.agoHours !== null ? `hace ${h.agoHours} h` : "nunca"} · cada {h.everyHours} h{h.failing ? " · en pausa por fallos" : ""}
+              <li key={h.id} className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 flex-col">
+                  <span className={h.stale ? "text-destructive" : undefined}>{h.label}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {h.agoHours !== null ? `hace ${h.agoHours} h` : "nunca"} · cada {h.everyHours} h{h.failing ? " · en pausa por fallos" : ""}
+                    {!h.active ? " · pausada" : ""}
+                  </span>
                 </span>
+                <Switch checked={h.active} onCheckedChange={(v) => void toggleSource(h.id, v)} aria-label={`${h.active ? "Pausar" : "Reanudar"} ${h.label}`} />
               </li>
             ))}
           </ul>
