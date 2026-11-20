@@ -87,6 +87,12 @@ const countMentions = (skill: Skill, folded: string, raw: string): number => {
   return n
 }
 
+/** Habilidades de la taxonomía nombradas en un texto, con cuántas veces se mencionan. */
+export function skillMentions(text: string): { skill: Skill; count: number }[] {
+  const folded = fold(text)
+  return skillsIn(text).map((skill) => ({ skill, count: countMentions(skill, folded, text) }))
+}
+
 const yearsForLine = (line: string): number | null => {
   const m = fold(line).match(/(\d{1,2})\s*\+?\s*(?:anos|years|yrs)\b/)
   return m ? Number(m[1]) : null
@@ -94,12 +100,6 @@ const yearsForLine = (line: string): number | null => {
 
 const EDU: { level: OfferProfile["education"]["level"]; re: RegExp }[] = [
   { level: "posgrado", re: /\b(maestria|master|msc|mba|doctorado|phd|posgrado|postgrado|especializacion)\b/ },
-/** Habilidades de la taxonomía nombradas en un texto, con cuántas veces se mencionan. */
-export function skillMentions(text: string): { skill: Skill; count: number }[] {
-  const folded = fold(text)
-  return skillsIn(text).map((skill) => ({ skill, count: countMentions(skill, folded, text) }))
-}
-
   { level: "grado", re: /\b(licenciatura|ingenieria|ingeniero|grado|bachelor|bachelors|universitari[oa]|profesional en|titulo|degree|pregrado)\b/ },
   { level: "tecnico", re: /\b(tecnico|tecnologo|technical degree|associate|diplomado|bachiller)\b/ },
 ]
