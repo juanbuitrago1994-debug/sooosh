@@ -777,3 +777,6 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 ### Para revisar por Juan
 1. Reinicia `pnpm dev`. `/ofertas` en escritorio y 375 px: título, subtítulo y barra centrados en la pantalla; el distintivo inferior con el haz; al escribir, el número gira dígito a dígito; cambia un filtro y mira el número; claro/oscuro.
 2. Decisión pendiente: hoy en el estado inicial el número es el de las ofertas que cumplen los filtros por defecto (Tecnología + tu región: 1.511 en LATAM). Si prefieres el total de TODA la plataforma (2.625+) hasta que alguien busque o filtre, es un cambio pequeño.
+
+### Ajuste de la portada del buscador tras la revisión de Juan (20-nov-2026)
+- Las ofertas **no se ocultan**: la portada ya no ocupa toda la primera pantalla. Título, subtítulo y barra bajan hacia el centro (`pt-28` en móvil, `pt-40` desde `sm`) y las tarjetas empiezan justo debajo, visibles desde el inicio y con el mismo diseño de antes. Se quitó el desplazamiento automático al escribir (ya no hace falta). El distintivo inferior sigue fijo sobre el borde de abajo.

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { FileUpIcon, SearchIcon, SlidersHorizontalIcon } from "lucide-react"
 import { useAutoAnimate } from "@formkit/auto-animate/react"
@@ -57,7 +57,6 @@ export function JobSearch() {
   const [filtersOpen, setFiltersOpen] = useState(false)
   // Total de ofertas que cumplen los filtros y el texto (el número del distintivo inferior).
   const [total, setTotal] = useState<number | null>(null)
-  const searchRef = useRef<HTMLDivElement>(null)
   const [cvOpen, setCvOpen] = useState(false)
   const [settled, setSettled] = useState("") // clave de la última petición terminada: mientras no coincida con la actual, se está buscando
   const [mode, setMode] = useState("")
@@ -115,14 +114,6 @@ export function JobSearch() {
       if (quick) clearTimeout(quick)
       clearTimeout(full)
     }
-  }, [typed])
-
-  // Al escribir la primera letra, la página sube suave hasta dejar la barra arriba: los resultados quedan debajo, a la vista.
-  const scrolledForTyping = useRef(false)
-  useEffect(() => {
-    const has = typed.trim().length > 0
-    if (has && !scrolledForTyping.current) searchRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-    scrolledForTyping.current = has
   }, [typed])
 
   // Enter confirma ya la búsqueda completa (sin esperar la pausa).
@@ -227,15 +218,15 @@ export function JobSearch() {
       </header>
 
       <main id="contenido" className="flex flex-1 flex-col">
-        {/* Portada: título, subtítulo y buscador, centrados en la primera pantalla. */}
-        <section className="flex min-h-dvh flex-col items-center justify-center gap-8 px-4 pb-24 text-center sm:px-6">
+        {/* Portada: título, subtítulo y buscador, bajados hacia el centro de la pantalla; las ofertas empiezan justo debajo y se ven desde el inicio. */}
+        <section className="flex flex-col items-center gap-8 px-4 pt-28 pb-10 text-center sm:px-6 sm:pt-40">
           <Rise className="flex max-w-2xl flex-col items-center gap-3">
             <h1 className="text-3xl font-medium tracking-tight text-balance sm:text-4xl">Tu próximo trabajo, más cerca</h1>
             <p className="max-w-xl text-base text-balance text-muted-foreground">Juntamos ofertas de muchas empresas y portales en un solo lugar, las actualizamos varias veces al día y te mostramos cómo postular a cada una.</p>
           </Rise>
 
-          <Rise step={1} className="flex w-full max-w-2xl scroll-mt-4 flex-col items-center gap-2">
-            <div ref={searchRef} className="relative w-full scroll-mt-4">
+          <Rise step={1} className="flex w-full max-w-2xl flex-col items-center gap-2">
+            <div className="relative w-full">
               <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground" aria-hidden />
               <Input
                 id="buscar"
