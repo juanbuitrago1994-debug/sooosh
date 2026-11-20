@@ -55,7 +55,8 @@
   --card-foreground: oklch(0.18 0.04 265);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.04 265);
-  --primary: oklch(0.205 0 0);
+  /* El principal del claro es el mismo gris oscuro que el fondo del modo oscuro; el del oscuro es blanco. */
+  --primary: oklch(0.182 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.95 0.01 255);
   --secondary-foreground: oklch(0.25 0.04 265);
@@ -75,7 +76,7 @@
   --radius: 0.875rem;
   --sidebar: oklch(0.985 0.003 248);
   --sidebar-foreground: oklch(0.18 0.04 265);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.182 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.95 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
