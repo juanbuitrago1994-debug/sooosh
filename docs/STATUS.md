@@ -865,3 +865,6 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Distintivo: vuelve el movimiento original del haz, ahora por dentro (20-nov-2026)
 - El resplandor que respira no se parecía al movimiento que Juan había aprobado (la luz que **recorre el borde**). Se restauró ese movimiento —una vuelta cada 6 s, un arco de luz que gira— pero **por dentro del borde**: un arco difuminado de un solo color (el principal del tema, 55 % de opacidad con cola que se desvanece) dentro de una máscara radial que lo deja ver solo junto al borde. Sigue con fondo `card` sólido, **sin borde**, sin manchas de color y sin anillo; ancho animado y «reducir movimiento» (queda un resplandor interior quieto).
+
+### Se descartan las dos luces; vuelve el haz que recorre el borde (20-nov-2026)
+- Las dos luces de colores que recorrían el contorno (c4bf469) se descartaron por decisión de Juan («perdimos total enfoque del efecto beam») y el commit se revirtió: el distintivo vuelve al arco de luz de un solo color que da una vuelta cada 6 s por dentro del borde (fondo `card`, sin borde). Si se retoma la idea de dos colores, que sea **dentro del mismo haz** (un arco con degradado hielo → lila), no como dos luces separadas.
