@@ -28,7 +28,7 @@ try {
     process.exit(0)
   }
   if (process.argv.includes("--check")) {
-    const h = (await syncHealth(getDb())).filter((x) => arg("runner") !== "cloud" || !["getonboard"].includes(x.id))
+    const h = (await syncHealth(getDb()))
     for (const x of h) log(`${x.stale ? "✗ ATRASADA" : "✓"} ${x.label}: último éxito ${x.lastOkAt ?? "nunca"}${x.lastError ? ` · error: ${x.lastError}` : ""}`)
     // Solo las fuentes clave hacen fallar la revisión (y con ello el aviso de GitHub): una remota caída no es una emergencia.
     process.exit(h.some((x) => x.stale && ["getonboard", "companies"].includes(x.id)) ? 1 : 0)

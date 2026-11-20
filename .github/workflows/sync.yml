@@ -32,10 +32,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # Fase 1: leer fuentes, vencer ofertas y purgar eventos viejos (sin IA). Get on Board se omite: su cortafuegos responde 403 a GitHub
-      # y no se rodea; esa fuente la lee el Mac (launchd, cada 3 h) cuando está encendido.
+      # Fase 1: leer fuentes, vencer ofertas y purgar eventos viejos (sin IA). Get on Board responde 403 al cliente de Node desde GitHub:
+      # su adaptador reintenta una vez con curl (autorizado por Juan el 20-nov-2026).
       - name: Leer fuentes
-        run: pnpm sync --phase=fetch --runner=cloud
+        run: pnpm sync --phase=fetch
 
       # Fase 2: vectores. Ollama solo se instala si hay ofertas sin vector (lo normal es que haya pocas).
       - name: ¿Hay vectores pendientes?
@@ -60,4 +60,4 @@ jobs:
 
       # Si Get on Board o las empresas llevan demasiado sin sincronizar, este paso falla y GitHub avisa por correo.
       - name: Revisar salud
-        run: pnpm sync --check --runner=cloud
+        run: pnpm sync --check

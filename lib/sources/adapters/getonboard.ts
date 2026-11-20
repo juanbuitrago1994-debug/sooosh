@@ -1,6 +1,6 @@
 import type { WorkMode } from "@/lib/jobs/draft"
 import { htmlToLines, htmlListItems } from "../text"
-import { SOURCE_HEADERS, sleep, type ExternalJob, type FetchResult, withRetry } from "../types"
+import { SOURCE_HEADERS, sleep, type ExternalJob, type FetchResult, withRetry, fetchWithCurlFallback } from "../types"
 
 /**
  * Get on Board (bolsa de empleo tech de Latinoamérica). API pública sin clave: `GET /api/v0/search/jobs` con `expand[]` para traer
@@ -72,7 +72,7 @@ export function mapGetOnBoardJob(item: Item): ExternalJob | null {
 }
 
 export async function fetchGetOnBoard(opts: { fetchImpl?: typeof fetch; pauseMs?: number; signal?: AbortSignal } = {}): Promise<FetchResult> {
-  const doFetch = withRetry(opts.fetchImpl ?? fetch)
+  const doFetch = withRetry(opts.fetchImpl ?? fetchWithCurlFallback())
   const jobs: ExternalJob[] = []
   let totalPages = 1
   let complete = false

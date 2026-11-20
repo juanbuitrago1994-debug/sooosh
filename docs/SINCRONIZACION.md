@@ -31,6 +31,6 @@ Un candado en la base (`sync_locks`, caduca a los 90 min) impide que dos corrida
 
 ## Dónde corre cada cosa (20-nov-2026)
 - **GitHub Actions** (`.github/workflows/sync.yml`, cada 3 h, minuto 17): empresas, portales y fuentes remotas + vectores con Ollama en el runner + revisión de salud. Medido en la primera corrida real: 593 s para leer fuentes, 164–176 s para 147–237 vectores.
-- **Tu Mac** (`pnpm sync:install`, cada 3 h mientras esté encendido): todo lo anterior si toca, más **Get on Board** y el estructurado con el LLM local.
-- **Get on Board** responde 403 al cliente HTTP de Node desde GitHub, aunque con `curl` sí responde 200 (probado con la misma identificación SoooshBot). No se cambia de cliente para esquivar ese bloqueo; se lee desde el Mac. Si Juan autoriza usar `curl` para esa API pública y documentada, se puede mover a la nube.
+- **Tu Mac** (`pnpm sync:install`, cada 3 h mientras esté encendido): todo lo anterior si toca, más el estructurado con el LLM local (lo único que necesita tu Mac).
+- **Get on Board** responde 403 al cliente HTTP de Node desde GitHub, pero 200 a `curl` con la misma identificación SoooshBot. Con autorización de Juan (20-nov-2026) su adaptador reintenta una vez con `curl` (`fetchWithCurlFallback`), así que corre también en la nube. Para desactivarlo: `SYNC_CURL_FALLBACK=0`.
 - Los 403 de Ashby/Workable y el 429 de Himalayas de la primera corrida eran de ráfaga (con pausas y reintentos cortés pasan): Himalayas ya trajo 147 ofertas nuevas desde GitHub.

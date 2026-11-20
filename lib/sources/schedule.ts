@@ -27,7 +27,7 @@ export type Runner = "cloud" | "home"
 export type Target = { id: string; label: string; everyHours: number; runner?: "home"; run: (db: Db) => Promise<SyncReport[]> }
 
 export const TARGETS: Target[] = [
-  { id: "getonboard", label: "Get on Board", everyHours: 3, runner: "home", run: async (db) => [await syncGetOnBoard(db)] },
+  { id: "getonboard", label: "Get on Board", everyHours: 3, run: async (db) => [await syncGetOnBoard(db)] },
   { id: "companies", label: "Empresas (Greenhouse, Lever, Ashby, Workable, Recruitee, SmartRecruiters, Personio)", everyHours: 6, run: (db) => syncAllCompanies(db) },
   ...PORTALS.map((p): Target => ({ id: `portal:${p.key}`, label: p.name, everyHours: 12, run: async (db) => [await syncPortal(db, p)] })),
   ...REMOTE_SOURCES.map((s): Target => ({ id: `remote:${s.key}`, label: s.name, everyHours: 12, run: async (db) => [await syncRemote(db, s.key)] })),

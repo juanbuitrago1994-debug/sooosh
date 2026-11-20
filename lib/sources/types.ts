@@ -72,6 +72,27 @@ export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
  * Lectura cortés: si la fuente responde «no ahora» (403 de su cortafuegos, 429 o 5xx) se espera y se reintenta hasta 2 veces, respetando
  * `Retry-After` (máx. 60 s). Misma identificación SoooshBot siempre: es paciencia, no una forma de rodear un bloqueo. 404 y el resto no se reintentan.
  */
+import { execFile } from "node:child_process"
+
+/**
+ * Get on Board (Cloudflare) responde 403 al cliente HTTP de Node desde IPs de centros de datos (GitHub Actions) y 200 a `curl` con las
+ * MISMAS cabeceras y la MISMA identificación SoooshBot (comprobado el 20-nov-2026). Juan autorizó (20-nov-2026) usar `curl` para esa API
+ * pública y documentada: se reintenta una sola vez con `curl`, sin cambiar quiénes somos ni el ritmo de lectura. Si también falla, se respeta el 403.
+ */
+export function fetchWithCurlFallback(f: typeof fetch = fetch): typeof fetch {
+  return (async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+    const res = await f(input, init)
+    if (res.status !== 403 || process.env.VITEST || process.env.SYNC_CURL_FALLBACK === "0") return res
+    const headers = new Headers(init?.headers)
+    const args = ["-sS", "--max-time", "45", "-w", "\n__STATUS__%{http_code}"]
+    headers.forEach((v, k) => args.push("-H", `${k}: ${v}`))
+    args.push(String(input))
+    const out = await new Promise<string | null>((resolve) => execFile("curl", args, { maxBuffer: 64 * 1024 * 1024 }, (err, stdout) => resolve(err ? null : stdout)))
+    const m = out?.match(/^([\s\S]*)\n__STATUS__(\d{3})$/)
+    return m ? new Response(m[2] === "204" ? null : m[1], { status: Number(m[2]) }) : res
+  }) as typeof fetch
+}
+
 const RETRY_WAITS = process.env.VITEST ? [] : [10_000, 30_000]
 export function withRetry(f: typeof fetch, waits: number[] = RETRY_WAITS): typeof fetch {
   return (async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
