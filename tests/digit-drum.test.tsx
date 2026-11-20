@@ -32,3 +32,13 @@ describe("Beam (border-beam, un solo color)", () => {
     expect(html).toMatch(/data-beam|beam/i)
   })
 })
+
+describe("intensidad del haz por tema", () => {
+  it("en claro se compensa (los presets de la librería son ~5 veces más tenues): 1 en claro, 0,5 en oscuro, y manda el valor explícito", async () => {
+    const { beamStrength } = await import("@/components/magic/beam")
+    expect(beamStrength("dark")).toBe(0.5)
+    expect(beamStrength("light")).toBe(1)
+    expect(beamStrength("light", 0.3)).toBe(0.3)
+    expect(beamStrength("dark", 0.9)).toBe(0.9)
+  })
+})

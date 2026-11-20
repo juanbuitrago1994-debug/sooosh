@@ -843,3 +843,6 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Para revisar por Juan
 1. Reinicia `pnpm dev` (la dependencia es nueva: `pnpm install` ya está hecho). Mira el distintivo de abajo en oscuro y claro; si el resplandor es mucho o poco, se ajusta con `strength` (hoy 0,5) en `Beam`.
+
+### Compensación del tema claro en `Beam` (20-nov-2026)
+- Los presets de `border-beam` son mucho más tenues en claro (en `pulse-inner`: borde 0,32 en claro frente a 1,54 en oscuro). `Beam` ahora usa por defecto una intensidad de **0,5 en oscuro y 1 en claro** (`beamStrength`, con prueba); si un componente pasa `strength`, manda ese valor.
