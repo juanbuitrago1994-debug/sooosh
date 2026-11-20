@@ -2,6 +2,12 @@
 
 Cuatro frentes, cada uno con **objetivo medible**, pasos, qué necesito de ti, riesgos y cómo sabremos que terminó. Las cifras de partida son de la base real de hoy.
 
+## Decisiones de Juan (20-nov-2026)
+- **Se empieza por B (cola de IA) y por A1–A2 con Colombia como país prioritario.**
+- **A4 «Publica tu oferta» queda en pausa**: Juan no quiere abrir ese producto al público por ahora. No se construye.
+- **Frente D (legal): cubierto por Juan.** Dice que habló con un abogado y que están cubiertos en todos los puntos legales. No hay nada técnico pendiente salvo, si el abogado lo pide, ajustar textos del consentimiento (el sistema ya vuelve a preguntar si cambia la versión). Se recomienda guardar el visto bueno por escrito fuera del repositorio.
+- A5 (feed de socio con portales) y el resto del frente C siguen como propuesta.
+
 ## Orden recomendado
 | # | Frente | Esfuerzo | Por qué en este orden |
 |---|---|---|---|
