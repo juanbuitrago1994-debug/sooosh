@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "motion/react"
 import { MOTION } from "@/lib/motion"
 
 /**
- * MatrixLoader — matriz de 4×4 puntos que pulsan con un patrón de retardos. Tamaños: sm (≈ 22 px), md (≈ 50 px) y lg (≈ 36 px, puntos casi cuadrados: el de referencia de transitions.dev).
+ * MatrixLoader — matriz de 4×4 puntos que pulsan con un patrón de retardos.
  * Idea inspirada en el «Matrix dot loader» de transitions.dev, reimplementada con `motion` y tokens del tema.
  * Solo anima opacidad (regla de movimiento); con prefers-reduced-motion queda quieta, en media opacidad.
  * Es decorativa (`aria-hidden`): el estado se comunica con el ThinkingTicker (`role="status"`).
@@ -50,16 +50,16 @@ export function patternOrder(pattern: MatrixPattern, r: number, c: number): numb
 /** El patrón sigue el paso real del análisis: cada etapa se ve distinta. */
 export const patternForStep = (step: number): MatrixPattern => MATRIX_PATTERNS[Math.abs(step) % MATRIX_PATTERNS.length]
 
-export function MatrixLoader({ pattern = "ola", size = "md", className }: { pattern?: MatrixPattern; size?: "sm" | "md" | "lg"; className?: string }) {
+export function MatrixLoader({ pattern = "ola", size = "md", className }: { pattern?: MatrixPattern; size?: "sm" | "md"; className?: string }) {
   const reduce = useReducedMotion()
   const start = reduce ? 0.5 : MOTION.dotMin
   return (
     <div aria-hidden data-pattern={pattern} data-size={size}
-      className={`grid grid-cols-4 ${size === "sm" ? "gap-0.5" : size === "lg" ? "gap-1" : "gap-1.5"} text-foreground ${className ?? ""}`}>
+      className={`grid grid-cols-4 ${size === "sm" ? "gap-0.5" : "gap-1.5"} text-foreground ${className ?? ""}`}>
       {CELLS.map(({ r, c }) => (
         <motion.span
           key={`${pattern}-${r}-${c}`}
-          className={`${size === "sm" ? "size-1 rounded-full" : size === "lg" ? "size-1.5 rounded-xs" : "size-2 rounded-full"} bg-current`}
+          className={`${size === "sm" ? "size-1" : "size-2"} rounded-full bg-current`}
           initial={{ opacity: start }}
           animate={reduce ? undefined : { opacity: [MOTION.dotMin, MOTION.dotMax, MOTION.dotMin] }}
           transition={{ duration: MOTION.dotCycle, ease: "easeInOut", repeat: Infinity, delay: patternOrder(pattern, r, c) * MOTION.dotStagger }}

@@ -28,6 +28,10 @@ export const MOTION = {
   dotStagger: 0.09,
   dotMin: 0.15,
   dotMax: 0.9,
+  /** cargador de puntos de transitions.dev (P33): ciclo en segundos y opacidad base/activa de cada punto; el punto está «activo» entre el 0 % y el 45 % del ciclo con el pico al 15 % */
+  loaderCycle: 1.2,
+  loaderBase: 0.2,
+  loaderActive: 0.65,
   /** una deriva completa del aura ambiental, en segundos */
   drift: 16,
 } as const
