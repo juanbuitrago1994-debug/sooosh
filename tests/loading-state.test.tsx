@@ -11,6 +11,10 @@ describe("cargador con frases (reemplaza a los esqueletos)", () => {
     expect((html.match(/class="size-0\.5 bg-current"/g) ?? []).length).toBe(16)
     expect(html).toContain("Buscando…")
   })
+  it("el cargador y la frase van siempre alineados en horizontal (fila), nunca uno debajo del otro", () => {
+    expect(html).toContain("flex items-center justify-center gap-3")
+    expect(html).not.toContain("flex-col")
+  })
   it("se anuncia una sola vez (status + aria-live) y la frase animada es decorativa", () => {
     expect(html).toContain('role="status"')
     expect(html).toContain('aria-live="polite"')
