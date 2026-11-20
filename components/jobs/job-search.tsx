@@ -8,6 +8,7 @@ import { Logo } from "@/components/brand/logo"
 import { BeamBadge } from "@/components/magic/beam-badge"
 import { DrumNumber } from "@/components/magic/digit-drum"
 import { Rise } from "@/components/motion/rise"
+import { token } from "@/lib/design-tokens"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -220,9 +221,9 @@ export function JobSearch() {
       <main id="contenido" className="flex flex-1 flex-col">
         {/* Portada: título, subtítulo y buscador, bajados hacia el centro de la pantalla; las ofertas empiezan justo debajo y se ven desde el inicio. */}
         <section className="flex flex-col items-center gap-8 px-4 pt-28 pb-10 text-center sm:px-6 sm:pt-40">
-          <Rise className="flex max-w-2xl flex-col items-center gap-3">
-            <h1 className="text-3xl font-medium tracking-tight text-balance sm:text-4xl">Tu próximo trabajo, más cerca</h1>
-            <p className="max-w-xl text-base text-balance text-muted-foreground">Juntamos ofertas de muchas empresas y portales en un solo lugar, las actualizamos varias veces al día y te mostramos cómo postular a cada una.</p>
+          <Rise className={token("hero-stack")}>
+            <h1 className={token("hero-title")}>Tu próximo trabajo, más cerca</h1>
+            <p className={`max-w-xl ${token("hero-subtitle")}`}>Juntamos ofertas de muchas empresas y portales en un solo lugar, las actualizamos varias veces al día y te mostramos cómo postular a cada una.</p>
           </Rise>
 
           <Rise step={1} className="flex w-full max-w-2xl flex-col items-center gap-2">

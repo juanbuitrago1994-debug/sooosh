@@ -783,3 +783,6 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Ajuste del cambio de número (20-nov-2026)
 - Los dígitos del distintivo ya no rebotan: entran desde abajo desenfocándose hasta quedar nítidos y el anterior sale hacia arriba difuminándose, con una sola curva de desaceleración suave (0,5 s de entrada y 0,32 s de salida), un giro de tambor leve (35°) y 35 ms de retardo entre dígitos, de derecha a izquierda. Sin movimiento si se pidió reducirlo.
+
+### Ajuste de la tipografía de portada y tokens documentados (20-nov-2026)
+- Título y subtítulo de la portada más pequeños, más juntos y con menos interletraje, definidos como **tokens documentados** en `docs/DESIGN-TOKENS.md` y usados desde `lib/design-tokens.ts` (`token("hero-title" | "hero-subtitle" | "hero-stack")`): título 24 px (móvil) / 30 px (≥ `sm`) con −0,05 em; subtítulo 14 px con −0,025 em; 6 px entre ambos (antes 12). Una prueba (`tests/design-tokens.test.ts`) falla si el código y el documento no coinciden o si algún token trae valores arbitrarios.
