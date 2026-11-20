@@ -83,7 +83,7 @@ export async function syncCompany(db: Db, c: { id: string; ats: Ats; token: stri
 }
 
 /** Todas las empresas activas del directorio, una tras otra con una pausa corta (cortesía con cada servicio). */
-export async function syncAllCompanies(db: Db, pauseMs = 300): Promise<SyncReport[]> {
+export async function syncAllCompanies(db: Db, pauseMs = process.env.VITEST ? 0 : 1200): Promise<SyncReport[]> {
   const out: SyncReport[] = []
   for (const c of (await listCompanies(db)).filter((x) => x.active)) {
     out.push(await syncCompany(db, { id: c.id, ats: c.ats as Ats, token: c.token, name: c.name }))

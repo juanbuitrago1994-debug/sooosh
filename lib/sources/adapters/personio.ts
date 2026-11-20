@@ -1,5 +1,5 @@
 import { htmlListItems, htmlToLines } from "../text"
-import { SOURCE_HEADERS, type ExternalJob, type FetchResult } from "../types"
+import { SOURCE_HEADERS, type ExternalJob, type FetchResult, withRetry } from "../types"
 
 /** Personio: `{empresa}.jobs.personio.de/xml` (feed público, sin clave). Sin país: trae la oficina (ciudad). */
 const tag = (s: string, t: string) => s.match(new RegExp(`<${t}>([\\s\\S]*?)</${t}>`, "i"))?.[1]?.replace(/<!\[CDATA\[|\]\]>/g, "").trim()
@@ -38,7 +38,7 @@ export function parsePersonio(xml: string, slug: string, company?: string): Exte
 }
 
 export async function fetchPersonio(slug: string, company?: string, opts: { fetchImpl?: typeof fetch; signal?: AbortSignal } = {}): Promise<FetchResult> {
-  const res = await (opts.fetchImpl ?? fetch)(`https://${encodeURIComponent(slug)}.jobs.personio.de/xml`, { headers: { ...SOURCE_HEADERS, Accept: "application/xml,text/xml" }, signal: opts.signal ?? AbortSignal.timeout(30_000) })
+  const res = await withRetry(opts.fetchImpl ?? fetch)(`https://${encodeURIComponent(slug)}.jobs.personio.de/xml`, { headers: { ...SOURCE_HEADERS, Accept: "application/xml,text/xml" }, signal: opts.signal ?? AbortSignal.timeout(30_000) })
   if (res.status === 404) throw new Error(`No existe la empresa «${slug}» en Personio`)
   if (!res.ok) throw new Error(`Personio respondió ${res.status}`)
   return { jobs: parsePersonio(await res.text(), slug, company), complete: true }

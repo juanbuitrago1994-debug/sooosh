@@ -1,6 +1,6 @@
 import type { WorkMode } from "@/lib/jobs/draft"
 import { htmlListItems } from "../text"
-import { SOURCE_HEADERS, type ExternalJob, type FetchResult } from "../types"
+import { SOURCE_HEADERS, type ExternalJob, type FetchResult, withRetry } from "../types"
 
 /** Lever: `api.lever.co/v0/postings/{sitio}?mode=json` (público, sin clave). Trae el enlace de postulación (`applyUrl`) y el país. */
 type LvJob = {
@@ -62,7 +62,7 @@ export function mapLeverJob(j: LvJob, site: string, company?: string): ExternalJ
 }
 
 export async function fetchLever(site: string, company?: string, opts: { fetchImpl?: typeof fetch; signal?: AbortSignal } = {}): Promise<FetchResult> {
-  const res = await (opts.fetchImpl ?? fetch)(`https://api.lever.co/v0/postings/${encodeURIComponent(site)}?mode=json`, { headers: SOURCE_HEADERS, signal: opts.signal ?? AbortSignal.timeout(30_000) })
+  const res = await withRetry(opts.fetchImpl ?? fetch)(`https://api.lever.co/v0/postings/${encodeURIComponent(site)}?mode=json`, { headers: SOURCE_HEADERS, signal: opts.signal ?? AbortSignal.timeout(30_000) })
   if (res.status === 404) throw new Error(`No existe el tablero «${site}» en Lever`)
   if (!res.ok) throw new Error(`Lever respondió ${res.status}`)
   const d = (await res.json()) as LvJob[]

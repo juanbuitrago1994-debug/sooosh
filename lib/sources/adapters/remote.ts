@@ -1,6 +1,6 @@
 import { detectGeo, LATAM_CODES } from "@/lib/jobs/geo"
 import { htmlToLines } from "../text"
-import { SOURCE_HEADERS, sleep, type ExternalJob, type FetchResult } from "../types"
+import { SOURCE_HEADERS, sleep, type ExternalJob, type FetchResult, withRetry } from "../types"
 
 /**
  * Fuentes de ofertas REMOTAS con API gratuita: Remotive, Jobicy y Himalayas. Sus términos piden lo mismo y aquí se cumple:
@@ -34,7 +34,7 @@ const employment = (s?: string) => EMPLOYMENT.find(([re]) => re.test(s ?? ""))?.
 const iso = (v?: string | number) => (typeof v === "number" ? new Date(v * 1000).toISOString() : v ? new Date(v).toISOString() : undefined)
 
 async function getJson<T>(url: string, opts: { fetchImpl?: typeof fetch; signal?: AbortSignal }): Promise<T> {
-  const res = await (opts.fetchImpl ?? fetch)(url, { headers: SOURCE_HEADERS, signal: opts.signal ?? AbortSignal.timeout(45_000) })
+  const res = await withRetry(opts.fetchImpl ?? fetch)(url, { headers: SOURCE_HEADERS, signal: opts.signal ?? AbortSignal.timeout(45_000) })
   if (!res.ok) throw new Error(`${new URL(url).hostname} respondió ${res.status}`)
   return (await res.json()) as T
 }
@@ -77,7 +77,7 @@ export async function fetchRemotive(opts: Opts = {}): Promise<FetchResult> {
       const m = mapRemotiveJob(j)
       if (m) out.set(m.externalId, m)
     }
-    await sleep(opts.pauseMs ?? 1500)
+    await sleep(opts.pauseMs ?? 3000)
   }
   return { jobs: [...out.values()], complete: false }
 }
@@ -176,7 +176,7 @@ export async function fetchHimalayas(opts: Opts & { pages?: number } = {}): Prom
         if (m) out.set(m.externalId, m)
       }
       if (!d.jobs?.length || d.jobs.length < 20) break
-      await sleep(opts.pauseMs ?? 1500)
+      await sleep(opts.pauseMs ?? 3000)
     }
   }
   return { jobs: [...out.values()], complete: false }

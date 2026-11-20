@@ -1,6 +1,6 @@
 import type { WorkMode } from "@/lib/jobs/draft"
 import { htmlToLines } from "../text"
-import { SOURCE_HEADERS, type ExternalJob, type FetchResult } from "../types"
+import { SOURCE_HEADERS, type ExternalJob, type FetchResult, withRetry } from "../types"
 
 /** Workable: `apply.workable.com/api/v1/widget/accounts/{cuenta}?details=true` (público, sin clave). */
 type WkJob = {
@@ -56,7 +56,7 @@ export function mapWorkableJob(j: WkJob, account: string, company?: string): Ext
 }
 
 export async function fetchWorkable(account: string, company?: string, opts: { fetchImpl?: typeof fetch; signal?: AbortSignal } = {}): Promise<FetchResult> {
-  const res = await (opts.fetchImpl ?? fetch)(`https://apply.workable.com/api/v1/widget/accounts/${encodeURIComponent(account)}?details=true`, { headers: SOURCE_HEADERS, signal: opts.signal ?? AbortSignal.timeout(30_000) })
+  const res = await withRetry(opts.fetchImpl ?? fetch)(`https://apply.workable.com/api/v1/widget/accounts/${encodeURIComponent(account)}?details=true`, { headers: SOURCE_HEADERS, signal: opts.signal ?? AbortSignal.timeout(30_000) })
   if (res.status === 404) throw new Error(`No existe la cuenta «${account}» en Workable`)
   if (!res.ok) throw new Error(`Workable respondió ${res.status}`)
   const d = (await res.json()) as { name?: string; jobs?: WkJob[] }

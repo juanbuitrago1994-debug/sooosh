@@ -1,6 +1,6 @@
 import type { WorkMode } from "@/lib/jobs/draft"
 import { htmlListItems, htmlToLines } from "../text"
-import { SOURCE_HEADERS, sleep, type ExternalJob, type FetchResult } from "../types"
+import { SOURCE_HEADERS, sleep, type ExternalJob, type FetchResult, withRetry } from "../types"
 
 /**
  * SmartRecruiters: `api.smartrecruiters.com/v1/companies/{empresa}/postings` (público, sin clave). El listado no trae el texto: se pide el detalle
@@ -72,7 +72,7 @@ export function mapSmartRecruitersJob(d: SrDetail, slug: string, company?: strin
 }
 
 export async function fetchSmartRecruiters(slug: string, company?: string, opts: { fetchImpl?: typeof fetch; signal?: AbortSignal; pauseMs?: number; maxDetails?: number } = {}): Promise<FetchResult> {
-  const f = opts.fetchImpl ?? fetch
+  const f = withRetry(opts.fetchImpl ?? fetch)
   const base = `https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(slug)}/postings`
   const items: SrItem[] = []
   for (let offset = 0; offset < 2000; offset += 100) {

@@ -1,5 +1,5 @@
 import type { WorkMode } from "@/lib/jobs/draft"
-import { SOURCE_HEADERS, type ExternalJob, type FetchResult } from "../types"
+import { SOURCE_HEADERS, type ExternalJob, type FetchResult, withRetry } from "../types"
 
 /** Ashby: `api.ashbyhq.com/posting-api/job-board/{nombre}` (público, sin clave). Trae `applyUrl`, ubicaciones y si es remoto. */
 type AbJob = {
@@ -46,7 +46,7 @@ export function mapAshbyJob(j: AbJob, name: string, company?: string): ExternalJ
 }
 
 export async function fetchAshby(name: string, company?: string, opts: { fetchImpl?: typeof fetch; signal?: AbortSignal } = {}): Promise<FetchResult> {
-  const res = await (opts.fetchImpl ?? fetch)(`https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(name)}`, { headers: SOURCE_HEADERS, signal: opts.signal ?? AbortSignal.timeout(30_000) })
+  const res = await withRetry(opts.fetchImpl ?? fetch)(`https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(name)}`, { headers: SOURCE_HEADERS, signal: opts.signal ?? AbortSignal.timeout(30_000) })
   if (res.status === 404) throw new Error(`No existe el tablero «${name}» en Ashby`)
   if (!res.ok) throw new Error(`Ashby respondió ${res.status}`)
   const d = (await res.json()) as { jobs?: AbJob[] }

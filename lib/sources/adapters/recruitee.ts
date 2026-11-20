@@ -1,6 +1,6 @@
 import type { WorkMode } from "@/lib/jobs/draft"
 import { htmlListItems, htmlToLines } from "../text"
-import { SOURCE_HEADERS, type ExternalJob, type FetchResult } from "../types"
+import { SOURCE_HEADERS, type ExternalJob, type FetchResult, withRetry } from "../types"
 
 /** Recruitee: `{empresa}.recruitee.com/api/offers/` (público, sin clave). Trae descripción y requisitos por separado. */
 type RcOffer = {
@@ -60,7 +60,7 @@ export function mapRecruiteeOffer(o: RcOffer, slug: string, company?: string): E
 }
 
 export async function fetchRecruitee(slug: string, company?: string, opts: { fetchImpl?: typeof fetch; signal?: AbortSignal } = {}): Promise<FetchResult> {
-  const res = await (opts.fetchImpl ?? fetch)(`https://${encodeURIComponent(slug)}.recruitee.com/api/offers/`, { headers: SOURCE_HEADERS, signal: opts.signal ?? AbortSignal.timeout(30_000) })
+  const res = await withRetry(opts.fetchImpl ?? fetch)(`https://${encodeURIComponent(slug)}.recruitee.com/api/offers/`, { headers: SOURCE_HEADERS, signal: opts.signal ?? AbortSignal.timeout(30_000) })
   if (res.status === 404) throw new Error(`No existe la empresa «${slug}» en Recruitee`)
   if (!res.ok) throw new Error(`Recruitee respondió ${res.status}`)
   const d = (await res.json()) as { offers?: RcOffer[] }

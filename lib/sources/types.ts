@@ -67,3 +67,21 @@ export type SyncReport = {
 export const SOURCE_HEADERS = { "User-Agent": "SoooshBot/0.1 (buscador de ofertas; lectura de APIs públicas)", Accept: "application/json" }
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+/**
+ * Lectura cortés: si la fuente responde «no ahora» (403 de su cortafuegos, 429 o 5xx) se espera y se reintenta hasta 2 veces, respetando
+ * `Retry-After` (máx. 60 s). Misma identificación SoooshBot siempre: es paciencia, no una forma de rodear un bloqueo. 404 y el resto no se reintentan.
+ */
+const RETRY_WAITS = process.env.VITEST ? [] : [10_000, 30_000]
+export function withRetry(f: typeof fetch, waits: number[] = RETRY_WAITS): typeof fetch {
+  return (async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+    let res = await f(input, init)
+    for (const wait of waits) {
+      if (!(res.status === 403 || res.status === 429 || res.status >= 500)) break
+      const ra = Number(res.headers?.get?.("retry-after"))
+      await sleep(Number.isFinite(ra) && ra > 0 ? Math.min(ra * 1000, 60_000) : wait)
+      res = await f(input, init)
+    }
+    return res
+  }) as typeof fetch
+}

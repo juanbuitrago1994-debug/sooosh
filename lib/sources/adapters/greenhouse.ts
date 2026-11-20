@@ -1,5 +1,5 @@
 import { htmlToLines } from "../text"
-import { SOURCE_HEADERS, type ExternalJob, type FetchResult } from "../types"
+import { SOURCE_HEADERS, type ExternalJob, type FetchResult, withRetry } from "../types"
 
 /** Greenhouse: `boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true` (público, sin clave). Una empresa por llamada. */
 type GhJob = {
@@ -35,7 +35,7 @@ export function mapGreenhouseJob(j: GhJob, token: string, company?: string): Ext
 }
 
 export async function fetchGreenhouse(token: string, company?: string, opts: { fetchImpl?: typeof fetch; signal?: AbortSignal } = {}): Promise<FetchResult> {
-  const res = await (opts.fetchImpl ?? fetch)(`https://boards-api.greenhouse.io/v1/boards/${encodeURIComponent(token)}/jobs?content=true`, { headers: SOURCE_HEADERS, signal: opts.signal ?? AbortSignal.timeout(30_000) })
+  const res = await withRetry(opts.fetchImpl ?? fetch)(`https://boards-api.greenhouse.io/v1/boards/${encodeURIComponent(token)}/jobs?content=true`, { headers: SOURCE_HEADERS, signal: opts.signal ?? AbortSignal.timeout(30_000) })
   if (res.status === 404) throw new Error(`No existe el tablero «${token}» en Greenhouse`)
   if (!res.ok) throw new Error(`Greenhouse respondió ${res.status}`)
   const d = (await res.json()) as { jobs?: GhJob[] }
