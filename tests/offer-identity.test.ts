@@ -85,3 +85,45 @@ describe("la tarjeta guardada se encuentra en el buscador", () => {
     expect(regionFilter("TODAS")).toBeUndefined()
   })
 })
+
+describe("revisión dato por dato", () => {
+  const text = `Estamos seleccionando diseñadora UX/UI para un proyecto 100% remoto.
+Nivel: Senior, con 3 a 5 años de experiencia. Contrato a término indefinido.
+Salario: $4.000.000 COP al mes.
+Dominio de Figma e inglés B2.
+Envía tu hoja de vida a candidatos@consultoravos.com o postula en https://forms.gle/abc123`
+  it("cada dato trae su estado y la frase de donde sale; lo que no está se marca «falta»", async () => {
+    const { buildEvidence } = await import("@/lib/jobs/evidence")
+    const bad = offer({ title: "🔹 Experiencia comprobable", requirements: ["Dominio de Figma e inglés B2"], tools: ["Figma"], languagesRequired: [{ language: "inglés", level: "B2" }], seniority: "senior", yearsExperience: { min: 3, max: 5 } })
+    const d = buildDraft({ offer: bad, text, url: "https://www.linkedin.com/posts/x-1/", fallbackHash: "h" })
+    const ev = Object.fromEntries(buildEvidence(d, text).map((e) => [e.key, e]))
+    expect(ev.titulo).toMatchObject({ status: "inferido", value: "Diseñadora UX/UI" })
+    expect(ev.titulo.quote).toContain("Estamos seleccionando")
+    expect(ev.empresa).toMatchObject({ status: "falta" })
+    expect(ev.modalidad).toMatchObject({ status: "texto", value: "Remoto" })
+    expect(ev.modalidad.quote).toContain("remoto")
+    expect(ev.nivel.quote).toContain("Senior")
+    expect(ev.experiencia).toMatchObject({ status: "texto", value: "3–5 años" })
+    expect(ev.salario.quote).toContain("4.000.000")
+    expect(ev.idiomas.quote).toContain("inglés")
+    expect(ev.postulacion.quote).toContain("candidatos@consultoravos.com")
+    expect(ev.region).toMatchObject({ status: "inferido", value: "Todas" })
+    expect(ev.contrato.quote).toContain("indefinido")
+  })
+  it("la cita es una frase corta del texto, no un párrafo", async () => {
+    const { findQuote } = await import("@/lib/jobs/evidence")
+    const long = `${"Texto de relleno sin importancia. ".repeat(12)}Salario: 5.000 USD al mes. ${"Más relleno. ".repeat(10)}`
+    const q = findQuote(long, (l) => l.includes("5.000 USD"))
+    expect(q).toBe("Salario: 5.000 USD al mes.")
+    expect(findQuote("nada que ver", () => false)).toBeUndefined()
+  })
+  it("«Quitar» deja el dato como «No indicado» y no se puede quitar el cargo ni las listas", async () => {
+    const { clearPatch, fieldValues } = await import("@/lib/jobs/field-values")
+    const d = buildDraft({ offer: offer({ title: "Senior UX/UI Designer", seniority: "senior", yearsExperience: { min: 3 } }), text, fallbackHash: "h" })
+    expect(fieldValues(d).experiencia).toBe("3+ años")
+    expect(fieldValues({ ...d, ...clearPatch("experiencia", d)! }).experiencia).toBeUndefined()
+    expect(fieldValues({ ...d, ...clearPatch("nivel", d)! }).nivel).toBeUndefined()
+    expect(clearPatch("titulo", d)).toBeNull()
+    expect(clearPatch("requisitos", d)).toBeNull()
+  })
+})

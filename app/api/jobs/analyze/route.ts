@@ -4,6 +4,7 @@ import { parseOfferText } from "@/lib/ai/parse-offer"
 import { sha256 } from "@/lib/cache/results"
 import { getDb } from "@/lib/db"
 import { buildDraft } from "@/lib/jobs/draft"
+import { buildEvidence } from "@/lib/jobs/evidence"
 import { requireAdmin } from "@/lib/jobs/admin"
 import { findJobByUrl } from "@/lib/jobs/store"
 import { cleanOfferText } from "@/lib/offer/clean"
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
     const { data: offer, dropped } = await parseOfferText(text, request.signal)
     const draft = buildDraft({ offer, text, url, link: typeof body?.link === "string" ? body.link : undefined, ld, fallbackHash: sha256(text).slice(0, 24) })
     const existing = await findJobByUrl(getDb(), draft.sourceUrl).catch(() => null)
-    return NextResponse.json({ draft, existing, dropped, cleaning: { removed: cleaning.removed, warning: cleaning.warning } })
+    return NextResponse.json({ draft, evidence: buildEvidence(draft, text), existing, dropped, cleaning: { removed: cleaning.removed, warning: cleaning.warning } })
   } catch (e) {
     if (e instanceof OfferError) return NextResponse.json({ error: e.message, code: e.code }, { status: OFFER_STATUS[e.code] })
     if (e instanceof AIError) return NextResponse.json({ error: e.message, code: e.code }, { status: AI_STATUS[e.code] })

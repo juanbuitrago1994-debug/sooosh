@@ -18,13 +18,16 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { applyLabel, type Apply } from "@/lib/jobs/apply"
+import { OfferReview } from "@/components/jobs/offer-review"
+import type { FieldEvidence } from "@/lib/jobs/evidence"
+import type { FieldKey } from "@/lib/jobs/field-values"
 import { COUNTRIES, REGION_OPTIONS } from "@/lib/jobs/geo"
 import { CURRENCIES, PERIODS, type Salary } from "@/lib/jobs/salary"
 import type { JobDraft } from "@/lib/jobs/draft"
 import { SENIORITY } from "@/lib/schemas/offer"
 
 type Row = { id: string; title: string; company: string | null; locationText: string | null; country: string | null; regions: string[]; workMode: string | null; status: string; sourceName: string; sourceUrl: string; createdAt: string }
-type Analysis = { draft: JobDraft; existing: { id: string; title: string; status: string } | null; dropped?: unknown[]; cleaning?: { warning?: string } }
+type Analysis = { draft: JobDraft; evidence?: FieldEvidence[]; existing: { id: string; title: string; status: string } | null; dropped?: unknown[]; cleaning?: { warning?: string } }
 
 const TOKEN_KEY = "sooosh-admin-token"
 const MODE = { remoto: "Remoto", hibrido: "Híbrido", presencial: "Presencial" } as const
@@ -55,6 +58,7 @@ export function JobsAdmin() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
+  const [confirmed, setConfirmed] = useState<ReadonlySet<FieldKey>>(new Set())
 
   const api = useCallback(
     async (path: string, tok: string, init: RequestInit = {}) => {
@@ -118,6 +122,7 @@ export function JobsAdmin() {
     setBusy(true)
     setError("")
     setAnalysis(null)
+    setConfirmed(new Set())
     try {
       const body = tab === "url" ? { url: url.trim() } : { text, link: link.trim() || undefined }
       setAnalysis(await api("/api/jobs/analyze", token, { method: "POST", body: JSON.stringify(body) }))
@@ -289,6 +294,21 @@ export function JobsAdmin() {
             </p>
           )}
           {analysis.cleaning?.warning && <p className="text-xs text-muted-foreground">{analysis.cleaning.warning}</p>}
+          {analysis.evidence && (
+            <OfferReview
+              evidence={analysis.evidence}
+              draft={d}
+              confirmed={confirmed}
+              onConfirm={(key) => {
+                setConfirmed((c) => new Set(c).add(key))
+                if (key === "titulo") patch({ titleSource: "texto" })
+              }}
+              onClear={(key, p) => {
+                patch(p)
+                setConfirmed((c) => new Set(c).add(key))
+              }}
+            />
+          )}
           <FieldGroup>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field>

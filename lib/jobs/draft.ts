@@ -73,6 +73,7 @@ export function detectEmploymentType(text: string, ld?: JobLd): string | undefin
   if (/\b(practicas|pasantia|internship|intern)\b/.test(t)) return "Prácticas"
   if (/\b(freelance|por proyecto|contractor|prestacion de servicios|independiente)\b/.test(t)) return "Contrato"
   if (/\b(temporal|fixed[- ]term|termino fijo|obra o labor)\b/.test(t)) return "Temporal"
+  if (/\b(termino indefinido|contrato indefinido|indefinido)\b/.test(t)) return "Indefinido"
   return undefined
 }
 
