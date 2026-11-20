@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { SourcesStatus } from "@/components/jobs/sources-status"
-import { describeRun, friendlyError, stateOf } from "@/lib/sources/status"
+import { describeRun, friendlyError, pct, stateOf } from "@/lib/sources/status"
 
 describe("estado público de las fuentes", () => {
   it("los errores técnicos se traducen y nunca se filtran tal cual", () => {
@@ -25,6 +25,12 @@ describe("estado público de las fuentes", () => {
     expect(stateOf(h({ stale: true }))).toBe("late")
     expect(stateOf(h({ failing: true, stale: true }))).toBe("paused")
     expect(stateOf(h({ lastOkAt: null }))).toBe("new")
+  })
+  it("los porcentajes de la ficha: redondeados y sin dividir por cero", () => {
+    expect(pct(1, 3)).toBe(33)
+    expect(pct(2, 3)).toBe(67)
+    expect(pct(0, 0)).toBe(0)
+    expect(pct(5, 5)).toBe(100)
   })
   it("el botón del panel está en el buscador y el panel no se pinta hasta abrirlo", () => {
     const html = renderToStaticMarkup(<SourcesStatus />)

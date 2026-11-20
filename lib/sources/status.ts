@@ -1,6 +1,8 @@
 import { and, desc, eq, gt, sql } from "drizzle-orm"
 import type { Db } from "@/lib/db"
 import { jobs, syncRuns } from "@/lib/db/schema"
+import { FAMILIES } from "@/lib/jobs/classify"
+import { COUNTRIES } from "@/lib/jobs/geo"
 import { syncHealth, TARGETS, type Health } from "./schedule"
 
 /**
@@ -13,6 +15,19 @@ const LOG_PER_SOURCE = 12
 
 export type SourceState = "ok" | "warn" | "late" | "paused" | "new"
 export type LogEntry = { at: string; ok: boolean; message: string }
+/** Datos útiles de una fuente para quien busca: qué tan frescas son sus ofertas y qué suelen traer. */
+export type SourceStats = {
+  /** entraron a Sooosh hace menos de 48 h */
+  new48: number
+  /** % de ofertas de tecnología, con salario publicado y remotas (0–100) */
+  techPct: number
+  salaryPct: number
+  remotePct: number
+  /** la oferta más reciente (fecha de publicación o, si no la dice, de entrada) */
+  latestAt: string | null
+  countries: { name: string; n: number }[]
+  families: { name: string; n: number }[]
+}
 export type SourceStatus = {
   id: string
   name: string
@@ -21,6 +36,10 @@ export type SourceStatus = {
   activeOffers: number
   lastOkAt: string | null
   everyHours: number
+  /** qué es la fuente, en una frase, y su sitio (para «Visitar la fuente») */
+  description: string
+  home: string | null
+  stats: SourceStats
   log: LogEntry[]
   /** solo para «Empresas»: ofertas activas por empresa */
   breakdown?: { name: string; offers: number }[]
@@ -55,6 +74,20 @@ export function stateOf(h: Pick<Health, "failing" | "stale" | "lastError" | "las
   return h.lastError ? "warn" : "ok"
 }
 
+export const pct = (n: number, total: number) => (total > 0 ? Math.round((n / total) * 100) : 0)
+
+const INFO: Record<string, { description: string; home: string | null }> = {
+  getonboard: { description: "Plataforma de empleo tech de Latinoamérica: cada oferta trae requisitos, modalidad y salario cuando la empresa los publica.", home: "https://www.getonbrd.com" },
+  companies: { description: "Tableros de empleo que las propias empresas publican (Greenhouse, Lever, Ashby y otros): la oferta original, tal como la escribió la empresa.", home: null },
+  "portal:chiletrabajos": { description: "Portal chileno de empleo. Traemos solo cargos de tecnología.", home: "https://www.chiletrabajos.cl" },
+  "portal:trabajando": { description: "Portal chileno de empleo. Traemos solo cargos de tecnología.", home: "https://www.trabajando.cl" },
+  "remote:remotive": { description: "Ofertas remotas de empresas de todo el mundo; solo las abiertas a Latinoamérica.", home: "https://remotive.com" },
+  "remote:jobicy": { description: "Ofertas remotas de todo el mundo; solo las abiertas a Latinoamérica.", home: "https://jobicy.com" },
+  "remote:himalayas": { description: "Ofertas remotas de todo el mundo; solo las abiertas a Latinoamérica.", home: "https://himalayas.app" },
+}
+const countryName = (code: string | null) => COUNTRIES.find((c) => c.code === code)?.name ?? null
+const familyName = (key: string | null) => (key && key in FAMILIES ? FAMILIES[key as keyof typeof FAMILIES] : null)
+
 const kindOf = (id: string): SourceStatus["kind"] => (id === "getonboard" ? "Plataforma" : id === "companies" ? "Empresas" : id.startsWith("portal:") ? "Portal" : "Remotas")
 const groupOf = (key: string | null): string | null => {
   if (!key) return null
@@ -63,21 +96,55 @@ const groupOf = (key: string | null): string | null => {
 }
 
 export async function sourceStatuses(db: Db, now = new Date()): Promise<SourceStatus[]> {
-  const [health, counts, runs] = await Promise.all([
+  const active = eq(jobs.status, "activa")
+  const [health, counts, countries, families, runs] = await Promise.all([
     syncHealth(db, now),
-    db.select({ key: jobs.sourceKey, company: sql<string>`max(${jobs.company})`, n: sql<number>`count(*)::int` }).from(jobs).where(eq(jobs.status, "activa")).groupBy(jobs.sourceKey),
+    db
+      .select({
+        key: jobs.sourceKey,
+        company: sql<string>`max(${jobs.company})`,
+        n: sql<number>`count(*)::int`,
+        new48: sql<number>`count(*) filter (where ${jobs.createdAt} > now() - interval '48 hours')::int`,
+        tech: sql<number>`count(*) filter (where ${jobs.isTech})::int`,
+        salary: sql<number>`count(*) filter (where ${jobs.salary} is not null)::int`,
+        remote: sql<number>`count(*) filter (where ${jobs.workMode} = 'remoto')::int`,
+        latest: sql<string | null>`max(coalesce(${jobs.postedAt}, ${jobs.createdAt}))`,
+      })
+      .from(jobs)
+      .where(active)
+      .groupBy(jobs.sourceKey),
+    db.select({ key: jobs.sourceKey, v: jobs.country, n: sql<number>`count(*)::int` }).from(jobs).where(active).groupBy(jobs.sourceKey, jobs.country),
+    db.select({ key: jobs.sourceKey, v: jobs.roleFamily, n: sql<number>`count(*)::int` }).from(jobs).where(active).groupBy(jobs.sourceKey, jobs.roleFamily),
     db.select().from(syncRuns).where(and(gt(syncRuns.finishedAt, sql`now() - make_interval(days => ${LOG_DAYS})`))).orderBy(desc(syncRuns.finishedAt)),
   ])
-  const totals = new Map<string, number>()
+  type Acc = { n: number; new48: number; tech: number; salary: number; remote: number; latest: string | null }
+  const acc = new Map<string, Acc>()
   const companies: { name: string; offers: number }[] = []
   for (const c of counts) {
     const g = groupOf(c.key)
     if (!g) continue
-    totals.set(g, (totals.get(g) ?? 0) + c.n)
+    const a = acc.get(g) ?? { n: 0, new48: 0, tech: 0, salary: 0, remote: 0, latest: null }
+    a.n += c.n
+    a.new48 += c.new48
+    a.tech += c.tech
+    a.salary += c.salary
+    a.remote += c.remote
+    if (c.latest && (!a.latest || c.latest > a.latest)) a.latest = c.latest
+    acc.set(g, a)
     if (g === "companies") companies.push({ name: c.company ?? c.key ?? "", offers: c.n })
+  }
+  const top = (rows: { key: string | null; v: string | null; n: number }[], g: string, label: (v: string | null) => string | null) => {
+    const m = new Map<string, number>()
+    for (const r of rows) {
+      if (groupOf(r.key) !== g) continue
+      const name = label(r.v)
+      if (name) m.set(name, (m.get(name) ?? 0) + r.n)
+    }
+    return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([name, n]) => ({ name, n }))
   }
   return TARGETS.map((t) => {
     const h = health.find((x) => x.id === t.id)!
+    const a = acc.get(t.id) ?? { n: 0, new48: 0, tech: 0, salary: 0, remote: 0, latest: null }
     const log = runs
       .filter((r) => r.target === t.id && r.finishedAt)
       .slice(0, LOG_PER_SOURCE)
@@ -87,11 +154,22 @@ export async function sourceStatuses(db: Db, now = new Date()): Promise<SourceSt
       name: t.id === "companies" ? "Empresas con tablero público" : t.label,
       kind: kindOf(t.id),
       state: stateOf(h),
-      activeOffers: totals.get(t.id) ?? 0,
+      activeOffers: a.n,
       lastOkAt: h.lastOkAt,
       everyHours: t.everyHours,
+      description: INFO[t.id]?.description ?? "",
+      home: INFO[t.id]?.home ?? null,
+      stats: {
+        new48: a.new48,
+        techPct: pct(a.tech, a.n),
+        salaryPct: pct(a.salary, a.n),
+        remotePct: pct(a.remote, a.n),
+        latestAt: a.latest ? new Date(a.latest).toISOString() : null,
+        countries: top(countries, t.id, countryName),
+        families: top(families, t.id, familyName),
+      },
       log,
-      breakdown: t.id === "companies" ? companies.sort((a, b) => b.offers - a.offers).slice(0, 40) : undefined,
+      breakdown: t.id === "companies" ? companies.sort((x, y) => y.offers - x.offers).slice(0, 40) : undefined,
     }
   })
 }

@@ -675,3 +675,8 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Para revisar por Juan
 1. Reinicia `pnpm dev`. En `/ofertas` pulsa **Fuentes** (arriba a la derecha): lista de fuentes con estado y conteos; toca una → detalle e historial; vuelve con la flecha; cierra con deslizar/Escape. Mira claro/oscuro, escritorio (panel derecho) y 375 px (desde abajo).
+
+### Ajuste de la mejora 4 tras la revisión de Juan (20-nov-2026)
+- El panel ahora sigue el patrón **Responsive de shadcn**: ventana (Dialog) en escritorio y panel desde abajo (Drawer) en el móvil. Las fuentes son una **cuadrícula de tarjetas casi cuadradas** (shadcn `Item`, 4:3; 2 columnas en móvil, 3 en escritorio) que se desplaza dentro del panel cuando haya muchas.
+- Cada tarjeta: tipo, estado, nombre, ofertas activas y cuántas son nuevas (llama). Al tocarla, la **ficha** suma datos nuevos de la base: qué es la fuente (una frase) y enlace «Visitar la fuente», ofertas activas, nuevas en 48 h, oferta más reciente, % de tecnología, % con salario publicado, % remotas, países principales y cargos que más trae; más el historial de 30 días (y el desglose por empresa en «Empresas»).
+- Tablas: las fuentes **no tienen tabla propia** (son adaptadores en código; en la base solo están `source_companies` —directorio de empresas—, `sync_runs` —historial— y `jobs.source_key`). Los datos nuevos se calculan al vuelo con agregaciones sobre `jobs`. Propuesta pendiente de decisión: tabla `sources` (nombre, tipo, sitio, descripción, atribución, activa) para añadir fuentes sin tocar el código.
