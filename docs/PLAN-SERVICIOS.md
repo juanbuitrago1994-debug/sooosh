@@ -124,3 +124,11 @@ Basado en `docs/PLAN-IA.md`. Cada etapa tiene una meta medible y un criterio par
 2. **País prioritario** para la cobertura: ¿Colombia primero?
 3. ¿Apruebas el formulario **«Publica tu oferta»** (A4) y quién contacta a los portales (A5)?
 4. ¿Tienes un abogado en mente (D2) o te preparo una lista de criterios para buscarlo?
+
+## Hallazgos de A (Colombia, vías oficiales) — 20-nov-2026
+- **Torre.co:** descartada (sus términos prohíben rastrear y copiar su contenido; la API oficial está en beta privada y su base es sobre todo remota).
+- **Adzuna** (términos oficiales): uso permitido para búsqueda personal, publicar anuncios de Adzuna con la etiqueta «Adzuna» y para investigación; **cualquier otro uso (análisis comercial, reventa, captación de clientes) exige acuerdo escrito**; el acceso es a discreción de Adzuna. **No se pudo confirmar** qué países cubre (sin Colombia confirmada). Hay que registrarse para ver el listado.
+- **Careerjet** (API de socios): clave por cada sitio web publicador; exige `user_ip` y `user_agent` de cada visitante que busca (está pensada para búsquedas en vivo en un sitio, no para volcar una base). La página oficial no dice nada de almacenamiento, atribución ni límites; la página de términos dio 404. Hay un código de localización `es_CO` según fuentes de terceros.
+- **Jooble:** la clave se pide con un formulario para operadores de portales; la página oficial no dice países, límites, almacenamiento ni atribución.
+- **Patrón común:** las tres están pensadas para **mostrar resultados en vivo con enlace de salida**, no para construir nuestra propia base. Si se usan, sería como **búsqueda federada bajo demanda** (consultar al buscar, no guardar), y solo después de leer su acuerdo de socios al registrarse.
+- **Servicio Público de Empleo (SPE) de Colombia:** no hay API ni conjunto de datos abiertos de vacantes en datos.gov.co; DataEmpleo publica **estadísticas mensuales agregadas** (sirven para tendencias de mercado, no para listar ofertas). El buscador oficial `buscadordeempleo.gov.co` es una aplicación web sin API documentada, sin `robots.txt` ni sitemap ni datos estructurados: leerlo implicaría usar endpoints internos no documentados, y eso no se hace sin su autorización. Vía legítima: solicitar a la Unidad del SPE un acceso o feed de vacantes (entidad pública con mandato de conectar oferta y demanda).
