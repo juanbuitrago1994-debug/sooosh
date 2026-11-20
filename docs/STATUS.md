@@ -786,3 +786,16 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Ajuste de la tipografía de portada y tokens documentados (20-nov-2026)
 - Título y subtítulo de la portada más pequeños, más juntos y con menos interletraje, definidos como **tokens documentados** en `docs/DESIGN-TOKENS.md` y usados desde `lib/design-tokens.ts` (`token("hero-title" | "hero-subtitle" | "hero-stack")`): título 24 px (móvil) / 30 px (≥ `sm`) con −0,05 em; subtítulo 14 px con −0,025 em; 6 px entre ambos (antes 12). Una prueba (`tests/design-tokens.test.ts`) falla si el código y el documento no coinciden o si algún token trae valores arbitrarios.
+
+## Ficha de la oferta alineada con el nuevo diseño (20-nov-2026)
+
+### Qué se hizo
+- **Cabecera como la de inicio y búsqueda** (`components/jobs/job-detail.tsx`): a todo el ancho y pegada arriba; a la izquierda, flecha para volver a los resultados y la marca; a la derecha, íconos: **guardar** (el marcador se rellena con un pequeño acercamiento), **compartir** y tema. Los íconos son botones cuadrados de esquinas redondeadas.
+- **Entrada de abajo hacia arriba** (`Rise`): primero título y empresa; después datos clave y cómo se postula; después encaje, habilidades, listas y fuente; con la misma curva y 70 ms de retardo que el resto de la app.
+- **Menos texto**: «Adaptar mi CV» (antes «… a esta oferta»), «Estimado con reglas, sin IA.», «Tu CV no muestra: …» / «Tu CV cubre lo que pide.», «Fuente: … · ver publicación original». «Guardar» salió de la fila inferior (ahora está en la cabecera); abajo quedan «No me interesa» y Privacidad. La barra inferior con **Postular** y **Adaptar mi CV** sigue fija y visible.
+
+### Qué se verificó
+- lint, tsc, build y 565 pruebas en verde.
+
+### Para revisar por Juan
+1. Reinicia `pnpm dev`. Abre una oferta desde `/ofertas`: cabecera pegada arriba con flecha + marca y los íconos guardar/compartir/tema; los bloques suben escalonados; guarda la oferta (marcador relleno) y vuelve con la flecha; claro/oscuro, escritorio y 375 px (la barra Postular/Adaptar debe seguir abajo).

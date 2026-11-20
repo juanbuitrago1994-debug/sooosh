@@ -7,6 +7,7 @@ import { ArrowLeftIcon, BookmarkIcon, CheckIcon, LinkIcon } from "lucide-react"
 import { toast } from "sonner"
 import { ApplyIcon } from "@/components/jobs/apply-icon"
 import { NewBadge } from "@/components/jobs/new-badge"
+import { Rise } from "@/components/motion/rise"
 import { Logo } from "@/components/brand/logo"
 import { PrivacyLink } from "@/components/privacy/privacy-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -107,15 +108,22 @@ export function JobDetail({ job }: { job: JobCard }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-6 sm:px-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-200">
-      <header className="flex items-center justify-between gap-2">
-        <Link href="/ofertas" className={buttonVariants({ variant: "ghost", size: "sm", className: "text-muted-foreground" })}>
-          <ArrowLeftIcon data-icon="inline-start" aria-hidden /> Resultados
-        </Link>
-        <div className="flex items-center">
-          <Link href="/" aria-label="Ir a Sooosh" className={buttonVariants({ variant: "ghost", size: "icon" })}>
-            <Logo className="size-5" />
+    <div className="flex min-h-dvh w-full flex-col">
+      {/* Cabecera igual a la de inicio y búsqueda: atrás y marca a la izquierda, acciones a la derecha, pegadas arriba. */}
+      <header className="flex items-center justify-between px-4 py-3 sm:px-6">
+        <div className="flex items-center gap-1">
+          <Link href="/ofertas" aria-label="Volver a los resultados" className={buttonVariants({ variant: "ghost", size: "icon" })}>
+            <ArrowLeftIcon aria-hidden />
           </Link>
+          <Link href="/" className="flex items-center gap-2 px-1 text-sm font-medium">
+            <Logo className="size-5" />
+            Sooosh
+          </Link>
+        </div>
+        <div className="flex items-center">
+          <Button variant="ghost" size="icon" aria-label={isSaved ? "Quitar de guardadas" : "Guardar oferta"} aria-pressed={isSaved} onClick={save}>
+            <BookmarkIcon key={String(isSaved)} className={isSaved ? "fill-current motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-200" : undefined} aria-hidden />
+          </Button>
           <Button variant="ghost" size="icon" aria-label="Compartir esta oferta" onClick={() => void share()}>
             <LinkIcon aria-hidden />
           </Button>
@@ -123,100 +131,99 @@ export function JobDetail({ job }: { job: JobCard }) {
         </div>
       </header>
 
-      <div className="flex flex-col items-start gap-1">
-        {job.isNew && <NewBadge />}
-        <h1 className="text-lg font-medium">{job.title}</h1>
-        {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
-        {job.remoteScope && <p className="text-sm text-muted-foreground">{job.remoteScope}</p>}
-      </div>
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 pt-4 sm:px-6">
+        <Rise className="flex flex-col items-start gap-1">
+          {job.isNew && <NewBadge />}
+          <h1 className="text-lg font-medium">{job.title}</h1>
+          {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+          {job.remoteScope && <p className="text-sm text-muted-foreground">{job.remoteScope}</p>}
+        </Rise>
 
-      {facts.length > 0 && (
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-4 border-y border-border/40 py-4 sm:grid-cols-3">
-          {facts.map((f) => (
-            <div key={f.key} className="flex flex-col gap-0.5">
-              <dt className="text-xs text-muted-foreground">{f.label}</dt>
-              <dd className="text-sm">{f.value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-
-      <section className="flex items-start gap-3" aria-label="Cómo se postula">
-        <ApplyIcon method={apply?.method} className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-        <div className="flex flex-col gap-0.5">
-          <p className="text-sm font-medium">{applyLabel(apply)}</p>
-          <p className="text-sm text-muted-foreground">{applyHint(apply)}</p>
-        </div>
-      </section>
-
-      {fit && profileCv && (
-        <section className="flex flex-col gap-2" aria-label="Encaje con tu CV">
-          <h2 className="text-sm font-medium">Encaje con tu CV: {fit.score} %</h2>
-          {fit.missing.length > 0 ? (
-            <p className="text-sm text-muted-foreground">Tu CV no muestra: {fit.missing.join(", ")}. Si lo tienes, agrégalo al adaptar el CV.</p>
-          ) : (
-            <p className="text-sm text-muted-foreground">Tu CV cubre lo que pide esta oferta.</p>
+        <Rise step={1} className="flex flex-col gap-6">
+          {facts.length > 0 && (
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-4 border-y border-border/40 py-4 sm:grid-cols-3">
+              {facts.map((f) => (
+                <div key={f.key} className="flex flex-col gap-0.5">
+                  <dt className="text-xs text-muted-foreground">{f.label}</dt>
+                  <dd className="text-sm">{f.value}</dd>
+                </div>
+              ))}
+            </dl>
           )}
-          <p className="text-xs text-muted-foreground">Estimación con reglas (sin IA): solo cuenta lo que tu CV dice.</p>
-        </section>
-      )}
 
-      {job.skills.length > 0 && (
-        <section className="flex flex-col gap-2" aria-label="Habilidades">
-          <h2 className="text-sm font-medium">Habilidades</h2>
-          <ul className="flex flex-wrap gap-2">
-            {job.skills.map((s) => {
-              const has = !!profileCv && covered.has(s.toLowerCase())
-              return (
-                <li key={s}>
-                  <Badge variant={has ? "default" : "secondary"}>
-                    {has && <CheckIcon data-icon="inline-start" aria-hidden />}
-                    {s}
-                    {has && <span className="sr-only"> (tu CV lo muestra)</span>}
-                  </Badge>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-      )}
+          <section className="flex items-start gap-3" aria-label="Cómo se postula">
+            <ApplyIcon method={apply?.method} className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            <div className="flex flex-col gap-0.5">
+              <p className="text-sm font-medium">{applyLabel(apply)}</p>
+              <p className="text-sm text-muted-foreground">{applyHint(apply)}</p>
+            </div>
+          </section>
+        </Rise>
 
-      <List title="Qué harás" items={o.responsibilities} />
-      <List title="Qué piden" items={o.requirements} />
-      <List title="Se valora" items={o.niceToHave} />
+        <Rise step={2} className="flex flex-col gap-6">
+          {fit && profileCv && (
+            <section className="flex flex-col gap-1.5" aria-label="Encaje con tu CV">
+              <h2 className="text-sm font-medium">Encaje con tu CV: {fit.score} %</h2>
+              <p className="text-sm text-muted-foreground">{fit.missing.length > 0 ? `Tu CV no muestra: ${fit.missing.join(", ")}.` : "Tu CV cubre lo que pide."}</p>
+              <p className="text-xs text-muted-foreground">Estimado con reglas, sin IA.</p>
+            </section>
+          )}
 
-      <p className="text-xs text-muted-foreground">
-        Fuente: {job.sourceName === "manual" ? "cargada por el equipo de Sooosh" : job.sourceName}
-        {job.sourceUrl.startsWith("http") && (
-          <>
-            {" · "}
-            <a href={job.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
-              ver la publicación original
+          {job.skills.length > 0 && (
+            <section className="flex flex-col gap-2" aria-label="Habilidades">
+              <h2 className="text-sm font-medium">Habilidades</h2>
+              <ul className="flex flex-wrap gap-2">
+                {job.skills.map((s) => {
+                  const has = !!profileCv && covered.has(s.toLowerCase())
+                  return (
+                    <li key={s}>
+                      <Badge variant={has ? "default" : "secondary"}>
+                        {has && <CheckIcon data-icon="inline-start" aria-hidden />}
+                        {s}
+                        {has && <span className="sr-only"> (tu CV lo muestra)</span>}
+                      </Badge>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          )}
+
+          <List title="Qué harás" items={o.responsibilities} />
+          <List title="Qué piden" items={o.requirements} />
+          <List title="Se valora" items={o.niceToHave} />
+
+          <p className="text-xs text-muted-foreground">
+            Fuente: {job.sourceName === "manual" ? "Sooosh" : job.sourceName}
+            {job.sourceUrl.startsWith("http") && (
+              <>
+                {" · "}
+                <a href={job.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
+                  ver publicación original
+                </a>
+              </>
+            )}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-1">
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={notInterested}>
+              No me interesa
+            </Button>
+            <PrivacyLink className="ml-auto text-muted-foreground" />
+          </div>
+        </Rise>
+
+        <div className="sticky bottom-0 -mx-4 mt-auto flex flex-col gap-2 border-t border-border/40 bg-background px-4 py-3 sm:mx-0 sm:flex-row-reverse sm:px-0">
+          {external && (
+            <a href={external} onClick={() => track("apply_click", { jobId: job.id, method: apply?.method ?? "desconocido" })} {...(isMail ? {} : { target: "_blank", rel: "noopener noreferrer" })} className={buttonVariants({ className: "sm:flex-1" })}>
+              {applyCta(apply)}
             </a>
-          </>
-        )}
-      </p>
-
-      <div className="flex flex-wrap items-center gap-1">
-        <Button variant="ghost" size="sm" onClick={save} aria-pressed={isSaved}>
-          <BookmarkIcon key={String(isSaved)} data-icon="inline-start" className={isSaved ? "fill-current motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-200" : undefined} aria-hidden /> {isSaved ? "Guardada" : "Guardar"}
-        </Button>
-        <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={notInterested}>
-          No me interesa
-        </Button>
-        <PrivacyLink className="ml-auto text-muted-foreground" />
-      </div>
-
-      <div className="sticky bottom-0 -mx-4 flex flex-col gap-2 border-t border-border/40 bg-background px-4 py-3 sm:mx-0 sm:flex-row-reverse sm:px-0">
-        {external && (
-          <a href={external} onClick={() => track("apply_click", { jobId: job.id, method: apply?.method ?? "desconocido" })} {...(isMail ? {} : { target: "_blank", rel: "noopener noreferrer" })} className={buttonVariants({ className: "sm:flex-1" })}>
-            {applyCta(apply)}
-          </a>
-        )}
-        <Button variant="outline" className="sm:flex-1" onClick={adapt}>
-          Adaptar mi CV a esta oferta
-        </Button>
-      </div>
+          )}
+          <Button variant="outline" className="sm:flex-1" onClick={adapt}>
+            Adaptar mi CV
+          </Button>
+        </div>
+      </main>
     </div>
   )
 }
