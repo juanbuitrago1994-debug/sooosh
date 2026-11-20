@@ -1,17 +1,18 @@
 "use client"
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { useReducedMotion } from "motion/react"
-import { Beam } from "@/components/magic/beam"
+import { motion, useReducedMotion } from "motion/react"
 import { MOTION } from "@/lib/motion"
 
-/** Relleno horizontal (px-4 = 16 px por lado) y borde (1 px por lado) del distintivo: sirven para fijar su ancho a lo que mide el contenido. */
-const CHROME = 2 * 16 + 2
+/** Relleno horizontal del distintivo (px-4 = 16 px por lado): sirve para fijar su ancho a lo que mide el contenido. */
+const CHROME = 2 * 16
 
 /**
- * Distintivo de fondo SÓLIDO y ligeramente distinto al de la app (`card`: un poco más claro en oscuro; no deja ver lo que pasa por detrás) con un resplandor interior sutil que respira (`Beam` en estilo `pulse-inner`, paleta `ice` fija y poco saturada: grises fríos y azules pálidos) y SIN borde. El ancho se anima (300 ms, la curva de la app)
- * cuando el contenido cambia de largo, p. ej. de 999 a 1.000 ofertas (idea de la transición «Card resize» de transitions.dev). Con «reducir movimiento»
- * el ancho cambia sin animar. Decorativo: no recibe clics.
+ * Distintivo de fondo SÓLIDO y ligeramente distinto al de la app (`card`), SIN borde, con un resplandor interior uniforme que respira muy despacio
+ * (una sombra interior suave que sube y baja de opacidad, del color del texto del tema). Reemplaza a `Beam`/`border-beam` en este componente: esa librería
+ * dibuja manchas de color ancladas al borde (de ahí los «puntos de color») y obligaba a tapar su trazo con un anillo, que dejaba un contorno oscuro.
+ * El ancho se anima (300 ms, la curva de la app) cuando el contenido cambia de largo (idea de «Card resize» de transitions.dev). Con «reducir
+ * movimiento» el resplandor queda quieto y el ancho cambia sin animar. Decorativo: no recibe clics.
  */
 export function BeamBadge({ children, className }: { children: ReactNode; className?: string }) {
   const reduce = useReducedMotion()
@@ -26,20 +27,22 @@ export function BeamBadge({ children, className }: { children: ReactNode; classN
     return () => ro.disconnect()
   }, [])
 
-  // `ice` fijo (sin el ciclo de tono de la librería) y poco saturado: solo grises fríos y azules pálidos.
   return (
-    <Beam size="pulse-inner" colorVariant="ice" staticColors saturation={0.4}>
-      <div
-        className={`relative flex justify-center overflow-hidden rounded-full bg-card px-4 py-2 text-xs ${className ?? ""}`}
-        style={{ width: width === null ? undefined : width + CHROME, transition: reduce ? undefined : `width 300ms cubic-bezier(${MOTION.ease.join(",")})` }}
-      >
-        <span ref={content} className="inline-flex shrink-0">
-          {children}
-        </span>
-        {/* Sin borde visible: un anillo OPACO de 1 px del mismo color que el fondo del distintivo, por encima del trazo del haz de la librería (que no se puede apagar).
-            Así no se ve ni el borde ni el haz de la librería, y solo queda el resplandor interior. */}
-        <span aria-hidden className="pointer-events-none absolute inset-0 z-10 rounded-full border" style={{ borderColor: "var(--card)" }} />
-      </div>
-    </Beam>
+    <div
+      className={`relative flex justify-center overflow-hidden rounded-full bg-card px-4 py-2 text-xs ${className ?? ""}`}
+      style={{ width: width === null ? undefined : width + CHROME, transition: reduce ? undefined : `width 300ms cubic-bezier(${MOTION.ease.join(",")})` }}
+    >
+      <span ref={content} className="relative inline-flex shrink-0">
+        {children}
+      </span>
+      <motion.span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-full"
+        style={{ boxShadow: "inset 0 0 12px 1px color-mix(in oklab, var(--foreground) 20%, transparent)" }}
+        initial={{ opacity: reduce ? 0.6 : 0.35 }}
+        animate={reduce ? undefined : { opacity: [0.35, 1, 0.35] }}
+        transition={{ duration: MOTION.wave, ease: "easeInOut", repeat: Infinity }}
+      />
+    </div>
   )
 }
