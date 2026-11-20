@@ -12,17 +12,14 @@ import type { RankedJob } from "@/lib/jobs/rank"
  * Tarjeta de una oferta en el buscador. Se adapta a lo que hay: título y empresa siempre; hasta 3 datos clave (experiencia, salario,
  * modalidad…) SOLO si existen; y abajo, cómo se postula («Se aplica en LinkedIn»). Toda la tarjeta es un enlace al detalle.
  */
-/** Entrada escalonada de las primeras 8 tarjetas (20 ms entre una y otra, 150 ms cada una): fluida, no un telón. Sin movimiento si la persona lo pidió. */
-const ENTER_DELAY = ["delay-0", "delay-20", "delay-40", "delay-60", "delay-80", "delay-100", "delay-120", "delay-140"]
-
-export function JobCard({ job, saved, onOpen, index = 8 }: { job: RankedJob; saved?: boolean; onOpen?: () => void; index?: number }) {
+export function JobCard({ job, saved, onOpen }: { job: RankedJob; saved?: boolean; onOpen?: () => void }) {
   const facts = buildFacts(job).filter((f) => f.key !== "publicada").slice(0, 3)
   const when = ago(job.postedAt)
   const subtitle = [job.company, job.locationText, when].filter(Boolean).join(" · ")
   return (
-    <li className={`motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-150 motion-safe:fill-mode-backwards ${ENTER_DELAY[index] ?? ""}`}>
+    <li>
       <Link href={`/ofertas/${job.id}`} onClick={onOpen} className="group block rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-        <GlassPanel className="flex flex-col gap-4 p-4 transition-colors group-hover:bg-muted/40">
+        <GlassPanel className="flex flex-col gap-4 p-4 transition-all duration-150 group-hover:bg-muted/40 motion-safe:group-hover:-translate-y-0.5 motion-safe:group-active:translate-y-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">
               <h2 className="line-clamp-2 text-lg font-medium">
@@ -30,7 +27,7 @@ export function JobCard({ job, saved, onOpen, index = 8 }: { job: RankedJob; sav
                 {saved && (
                   <>
                     {" "}
-                    <BookmarkIcon className="inline size-4 align-text-bottom text-muted-foreground" aria-hidden />
+                    <BookmarkIcon className="inline size-4 align-text-bottom fill-current text-muted-foreground motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-200" aria-hidden />
                     <span className="sr-only"> (guardada)</span>
                   </>
                 )}

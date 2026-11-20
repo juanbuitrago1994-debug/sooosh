@@ -680,3 +680,21 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - El panel ahora sigue el patrón **Responsive de shadcn**: ventana (Dialog) en escritorio y panel desde abajo (Drawer) en el móvil. Las fuentes son una **cuadrícula de tarjetas casi cuadradas** (shadcn `Item`, 4:3; 2 columnas en móvil, 3 en escritorio) que se desplaza dentro del panel cuando haya muchas.
 - Cada tarjeta: tipo, estado, nombre, ofertas activas y cuántas son nuevas (llama). Al tocarla, la **ficha** suma datos nuevos de la base: qué es la fuente (una frase) y enlace «Visitar la fuente», ofertas activas, nuevas en 48 h, oferta más reciente, % de tecnología, % con salario publicado, % remotas, países principales y cargos que más trae; más el historial de 30 días (y el desglose por empresa en «Empresas»).
 - Tablas: las fuentes **no tienen tabla propia** (son adaptadores en código; en la base solo están `source_companies` —directorio de empresas—, `sync_runs` —historial— y `jobs.source_key`). Los datos nuevos se calculan al vuelo con agregaciones sobre `jobs`. Propuesta pendiente de decisión: tabla `sources` (nombre, tipo, sitio, descripción, atribución, activa) para añadir fuentes sin tocar el código.
+
+## Mejoras de diseño y experiencia — 5: microinteracciones (20-nov-2026)
+
+### Qué se hizo
+- **Lista de resultados** (`@formkit/auto-animate` 0.10.2, MIT, 2,5 M descargas/semana, sin dependencias, versión fija; alta en el lockfile de solo 8 líneas): las altas, bajas y cambios de orden se animan solos en 180 ms —al escribir en la búsqueda en vivo, al cambiar un filtro o al descartar una oferta («No me interesa»)—. La primera carga hace un fundido de 200 ms. Se retiró el escalonado por tarjeta de la mejora 2 (chocaba con esta animación).
+- **Tarjeta de oferta**: al pasar el cursor sube 2 px (sin sombra) y vuelve al pulsarla; el marcador «guardada» aparece con un acercamiento de 200 ms.
+- **Ficha de la oferta**: entra con un fundido y un desplazamiento mínimo (200 ms); al guardar, el marcador se rellena con un pequeño acercamiento.
+- Ya existentes de las mejoras anteriores: llama de «Nueva» (300 ms), atenuación suave mientras carga (150 ms), botones de filtros guardados (150 ms), tarjetas del panel Fuentes (150 ms) y cambio lista↔ficha (200 ms).
+- Todo respeta «reducir movimiento» (`motion-safe:` y el modo propio de auto-animate); ninguna animación pasa de 300 ms, sin rebotes; sin valores arbitrarios de Tailwind.
+
+### Qué se verificó
+- lint, tsc, build y 548 pruebas en verde.
+
+### Impacto en la app y la experiencia
+- La lista deja de «saltar» cuando cambian los resultados: lo que entra, sale o se reordena se desliza en un instante; guardar y abrir una oferta da respuesta táctil sin estorbar.
+
+### Para revisar por Juan
+1. Reinicia `pnpm dev`. En `/ofertas`: escribe en el buscador y mira cómo la lista se reacomoda; cambia Región/Modalidad/Orden; descarta una oferta («No me interesa» en su ficha) y vuelve; pasa el cursor y pulsa una tarjeta; guarda una oferta en su ficha. Con «reducir movimiento» activado en el sistema no debe moverse nada.

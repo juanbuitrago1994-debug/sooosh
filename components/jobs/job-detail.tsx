@@ -107,7 +107,7 @@ export function JobDetail({ job }: { job: JobCard }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-6 sm:px-6">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-6 sm:px-6 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-200">
       <header className="flex items-center justify-between gap-2">
         <Link href="/ofertas" className={buttonVariants({ variant: "ghost", size: "sm", className: "text-muted-foreground" })}>
           <ArrowLeftIcon data-icon="inline-start" aria-hidden /> Resultados
@@ -199,7 +199,7 @@ export function JobDetail({ job }: { job: JobCard }) {
 
       <div className="flex flex-wrap items-center gap-1">
         <Button variant="ghost" size="sm" onClick={save} aria-pressed={isSaved}>
-          <BookmarkIcon data-icon="inline-start" aria-hidden /> {isSaved ? "Guardada" : "Guardar"}
+          <BookmarkIcon key={String(isSaved)} data-icon="inline-start" className={isSaved ? "fill-current motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-200" : undefined} aria-hidden /> {isSaved ? "Guardada" : "Guardar"}
         </Button>
         <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={notInterested}>
           No me interesa

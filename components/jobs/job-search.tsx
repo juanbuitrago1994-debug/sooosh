@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { ConsentBanner } from "@/components/privacy/consent-banner"
 import { PrivacyLink } from "@/components/privacy/privacy-dialog"
 import { JobCard } from "@/components/jobs/job-card"
+import { useAutoAnimate } from "@formkit/auto-animate/react"
 import { SourcesStatus } from "@/components/jobs/sources-status"
 import { SavedFiltersBar } from "@/components/jobs/saved-filters-bar"
 import { SearchProfilePanel } from "@/components/jobs/search-profile-panel"
@@ -67,6 +68,8 @@ export function JobSearch() {
   const cv = useSearchProfile()?.cv ?? null
   const [jobs, setJobs] = useState<RankedJob[] | null>(null)
   const [error, setError] = useState("")
+  // Altas, bajas y cambios de orden de la lista (búsqueda en vivo, descartar una oferta) se animan solos; respeta «reducir movimiento».
+  const [listRef] = useAutoAnimate({ duration: 180, easing: "ease-out" })
 
   // La región depende del navegador: se lee después de montar (en el servidor no existe).
   useEffect(() => {
@@ -322,14 +325,13 @@ export function JobSearch() {
               {jobs?.length} {jobs?.length === 1 ? "oferta" : "ofertas"}
               {meta.matches !== null && meta.scored !== null && ` · ${meta.matches} ${meta.matches === 1 ? "hace" : "hacen"} match entre las ${meta.scored} mejores candidatas`}
             </p>
-            <ul className="flex flex-col gap-3">
+            <ul ref={listRef} className="flex flex-col gap-3 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-200">
               {jobs
                 ?.filter((j) => onlySaved || !marks.dismissed.includes(j.id))
                 .map((j, i) => (
                   <JobCard
                     key={j.id}
                     job={j}
-                    index={i}
                     saved={marks.saved.includes(j.id)}
                     onOpen={() => track("open", { jobId: j.id, position: i, score: j.fit?.score ?? null, match: j.fit ? j.fit.match : null })}
                   />
