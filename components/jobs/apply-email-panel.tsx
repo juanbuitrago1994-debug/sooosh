@@ -284,12 +284,12 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
                 >
                   <div className="flex items-start gap-2 py-1">
                     <StepMark done={done} />
-                    <div className="flex min-w-0 flex-col gap-1">
-                      <span className={`text-xs transition-colors duration-500 ${done ? "text-muted-foreground" : "font-medium text-foreground"}`}>
-                        {s.title}
+                    <div className="flex min-w-0 flex-col">
+                      <span className={`text-xs leading-4 transition-colors duration-500 ${done ? "text-muted-foreground" : "font-medium text-foreground"}`}>
+                        Paso {i + 1} · {s.title}
                         {done && <span className="sr-only"> (listo)</span>}
                       </span>
-                      <span className={`text-xs transition-colors duration-500 ${done ? "text-muted-foreground/70" : "text-muted-foreground"}`}>{s.description}</span>
+                      <span className={`text-xs leading-4 transition-colors duration-500 ${done ? "text-muted-foreground/70" : "text-muted-foreground"}`}>{s.description}</span>
                     </div>
                   </div>
                 </motion.li>
@@ -326,7 +326,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
 /** Marca de un paso (solo visual): el MISMO círculo de 18 px con borde fino; vacío si es el actual, relleno en gris con check si ya se superó. */
 function StepMark({ done }: { done: boolean }) {
   return (
-    <span aria-hidden className={`mt-px flex size-4.5 shrink-0 items-center justify-center rounded-full border transition-colors duration-500 ${done ? "border-muted-foreground bg-muted-foreground" : "border-foreground"}`}>
+    <span aria-hidden className={`flex size-4.5 shrink-0 items-center justify-center rounded-full border transition-colors duration-500 ${done ? "border-muted-foreground bg-muted-foreground" : "border-foreground"}`}>
       {done && <CheckIcon className="size-3 stroke-3 text-popover" />}
     </span>
   )
