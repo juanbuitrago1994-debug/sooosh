@@ -2,7 +2,7 @@
 
 import { useState, type CSSProperties } from "react"
 import Link from "next/link"
-import { CheckIcon, CircleCheckIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, XIcon } from "lucide-react"
+import { CheckIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -266,7 +266,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
             const done = i < step
             return (
               <li key={s} aria-current={done ? undefined : "step"} className="flex items-center gap-2 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-200">
-                {done ? <CircleCheckIcon aria-hidden className="size-4 fill-muted-foreground stroke-popover" /> : <span aria-hidden className="size-4 rounded-full border-2 border-foreground" />}
+                <StepMark done={done} />
                 <span className={done ? "text-muted-foreground" : "font-medium text-foreground"}>
                   {s}
                   {done && <span className="sr-only"> (listo)</span>}
@@ -298,6 +298,15 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
         </div>
       </DrawerFooter>
     </div>
+  )
+}
+
+/** Marca de un paso (solo visual): el MISMO círculo de 16 px; vacío si es el actual, relleno en gris con check si ya se superó. */
+function StepMark({ done }: { done: boolean }) {
+  return (
+    <span aria-hidden className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${done ? "border-muted-foreground bg-muted-foreground" : "border-foreground"}`}>
+      {done && <CheckIcon className="size-2.5 stroke-3 text-popover" />}
+    </span>
   )
 }
 
