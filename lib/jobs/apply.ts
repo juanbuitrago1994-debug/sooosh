@@ -15,6 +15,7 @@ export type Apply = ApplyChannel & { alt?: ApplyChannel[] }
 
 const PLATFORMS: [RegExp, string][] = [
   [/(^|\.)linkedin\.com$/, "LinkedIn"],
+  [/(^|\.)lnkd\.in$/, "LinkedIn"],
   [/(^|\.)indeed\./, "Indeed"],
   [/computrabajo\./, "Computrabajo"],
   [/(^|\.)getonbrd\.com$/, "Get on Board"],
@@ -52,11 +53,22 @@ export function isFormUrl(url: string): boolean {
     return false
   }
 }
-const formLinkIn = (text?: string): string | undefined =>
-  text
-    ?.match(/https?:\/\/[^\s<>"')\]]+/gi)
-    ?.map((u) => u.replace(/[.,;:!?]+$/, ""))
-    .find(isFormUrl)
+const linksIn = (text?: string): string[] => text?.match(/https?:\/\/[^\s<>"')\]]+/gi)?.map((u) => u.replace(/[.,;:!?]+$/, "")) ?? []
+const isShort = (u: string) => hostOf(u) === "lnkd.in"
+
+/**
+ * Otra vía de postulación que traen los enlaces del texto: un formulario (Google Forms, Typeform, un sistema de selección…) o, si un enlace corto de
+ * LinkedIn se pudo resolver (`resolved`: corto → destino real), la página a la que lleva. Un enlace corto sin resolver no cuenta.
+ */
+function linkChannelIn(text: string | undefined, resolved: Record<string, string> = {}): ApplyChannel | undefined {
+  const urls = linksIn(text).map((u) => resolved[u] ?? u).filter((u) => !isShort(u))
+  const form = urls.find(isFormUrl)
+  if (form) return { method: "formulario", url: form }
+  const viaShort = linksIn(text).find((u) => resolved[u] && !isShort(resolved[u]))
+  if (!viaShort) return undefined
+  const ch = fromUrl(resolved[viaShort])
+  return ch && ch.method !== "plataforma" ? ch : undefined
+}
 
 function fromUrl(url: string): ApplyChannel | null {
   const host = hostOf(url)
@@ -71,15 +83,15 @@ function fromUrl(url: string): ApplyChannel | null {
  * `applyUrl` = enlace de postulación que entrega la fuente (API o JSON-LD) y manda sobre todo; si no hay, se usa el enlace de la
  * oferta (`sourceUrl`). Un correo con verbo de postulación en el texto gana sobre un enlace genérico de portal.
  */
-export function detectApply(input: { sourceUrl: string; text?: string; applyUrl?: string }): Apply {
+export function detectApply(input: { sourceUrl: string; text?: string; applyUrl?: string; /** enlaces cortos de LinkedIn del texto ya resueltos (corto → destino real) */ resolved?: Record<string, string> }): Apply {
   const main = mainChannel(input)
   const email = input.text?.match(EMAIL_APPLY)?.[1]
-  const form = formLinkIn(input.text)
-  // Sin otra pista, un formulario enlazado en el texto es la vía.
-  const primary: ApplyChannel = main.method === "desconocido" && form ? { method: "formulario", url: form } : main
+  const extra = linkChannelIn(input.text, input.resolved)
+  // Sin otra pista, el formulario (o la página) enlazado en el texto es la vía.
+  const primary: ApplyChannel = main.method === "desconocido" && extra ? extra : main
   const alt: ApplyChannel[] = []
   if (email && primary.method !== "correo") alt.push({ method: "correo", email, url: `mailto:${email}` })
-  if (form && form !== primary.url) alt.push({ method: "formulario", url: form })
+  if (extra && extra.url !== primary.url) alt.push(extra)
   return alt.length ? { ...primary, alt } : primary
 }
 

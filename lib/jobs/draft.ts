@@ -104,7 +104,7 @@ function isoDate(v?: string): string | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d.toISOString()
 }
 
-export function buildDraft(input: { offer: Offer; text: string; url?: string; link?: string; ld?: JobLd; applyUrl?: string; /** empresa que entrega la página (p. ej. el perfil que publica en LinkedIn): manda sobre la deducida del texto */ company?: string; fallbackHash: string }): JobDraft {
+export function buildDraft(input: { offer: Offer; text: string; url?: string; link?: string; ld?: JobLd; applyUrl?: string; /** empresa que entrega la página (p. ej. el perfil que publica en LinkedIn): manda sobre la deducida del texto */ company?: string; /** enlaces cortos de LinkedIn del texto ya resueltos */ resolved?: Record<string, string>; fallbackHash: string }): JobDraft {
   const { offer, text, ld } = input
   const linkRaw = input.url ?? input.link
   let sourceUrl = `texto:${input.fallbackHash}`
@@ -152,7 +152,7 @@ export function buildDraft(input: { offer: Offer; text: string; url?: string; li
     offer,
     skills,
     roleFamily: classifyRole({ title: id.title, skills }).family,
-    apply: detectApply({ sourceUrl, text, applyUrl: input.applyUrl }),
+    apply: detectApply({ sourceUrl, text, applyUrl: input.applyUrl, resolved: input.resolved }),
     salary: ldSalary ?? detectSalary(text) ?? undefined,
     postedAt: isoDate(ld?.datePosted),
     validThrough: isoDate(ld?.validThrough),

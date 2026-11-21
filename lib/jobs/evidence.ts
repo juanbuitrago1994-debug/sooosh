@@ -18,6 +18,7 @@ export type EvidenceStatus = "texto" | "inferido" | "falta"
 export type FieldEvidence = { key: FieldKey; label: string; value?: string; status: EvidenceStatus; quote?: string }
 
 const MAX_QUOTE = 180
+const COMPANY_FROM = { pagina: "Es el perfil que publica la oferta en LinkedIn", encabezado: "Viene en el encabezado de la publicación que pegaste", tu: "La escribiste tú" } as const
 
 /** Frase (o línea) del texto donde `test` se cumple; si es muy larga, solo la oración que lo contiene. */
 export function findQuote(text: string, test: (line: string) => boolean): string | undefined {
@@ -43,7 +44,7 @@ const MODE_RE: Record<string, RegExp> = {
 }
 const TYPE_RE = /\b(tiempo completo|full[- ]?time|medio tiempo|part[- ]?time|contrato|temporal|practicas|pasantia|freelance|por proyecto|indefinido|termino fijo)\b/
 
-export function buildEvidence(d: JobDraft, text: string, opts: { companyFromPage?: boolean } = {}): FieldEvidence[] {
+export function buildEvidence(d: JobDraft, text: string, opts: { companyFrom?: "pagina" | "tu" | "encabezado" } = {}): FieldEvidence[] {
   const values = fieldValues(d)
   const ev = (key: FieldKey, status: EvidenceStatus, quote?: string): FieldEvidence => ({ key, label: FIELD_LABELS[key], value: values[key], status: values[key] ? status : "falta", quote: values[key] ? quote : undefined })
   const quote: Partial<Record<FieldKey, string | undefined>> = {
@@ -67,7 +68,8 @@ export function buildEvidence(d: JobDraft, text: string, opts: { companyFromPage
     switch (key) {
       case "empresa":
         // la empresa que entrega la página (perfil que publica) no está en el texto, pero es un dato de la fuente
-        return opts.companyFromPage && d.company ? ev(key, "texto", "Es el perfil que publica la oferta en LinkedIn") : ev(key, quote.empresa ? "texto" : "inferido", quote.empresa)
+        if (opts.companyFrom && d.company) return ev(key, "texto", COMPANY_FROM[opts.companyFrom])
+        return ev(key, quote.empresa ? "texto" : "inferido", quote.empresa)
       case "titulo":
         return ev(key, d.titleSource === "inferido" ? "inferido" : "texto", titleQuote)
       case "pais":

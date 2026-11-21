@@ -19,12 +19,12 @@ import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { applyLabel, type Apply } from "@/lib/jobs/apply"
 import { OfferReview } from "@/components/jobs/offer-review"
 import type { FieldEvidence } from "@/lib/jobs/evidence"
+import { classifyEntry } from "@/lib/jobs/entry-kind"
 import type { FieldKey } from "@/lib/jobs/field-values"
 import { COUNTRIES, REGION_OPTIONS } from "@/lib/jobs/geo"
 import { CURRENCIES, PERIODS, type Salary } from "@/lib/jobs/salary"
@@ -58,9 +58,9 @@ export function JobsAdmin() {
   const [typed, setTyped] = useState("")
   const [authed, setAuthed] = useState(false)
   const [rows, setRows] = useState<Row[]>([])
-  const [tab, setTab] = useState<"url" | "text">("url")
-  const [url, setUrl] = useState("")
-  const [text, setText] = useState("")
+  // Una sola caja: si lo pegado es un enlace se lee la página; si es texto se analiza el texto (con empresa y enlace original opcionales).
+  const [entry, setEntry] = useState("")
+  const [company, setCompany] = useState("")
   const [link, setLink] = useState("")
   const [busy, setBusy] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -141,7 +141,7 @@ export function JobsAdmin() {
     setAnalysis(null)
     setConfirmed(new Set())
     try {
-      const body = tab === "url" ? { url: url.trim() } : { text, link: link.trim() || undefined }
+      const body = classifyEntry(entry) === "url" ? { url: entry.trim() } : { text: entry, link: link.trim() || undefined, company: company.trim() || undefined }
       const result = await api("/api/jobs/analyze", token, { method: "POST", body: JSON.stringify(body), signal: ctrl.signal })
       if (!ctrl.signal.aborted) setAnalysis(result)
     } catch (e) {
@@ -167,8 +167,8 @@ export function JobsAdmin() {
       toast.success(r.created ? "Tarjeta guardada" : "Tarjeta actualizada")
       if (r.company?.created) toast.success(`Agregué ${r.company.token} (${r.company.ats}) al directorio de fuentes: sus demás ofertas se sincronizan desde «Fuentes».`)
       setAnalysis(null)
-      setUrl("")
-      setText("")
+      setEntry("")
+      setCompany("")
       setLink("")
       await load(token, q, only)
     } catch (e) {
@@ -260,32 +260,26 @@ export function JobsAdmin() {
   }
 
   const d = analysis?.draft
-  const canAnalyze = tab === "url" ? url.trim().length > 8 : text.trim().length >= 200
+  const kind = classifyEntry(entry)
+  const canAnalyze = kind === "url" ? entry.trim().length > 8 : entry.trim().length >= 200
   return (
     <div className="flex min-h-dvh w-full flex-col">
       {header}
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-4 py-6 sm:px-6">
         <section className="flex flex-col gap-4" aria-label="Cargar una oferta">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as "url" | "text")}>
-            <TabsList className="w-full">
-              <TabsTrigger value="url">Enlace</TabsTrigger>
-              <TabsTrigger value="text">Pegar texto</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          {tab === "url" ? (
-            <Field>
-              <FieldLabel htmlFor="job-url" className="sr-only">
-                Enlace de la oferta
-              </FieldLabel>
-              <Input id="job-url" type="url" inputMode="url" placeholder="Enlace de la oferta (LinkedIn, Indeed, sitio de la empresa…)" value={url} onChange={(e) => setUrl(e.target.value)} />
-            </Field>
-          ) : (
+          <Field>
+            <FieldLabel htmlFor="job-entry" className="sr-only">
+              Enlace o texto de la oferta
+            </FieldLabel>
+            <Textarea id="job-entry" rows={kind === "url" ? 2 : 10} placeholder="Pega el enlace de la oferta o su texto" value={entry} onChange={(e) => setEntry(e.target.value)} />
+          </Field>
+          {kind === "text" && entry.trim() && (
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="job-text" className="sr-only">
-                  Texto de la oferta
+                <FieldLabel htmlFor="job-company" className="sr-only">
+                  Empresa (opcional)
                 </FieldLabel>
-                <Textarea id="job-text" rows={10} placeholder="Pega aquí el texto de la oferta" value={text} onChange={(e) => setText(e.target.value)} />
+                <Input id="job-company" placeholder="Empresa o perfil que publica (opcional)" value={company} onChange={(e) => setCompany(e.target.value)} />
               </Field>
               <Field>
                 <FieldLabel htmlFor="job-link" className="sr-only">
@@ -321,6 +315,13 @@ export function JobsAdmin() {
             </p>
           )}
           {analysis.cleaning?.warning && <p className="text-xs text-muted-foreground">{analysis.cleaning.warning}</p>}
+          {/* La empresa casi nunca viene en el texto de una publicación: se pide arriba, sin tener que buscar el campo en el formulario (se queda mientras se escribe). */}
+          {(analysis.evidence ? !analysis.evidence.find((e) => e.key === "empresa")?.value : !d.company) && (
+            <Field>
+              <FieldLabel htmlFor="d-company-top">Falta la empresa</FieldLabel>
+              <Input id="d-company-top" placeholder="Escríbela o déjala vacía" value={d.company ?? ""} onChange={(e) => patch({ company: e.target.value || undefined })} />
+            </Field>
+          )}
           {analysis.evidence && (
             <OfferReview
               evidence={analysis.evidence}

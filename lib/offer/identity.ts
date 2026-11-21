@@ -75,7 +75,9 @@ export function plausibleCompany(company: string, offer: Pick<Offer, "requiremen
 }
 
 export function refineIdentity(offer: Offer, text: string): { title: string; titleSource: TitleSource; company?: string } {
-  const company = offer.company && plausibleCompany(offer.company, offer) ? offer.company.trim() : undefined
+  // Si el título que devolvió el modelo es la frase de apertura, la «empresa» salió de partirla por «en»: solo vale si empieza con mayúscula.
+  const fromHook = HOOK_START.test(symbols(offer.title))
+  const company = offer.company && plausibleCompany(offer.company, offer) && (!fromHook || /^[\p{Lu}\d]/u.test(offer.company.trim())) ? offer.company.trim() : undefined
   if (plausibleTitle(offer.title)) return { title: offer.title.trim(), titleSource: "texto", company }
   const hook = titleFromHook(text)
   return hook ? { title: hook, titleSource: "inferido", company } : { title: "", titleSource: "falta", company }

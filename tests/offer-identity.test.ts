@@ -141,7 +141,7 @@ describe("la empresa de la página manda sobre la deducida del texto", () => {
     const d = buildDraft({ offer: o, text: post, url: "https://www.linkedin.com/posts/x", company: "Vos Consultora", ld: { datePosted: "2026-10-29T19:17:30.572Z" }, fallbackHash: "h" })
     expect(d.company).toBe("Vos Consultora")
     expect(d.postedAt).toBe("2026-10-29T19:17:30.572Z")
-    const ev = buildEvidence(d, post, { companyFromPage: true }).find((e) => e.key === "empresa")!
+    const ev = buildEvidence(d, post, { companyFrom: "pagina" }).find((e) => e.key === "empresa")!
     expect(ev).toMatchObject({ status: "texto", value: "Vos Consultora" })
     expect(ev.quote).toContain("LinkedIn")
   })
