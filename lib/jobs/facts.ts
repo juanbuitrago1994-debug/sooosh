@@ -17,6 +17,23 @@ export function yearsLabel(y?: { min?: number; max?: number }): string | null {
   return `Hasta ${y.max} años`
 }
 
+/** «29 oct 2026»: la fecha en hora de Colombia (igual en el servidor y en el navegador, para que no cambie al cargar la página). */
+export function dayLabel(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return null
+  const parts = new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "America/Bogota" }).formatToParts(d)
+  const get = (t: string) => parts.find((x) => x.type === t)?.value.replace(/\./g, "") ?? ""
+  return `${get("day")} ${get("month")} ${get("year")}`
+}
+
+/** Para una oferta seleccionada por Sooosh: cuándo se publicó (si la fuente lo dice) y cuándo se agregó. */
+export function curatedDates(job: { postedAt?: string | null; createdAt: string }): string {
+  const added = dayLabel(job.createdAt)
+  const posted = dayLabel(job.postedAt)
+  return [posted && `Publicada el ${posted}`, added && `Agregada el ${added}`].filter(Boolean).join(" · ")
+}
+
 /** «hace 3 días»: solo con la fecha que publicó la fuente (nunca la de carga en Sooosh). */
 export function ago(iso: string | null | undefined, now = new Date()): string | null {
   if (!iso) return null

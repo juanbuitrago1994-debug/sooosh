@@ -110,7 +110,7 @@ describe("salario solo con moneda explícita", () => {
 const offer = (extra: object = {}) => offerSchema.parse({ title: "Product Designer", company: "Acme", language: "es", requirements: ["Figma"], ...extra })
 const job = (over: Partial<Job> = {}): Job => ({
   id: "11111111-1111-4111-8111-111111111111", title: "Product Designer", company: "Acme", locationText: "Bogotá, Colombia", country: "CO", regions: ["CO", "LATAM"], workMode: null, remoteScope: null,
-  isNew: false, employmentType: null, seniority: null, language: "es", skills: [], apply: null, salary: null, roleFamily: null, isTech: true, sourceName: "linkedin", sourceUrl: "https://www.linkedin.com/jobs/view/1/", postedAt: null, createdAt: "2026-11-19T00:00:00Z", offer: offer(), ...over,
+  isNew: false, origin: "feed", employmentType: null, seniority: null, language: "es", skills: [], apply: null, salary: null, roleFamily: null, isTech: true, sourceName: "linkedin", sourceUrl: "https://www.linkedin.com/jobs/view/1/", postedAt: null, createdAt: "2026-11-19T00:00:00Z", offer: offer(), ...over,
 })
 
 describe("datos que sí tenemos", () => {
@@ -182,5 +182,23 @@ describe("insignia «Nueva»", () => {
   it("la tarjeta la muestra solo si la oferta entró hace menos de 48 h (isNew)", () => {
     expect(renderToStaticMarkup(<JobCard job={rank(true)} />)).toContain("Nueva")
     expect(renderToStaticMarkup(<JobCard job={rank(false)} />)).not.toContain("Nueva")
+  })
+})
+
+describe("ofertas seleccionadas por Sooosh", () => {
+  it("las fechas se muestran en hora de Colombia y sin puntos: publicada y agregada", async () => {
+    const { curatedDates, dayLabel } = await import("@/lib/jobs/facts")
+    expect(dayLabel("2026-10-29T19:17:30.572Z")).toBe("29 oct 2026")
+    expect(dayLabel("2026-11-21T03:00:00Z")).toBe("20 nov 2026") // 03:00 UTC = 22:00 del día anterior en Bogotá
+    expect(dayLabel(null)).toBeNull()
+    expect(dayLabel("no es fecha")).toBeNull()
+    expect(curatedDates({ postedAt: "2026-10-29T19:17:30.572Z", createdAt: "2026-11-21T15:00:00Z" })).toBe("Publicada el 29 oct 2026 · Agregada el 21 nov 2026")
+    expect(curatedDates({ postedAt: null, createdAt: "2026-11-21T15:00:00Z" })).toBe("Agregada el 21 nov 2026")
+  })
+  it("la tarjeta muestra «Seleccionada por Sooosh» solo si la cargó una persona desde el panel", () => {
+    const manual = renderToStaticMarkup(<JobCard job={job({ origin: "manual" })} />)
+    const feed = renderToStaticMarkup(<JobCard job={job({ origin: "feed" })} />)
+    expect(manual).toContain("Seleccionada por Sooosh")
+    expect(feed).not.toContain("Seleccionada por Sooosh")
   })
 })

@@ -64,7 +64,7 @@ describe("mezcla texto + significado (RRF)", () => {
 
 const mkOffer = (title: string, reqs: string[], tools: string[]) => offerSchema.parse({ title, language: "es", requirements: reqs, tools })
 const mkJob = (id: string, title: string, offer: ReturnType<typeof mkOffer>, createdAt: string): JobCard => ({
-  id, title, isNew: false, company: "X", locationText: null, country: null, regions: ["LATAM"], workMode: "remoto", remoteScope: null, employmentType: null, seniority: null, language: "es", skills: [], apply: null, salary: null, roleFamily: null, isTech: true, sourceName: "manual", sourceUrl: "https://x/" + id, postedAt: null, createdAt, offer,
+  id, title, origin: "feed", isNew: false, company: "X", locationText: null, country: null, regions: ["LATAM"], workMode: "remoto", remoteScope: null, employmentType: null, seniority: null, language: "es", skills: [], apply: null, salary: null, roleFamily: null, isTech: true, sourceName: "manual", sourceUrl: "https://x/" + id, postedAt: null, createdAt, offer,
 })
 const cv = cvSchema.parse({
   header: { fullName: "Ana" },

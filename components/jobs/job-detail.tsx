@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeftIcon, BookmarkIcon, CheckIcon, LinkIcon } from "lucide-react"
 import { toast } from "sonner"
 import { ApplyIcon } from "@/components/jobs/apply-icon"
+import { CuratedTag } from "@/components/jobs/curated-tag"
 import { NewBadge } from "@/components/jobs/new-badge"
 import { Rise } from "@/components/motion/rise"
 import { Logo } from "@/components/brand/logo"
@@ -14,7 +15,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { applyChannels, applyCta, applyHint, applyLabel, channelHref } from "@/lib/jobs/apply"
-import { buildFacts, companyLine } from "@/lib/jobs/facts"
+import { buildFacts, companyLine, curatedDates } from "@/lib/jobs/facts"
 import { savePrefill } from "@/lib/jobs/prefill"
 import { track } from "@/lib/events/consent"
 import { dismissJob, toggleSaved, useMarks } from "@/lib/profile/job-marks"
@@ -138,6 +139,12 @@ export function JobDetail({ job }: { job: JobCard }) {
           <h1 className="text-lg font-medium">{job.title}</h1>
           {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
           {job.remoteScope && <p className="text-sm text-muted-foreground">{job.remoteScope}</p>}
+          {job.origin === "manual" && (
+            <div className="mt-1 flex flex-col gap-0.5">
+              <CuratedTag />
+              <p className="text-xs text-muted-foreground">{curatedDates(job)}</p>
+            </div>
+          )}
         </Rise>
 
         <Rise step={1} className="flex flex-col gap-6">

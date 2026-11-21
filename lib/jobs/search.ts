@@ -28,6 +28,8 @@ export type JobCard = {
   sourceUrl: string
   postedAt: string | null
   createdAt: string
+  /** `manual` = la revisó y cargó una persona de Sooosh desde el panel; `feed` = la trajo una fuente automática */
+  origin: string
   isNew: boolean
   roleFamily: string | null
   isTech: boolean
@@ -63,6 +65,7 @@ export const jobCols = {
   sourceUrl: jobs.sourceUrl,
   postedAt: jobs.postedAt,
   createdAt: jobs.createdAt,
+  origin: jobs.origin,
   /** entró a Sooosh hace menos de 48 h (se calcula en la base: así no depende del reloj del navegador) */
   // «Nueva» = publicada en las últimas 48 h (la fecha de la fuente; si no la trae, la de carga en Sooosh).
   isNew: sql<boolean>`coalesce(${jobs.postedAt}, ${jobs.createdAt}) > now() - interval '48 hours'`,
