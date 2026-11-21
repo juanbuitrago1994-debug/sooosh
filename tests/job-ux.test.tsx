@@ -195,10 +195,10 @@ describe("ofertas seleccionadas por Sooosh", () => {
     expect(curatedDates({ postedAt: "2026-10-29T19:17:30.572Z", createdAt: "2026-11-21T15:00:00Z" })).toBe("Publicada el 29 oct 2026 · Agregada el 21 nov 2026")
     expect(curatedDates({ postedAt: null, createdAt: "2026-11-21T15:00:00Z" })).toBe("Agregada el 21 nov 2026")
   })
-  it("la tarjeta muestra «Seleccionada por Sooosh» solo si la cargó una persona desde el panel", () => {
+  it("la tarjeta muestra «Curated by Sooosh» solo si la cargó una persona desde el panel", () => {
     const manual = renderToStaticMarkup(<JobCard job={job({ origin: "manual" })} />)
     const feed = renderToStaticMarkup(<JobCard job={job({ origin: "feed" })} />)
-    expect(manual).toContain("Seleccionada por Sooosh")
-    expect(feed).not.toContain("Seleccionada por Sooosh")
+    expect(manual).toContain("Curated by Sooosh")
+    expect(feed).not.toContain("Curated by Sooosh")
   })
 })

@@ -23,6 +23,7 @@ export function JobCard({ job, saved, onOpen }: { job: RankedJob; saved?: boolea
         <GlassPanel className="flex flex-col gap-4 p-4 transition-all duration-150 group-hover:bg-muted/40 motion-safe:group-hover:-translate-y-0.5 motion-safe:group-active:translate-y-0">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">
+              {job.origin === "manual" && <CuratedBadge className="mb-0.5 self-start" />}
               <h2 className="line-clamp-2 text-lg font-medium">
                 {job.title}
                 {saved && (
@@ -34,7 +35,6 @@ export function JobCard({ job, saved, onOpen }: { job: RankedJob; saved?: boolea
                 )}
               </h2>
               {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
-              {job.origin === "manual" && <CuratedBadge className="mt-1" />}
             </div>
             {(job.fit || job.isNew) && (
               <div className="flex shrink-0 flex-col items-end gap-1.5">

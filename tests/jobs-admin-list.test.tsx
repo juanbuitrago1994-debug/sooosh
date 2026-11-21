@@ -61,12 +61,12 @@ describe("carga del análisis en el distintivo", () => {
   })
 })
 
-describe("insignia rosa «Seleccionada por Sooosh»", () => {
+describe("insignia rosa «Curated by Sooosh»", () => {
   it("usa los colores documentados y el texto completo", async () => {
     const { CuratedBadge } = await import("@/components/magic/curated-badge")
     const { EFFECT_COLORS } = await import("@/lib/design-tokens")
     const html = renderToStaticMarkup(<CuratedBadge />)
-    expect(html).toContain("Seleccionada por Sooosh")
+    expect(html).toContain("Curated by Sooosh")
     expect(html).toContain(EFFECT_COLORS["curated-bg"])
     expect(html).toContain(EFFECT_COLORS["curated-fg"])
   })

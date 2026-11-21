@@ -971,3 +971,8 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - **Filtro «Manuales»** en la lista de tarjetas del panel (`/admin/ofertas`): Todas · **Manuales** · Incompletas · Ocultas. Trae solo las cargadas desde el panel (`origin = manual`), y funciona junto al buscador. `GET /api/jobs?only=manuales`.
 - Verificado: lint (0 errores), `tsc`, `build` y 652 pruebas en verde (nuevas: el filtro llega al servidor y la insignia usa los colores documentados).
 - **Para revisar por Juan**: (1) la oferta de Vos Consultora en la lista y en su ficha: insignia rosa, legible en claro y oscuro (escritorio y 375 px); si el rosa se ve muy fuerte o muy suave, se ajusta con el token `curated-bg`; (2) `/admin/ofertas` → «Manuales»: deben salir solo las que cargaste tú.
+
+### Insignia «Curated by Sooosh» arriba del título (21-nov-2026)
+- La insignia rosa se mueve **arriba del título** (tarjeta y ficha; en la ficha va junto a «Nueva», encima del título), un poco más pequeña (`h-4`, menos relleno) y con el texto **«Curated by Sooosh»** (en inglés por decisión de Juan; se escribe «Sooosh», como la marca de la app). Las fechas «Publicada el … · Agregada el …» siguen debajo del subtítulo en la ficha. Mismos colores (`curated-bg`, `curated-fg`).
+- Verificado: lint (0 errores), `tsc`, `build` y 652 pruebas en verde.
+- **Para revisar por Juan**: la oferta de Vos Consultora en la lista y en su ficha (claro/oscuro, escritorio y 375 px): la insignia arriba del título, algo más pequeña, con «Curated by Sooosh»; en la ficha junto a «Nueva» si aplica.

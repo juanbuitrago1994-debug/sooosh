@@ -135,15 +135,17 @@ export function JobDetail({ job }: { job: JobCard }) {
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 pt-4 sm:px-6">
         <Rise className="flex flex-col items-start gap-1">
-          {job.isNew && <NewBadge />}
+          {(job.isNew || job.origin === "manual") && (
+            <div className="flex flex-wrap items-center gap-2">
+              {job.origin === "manual" && <CuratedBadge />}
+              {job.isNew && <NewBadge />}
+            </div>
+          )}
           <h1 className="text-lg font-medium">{job.title}</h1>
           {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
           {job.remoteScope && <p className="text-sm text-muted-foreground">{job.remoteScope}</p>}
           {job.origin === "manual" && (
-            <div className="mt-1 flex flex-col items-start gap-1.5">
-              <CuratedBadge />
-              <p className="text-xs text-muted-foreground">{curatedDates(job)}</p>
-            </div>
+            <p className="text-xs text-muted-foreground">{curatedDates(job)}</p>
           )}
         </Rise>
 

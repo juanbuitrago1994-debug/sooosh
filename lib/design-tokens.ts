@@ -21,9 +21,9 @@ export const EFFECT_COLORS = {
   "beam-rose": "oklch(0.76 0.15 8)",
   /** naranja: el color con el que termina (la cabeza) del haz en el tema claro */
   "beam-orange": "oklch(0.78 0.15 55)",
-  /** rosa llamativo: fondo de la insignia «Seleccionada por Sooosh» (sólido, igual en claro y oscuro) */
+  /** rosa llamativo: fondo de la insignia «Curated by Sooosh» (sólido, igual en claro y oscuro) */
   "curated-bg": "oklch(0.80 0.15 5)",
-  /** texto de la insignia «Seleccionada por Sooosh»: rosa muy oscuro, con buen contraste sobre el fondo rosa */
+  /** texto de la insignia «Curated by Sooosh»: rosa muy oscuro, con buen contraste sobre el fondo rosa */
   "curated-fg": "oklch(0.26 0.07 5)",
 } as const
 
