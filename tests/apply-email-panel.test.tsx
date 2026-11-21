@@ -28,7 +28,7 @@ describe("panel de correo", () => {
     // Solo se ve el paso actual: los siguientes se revelan al avanzar.
     expect(html).toContain("Destinatario")
     for (const s of ["Asunto", "Cuerpo", "Listo"]) expect(html).not.toContain(`>${s}<`)
-    expect(html).toContain('role="progressbar"')
+    expect(html).not.toContain('role="progressbar"')
     expect(html).toContain('aria-current="step"')
   })
   it("paso 1: permite agregar otro correo a mano", async () => {
