@@ -51,6 +51,10 @@ describe("parseOfferText: camino rápido por líneas", () => {
     const o = offerFromIndices(["Analista de Datos", "- Dominio de SQL"], { title: 0, requirements: [1, 77], niceToHave: [], responsibilities: [] })
     expect(o?.requirements).toEqual(["Dominio de SQL"])
   })
+  it("quita también las viñetas de emoji de LinkedIn al armar las listas", () => {
+    const o = offerFromIndices(["Diseñador UX/UI", "🔹 Dominio de Figma", "📌 Trabajo en equipo"], { title: 0, requirements: [1, 2], niceToHave: [], responsibilities: [] })
+    expect(o?.requirements).toEqual(["Dominio de Figma", "Trabajo en equipo"])
+  })
   it("deriva sin IA herramientas completas (Power BI), seniority, años e idiomas", () => {
     expect(toolsIn(["- Power BI o Tableau", "- Dominio de Excel y SQL"])).toEqual(expect.arrayContaining(["Power BI", "Tableau", "Excel", "SQL"]))
     expect(toolsIn(["- Dominio de Excel"])).not.toContain("Dominio")

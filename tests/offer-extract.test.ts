@@ -86,3 +86,29 @@ describe("fetchOffer", () => {
     }
   })
 })
+
+describe("publicación de LinkedIn de una empresa: datos estructurados de la página", () => {
+  const html = readFileSync(path.join(__dirname, "fixtures/offers/linkedin-post-empresa.html"), "utf8")
+  const url = "https://www.linkedin.com/posts/consultoravos_estamos-seleccionando-uxui"
+  it("la empresa es el perfil que publica y la fecha es la de la publicación; los autores de comentarios no cuentan", () => {
+    const r = extractOffer(html, url)!
+    expect(r.method).toBe("site")
+    expect(r.company).toBe("Vos Consultora")
+    expect(r.ld?.datePosted).toBe("2026-10-29T19:17:30.572Z")
+    expect(r.postedBy).toBeUndefined()
+    expect(r.text).toContain("Estamos seleccionando Diseñador/a UX/UI")
+    expect(r.text).not.toContain("Comentarista")
+  })
+  it("si la publica una persona, no se inventa una empresa: solo se sabe quién publicó", () => {
+    const person = html.replace('"author":{"name":"Vos Consultora","url":"https://ar.linkedin.com/company/consultoravos","@type":"Organization"}', '"author":{"name":"Ana Reclutadora","@type":"Person"}')
+    const r = extractOffer(person, url)!
+    expect(r.company).toBeUndefined()
+    expect(r.postedBy).toBe("Ana Reclutadora")
+  })
+  it("sin datos estructurados, todo queda como antes", () => {
+    const bare = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, "")
+    const r = extractOffer(bare, url)!
+    expect(r.company).toBeUndefined()
+    expect(r.ld).toBeUndefined()
+  })
+})

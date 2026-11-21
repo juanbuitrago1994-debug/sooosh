@@ -1,5 +1,28 @@
 [
   {
+    "id": "linkedin-vos-consultora",
+    "nota": "Texto REAL de la publicación de Vos Consultora que guardó Juan (solo el cuerpo, tal como se pega). Sin encabezado: la empresa no viaja en el texto.",
+    "text": "Estamos seleccionando Diseñador/a UX/UI para sumarse al equipo de una empresa en crecimiento.  ¿Qué buscamos?\n🔹 Experiencia comprobable en diseño de interfaces (UI) e investigación de experiencia de usuario (UX).\n🔹 Dominio de Figma y sistemas de diseño (Design Systems).\n🔹 Trabajo en equipo junto a desarrolladores y área de producto.\n🔹 Modalidad: Remoto.\n📩 ¿Cómo postularte?Envianos tu CV + Portfolio actualizado a candidatos@consultoravos.com (Asunto: UX/UI).  O cargá tus datos directamente en este link: https://lnkd.in/d92iP43G",
+    "expect": {
+      "title": "Diseñador/a UX/UI",
+      "titleSource": "inferido",
+      "company": null,
+      "requirements": [
+        "Dominio de Figma y sistemas de diseño",
+        "Trabajo en equipo junto a desarrolladores",
+        "Experiencia comprobable en diseño de interfaces"
+      ],
+      "responsibilities": [],
+      "niceToHave": [],
+      "mustNot": [
+        "candidatos@consultoravos.com",
+        "lnkd.in/d92iP43G",
+        "Modalidad: Remoto"
+      ],
+      "email": "candidatos@consultoravos.com"
+    }
+  },
+  {
     "id": "linkedin-sin-titulo",
     "nota": "Sintética, con la estructura de la publicación de LinkedIn de la diseñadora UX/UI: sin cargo, sin empresa, encabezado «Experiencia comprobable», correo y formulario.",
     "text": "Estamos seleccionando diseñadora UX/UI para un proyecto remoto con una consultora aliada.\n\n🔹 Experiencia comprobable\n- Diseño de interfaces (UI) e investigación de experiencia de usuario\n- Dominio de Figma y Design Systems\n- Portafolio con casos reales\n\n🔹 Funciones\n- Diseñar flujos y prototipos de alta fidelidad\n- Validar con usuarios\n\n🔹 Ofrecemos\n- Contrato por prestación de servicios\n- Horario flexible\n\nEnvía tu hoja de vida a candidatos@consultoravos.com o postula en https://forms.gle/abc123\n#diseño #ux #hiring",

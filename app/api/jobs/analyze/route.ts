@@ -26,11 +26,13 @@ export async function POST(request: Request) {
   try {
     let raw: string
     let ld
+    let pageCompany: string | undefined
     let url: string | undefined
     if (typeof body?.url === "string" && body.url.trim()) {
       const page = await fetchOffer(body.url.trim(), { signal: request.signal })
       raw = page.text
       ld = page.ld
+      pageCompany = page.company
       url = body.url.trim()
     } else if (typeof body?.text === "string") {
       raw = body.text.trim()
@@ -48,9 +50,9 @@ export async function POST(request: Request) {
       throw new OfferError("empty", "No encontramos el contenido de la oferta. Copia el texto de la oferta y pégalo en «Pegar texto».")
     }
     const { data: offer, dropped } = await parseOfferText(text, request.signal)
-    const draft = buildDraft({ offer, text, url, link: typeof body?.link === "string" ? body.link : undefined, ld, fallbackHash: sha256(text).slice(0, 24) })
+    const draft = buildDraft({ offer, text, url, link: typeof body?.link === "string" ? body.link : undefined, ld, company: pageCompany, fallbackHash: sha256(text).slice(0, 24) })
     const existing = await findJobByUrl(getDb(), draft.sourceUrl).catch(() => null)
-    return NextResponse.json({ draft, evidence: buildEvidence(draft, text), existing, dropped, cleaning: { removed: cleaning.removed, warning: cleaning.warning } })
+    return NextResponse.json({ draft, evidence: buildEvidence(draft, text, { companyFromPage: !!pageCompany }), existing, dropped, cleaning: { removed: cleaning.removed, warning: cleaning.warning } })
   } catch (e) {
     if (e instanceof OfferError) return NextResponse.json({ error: e.message, code: e.code }, { status: OFFER_STATUS[e.code] })
     if (e instanceof AIError) return NextResponse.json({ error: e.message, code: e.code }, { status: AI_STATUS[e.code] })

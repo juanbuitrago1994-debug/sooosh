@@ -42,6 +42,11 @@ describe("empresa", () => {
     expect(plausibleCompany("Banco de Bogotá", o)).toBe(true)
     expect(plausibleCompany("Mercado Libre", o)).toBe(true)
     expect(plausibleCompany("Requisitos:", o)).toBe(false)
+    // frases que salen de partir la frase de apertura por «en»
+    expect(plausibleCompany("crecimiento. ¿Qué buscamos?", o)).toBe(false)
+    expect(plausibleCompany("una empresa en crecimiento", o)).toBe(false)
+    expect(plausibleCompany("Acme S.A.S", o)).toBe(true)
+    expect(plausibleCompany("nubank", o)).toBe(true)
   })
   it("sin empresa, la tarjeta dice dónde se publicó", () => {
     expect(companyLine({ company: "Acme", sourceName: "linkedin" })).toBe("Acme")
@@ -125,5 +130,26 @@ Envía tu hoja de vida a candidatos@consultoravos.com o postula en https://forms
     expect(fieldValues({ ...d, ...clearPatch("nivel", d)! }).nivel).toBeUndefined()
     expect(clearPatch("titulo", d)).toBeNull()
     expect(clearPatch("requisitos", d)).toBeNull()
+  })
+})
+
+describe("la empresa de la página manda sobre la deducida del texto", () => {
+  const post = "Estamos seleccionando Diseñador/a UX/UI para sumarse al equipo de una empresa en crecimiento.  ¿Qué buscamos?\n🔹 Modalidad: Remoto."
+  it("con empresa de la página, la tarjeta la usa y la evidencia dice de dónde sale; la fecha de la fuente decide si es «Nueva»", async () => {
+    const { buildEvidence } = await import("@/lib/jobs/evidence")
+    const o = offer({ title: "Estamos seleccionando Diseñador/a UX/UI", company: "crecimiento. ¿Qué buscamos?" })
+    const d = buildDraft({ offer: o, text: post, url: "https://www.linkedin.com/posts/x", company: "Vos Consultora", ld: { datePosted: "2026-10-29T19:17:30.572Z" }, fallbackHash: "h" })
+    expect(d.company).toBe("Vos Consultora")
+    expect(d.postedAt).toBe("2026-10-29T19:17:30.572Z")
+    const ev = buildEvidence(d, post, { companyFromPage: true }).find((e) => e.key === "empresa")!
+    expect(ev).toMatchObject({ status: "texto", value: "Vos Consultora" })
+    expect(ev.quote).toContain("LinkedIn")
+  })
+  it("«Nueva» cuenta desde la fecha de publicación, no desde la de carga", async () => {
+    const { jobCols } = await import("@/lib/jobs/search")
+    const { PgDialect } = await import("drizzle-orm/pg-core")
+    const q = new PgDialect().sqlToQuery(jobCols.isNew as never).sql
+    expect(q).toContain("coalesce")
+    expect(q).toContain("posted_at")
   })
 })

@@ -84,7 +84,7 @@ async function readCapped(res: Response): Promise<string> {
   return new TextDecoder().decode(Buffer.concat(chunks))
 }
 
-export type FetchedOffer = { text: string; method: ExtractMethod | "texto"; site?: string; title?: string; company?: string; ld?: JobLd; /** dirección final tras las redirecciones */ finalUrl?: string }
+export type FetchedOffer = { text: string; method: ExtractMethod | "texto"; site?: string; title?: string; company?: string; postedBy?: string; ld?: JobLd; /** dirección final tras las redirecciones */ finalUrl?: string }
 
 /** Descarga la página de una oferta y devuelve su contenido principal (capa 1: extracción determinista). */
 export async function fetchOffer(

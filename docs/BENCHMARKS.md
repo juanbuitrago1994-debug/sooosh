@@ -225,3 +225,21 @@ No se añadió una segunda pasada del modelo para verificar cada dato: con este 
 ## Conexión a Supabase por el pooler de transacciones: consultas encadenadas (20-nov-2026)
 
 Mismo guion (10 consultas simultáneas por ronda sobre `select count(*) … from jobs`, límite de 4 s por consulta), `postgres.js` contra el pooler `:6543`, con pausas para que actúe `idle_timeout`: **pool de 5 con el valor por defecto (`max_pipeline` 100): 5 de 80 respondieron; `max_pipeline: 1`: 80 de 80 (4 s); una sola conexión con `max_pipeline: 1`: 80 de 80**. Antes de encontrar la causa se midió también que recrear el pool tras un fallo y reintentar daba 48 de 48 en rondas de 8 consultas, pero bajo 10 peticiones simultáneas a la app respondía 502 en 5 de 10 → la reparación sola no basta; la causa era el encadenamiento. En la app (servidor real, 3 rondas de 10 búsquedas simultáneas separadas 22 s) con `max_pipeline: 1`: las rondas 2 y 3 respondieron las 10 en 0,8–1,8 s sin recrear conexiones (la ronda 1 aún usaba el pool anterior).
+
+## Analizador de ofertas A5 — limpieza conservadora y datos estructurados de LinkedIn (21-nov-2026)
+
+**Problema medido** (publicación real de Vos Consultora que guardó Juan, reproducida con el código real y `qwen2.5:7b-instruct`): la limpieza con el modelo quitaba contenido propio de la oferta. Por enlace borró la primera línea (el cargo); pegando el texto borró 4 de las 6 líneas (requisitos y la línea del correo incluidos), y «Modalidad: Remoto» terminó como una función. La página pública del post además publica en sus datos estructurados (`SocialMediaPosting`) el perfil que publica (`author: Organization «Vos Consultora»`) y la fecha real (29-oct-2026), que no se leían.
+
+**Medición** (conjunto `bench/gold/offers.json`, ahora 7 casos —el nuevo es el texto real de esa publicación—, 2 repeticiones, 14 muestras por columna; «sin» = limpieza como antes, «con» = limpieza conservadora):
+
+| Medición | Sin protección | Con protección |
+|---|---|---|
+| Recall de las listas | 86 % (la publicación real: 0 de 3 requisitos) | **100 %** |
+| Líneas intrusas en las listas | 0 de 38 | 0 de 38 |
+| Empresa correcta | 100 % | 100 % |
+| Cargo y vías de postulación | 100 % / 100 % | 100 % / 100 % |
+| Tiempo medio por publicación | 11,3 s | **7,0 s** (12 de 14 muestras no llamaron al modelo: todo era claramente propio de la oferta) |
+
+Notas de honestidad: (1) una medición intermedia dio «empresa» 86 % en ambas columnas por «crecimiento. ¿Qué buscamos?», que salía de partir la frase de apertura por «en» y pasaba el filtro de empresas; el filtro se endureció (sin «¿?», sin punto final, sin frases en minúscula) y la cifra de la tabla es posterior a ese arreglo, por eso aplica a las dos columnas; (2) el conjunto sigue siendo de desarrollo (6 de 7 casos escritos o escogidos por nosotros); (3) la protección omite la IA solo cuando quedan menos de 3 líneas dudosas: con comentarios de otras personas (hilos) el modelo sigue decidiendo esas líneas.
+
+**Prueba de punta a punta con la publicación real** (enlace vs texto pegado, mismos pasos que el administrador): por enlace ahora salen cargo «Diseñador/a UX/UI» (inferido), **empresa «Vos Consultora»** (perfil que publica, de los datos estructurados), **fecha 29-oct-2026**, 3 requisitos, correo como otra vía; pegando el texto salen el mismo cargo, los mismos 3 requisitos y el correo (sin empresa ni fecha: el texto pegado no las trae). Antes, por texto: 0 requisitos, sin correo y empresa «crecimiento. ¿Qué buscamos?».

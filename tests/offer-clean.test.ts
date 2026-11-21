@@ -90,9 +90,30 @@ describe("capa 2 · limpieza con el modelo local", () => {
   it("si el modelo no deja casi nada, no se tira la oferta", async () => {
     decide = () => []
     const r = await cleanOfferText(pasted)
-    expect(r.llm).toBe(false)
-    expect(r.warning).toMatch(/muy poco texto/)
+    // lo claramente propio de la oferta (frase de apertura, viñetas, contacto) se conserva aunque el modelo no deje nada
     expect(r.text).toContain("Dominio de SQL y Excel avanzado")
+    expect(r.text).toContain("talento@initech.example")
+    expect(r.text).not.toContain("Excelente oportunidad")
+  })
+
+  it("nunca quita el cargo, los requisitos ni el correo de una publicación corta, aunque el modelo los descarte", async () => {
+    const post = `Estamos seleccionando Diseñador/a UX/UI para sumarse al equipo de una empresa en crecimiento.  ¿Qué buscamos?
+🔹 Experiencia comprobable en diseño de interfaces (UI) e investigación de experiencia de usuario (UX).
+🔹 Dominio de Figma y sistemas de diseño (Design Systems).
+🔹 Trabajo en equipo junto a desarrolladores y área de producto.
+🔹 Modalidad: Remoto.
+📩 ¿Cómo postularte?Envianos tu CV + Portfolio actualizado a candidatos@consultoravos.com (Asunto: UX/UI).  O cargá tus datos directamente en este link: https://lnkd.in/d92iP43G`
+    decide = () => [1] // el modelo descarta casi todo (lo que se midió con el modelo real)
+    const r = await cleanOfferText(post)
+    for (const x of ["Estamos seleccionando", "Dominio de Figma", "Trabajo en equipo", "candidatos@consultoravos.com", "lnkd.in/d92iP43G"]) expect(r.text).toContain(x)
+    expect(calls).toHaveLength(0) // todo está protegido: no queda nada dudoso, ni siquiera se llama al modelo
+  })
+
+  it("protege solo lo propio de la oferta: los comentarios de otras personas siguen siendo del modelo", async () => {
+    const { protectedLines } = await import("@/lib/offer/clean")
+    const lines = ["Estamos contratando: Analista de Datos", "Requisitos:", "- SQL", "Envía tu CV a rh@acme.example", "Carlos Pérez", "Analista BI", "Excelente oportunidad, ¿pagan en dólares?"]
+    const safe = protectedLines(lines)
+    expect([...safe].sort()).toEqual([0, 1, 2, 3])
   })
 
   it("useLlm:false aplica solo el prefiltro sin llamar al modelo", async () => {

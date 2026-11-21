@@ -64,7 +64,8 @@ export const jobCols = {
   postedAt: jobs.postedAt,
   createdAt: jobs.createdAt,
   /** entró a Sooosh hace menos de 48 h (se calcula en la base: así no depende del reloj del navegador) */
-  isNew: sql<boolean>`${jobs.createdAt} > now() - interval '48 hours'`,
+  // «Nueva» = publicada en las últimas 48 h (la fecha de la fuente; si no la trae, la de carga en Sooosh).
+  isNew: sql<boolean>`coalesce(${jobs.postedAt}, ${jobs.createdAt}) > now() - interval '48 hours'`,
   roleFamily: jobs.roleFamily,
   isTech: jobs.isTech,
   offer: jobs.offer,

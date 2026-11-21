@@ -43,7 +43,7 @@ const MODE_RE: Record<string, RegExp> = {
 }
 const TYPE_RE = /\b(tiempo completo|full[- ]?time|medio tiempo|part[- ]?time|contrato|temporal|practicas|pasantia|freelance|por proyecto|indefinido|termino fijo)\b/
 
-export function buildEvidence(d: JobDraft, text: string): FieldEvidence[] {
+export function buildEvidence(d: JobDraft, text: string, opts: { companyFromPage?: boolean } = {}): FieldEvidence[] {
   const values = fieldValues(d)
   const ev = (key: FieldKey, status: EvidenceStatus, quote?: string): FieldEvidence => ({ key, label: FIELD_LABELS[key], value: values[key], status: values[key] ? status : "falta", quote: values[key] ? quote : undefined })
   const quote: Partial<Record<FieldKey, string | undefined>> = {
@@ -65,6 +65,9 @@ export function buildEvidence(d: JobDraft, text: string): FieldEvidence[] {
 
   return FIELD_KEYS.map((key): FieldEvidence => {
     switch (key) {
+      case "empresa":
+        // la empresa que entrega la página (perfil que publica) no está en el texto, pero es un dato de la fuente
+        return opts.companyFromPage && d.company ? ev(key, "texto", "Es el perfil que publica la oferta en LinkedIn") : ev(key, quote.empresa ? "texto" : "inferido", quote.empresa)
       case "titulo":
         return ev(key, d.titleSource === "inferido" ? "inferido" : "texto", titleQuote)
       case "pais":

@@ -6,7 +6,6 @@ import { applyChannels, detectApply } from "@/lib/jobs/apply"
 import { fold } from "@/lib/keywords/normalize"
 import { cleanOfferText } from "@/lib/offer/clean"
 import { refineIdentity } from "@/lib/offer/identity"
-import { reconcileOffer } from "@/lib/offer/segment"
 import type { Offer } from "@/lib/schemas/offer"
 
 /**
@@ -42,18 +41,18 @@ function score(c: Case, offer: Offer, text: string) {
 }
 
 it("conjunto de prueba del analizador de ofertas", async () => {
-  type Row = { id: string; run: number; mode: "sin" | "con"; ms: number; titleOk: boolean; companyOk: boolean; got: number; wantTotal: number; intruders: number; leaks: string[]; mustNot: number; applyOk: boolean; moved?: number; removed?: number; added?: number }
+  // «sin» = limpieza como antes de A5 (el modelo decide todas las líneas); «con» = limpieza conservadora (líneas propias de la oferta protegidas).
+  type Row = { id: string; run: number; mode: "sin" | "con"; ms: number; llm: boolean; titleOk: boolean; companyOk: boolean; got: number; wantTotal: number; intruders: number; leaks: string[]; mustNot: number; applyOk: boolean }
   const rows: Row[] = []
   for (const c of cases) {
     const text = c.text ?? readFileSync(path.join(__dirname, "../tests/fixtures", c.file!), "utf8")
     for (let run = 1; run <= RUNS; run++) {
-      const t0 = Date.now()
-      const cleaned = await cleanOfferText(text)
-      const parsed = await parseOfferText(cleaned.text, undefined, { reconcile: false })
-      const ms = Date.now() - t0
-      const rec = reconcileOffer(parsed.data, cleaned.text)
-      rows.push({ id: c.id, run, mode: "sin", ms, ...score(c, parsed.data, text) })
-      rows.push({ id: c.id, run, mode: "con", ms, ...score(c, rec.offer, text), moved: rec.moved, removed: rec.removed, added: rec.added })
+      for (const mode of ["sin", "con"] as const) {
+        const t0 = Date.now()
+        const cleaned = await cleanOfferText(text, { protect: mode === "con" })
+        const parsed = await parseOfferText(cleaned.text, undefined)
+        rows.push({ id: c.id, run, mode, ms: Date.now() - t0, llm: cleaned.llm, ...score(c, parsed.data, text) })
+      }
     }
   }
   const sum = (mode: "sin" | "con") => {
@@ -70,6 +69,7 @@ it("conjunto de prueba del analizador de ofertas", async () => {
       intrusosPosibles: r.reduce((a, x) => a + x.mustNot, 0),
       postulacion: pct(r.filter((x) => x.applyOk).length, n),
       msMedio: Math.round(r.reduce((a, x) => a + x.ms, 0) / n),
+      sinLlamarAlModelo: r.filter((x) => !x.llm).length,
     }
   }
   const summary = { fecha: new Date().toISOString().slice(0, 10), modelo: process.env.OLLAMA_MODEL, repeticiones: RUNS, casos: cases.length, sin: sum("sin"), con: sum("con"), filas: rows }

@@ -105,3 +105,23 @@ describe("limpieza: línea suelta descartada entre líneas conservadas", () => {
     expect([...fillSingleGaps(new Set([0, 1]), 6)].sort()).toEqual([0, 1]) // comentarios al final: no se tocan
   })
 })
+
+describe("publicación sin encabezados: «¿Qué buscamos?» abre los requisitos", () => {
+  const post = `Estamos seleccionando Diseñador/a UX/UI para sumarse al equipo de una empresa en crecimiento.  ¿Qué buscamos?
+🔹 Experiencia comprobable en diseño de interfaces (UI).
+🔹 Dominio de Figma y sistemas de diseño.
+🔹 Trabajo en equipo junto a desarrolladores.
+🔹 Modalidad: Remoto.
+📩 ¿Cómo postularte? Envianos tu CV a candidatos@consultoravos.com`
+  it("las viñetas que siguen son requisitos y el contacto cierra la lista", () => {
+    const b = segmentOffer(post)
+    expect(b.map((x) => x.kind)).toEqual(["gancho", "requisitos", "contacto"])
+    expect(b[1].lines).toHaveLength(4)
+  })
+  it("agrega el requisito que el modelo omitió y deja «Modalidad: Remoto» fuera de las listas (tiene su campo)", () => {
+    const model = offer({ requirements: ["🔹 Experiencia comprobable en diseño de interfaces (UI).", "🔹 Dominio de Figma y sistemas de diseño."], responsibilities: ["🔹 Modalidad: Remoto."] })
+    const r = reconcileOffer(model, post)
+    expect(r.offer.requirements.map((x) => x.replace(/^🔹 /, ""))).toEqual(["Experiencia comprobable en diseño de interfaces (UI).", "Dominio de Figma y sistemas de diseño.", "Trabajo en equipo junto a desarrolladores."])
+    expect(r.offer.responsibilities).toEqual([])
+  })
+})

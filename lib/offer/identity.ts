@@ -33,7 +33,7 @@ export function isBareHeading(line: string): boolean {
   return isSectionHeading(line) && !/[:：]\s*\S/.test(line.trim())
 }
 
-const HOOK_START = /^(estamos\s+(seleccionando|buscando|contratando|reclutando)|buscamos|se\s+busca|se\s+necesita|necesitamos|requerimos|we(?:'re|\s+are)\s+(hiring|looking))/i
+export const HOOK_START = /^(estamos\s+(seleccionando|buscando|contratando|reclutando)|buscamos|se\s+busca|se\s+necesita|necesitamos|requerimos|we(?:'re|\s+are)\s+(hiring|looking))/i
 const HOOK =
   /(?:estamos\s+(?:seleccionando|buscando|contratando|reclutando)|buscamos|se\s+busca|se\s+necesita|necesitamos|requerimos|vacante\s+(?:de|para)|we(?:'re|\s+are)\s+(?:hiring|looking\s+for))\s*:?\s*(?:a\s+|una?\s+|el\s+|la\s+)?(.{3,80}?)(?=\s+(?:para|for|at|in|with|en|con|que|de\s+tiempo|a\s+tiempo|remot[oa]|h[ií]brid[oa]|presencial|y\s+(?:lo|la|el))\b|[.,;:!?\n(]|$)/i
 
@@ -68,7 +68,9 @@ export function plausibleCompany(company: string, offer: Pick<Offer, "requiremen
   const stops = words.filter((w) => STOP.has(w.toLowerCase())).length
   const lowerStart = /^\p{Ll}/u.test(c)
   if (stops >= 3) return false
-  if (lowerStart && (stops >= 1 || words.length >= 4)) return false
+  // Una frase (con «¿?», punto final o minúscula inicial y varias palabras) no es el nombre de una empresa: «crecimiento. ¿Qué buscamos?» salía de partir una frase de apertura por «en».
+  if (/[¿?!¡]/.test(c) || /[.]$/.test(c)) return false
+  if (lowerStart && words.length > 1) return false
   return true
 }
 

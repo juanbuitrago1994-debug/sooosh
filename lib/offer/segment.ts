@@ -19,7 +19,11 @@ const KIND_RE: [BlockKind, RegExp][] = [
   ["requisitos", /^(?:(?:requisitos?|requerimientos?|lo que buscamos|requirements|qualifications|what you bring|must have)\b|(?:perfil(?: del candidato| buscado)?|experiencia(?: comprobable| requerida| laboral)?|conocimientos|habilidades|formacion|educacion)$)/],
 ]
 
-const CONTACT_LINE = /(@[\w-]+\.[\w.-]+|https?:\/\/|www\.|\b(env[ií]a(?:r|nos)?|escr[ií]be(?:nos)?|postula(?:te)?|aplica(?:r)?|m[aá]ndanos|cont[aá]ctanos|send (?:us )?your|apply (?:here|now|at|via)|dm me)\b)/i
+export const CONTACT_LINE = /(@[\w-]+\.[\w.-]+|https?:\/\/|www\.|\b(env[ií]a(?:r|nos)?|escr[ií]be(?:nos)?|postula(?:te)?|aplica(?:r)?|m[aá]ndanos|cont[aá]ctanos|send (?:us )?your|apply (?:here|now|at|via)|dm me)\b)/i
+/** Frase que abre la lista de requisitos sin ser un encabezado: «¿Qué buscamos?», «¿Qué pedimos?», «What we're looking for». */
+const ASKS_FOR = /(?:¿\s*qu[eé]\s+(?:buscamos|necesitamos|pedimos|esperamos|requerimos)\s*\??|what\s+(?:we(?:'|’)?re|we\s+are|you(?:'|’)?ll)\s+(?:looking\s+for|need))\s*[:.]?\s*$/i
+/** «Modalidad: Remoto», «Horario: …»: son datos de la oferta (ya tienen su campo), no requisitos ni funciones. */
+const META_LINE = /^\s*(?:modalidad|ubicaci[oó]n|horario|jornada|contrato|tipo de contrato|salario|sueldo|remuneraci[oó]n|lugar(?: de trabajo)?|location|schedule|salary|contract)\s*[:：]/i
 const stripBullet = (l: string) => l.replace(/^\s*(?:[-–—•·*▪◦►✓●○■□>🔹🔸🔶🔷✅☑️➡️👉]|\d{1,2}[.)])+\s*/u, "").trim()
 const words = (s: string) => s.split(/\s+/).filter(Boolean)
 
@@ -86,6 +90,11 @@ export function segmentOffer(text: string): Block[] {
       continue
     }
     cur.lines.push(line)
+    // «… ¿Qué buscamos?» al final de la frase de apertura: lo que sigue (viñetas sin encabezado) son los requisitos.
+    if (cur.kind === "gancho" && ASKS_FOR.test(line)) {
+      push()
+      cur = { kind: "requisitos", lines: [] }
+    }
   }
   push()
   return blocks
@@ -124,7 +133,7 @@ export function reconcileOffer(offer: Offer, text: string): { offer: Offer; move
       const kind = where.get(k)
       const target = kind ? LIST_KIND[kind] : undefined
       // un encabezado que el modelo metió como si fuera un dato («What you'll do») no es parte de ninguna lista
-      if (isBareHeading(item) || (kind && !target && ["contacto", "beneficios", "hashtags"].includes(kind))) {
+      if (isBareHeading(item) || META_LINE.test(stripBullet(item)) || (kind && !target && ["contacto", "beneficios", "hashtags"].includes(kind))) {
         removed++
         continue
       }
@@ -141,7 +150,7 @@ export function reconcileOffer(offer: Offer, text: string): { offer: Offer; move
     for (const l of b.lines) {
       const k = key(l)
       const text1 = original.get(k) ?? stripBullet(l)
-      if (seen.has(k) || text1.length < 3 || text1.length > 240 || CONTACT_LINE.test(text1)) continue
+      if (seen.has(k) || text1.length < 3 || text1.length > 240 || CONTACT_LINE.test(text1) || META_LINE.test(text1)) continue
       seen.add(k)
       out[dest].push(text1)
       added++

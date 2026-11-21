@@ -104,7 +104,7 @@ function isoDate(v?: string): string | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d.toISOString()
 }
 
-export function buildDraft(input: { offer: Offer; text: string; url?: string; link?: string; ld?: JobLd; applyUrl?: string; fallbackHash: string }): JobDraft {
+export function buildDraft(input: { offer: Offer; text: string; url?: string; link?: string; ld?: JobLd; applyUrl?: string; /** empresa que entrega la página (p. ej. el perfil que publica en LinkedIn): manda sobre la deducida del texto */ company?: string; fallbackHash: string }): JobDraft {
   const { offer, text, ld } = input
   const linkRaw = input.url ?? input.link
   let sourceUrl = `texto:${input.fallbackHash}`
@@ -139,7 +139,7 @@ export function buildDraft(input: { offer: Offer; text: string; url?: string; li
     sourceName,
     title: id.title,
     titleSource: id.titleSource,
-    company: id.company,
+    company: input.company ?? id.company,
     locationText: ld?.location ?? labeledLocation(text),
     country,
     // Sin país ni región conocidos, una tarjeta cargada a mano no se pierde: queda abierta a todas las regiones (se puede cambiar al revisarla).

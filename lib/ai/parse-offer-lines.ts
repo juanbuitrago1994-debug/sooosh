@@ -25,7 +25,7 @@ export const LABEL_PROMPT = `Recibes las líneas numeradas de una oferta de trab
 {"title": línea del título del puesto, "company": línea con el nombre de la empresa (o null), "requirements": [líneas de requisitos obligatorios], "niceToHave": [líneas de lo deseable o que "se valora"], "responsibilities": [líneas de funciones o responsabilidades]}
 No incluyas encabezados como «Requisitos:» o «Responsabilidades:», ni beneficios, ni cómo postular, ni hashtags. Una línea con varias cosas va en la parte principal. Responde únicamente con el JSON.`
 
-const strip = (l: string) => l.replace(/^\s*(?:[-–—•·*▪◦►✓●○■□>]|\d{1,2}[.)])\s+/, "").replace(/\s+/g, " ").trim()
+const strip = (l: string) => l.replace(/^\s*(?:[-–—•·*▪◦►✓●○■□>]|\p{Extended_Pictographic}\uFE0F?|\d{1,2}[.)])\s+/u, "").replace(/\s+/g, " ").trim()
 
 /** «Estamos contratando: Analista de Datos en Initech (híbrido, Lima).» → { title, company } */
 export function splitTitleLine(line: string): { title: string; company?: string } {

@@ -1,6 +1,6 @@
 import { Readability } from "@mozilla/readability"
 import { parseHTML } from "linkedom"
-import { decodeEntities, fragmentToText, htmlToText, jobPostingFromJsonLd, type JobLd } from "./html"
+import { decodeEntities, fragmentToText, htmlToText, jobPostingFromJsonLd, socialPostingFromJsonLd, type JobLd } from "./html"
 
 /**
  * Capa 1 del pipeline de ofertas: extracción DETERMINISTA del contenido principal de una página.
@@ -9,7 +9,7 @@ import { decodeEntities, fragmentToText, htmlToText, jobPostingFromJsonLd, type 
  * (comentarios, reacciones, navegación, cookies, publicidad).
  */
 export type ExtractMethod = "json-ld" | "site" | "readability" | "heuristic"
-export type Extracted = { text: string; method: ExtractMethod; site?: string; title?: string; company?: string; /** datos estructurados (JSON-LD) si la página los publica */ ld?: JobLd }
+export type Extracted = { text: string; method: ExtractMethod; site?: string; title?: string; company?: string; /** quién publicó (si es una persona, no una empresa) */ postedBy?: string; /** datos estructurados (JSON-LD) si la página los publica */ ld?: JobLd }
 
 /** Elementos que nunca son parte de la oferta, en cualquier sitio. */
 const GLOBAL_NOISE = [
@@ -143,7 +143,17 @@ export function extractOffer(html: string, url?: string): Extracted | null {
       removeNoise(body.ownerDocument as Doc, GLOBAL_NOISE.filter((s) => s !== "[aria-hidden=true]"), null)
       const text = nodeText(body)
       if (text.length >= 60) {
-        return { text, method: "site", site: site.name, title: firstText(document, site.title), company: firstText(document, site.company) }
+        // En una publicación de LinkedIn la empresa y la fecha salen de los datos estructurados de la página (no del texto).
+        const social = site.name === "linkedin-publicacion" ? socialPostingFromJsonLd(html) : null
+        return {
+          text,
+          method: "site",
+          site: site.name,
+          title: firstText(document, site.title),
+          company: social?.company ?? firstText(document, site.company),
+          postedBy: social?.postedBy,
+          ld: social?.datePublished ? { datePosted: social.datePublished } : undefined,
+        }
       }
     }
   }

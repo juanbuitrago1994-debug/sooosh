@@ -94,6 +94,40 @@ function jobLdMeta(o: Record<string, unknown>): JobLd {
   }
 }
 
+/**
+ * Datos estructurados de una PUBLICACIÓN de LinkedIn (schema.org/SocialMediaPosting): quién la publica y cuándo. Si la publica una página de empresa
+ * (`author: Organization`) ese nombre es la empresa que ofrece el puesto; si la publica una persona, solo se sabe quién la publicó (no la empresa).
+ * Los autores de los comentarios que trae la misma página NO se leen: solo el autor de la publicación.
+ */
+export function socialPostingFromJsonLd(html: string): { company?: string; postedBy?: string; datePublished?: string } | null {
+  const re = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+  for (const m of html.matchAll(re)) {
+    let data: unknown
+    try {
+      data = JSON.parse(m[1])
+    } catch {
+      continue
+    }
+    const stack: unknown[] = [data]
+    while (stack.length) {
+      const n = stack.pop()
+      if (Array.isArray(n)) stack.push(...n)
+      else if (n && typeof n === "object") {
+        const o = n as Record<string, unknown>
+        const type = o["@type"]
+        if (type === "SocialMediaPosting" || (Array.isArray(type) && type.includes("SocialMediaPosting"))) {
+          const a = o.author as { "@type"?: unknown; name?: unknown } | undefined
+          const name = str(a?.name)
+          const isOrg = a?.["@type"] === "Organization"
+          return { company: isOrg ? name : undefined, postedBy: !isOrg ? name : undefined, datePublished: str(o.datePublished) }
+        }
+        if (o["@graph"]) stack.push(o["@graph"])
+      }
+    }
+  }
+  return null
+}
+
 export function jobPostingFromJsonLd(html: string): { title?: string; company?: string; description: string; ld: JobLd } | null {
   const re = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
   for (const m of html.matchAll(re)) {

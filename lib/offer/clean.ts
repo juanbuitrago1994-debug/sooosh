@@ -1,5 +1,7 @@
 import { z } from "zod"
 import { getProvider } from "@/lib/ai"
+import { HOOK_START, isSectionHeading } from "./identity"
+import { CONTACT_LINE, segmentOffer } from "./segment"
 import { OFFER_MAX_CHARS } from "@/lib/schemas/offer"
 
 /**
@@ -39,6 +41,28 @@ export function prefilterLines(text: string): string[] {
 
 export const keepSchema = z.object({ keep: z.array(z.number().int().min(0)) })
 
+const BULLET = /^\s*(?:[-–—•·*▪◦►✓●○■□>]|[\p{Extended_Pictographic}\u{FE0F}]|\d{1,2}[.)])/u
+
+/**
+ * Líneas que son claramente parte de la oferta y que la limpieza con el modelo NUNCA debe quitar: la frase de apertura («Estamos seleccionando…»),
+ * las viñetas (guion, punto o emoji), los encabezados, las líneas de contacto (correo, enlace, «envía tu CV») y todo lo que cae dentro de una sección
+ * con encabezado (requisitos, funciones, se valora, beneficios). Los comentarios de otras personas no cumplen nada de esto: vienen después del
+ * contacto, sin viñetas. Medido: con un post corto el modelo quitaba el cargo, los requisitos y el correo (ver docs/BENCHMARKS.md).
+ */
+export function protectedLines(lines: string[]): Set<number> {
+  const kinds = new Map<string, string>()
+  for (const b of segmentOffer(lines.join("\n"))) for (const l of b.lines) if (!kinds.has(l)) kinds.set(l, b.kind)
+  const out = new Set<number>()
+  lines.forEach((l, i) => {
+    const kind = kinds.get(l.trim())
+    if (HOOK_START.test(l.trim().replace(/^[^\p{L}\p{N}]+/u, "")) || BULLET.test(l) || isSectionHeading(l) || CONTACT_LINE.test(l) || (kind && ["requisitos", "funciones", "deseables", "beneficios", "contacto"].includes(kind))) out.add(i)
+  })
+  return out
+}
+
+/** Si casi todo está protegido no queda nada dudoso que decidir: se omite el modelo (más rápido y sin riesgo de perder contenido). */
+const MIN_DOUBTFUL_LINES = 3
+
 /**
  * El modelo a veces descarta una línea suelta de la oferta (un requisito entre dos requisitos). Si UNA sola línea quedó fuera entre dos que se
  * conservaron, se recupera: un comentario ajeno suele venir en bloque al final, no aislado en medio de la oferta. Huecos de dos o más líneas se respetan.
@@ -69,7 +93,7 @@ export type CleanResult = {
  * Limpia el texto de una oferta. `useLlm: false` aplica solo el prefiltro determinista.
  * Si el LLM falla o devuelve algo sospechoso (casi nada), se conserva el resultado del prefiltro.
  */
-export async function cleanOfferText(text: string, opts: { signal?: AbortSignal; useLlm?: boolean } = {}): Promise<CleanResult> {
+export async function cleanOfferText(text: string, opts: { signal?: AbortSignal; useLlm?: boolean; /** `false` solo sirve para medir el antes y el después */ protect?: boolean } = {}): Promise<CleanResult> {
   const lines = prefilterLines(text)
   const before = text.split("\n").filter((l) => l.trim()).length
   const done = (kept: string[], llm: boolean, warning?: string): CleanResult => ({
@@ -79,6 +103,8 @@ export async function cleanOfferText(text: string, opts: { signal?: AbortSignal;
     warning,
   })
   if (lines.length === 0 || opts.useLlm === false) return done(lines, false)
+  const safe = opts.protect === false ? new Set<number>() : protectedLines(lines)
+  if (opts.protect !== false && lines.length - safe.size < MIN_DOUBTFUL_LINES) return done(lines, false)
 
   try {
     const keep = new Set<number>()
@@ -98,6 +124,7 @@ export async function cleanOfferText(text: string, opts: { signal?: AbortSignal;
       for (const n of data.keep) if (n >= start && n < end) keep.add(n)
       start = end
     }
+    for (const i of safe) keep.add(i)
     const filled = fillSingleGaps(keep, lines.length)
     const kept = lines.filter((_, i) => filled.has(i))
     // Salvaguarda: si el modelo no dejó casi nada, probablemente se equivocó → no tirar la oferta.
