@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 import Link from "next/link"
 import { CheckIcon, CopyIcon, DownloadIcon, FileTextIcon } from "lucide-react"
 import { toast } from "sonner"
@@ -37,7 +37,11 @@ export type ApplyEmailPanelProps = {
 export function ApplyEmailPanel(props: ApplyEmailPanelProps) {
   return (
     <Drawer open={props.open} onOpenChange={props.onOpenChange} swipeDirection="right">
-      <DrawerContent className="top-0 h-dvh w-full bg-popover/60 backdrop-blur-xl sm:max-w-md">
+      {/* Panel flotante, como el de shadcn: separado de los bordes (--drawer-inset), esquinas redondeadas y sin la franja de relleno del borde. */}
+      <DrawerContent
+        style={{ "--drawer-inset": "0.75rem", "--drawer-bleed-background": "transparent" } as CSSProperties}
+        className="top-0 bottom-0 left-0 h-auto w-auto border-border/40 bg-popover/60 backdrop-blur-xl data-[swipe-direction=right]:rounded-2xl data-[swipe-direction=right]:border sm:left-auto sm:w-full sm:max-w-md"
+      >
         <PanelBody {...props} />
       </DrawerContent>
     </Drawer>
