@@ -20,7 +20,8 @@ afterEach(() => vi.doUnmock("@/lib/profile/search-profile"))
 describe("panel de correo", () => {
   it("paso 1: muestra los correos detectados y el progreso de 4 pasos", async () => {
     const html = await render({ cv })
-    expect(html).toContain("Paso 1 de 4")
+    expect(html).not.toContain("Paso 1 de 4")
+    expect(html).toContain("Armamos el correo con los datos de tu CV.")
     expect(html).toContain("candidatos@consultoravos.com")
     expect(html).toContain("rrhh@consultoravos.com")
     for (const s of ["1. Destinatario", "2. Asunto", "3. Cuerpo", "4. Listo"]) expect(html).toContain(s)

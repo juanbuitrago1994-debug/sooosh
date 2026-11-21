@@ -149,9 +149,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
     <div className="flex min-h-0 flex-1 flex-col">
       <DrawerHeader className="flex flex-col gap-1 p-4">
         <DrawerTitle>Postular por correo</DrawerTitle>
-        <DrawerDescription>
-          Paso {step + 1} de {STEPS.length}: {STEPS[step].toLowerCase()}
-        </DrawerDescription>
+        <DrawerDescription>Armamos el correo con los datos de tu CV.</DrawerDescription>
       </DrawerHeader>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
