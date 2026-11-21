@@ -149,13 +149,12 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
     <div className="flex min-h-0 flex-1 flex-col">
       <DrawerHeader className="flex flex-col gap-1 p-4">
         <DrawerTitle>Postular por correo</DrawerTitle>
-        <DrawerDescription>Armamos el correo con los datos de tu CV.</DrawerDescription>
+        <DrawerDescription>Armamos el correo con los datos de tu CV. Los destinatarios salen de la oferta; puedes agregar otro.</DrawerDescription>
       </DrawerHeader>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
         {step === 0 && (
           <FieldGroup>
-            <p className="text-sm text-muted-foreground">{emails.length > 1 ? "Encontramos estos correos en la oferta. Elige a cuál(es) escribir." : "Este es el correo que encontramos en la oferta."} Si hay otro, puedes agregarlo.</p>
             {/* Lista compacta: 8 px entre correos; en pantallas táctiles cada fila conserva 44 px de alto. */}
             <div className="flex flex-col gap-2">
               {options.map((e) => (
