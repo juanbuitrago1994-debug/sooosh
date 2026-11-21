@@ -67,4 +67,4 @@ Más la casilla «Incluir portafolio / web» (solo si el usuario los cargó; si 
 3. **Siempre se habla de «tú»**: el tono «Profesional» ya no usa «usted»; solo cambia el registro (más formal y sobrio, pero tuteando).
 
 ## Avance
-- **S0, S1 y S2 hechos** (ver `docs/STATUS.md`). Nota: `apply.emails` guarda solo las direcciones (sin «fuente»).
+- **S0, S1, S2 y S3 hechos** (ver `docs/STATUS.md`). Nota: `apply.emails` guarda solo las direcciones (sin «fuente»).

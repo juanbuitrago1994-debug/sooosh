@@ -14,7 +14,8 @@ import { PrivacyLink } from "@/components/privacy/privacy-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { applyChannels, applyCta, applyHint, applyLabel, channelHref } from "@/lib/jobs/apply"
+import { ApplyEmailPanel } from "@/components/jobs/apply-email-panel"
+import { applyChannels, applyCta, applyHint, applyLabel, channelHref, emailsOf } from "@/lib/jobs/apply"
 import { buildFacts, companyLine, curatedDates } from "@/lib/jobs/facts"
 import { savePrefill } from "@/lib/jobs/prefill"
 import { track } from "@/lib/events/consent"
@@ -47,6 +48,7 @@ export function JobDetail({ job }: { job: JobCard }) {
   const marks = useMarks()
   const isSaved = marks.saved.includes(job.id)
   const [fit, setFit] = useState<Fit | null>(null)
+  const [mailOpen, setMailOpen] = useState(false)
   const facts = buildFacts(job)
   const o = job.offer
   const subtitle = [companyLine(job), job.locationText].filter(Boolean).join(" · ")
@@ -73,6 +75,11 @@ export function JobDetail({ job }: { job: JobCard }) {
   const isMail = apply?.method === "correo"
   const external = apply?.url ?? (job.sourceUrl.startsWith("http") ? job.sourceUrl : undefined)
   const others = applyChannels(apply).slice(1)
+  const mailTo = emailsOf(apply)
+  const openMail = () => {
+    track("apply_click", { jobId: job.id, method: "correo" })
+    setMailOpen(true)
+  }
 
   const save = () => {
     const now = toggleSaved(job.id)
@@ -172,14 +179,21 @@ export function JobDetail({ job }: { job: JobCard }) {
                   <ul className="flex flex-wrap gap-2">
                     {others.map((c) => (
                       <li key={`${c.method}-${c.email ?? c.url}`}>
-                        <a
-                          href={channelHref(c)}
-                          onClick={() => track("apply_click", { jobId: job.id, method: c.method })}
-                          {...(c.method === "correo" ? {} : { target: "_blank", rel: "noopener noreferrer" })}
-                          className={buttonVariants({ variant: "outline", size: "sm" })}
-                        >
-                          {c.method === "correo" ? `Por correo a ${c.email}` : applyCta(c)}
-                        </a>
+                        {c.method === "correo" ? (
+                          <Button variant="outline" size="sm" onClick={openMail}>
+                            Por correo a {c.email}
+                          </Button>
+                        ) : (
+                          <a
+                            href={channelHref(c)}
+                            onClick={() => track("apply_click", { jobId: job.id, method: c.method })}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={buttonVariants({ variant: "outline", size: "sm" })}
+                          >
+                            {applyCta(c)}
+                          </a>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -243,7 +257,11 @@ export function JobDetail({ job }: { job: JobCard }) {
         </Rise>
 
         <div className="sticky bottom-0 -mx-4 mt-auto flex flex-col gap-2 border-t border-border/40 bg-background px-4 py-3 sm:mx-0 sm:flex-row-reverse sm:px-0">
-          {external && (
+          {isMail && mailTo.length > 0 ? (
+            <Button className="sm:flex-1" onClick={openMail}>
+              {applyCta(apply)}
+            </Button>
+          ) : external && (
             <a href={external} onClick={() => track("apply_click", { jobId: job.id, method: apply?.method ?? "desconocido" })} {...(isMail ? {} : { target: "_blank", rel: "noopener noreferrer" })} className={buttonVariants({ className: "sm:flex-1" })}>
               {applyCta(apply)}
             </a>
@@ -253,6 +271,7 @@ export function JobDetail({ job }: { job: JobCard }) {
           </Button>
         </div>
       </main>
+      {mailTo.length > 0 && <ApplyEmailPanel open={mailOpen} onOpenChange={setMailOpen} job={{ title: job.title, company: job.company }} emails={mailTo} subject={apply?.subject} covered={fit?.covered ?? []} />}
     </div>
   )
 }
