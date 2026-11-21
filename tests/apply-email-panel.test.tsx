@@ -25,7 +25,9 @@ describe("panel de correo", () => {
     expect(html).not.toContain("Encontramos estos correos")
     expect(html).toContain("candidatos@consultoravos.com")
     expect(html).toContain("rrhh@consultoravos.com")
-    for (const s of ["1. Destinatario", "2. Asunto", "3. Cuerpo", "4. Listo"]) expect(html).toContain(s)
+    // Solo se ve el paso actual: los siguientes se revelan al avanzar.
+    expect(html).toContain("Destinatario")
+    for (const s of ["Asunto", "Cuerpo", "Listo"]) expect(html).not.toContain(`>${s}<`)
     expect(html).toContain('role="progressbar"')
     expect(html).toContain('aria-current="step"')
   })

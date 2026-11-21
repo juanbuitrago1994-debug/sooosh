@@ -2,7 +2,7 @@
 
 import { useState, type CSSProperties } from "react"
 import Link from "next/link"
-import { CheckIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, XIcon } from "lucide-react"
+import { CheckIcon, CircleCheckIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -261,13 +261,21 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
       </div>
 
       <DrawerFooter className="gap-3 border-t border-border/40 p-4 pt-3">
-        <Progress value={((step + 1) / STEPS.length) * 100}>
-          <ol className="flex w-full justify-between text-xs text-muted-foreground">
-            {STEPS.map((s, i) => (
-              <li key={s} aria-current={i === step ? "step" : undefined} className={i === step ? "font-medium text-foreground" : undefined}>
-                {i + 1}. {s}
-              </li>
-            ))}
+        <Progress value={((step + 1) / STEPS.length) * 100} className="gap-2">
+          {/* Los pasos se van revelando de a uno: solo se ven los superados (en gris, con un check sólido) y el actual. */}
+          <ol className="flex w-full flex-col gap-2 text-sm" aria-label="Pasos">
+            {STEPS.slice(0, step + 1).map((s, i) => {
+              const done = i < step
+              return (
+                <li key={s} aria-current={done ? undefined : "step"} className="flex items-center gap-2 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-200">
+                  {done ? <CircleCheckIcon aria-hidden className="size-4 fill-muted-foreground stroke-popover" /> : <span aria-hidden className="flex size-4 items-center justify-center"><span className="size-2 rounded-full bg-foreground" /></span>}
+                  <span className={done ? "text-muted-foreground" : "font-medium text-foreground"}>
+                    {s}
+                    {done && <span className="sr-only"> (listo)</span>}
+                  </span>
+                </li>
+              )
+            })}
           </ol>
         </Progress>
         <div className="flex gap-2">
