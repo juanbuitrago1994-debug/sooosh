@@ -1,12 +1,14 @@
 /**
- * Correos de postulación dentro del texto de una oferta, SIN IA. Devuelve hasta `MAX_EMAILS`, el más probable primero.
+ * Correos de postulación dentro del texto de una oferta, SIN IA. Devuelve hasta `MAX_EMAILS` (5), el más probable primero.
  * Cubre lo que antes se perdía: correos sin verbo («CV a: x@y.com»), correos antes del verbo, correos ofuscados
  * («x [at] y.com», «x arroba y punto com») y más de un correo por oferta. Un correo es «fuerte» si hay un verbo de
  * postulación justo antes (la señal que ya usaba `detectApply` para elegirlo como vía principal).
  */
-export type DetectedEmail = { email: string; /** verbo de postulación justo antes del correo */ strong: boolean; score: number }
+export type DetectedEmail = { email: string; /** verbo de postulación justo antes del correo */ strong: boolean; score: number; /** posición en el texto (ya sin ofuscación) */ index: number }
 
-export const MAX_EMAILS = 3
+export const MAX_EMAILS = 5
+/** Un correo sin pistas que aparece hasta tantos caracteres después de uno «fuerte» se toma como otra dirección de la misma lista («… a x@a.com, y@a.com o z@a.com»). */
+const LIST_REACH = 160
 
 const VERBS =
   /(?:env[ií]a(?:r|nos|lo|la)?|mand(?:a|ar|anos)|remite|remitir|postula(?:te|r)?|aplica(?:r)?|escr[ií]be(?:nos)?|e-?mail(?: us)?|cont[aá]ctanos|send (?:us )?(?:your )?(?:cv|resume|application)|apply (?:by|via|at|to)|(?:cv|curr[ií]culum|curriculum|hoja de vida|resume|portafolio|portfolio)(?: vitae)?\s*(?:a|al|to|:|en)\b)/i
@@ -53,9 +55,12 @@ export function detectEmails(input?: string | null): DetectedEmail[] {
     if (LOCAL_HINTS.test(local)) score += 2
     if (GENERIC_LOCAL.test(local)) score -= 1
     const prev = found.get(email)
-    if (!prev || score > prev.score) found.set(email, { email, strong: strong || !!prev?.strong, score })
+    if (!prev || score > prev.score) found.set(email, { email, strong: strong || !!prev?.strong, score, index: prev?.index ?? m.index ?? 0 })
   }
   const all = [...found.values()]
+  // Lista de direcciones: las que siguen de cerca a un correo con verbo de postulación cuentan como alternativas de la misma oferta.
+  const strongs = all.filter((e) => e.strong)
+  for (const e of all) if (e.score < 1 && strongs.some((s) => e.index > s.index && e.index - s.index < LIST_REACH)) e.score = 1
   // Un único correo en toda la oferta se acepta aunque no tenga pistas; con varios, se exige alguna señal (≥ 1).
   const kept = all.length === 1 ? all : all.filter((e) => e.score >= 1)
   return kept.sort((a, b) => b.score - a.score).slice(0, MAX_EMAILS)

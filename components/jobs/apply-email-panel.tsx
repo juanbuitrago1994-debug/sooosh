@@ -2,19 +2,22 @@
 
 import { useState, type CSSProperties } from "react"
 import Link from "next/link"
-import { CheckIcon, CopyIcon, DownloadIcon, FileTextIcon } from "lucide-react"
+import { CheckIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { buildBody, buildSubject, webLinks } from "@/lib/apply/email"
 import { useSearchProfile } from "@/lib/profile/search-profile"
+
+const MAX_RECIPIENTS = 10
+const EMAIL_RE = /^[^\s@,;]+@[^\s@,;]+\.[A-Za-z]{2,}$/
 
 const STEPS = ["Destinatario", "Asunto", "Cuerpo", "Listo"] as const
 
@@ -52,6 +55,10 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
   const cv = useSearchProfile()?.cv ?? null
   const [step, setStep] = useState(0)
   const [picked, setPicked] = useState<string[]>(emails.slice(0, 1))
+  // Correos que la persona agrega a mano (la oferta puede traer más de los que detectamos); se marcan solos.
+  const [added, setAdded] = useState<string[]>([])
+  const [draft, setDraft] = useState("")
+  const [draftError, setDraftError] = useState<string | null>(null)
   const [subject, setSubject] = useState(() => (cv ? buildSubject({ detected, cv, job }).text : (detected ?? "")))
   const [includeWeb, setIncludeWeb] = useState(false)
   const [body, setBody] = useState(() => (cv ? buildBody({ cv, job, covered, includeWeb: false }) : ""))
@@ -78,9 +85,28 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
     )
   }
 
+  const options = [...emails, ...added]
+  const addRecipient = () => {
+    const e = draft.trim().toLowerCase()
+    if (!e) return
+    if (!EMAIL_RE.test(e)) return setDraftError("Escribe un correo válido, por ejemplo nombre@empresa.com.")
+    if (options.some((o) => o.toLowerCase() === e)) return setDraftError("Ese correo ya está en la lista.")
+    if (options.length >= MAX_RECIPIENTS) return setDraftError(`Puedes elegir hasta ${MAX_RECIPIENTS} correos.`)
+    setAdded((a) => [...a, e])
+    setPicked((p) => [...p, e])
+    setDraft("")
+    setDraftError(null)
+  }
+  const removeAdded = (e: string) => {
+    setAdded((a) => a.filter((x) => x !== e))
+    setPicked((p) => p.filter((x) => x !== e))
+  }
+  // Los destinatarios se copian en el orden en que aparecen en la lista.
+  const recipients = options.filter((o) => picked.includes(o))
+
   const links = webLinks(cv)
   const fromOffer = Boolean(detected)
-  const canNext = step === 0 ? picked.length > 0 : step === 1 ? subject.trim().length > 0 : step === 2 ? body.trim().length > 0 : false
+  const canNext = step === 0 ? recipients.length > 0 : step === 1 ? subject.trim().length > 0 : step === 2 ? body.trim().length > 0 : false
 
   const toggleWeb = (on: boolean) => {
     setIncludeWeb(on)
@@ -131,15 +157,49 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
         {step === 0 && (
           <FieldGroup>
-            <p className="text-sm text-muted-foreground">{emails.length > 1 ? "Encontramos estos correos en la oferta. Elige a cuál(es) escribir." : "Este es el correo que encontramos en la oferta."}</p>
-            {emails.map((e) => (
+            <p className="text-sm text-muted-foreground">{emails.length > 1 ? "Encontramos estos correos en la oferta. Elige a cuál(es) escribir." : "Este es el correo que encontramos en la oferta."} Si hay otro, puedes agregarlo.</p>
+            {options.map((e) => (
               <Field key={e} orientation="horizontal" className="min-h-11 items-center">
                 <Checkbox id={`to-${e}`} checked={picked.includes(e)} onCheckedChange={(on) => setPicked((p) => (on ? [...p, e] : p.filter((x) => x !== e)))} />
-                <FieldLabel htmlFor={`to-${e}`} className="break-all font-normal">
+                <FieldLabel htmlFor={`to-${e}`} className="min-w-0 flex-1 break-all font-normal">
                   {e}
                 </FieldLabel>
+                {added.includes(e) && (
+                  <Button type="button" variant="ghost" size="icon" aria-label={`Quitar ${e}`} onClick={() => removeAdded(e)}>
+                    <XIcon aria-hidden />
+                  </Button>
+                )}
               </Field>
             ))}
+            <Field data-invalid={draftError ? true : undefined}>
+              <FieldLabel htmlFor="mail-add">Agregar otro correo</FieldLabel>
+              <div className="flex gap-2">
+                <Input
+                  id="mail-add"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="off"
+                  placeholder="nombre@empresa.com"
+                  value={draft}
+                  aria-invalid={draftError ? true : undefined}
+                  onChange={(e) => {
+                    setDraft(e.target.value)
+                    setDraftError(null)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      addRecipient()
+                    }
+                  }}
+                />
+                <Button type="button" variant="outline" onClick={addRecipient} disabled={!draft.trim()}>
+                  <PlusIcon data-icon="inline-start" />
+                  Agregar
+                </Button>
+              </div>
+              {draftError && <FieldError>{draftError}</FieldError>}
+            </Field>
           </FieldGroup>
         )}
 
@@ -184,7 +244,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
         {step === 3 && (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-muted-foreground">Copia cada parte en tu correo. No adjuntamos archivos: adjunta tu CV desde tu equipo.</p>
-            <Piece label="Para" text={picked.join(", ")} onCopy={() => copy("Destinatario", picked.join(", "))} />
+            <Piece label="Para" text={recipients.join(", ")} onCopy={() => copy("Destinatario", recipients.join(", "))} />
             <Piece label="Asunto" text={subject} onCopy={() => copy("Asunto", subject)} />
             <Piece label="Cuerpo" text={body} multiline onCopy={() => copy("Cuerpo", body)} />
             <Button type="button" variant="outline" onClick={download} disabled={downloading}>

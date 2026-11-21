@@ -21,11 +21,19 @@ describe("detectEmails", () => {
     const t = "Ventas: info@acme.com. Para postular envía tu CV a rrhh@acme.com"
     expect(list(t)).toEqual(["rrhh@acme.com"])
   })
-  it("devuelve hasta 3, sin duplicados", () => {
-    const t = "Envía tu CV a a@x.com o a b@x.com, también c@x.com y d@x.com. Envía tu CV a a@x.com"
+  it("devuelve hasta 5, sin duplicados", () => {
+    const t = "Envía tu CV a a@x.com, b@x.com, c@x.com, d@x.com, e@x.com y f@x.com. Envía tu CV a a@x.com"
     const r = list(t)
-    expect(r.length).toBeLessThanOrEqual(3)
+    expect(r).toHaveLength(5)
     expect(new Set(r).size).toBe(r.length)
+  })
+  it("una lista de direcciones tras el verbo se toma completa, aunque las siguientes no tengan pistas", () => {
+    expect(list("Para postular envía tu CV a rrhh@acme.com, ana@acme.com o luis@acme.com antes del viernes.")).toEqual(["rrhh@acme.com", "ana@acme.com", "luis@acme.com"])
+    expect(list("Enviar hoja de vida a:\n- seleccion@acme.com\n- maria@acme.com\n- pedro@acme.com")).toHaveLength(3)
+  })
+  it("un correo lejano y sin pistas, anterior o de otro tema no entra a la lista", () => {
+    expect(list("Soporte: soporte@acme.com. Envía tu CV a rrhh@acme.com.")).toEqual(["rrhh@acme.com"])
+    expect(list(`Envía tu CV a rrhh@acme.com. ${"Texto. ".repeat(40)} Prensa: prensa@acme.com`)).toEqual(["rrhh@acme.com"])
   })
   it("correos ofuscados", () => {
     expect(deobfuscate("rrhh [at] acme [dot] com")).toBe("rrhh@acme.com")

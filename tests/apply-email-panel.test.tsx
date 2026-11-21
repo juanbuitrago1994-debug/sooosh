@@ -27,6 +27,12 @@ describe("panel de correo", () => {
     expect(html).toContain('role="progressbar"')
     expect(html).toContain('aria-current="step"')
   })
+  it("paso 1: permite agregar otro correo a mano", async () => {
+    const html = await render({ cv })
+    expect(html).toContain("Agregar otro correo")
+    expect(html).toContain('id="mail-add"')
+    expect(html).toContain('type="email"')
+  })
   it("sin CV pide cargarlo y no inventa nada", async () => {
     const html = await render(null)
     expect(html).toContain("Primero carga tu CV")
