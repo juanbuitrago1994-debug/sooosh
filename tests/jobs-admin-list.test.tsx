@@ -71,7 +71,12 @@ describe("insignia rosa «Curated by Sooosh»", () => {
     expect(html).toContain("14%") // fondo translúcido
     expect(html).toContain("var(--foreground)") // texto mezclado con el tema: se lee en claro y oscuro
     expect(html).toContain(EFFECT_COLORS["curated-size"])
-    expect(html).toContain("rounded-md")
-    expect(html).not.toContain("rounded-4xl") // ya no es una píldora
+    // semiredonda (no una píldora) y con el mismo relleno en los cuatro lados
+    expect(html).toContain("border-radius:calc(var(--radius) * 0.3)")
+    expect(html).toContain("padding:0.1875rem")
+    expect(html).not.toMatch(/padding-(left|right|top|bottom)/)
+    // icono sólido: relleno, no solo trazo
+    expect(html).toContain('fill="currentColor"')
+    expect(html).toContain('fill-rule="evenodd"')
   })
 })

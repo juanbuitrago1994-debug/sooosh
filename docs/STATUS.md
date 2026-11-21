@@ -982,3 +982,10 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - Tokens (`docs/DESIGN-TOKENS.md`, con prueba): `curated-pink` `oklch(0.72 0.17 5)` y `curated-size` `0.625rem` (reemplazan a `curated-bg` y `curated-fg`). Sigue arriba del título, en la tarjeta y en la ficha.
 - Verificado: lint (0 errores), `tsc`, `build` y las pruebas en verde.
 - **Para revisar por Juan**: la oferta de Vos Consultora en la lista y en su ficha (claro y oscuro, escritorio y 375 px): ¿se lee bien el texto de 10 px? Si el rosa se ve flojo o fuerte, se ajusta con la opacidad (14 %) o con `curated-pink`; si el texto es muy chico, con `curated-size`.
+
+### Insignia «Curated by Sooosh»: esquinas semiredondas, relleno uniforme e icono sólido (21-nov-2026)
+- **Esquinas**: antes parecía una píldora porque el radio de la app es grande (`rounded-md` = 11 px y la insignia mide 14 px de alto). Ahora el radio es el 30 % del radio de la app (≈ 4 px): un rectángulo de esquinas suaves.
+- **Relleno**: el `Badge` de shadcn le sumaba más relleno del lado del icono; ahora es **el mismo en los cuatro lados** (3 px) y el espacio entre icono y texto es igual a ese relleno.
+- **Icono sólido**: círculo relleno con la marca de verificación recortada (trazado de Heroicons «check-circle» sólido, licencia MIT), del mismo rosa que el texto.
+- Verificado: lint (0 errores), `tsc`, `build` y las pruebas en verde (la prueba comprueba radio, relleno uniforme sin lados sueltos e icono con relleno).
+- **Para revisar por Juan**: la insignia en la lista y en la ficha (claro y oscuro, escritorio y 375 px): esquinas suaves, aire parejo alrededor, icono sólido. Si quieres otra forma de icono (sello, escudo), se cambia solo el trazado.
