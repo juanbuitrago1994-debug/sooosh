@@ -40,6 +40,7 @@ export type ApplyEmailPanelProps = {
 export function ApplyEmailPanel(props: ApplyEmailPanelProps) {
   return (
     <Drawer open={props.open} onOpenChange={props.onOpenChange} swipeDirection="right">
+      {/* Espaciado de los paneles laterales: 24 px entre bloques (título + descripción, campo, lista) y 8 px dentro de un bloque. */}
       {/* Panel flotante, como el de shadcn: separado de los bordes (--drawer-inset), esquinas redondeadas y sin la franja de relleno del borde. */}
       <DrawerContent
         style={{ "--drawer-inset": "0.75rem", "--drawer-bleed-background": "transparent" } as CSSProperties}
@@ -67,7 +68,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
 
   if (!cv) {
     return (
-      <div className="flex flex-1 flex-col gap-4 p-4">
+      <div className="flex flex-1 flex-col gap-6 p-4">
         <DrawerHeader className="flex flex-col gap-1">
           <DrawerTitle>Postular por correo</DrawerTitle>
           <DrawerDescription>Armamos el correo con los datos de tu CV.</DrawerDescription>
@@ -147,14 +148,14 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <DrawerHeader className="flex flex-col gap-1 p-4">
+      <DrawerHeader className="flex flex-col gap-1 p-4 pb-6">
         <DrawerTitle>Postular por correo</DrawerTitle>
         <DrawerDescription>Armamos el correo con los datos de tu CV. Los destinatarios salen de la oferta; puedes agregar otro.</DrawerDescription>
       </DrawerHeader>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
         {step === 0 && (
-          <FieldGroup>
+          <FieldGroup className="gap-6">
             <Field data-invalid={draftError ? true : undefined}>
               <FieldLabel htmlFor="mail-add" className="sr-only">
                 Agregar otro correo
@@ -217,7 +218,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
         )}
 
         {step === 2 && (
-          <FieldGroup>
+          <FieldGroup className="gap-6">
             <Field>
               <FieldLabel htmlFor="mail-body">Cuerpo del correo</FieldLabel>
               <Textarea
@@ -247,7 +248,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
         )}
 
         {step === 3 && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6">
             <p className="text-sm text-muted-foreground">Copia cada parte en tu correo. No adjuntamos archivos: adjunta tu CV desde tu equipo.</p>
             <Piece label="Para" text={recipients.join(", ")} onCopy={() => copy("Destinatario", recipients.join(", "))} />
             <Piece label="Asunto" text={subject} onCopy={() => copy("Asunto", subject)} />
