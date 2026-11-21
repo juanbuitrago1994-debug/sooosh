@@ -29,3 +29,14 @@ describe("búsqueda en vivo (fast)", () => {
     expect(embedQuery).toHaveBeenCalledOnce()
   })
 })
+
+describe("filtro «Solo seleccionadas por Sooosh»", () => {
+  beforeEach(() => searchJobs.mockClear())
+  it("llega a la búsqueda cuando se activa y no se manda cuando no", async () => {
+    await post({ region: "CO", curated: true, fast: true })
+    expect((searchJobs.mock.calls[0] as unknown[])[1]).toMatchObject({ curated: true })
+    searchJobs.mockClear()
+    await post({ region: "CO", fast: true })
+    expect((searchJobs.mock.calls[0] as unknown[])[1]).toMatchObject({ curated: false })
+  })
+})

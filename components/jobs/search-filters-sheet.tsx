@@ -13,7 +13,7 @@ import type { SavedFilters } from "@/lib/profile/saved-filters"
 export const MODE_LABEL: Record<string, string> = { remoto: "Remoto", hibrido: "Híbrido", presencial: "Presencial" }
 export const AREA_LABEL: Record<SavedFilters["area"], string> = { tecnologia: "Tecnología", todas: "Todas las áreas" }
 
-export type FilterValues = Omit<SavedFilters, "auto"> & { onlySaved: boolean }
+export type FilterValues = Omit<SavedFilters, "auto"> & { onlySaved: boolean; onlyCurated: boolean }
 
 /** Todos los filtros del buscador en una hoja: la pantalla queda limpia y se ve lo que importa, las ofertas. */
 export function SearchFiltersSheet({
@@ -90,6 +90,10 @@ export function SearchFiltersSheet({
               <label htmlFor="f-match" className="flex items-center justify-between gap-3 text-sm font-medium">
                 {hasCv ? "Solo con match" : "Solo con match (requiere tu CV)"}
                 <Switch id="f-match" checked={hasCv && values.onlyMatches} disabled={!hasCv} onCheckedChange={(v) => onChange({ onlyMatches: v })} />
+              </label>
+              <label htmlFor="f-curated" className="flex items-center justify-between gap-3 text-sm font-medium">
+                Solo seleccionadas por Sooosh
+                <Switch id="f-curated" checked={values.onlyCurated} onCheckedChange={(v) => onChange({ onlyCurated: v })} />
               </label>
               {savedCount > 0 && (
                 <label htmlFor="f-saved" className="flex items-center justify-between gap-3 text-sm font-medium">

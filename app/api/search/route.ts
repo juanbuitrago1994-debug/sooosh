@@ -24,6 +24,8 @@ const bodySchema = z.object({
   onlyMatches: z.boolean().default(false),
   /** identificador aleatorio de quien aceptó «Para mí»: permite reordenar SUAVEMENTE según lo que ha abierto, guardado o descartado */
   anonId: z.string().uuid().optional(),
+  /** solo las seleccionadas por Sooosh (las cargadas y revisadas desde el panel) */
+  curated: z.boolean().default(false),
   /** solo las guardadas: ids de las ofertas (ignora región, área y texto) */
   savedIds: z.array(z.string().uuid()).max(100).optional(),
   /** El CV de quien busca (opcional): solo sirve para calcular el encaje; no se guarda en ningún lado. */
@@ -42,7 +44,7 @@ const POOL = 80
 export async function POST(request: Request) {
   const parsed = bodySchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "Búsqueda inválida." }, { status: 400 })
-  const { region, q, mode, area, sort, onlyMatches, fast } = parsed.data
+  const { region, q, mode, area, sort, onlyMatches, fast, curated } = parsed.data
   const cv = parsed.data.cv ? cvSchema.safeParse(parsed.data.cv) : null
   const profile = cv?.success ? cv.data : null
   try {
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
     const wide = !!profile && (sort === "encaje" || onlyMatches)
     // Sin texto de búsqueda, las candidatas son las más cercanas al CV (vectores); con texto, las del texto y el significado.
     const profileEmbedding = wide && !q && profile ? await embedProfile(profile, AbortSignal.timeout(8000)).catch(() => null) : null
-    const { jobs, semantic, total } = await withDb((db) => searchJobs(db, { region, q, mode, area, limit: wide ? POOL : PAGE, embedding: embedding ?? undefined, profileEmbedding: profileEmbedding ?? undefined }))
+    const { jobs, semantic, total } = await withDb((db) => searchJobs(db, { region, q, mode, area, curated, limit: wide ? POOL : PAGE, embedding: embedding ?? undefined, profileEmbedding: profileEmbedding ?? undefined }))
     let ranked = rankByFit(jobs, profile, sort)
     // «Para mí»: con consentimiento personal y suficientes señales, la lista por relevancia se reordena suavemente según su gusto.
     let personalized = false

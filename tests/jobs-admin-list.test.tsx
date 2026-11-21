@@ -72,11 +72,25 @@ describe("insignia rosa «Curated by Sooosh»", () => {
     expect(html).toContain("var(--foreground)") // texto mezclado con el tema: se lee en claro y oscuro
     expect(html).toContain(EFFECT_COLORS["curated-size"])
     // semiredonda (no una píldora) y con el mismo relleno en los cuatro lados
-    expect(html).toContain("border-radius:calc(var(--radius) * 0.3)")
+    expect(html).toContain("border-radius:calc(var(--radius) * 0.45)")
     expect(html).toContain("padding:0.1875rem")
     expect(html).not.toMatch(/padding-(left|right|top|bottom)/)
-    // icono sólido: relleno, no solo trazo
-    expect(html).toContain('fill="currentColor"')
-    expect(html).toContain('fill-rule="evenodd"')
+    // icono de manos que se estrechan (curado «a mano»)
+    expect(html).toContain("lucide-handshake")
+  })
+})
+
+describe("filtros del buscador público", () => {
+  it("la hoja de filtros ofrece «Solo seleccionadas por Sooosh»", async () => {
+    vi.doMock("@/components/jobs/responsive-sheet", () => ({
+      ResponsiveSheet: ({ children }: { children: (s: Record<string, React.ComponentType<{ children?: React.ReactNode }>>) => React.ReactNode }) => <div>{children({ Header: ({ children: c }) => <div>{c}</div>, Title: ({ children: c }) => <h2>{c}</h2>, Description: ({ children: c }) => <p>{c}</p> })}</div>,
+    }))
+    vi.doMock("@/components/jobs/saved-filters-bar", () => ({ SavedFiltersBar: () => null }))
+    const { SearchFiltersSheet } = await import("@/components/jobs/search-filters-sheet")
+    const html = renderToStaticMarkup(
+      <SearchFiltersSheet open onOpenChange={() => {}} values={{ region: "CO", area: "tecnologia", mode: "", sort: "relevancia", onlyMatches: false, onlySaved: false, onlyCurated: true }} hasCv={false} savedCount={0} onChange={() => {}} onApplySaved={() => {}} />,
+    )
+    expect(html).toContain("Solo seleccionadas por Sooosh")
+    expect(html).toContain('id="f-curated"')
   })
 })

@@ -38,7 +38,7 @@ export type JobCard = {
 
 /** `tecnologia` = solo cargos de tecnología (desarrollo, datos, diseño digital, producto, infraestructura…); `todas` = sin filtro. */
 export type Area = "tecnologia" | "todas"
-export type SearchParams = { region: string; q?: string; mode?: WorkMode; area?: Area; limit?: number; embedding?: number[]; /** vector del CV: sin texto de búsqueda, trae primero las ofertas más cercanas a la persona */ profileEmbedding?: number[] }
+export type SearchParams = { region: string; q?: string; /** solo las seleccionadas por Sooosh (cargadas y revisadas desde el panel) */ curated?: boolean; mode?: WorkMode; area?: Area; limit?: number; embedding?: number[]; /** vector del CV: sin texto de búsqueda, trae primero las ofertas más cercanas a la persona */ profileEmbedding?: number[] }
 /** `total` = cuántas ofertas activas cumplen los filtros y el texto (no solo las de la página): es el número del distintivo «Ofertas encontradas». */
 export type SearchResult = { jobs: JobCard[]; semantic: boolean; total: number }
 
@@ -95,6 +95,7 @@ const base = (p: SearchParams) =>
     regionFilter(p.region),
     p.mode && (WORK_MODES as readonly string[]).includes(p.mode) ? eq(jobs.workMode, p.mode) : undefined,
     p.area === "tecnologia" ? eq(jobs.isTech, true) : undefined,
+    p.curated ? eq(jobs.origin, "manual") : undefined,
   )
 
 const countWhere = async (db: Db, where: SQL | undefined): Promise<number> => (await db.select({ n: sql<number>`count(*)::int` }).from(jobs).where(where))[0]?.n ?? 0

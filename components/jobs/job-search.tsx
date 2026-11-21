@@ -72,6 +72,7 @@ export function JobSearch() {
   const [area, setArea] = useState<Area>("tecnologia") // el buscador abre en Tecnología
   const [onlyMatches, setOnlyMatches] = useState(false)
   const [onlySaved, setOnlySaved] = useState(false)
+  const [onlyCurated, setOnlyCurated] = useState(false)
   const [trending, setTrending] = useState<{ q: string; users: number }[]>([])
   const consent = useConsent()
   const marks = useMarks()
@@ -142,7 +143,7 @@ export function JobSearch() {
   const commit = () => setSearch({ q: typed.trim(), fast: false })
 
   const effectiveSort: Sort = sort === "encaje" && !cv ? "relevancia" : sort
-  const requestKey = [region, q, fast, mode, area, effectiveSort, onlyMatches, !!cv, onlySaved, marks.saved.join(",")].join("|")
+  const requestKey = [region, q, fast, mode, area, effectiveSort, onlyMatches, !!cv, onlySaved, onlyCurated, marks.saved.join(",")].join("|")
   const loading = region !== null && settled !== requestKey
 
   useEffect(() => {
@@ -151,7 +152,7 @@ export function JobSearch() {
     fetch("/api/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ region, q: q || undefined, fast: fast || undefined, mode: mode || undefined, area, sort: effectiveSort, onlyMatches: !!cv && onlyMatches, cv: cv ?? undefined, anonId: anonId ?? undefined, savedIds: onlySaved ? marks.saved : undefined }),
+      body: JSON.stringify({ region, q: q || undefined, fast: fast || undefined, mode: mode || undefined, area, sort: effectiveSort, onlyMatches: !!cv && onlyMatches, curated: onlyCurated || undefined, cv: cv ?? undefined, anonId: anonId ?? undefined, savedIds: onlySaved ? marks.saved : undefined }),
       // Si el servidor no responde en 20 s se avisa (con «Reintentar») en vez de dejar el cargador para siempre.
       signal: AbortSignal.any([ctrl.signal, AbortSignal.timeout(20_000)]),
     })
@@ -226,8 +227,8 @@ export function JobSearch() {
 
   const regionName = useMemo(() => (region === ALL_REGIONS ? "Todas las regiones" : (REGION_OPTIONS.find((r) => r.code === region)?.name ?? "")), [region])
   // Resumen de lo que está activo (la pantalla no muestra los filtros, solo esta línea) y cuántos difieren del arranque.
-  const summary = [AREA_LABEL[area], regionName, mode ? MODE_LABEL[mode] : null, onlySaved ? "Guardadas" : null, cv && onlyMatches ? "Solo match" : null].filter(Boolean).join(" · ")
-  const activeFilters = (mode ? 1 : 0) + (onlySaved ? 1 : 0) + (cv && onlyMatches ? 1 : 0) + (area !== "tecnologia" ? 1 : 0) + (sort !== "relevancia" ? 1 : 0)
+  const summary = [AREA_LABEL[area], regionName, mode ? MODE_LABEL[mode] : null, onlySaved ? "Guardadas" : null, onlyCurated ? "Seleccionadas por Sooosh" : null, cv && onlyMatches ? "Solo match" : null].filter(Boolean).join(" · ")
+  const activeFilters = (mode ? 1 : 0) + (onlySaved ? 1 : 0) + (onlyCurated ? 1 : 0) + (cv && onlyMatches ? 1 : 0) + (area !== "tecnologia" ? 1 : 0) + (sort !== "relevancia" ? 1 : 0)
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col">
@@ -352,7 +353,7 @@ export function JobSearch() {
         <SearchFiltersSheet
           open={filtersOpen}
           onOpenChange={setFiltersOpen}
-          values={{ region, area, mode: mode as SavedFilters["mode"], sort, onlyMatches, onlySaved }}
+          values={{ region, area, mode: mode as SavedFilters["mode"], sort, onlyMatches, onlySaved, onlyCurated }}
           hasCv={!!cv}
           savedCount={marks.saved.length}
           onChange={(patch) => {
@@ -363,6 +364,7 @@ export function JobSearch() {
             if (patch.sort !== undefined) setSort(patch.sort)
             if (patch.onlyMatches !== undefined) setOnlyMatches(patch.onlyMatches)
             if (patch.onlySaved !== undefined) setOnlySaved(patch.onlySaved)
+            if (patch.onlyCurated !== undefined) setOnlyCurated(patch.onlyCurated)
           }}
           onApplySaved={(f) => {
             setFiltersTouched(true)
