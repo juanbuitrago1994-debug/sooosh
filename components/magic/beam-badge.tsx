@@ -26,7 +26,8 @@ const RIM = "radial-gradient(ellipse farthest-side at center, transparent 30%, b
  * ni anillo. El ancho se anima (300 ms, la curva de la app) cuando el contenido cambia de largo. Con «reducir movimiento» no gira y queda un resplandor
  * interior quieto. Decorativo: no recibe clics.
  */
-export function BeamBadge({ children, className }: { children: ReactNode; className?: string }) {
+/** `beam={false}`: el mismo distintivo (fondo, tamaño, ancho animado) pero sin el haz de luz; sirve para mostrar un estado de carga. */
+export function BeamBadge({ children, className, beam = true }: { children: ReactNode; className?: string; beam?: boolean }) {
   const reduce = useReducedMotion()
   const { resolvedTheme } = useTheme()
   const gradient = beamGradient(resolvedTheme === "light" ? "light" : "dark")
@@ -46,7 +47,7 @@ export function BeamBadge({ children, className }: { children: ReactNode; classN
       className={`relative flex justify-center overflow-hidden rounded-full bg-muted px-4 py-2 text-xs dark:bg-card ${className ?? ""}`}
       style={{ width: width === null ? undefined : width + CHROME, transition: reduce ? undefined : `width 300ms cubic-bezier(${MOTION.ease.join(",")})` }}
     >
-      {reduce ? (
+      {!beam ? null : reduce ? (
         <span aria-hidden className="pointer-events-none absolute inset-0 rounded-full" style={{ boxShadow: "inset 0 0 10px 1px color-mix(in oklab, var(--foreground) 14%, transparent)" }} />
       ) : (
         <div aria-hidden className="pointer-events-none absolute inset-0 rounded-full" style={{ maskImage: RIM, WebkitMaskImage: RIM }}>

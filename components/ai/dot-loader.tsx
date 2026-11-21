@@ -36,7 +36,7 @@ export function dotDelay(variant: DotVariant, idx: number, cycleMs = MOTION.load
   }
 }
 
-export function DotLoader({ variant = "twinkle", rounded = false, className }: { variant?: DotVariant; rounded?: boolean; className?: string }) {
+export function DotLoader({ variant = "scan", rounded = false, className }: { variant?: DotVariant; rounded?: boolean; className?: string }) {
   const reduce = useReducedMotion()
   return (
     <div aria-hidden data-variant={variant} data-rounded={rounded} className={`grid size-3.5 grid-cols-4 gap-0.5 text-foreground ${className ?? ""}`}>

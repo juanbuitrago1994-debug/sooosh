@@ -5,7 +5,7 @@ import { LoadingState } from "@/components/ai/loading-state"
 describe("cargador con frases (reemplaza a los esqueletos)", () => {
   const html = renderToStaticMarkup(<LoadingState messages={["Buscando…", "Ordenando…"]} />)
   it("muestra el cargador de referencia (4×4 puntos de 2 px con 2 px de separación = 14 px) y la primera frase", () => {
-    expect(html).toContain('data-variant="twinkle"')
+    expect(html).toContain('data-variant="scan"')
     expect(html).toContain("size-3.5")
     expect(html).toContain("gap-0.5")
     expect((html.match(/class="size-0\.5 bg-current"/g) ?? []).length).toBe(16)

@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
  * arriba difuminándose (la misma animación que el número de «Ofertas encontradas»). Con «reducir movimiento»: puntos quietos y frases sin animar.
  * Los lectores de pantalla oyen solo la primera frase, una vez (el resto es decoración).
  */
-export function LoadingState({ messages, interval = 2400, variant = "twinkle", className }: { messages: string[]; interval?: number; variant?: DotVariant; className?: string }) {
+export function LoadingState({ messages, interval = 2400, variant = "scan", size = "md", className }: { messages: string[]; interval?: number; /** «sm»: versión para un distintivo (texto `text-xs`, frase más angosta) */ size?: "md" | "sm"; variant?: DotVariant; className?: string }) {
   const reduce = useReducedMotion()
   const [i, setI] = useState(0)
 
@@ -24,10 +24,10 @@ export function LoadingState({ messages, interval = 2400, variant = "twinkle", c
 
   const text = messages[i] ?? ""
   return (
-    <div role="status" aria-live="polite" className={cn("flex items-center justify-center gap-3", className)}>
+    <div role="status" aria-live="polite" className={cn("flex items-center justify-center", size === "sm" ? "gap-2" : "gap-3", className)}>
       <span className="sr-only">{messages[0]}</span>
       <DotLoader variant={variant} />
-      <div aria-hidden className="relative flex h-5 w-64 items-center text-left text-sm text-muted-foreground">
+      <div aria-hidden className={cn("relative flex items-center text-left text-muted-foreground", size === "sm" ? "h-4 w-36 text-xs" : "h-5 w-64 text-sm")}>
         {reduce ? (
           <span>{text}</span>
         ) : (

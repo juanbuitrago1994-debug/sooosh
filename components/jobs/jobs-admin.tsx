@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { ExternalLinkIcon, InfoIcon, SearchIcon, Trash2Icon } from "lucide-react"
+import { ExternalLinkIcon, InfoIcon, SearchIcon, Trash2Icon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 import { Logo } from "@/components/brand/logo"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { LoadingState } from "@/components/ai/loading-state"
+import { BeamBadge } from "@/components/magic/beam-badge"
+import { BlurReveal } from "@/components/motion/blur-reveal"
 import { ResponsiveSheet } from "@/components/jobs/responsive-sheet"
 import { SourcesAdmin } from "@/components/jobs/sources-admin"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -303,17 +305,9 @@ export function JobsAdmin() {
           )}
         </section>
 
-      <ResponsiveSheet open={busy || !!analysis} onOpenChange={(o) => !o && !saving && discard()}>
+      <ResponsiveSheet open={!!analysis} onOpenChange={(o) => !o && !saving && discard()}>
         {({ Header, Title, Description }) =>
-          busy ? (
-            <>
-              <Header className="sr-only">
-                <Title>Analizando la oferta</Title>
-                <Description>Leyendo la oferta con el modelo local.</Description>
-              </Header>
-              <LoadingState className="flex-1" messages={["Leyendo la oferta…", "Separando cargo, requisitos y contacto…", "Verificando cada dato contra el texto…"]} />
-            </>
-          ) : analysis && d ? (
+          analysis && d ? (
             <>
               <Header className="text-left">
                 <Title className="text-lg">Revisa la oferta</Title>
@@ -541,6 +535,20 @@ export function JobsAdmin() {
           ) : null
         }
       </ResponsiveSheet>
+
+      {/* Mientras se analiza: el mismo distintivo de «Ofertas encontradas», sin haz de luz, con el cargador. */}
+      <BlurReveal show={busy} className="pointer-events-none fixed inset-x-0 bottom-6 z-20 flex justify-center px-4">
+        <div className="pointer-events-auto">
+          <BeamBadge beam={false}>
+            <span className="flex items-center gap-2">
+              <LoadingState size="sm" messages={["Leyendo la oferta…", "Separando los datos…", "Verificando cada dato…"]} />
+              <Button type="button" variant="ghost" size="icon-xs" aria-label="Cancelar el análisis" onClick={discard}>
+                <XIcon aria-hidden />
+              </Button>
+            </span>
+          </BeamBadge>
+        </div>
+      </BlurReveal>
 
         <section className="flex flex-col gap-3" aria-labelledby="guardadas">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">

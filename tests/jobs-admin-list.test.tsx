@@ -34,3 +34,24 @@ describe("pantalla del panel", () => {
     expect(html).not.toContain(".env.local")
   })
 })
+
+describe("carga del análisis en el distintivo", () => {
+  it("el distintivo sin haz conserva su aspecto y no dibuja la luz; con haz sí", async () => {
+    vi.doMock("next-themes", () => ({ useTheme: () => ({ resolvedTheme: "dark" }) }))
+    const { BeamBadge } = await import("@/components/magic/beam-badge")
+    const plain = renderToStaticMarkup(<BeamBadge beam={false}>cargando</BeamBadge>)
+    const withBeam = renderToStaticMarkup(<BeamBadge>cargando</BeamBadge>)
+    expect(plain).toContain("rounded-full")
+    expect(plain).not.toContain("mask-image")
+    expect(plain).not.toContain("conic-gradient")
+    expect(withBeam).toContain("conic-gradient")
+  })
+  it("la versión pequeña del cargador cabe en el distintivo y usa el barrido por columnas", async () => {
+    const { LoadingState } = await import("@/components/ai/loading-state")
+    const html = renderToStaticMarkup(<LoadingState size="sm" messages={["Leyendo la oferta…"]} />)
+    expect(html).toContain('data-variant="scan"')
+    expect(html).toContain("text-xs")
+    expect(html).toContain("w-36")
+    expect(html).not.toContain("w-64")
+  })
+})
