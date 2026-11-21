@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   try {
     const p = new URL(request.url).searchParams
     const only = p.get("only")
-    const filter: JobListFilter = { q: p.get("q")?.slice(0, 80) || undefined, only: only === "incompletas" || only === "ocultas" ? only : undefined }
+    const filter: JobListFilter = { q: p.get("q")?.slice(0, 80) || undefined, only: only === "incompletas" || only === "ocultas" || only === "manuales" ? only : undefined }
     const [list, total] = await Promise.all([listJobs(getDb(), filter), countJobs(getDb(), filter)])
     return NextResponse.json({ jobs: list, total })
   } catch (e) {

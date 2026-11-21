@@ -69,7 +69,7 @@ export function JobsAdmin() {
   const [confirmed, setConfirmed] = useState<ReadonlySet<FieldKey>>(new Set())
   const [total, setTotal] = useState(0)
   const [q, setQ] = useState("")
-  const [only, setOnly] = useState<"" | "incompletas" | "ocultas">("")
+  const [only, setOnly] = useState<"" | "incompletas" | "ocultas" | "manuales">("")
   const abort = useRef<AbortController | null>(null)
 
   const api = useCallback(
@@ -559,8 +559,9 @@ export function JobsAdmin() {
                 {rows.length < total ? `${rows.length} de ${total}` : total}
               </span>
             </h2>
-            <ToggleGroup value={[only || "todas"]} onValueChange={(v) => v[0] && setOnly(v[0] === "todas" ? "" : (v[0] as "incompletas" | "ocultas"))} variant="outline" size="sm" className="ml-auto">
+            <ToggleGroup value={[only || "todas"]} onValueChange={(v) => v[0] && setOnly(v[0] === "todas" ? "" : (v[0] as "incompletas" | "ocultas" | "manuales"))} variant="outline" size="sm" className="ml-auto">
               <ToggleGroupItem value="todas">Todas</ToggleGroupItem>
+              <ToggleGroupItem value="manuales">Manuales</ToggleGroupItem>
               <ToggleGroupItem value="incompletas">Incompletas</ToggleGroupItem>
               <ToggleGroupItem value="ocultas">Ocultas</ToggleGroupItem>
             </ToggleGroup>

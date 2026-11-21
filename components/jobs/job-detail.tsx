@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeftIcon, BookmarkIcon, CheckIcon, LinkIcon } from "lucide-react"
 import { toast } from "sonner"
 import { ApplyIcon } from "@/components/jobs/apply-icon"
-import { CuratedTag } from "@/components/jobs/curated-tag"
+import { CuratedBadge } from "@/components/magic/curated-badge"
 import { NewBadge } from "@/components/jobs/new-badge"
 import { Rise } from "@/components/motion/rise"
 import { Logo } from "@/components/brand/logo"
@@ -140,8 +140,8 @@ export function JobDetail({ job }: { job: JobCard }) {
           {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
           {job.remoteScope && <p className="text-sm text-muted-foreground">{job.remoteScope}</p>}
           {job.origin === "manual" && (
-            <div className="mt-1 flex flex-col gap-0.5">
-              <CuratedTag />
+            <div className="mt-1 flex flex-col items-start gap-1.5">
+              <CuratedBadge />
               <p className="text-xs text-muted-foreground">{curatedDates(job)}</p>
             </div>
           )}

@@ -82,7 +82,7 @@ export async function findJobByUrl(db: Db, sourceUrl: string): Promise<{ id: str
   return r ?? null
 }
 
-export type JobListFilter = { status?: JobStatus[]; limit?: number; /** texto en el título o la empresa */ q?: string; /** incompletas: sin empresa, sin región o sin ubicación · ocultas: apagadas o cerradas */ only?: "incompletas" | "ocultas" }
+export type JobListFilter = { status?: JobStatus[]; limit?: number; /** texto en el título o la empresa */ q?: string; /** incompletas: sin empresa, sin región o sin ubicación · ocultas: apagadas o cerradas · manuales: cargadas desde el panel */ only?: "incompletas" | "ocultas" | "manuales" }
 
 const listWhere = (o: JobListFilter) => {
   const like = o.q?.trim() ? `%${o.q.trim().replace(/[\\%_]/g, (c) => `\\${c}`)}%` : undefined
@@ -91,6 +91,7 @@ const listWhere = (o: JobListFilter) => {
     like ? sql`public.f_unaccent(${jobs.title} || ' ' || coalesce(${jobs.company}, '')) ilike public.f_unaccent(${like})` : undefined,
     o.only === "incompletas" ? or(sql`${jobs.company} is null`, sql`cardinality(${jobs.regions}) = 0`, sql`(${jobs.locationText} is null and ${jobs.country} is null)`) : undefined,
     o.only === "ocultas" ? ne(jobs.status, "activa") : undefined,
+    o.only === "manuales" ? eq(jobs.origin, "manual") : undefined,
   )
 }
 

@@ -31,3 +31,5 @@ Solo para `components/magic/*` (excepción documentada en `CLAUDE.md`); el resto
 | `beam-lilac` | `oklch(0.78 0.11 305)` | lila pálido: cabeza del haz |
 | `beam-rose` | `oklch(0.76 0.15 8)` | rosa: cola del haz en el tema claro |
 | `beam-orange` | `oklch(0.78 0.15 55)` | naranja: cabeza del haz en el tema claro |
+| `curated-bg` | `oklch(0.80 0.15 5)` | rosa llamativo: fondo de la insignia «Seleccionada por Sooosh» (sólido, igual en claro y oscuro; pedido por Juan el 21-nov-2026) |
+| `curated-fg` | `oklch(0.26 0.07 5)` | texto de esa insignia: rosa muy oscuro, buen contraste sobre el fondo rosa |

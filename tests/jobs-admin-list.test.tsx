@@ -17,6 +17,11 @@ describe("lista de tarjetas del panel", () => {
     expect(listJobs).toHaveBeenCalledWith({}, { q: "diseño", only: "incompletas" })
     expect(countJobs).toHaveBeenCalledWith({}, { q: "diseño", only: "incompletas" })
   })
+  it("el filtro «Manuales» llega al servidor", async () => {
+    const { GET } = await import("@/app/api/jobs/route")
+    await GET(new Request("http://x/api/jobs?q=&only=manuales"))
+    expect(listJobs).toHaveBeenLastCalledWith({}, { q: undefined, only: "manuales" })
+  })
   it("un filtro desconocido se ignora y un texto vacío no filtra", async () => {
     const { GET } = await import("@/app/api/jobs/route")
     await GET(new Request("http://x/api/jobs?q=&only=cualquier-cosa"))
@@ -53,5 +58,16 @@ describe("carga del análisis en el distintivo", () => {
     expect(html).toContain("text-xs")
     expect(html).toContain("w-36")
     expect(html).not.toContain("w-64")
+  })
+})
+
+describe("insignia rosa «Seleccionada por Sooosh»", () => {
+  it("usa los colores documentados y el texto completo", async () => {
+    const { CuratedBadge } = await import("@/components/magic/curated-badge")
+    const { EFFECT_COLORS } = await import("@/lib/design-tokens")
+    const html = renderToStaticMarkup(<CuratedBadge />)
+    expect(html).toContain("Seleccionada por Sooosh")
+    expect(html).toContain(EFFECT_COLORS["curated-bg"])
+    expect(html).toContain(EFFECT_COLORS["curated-fg"])
   })
 })

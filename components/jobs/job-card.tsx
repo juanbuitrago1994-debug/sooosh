@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ArrowRightIcon, BookmarkIcon, CheckIcon } from "lucide-react"
-import { CuratedTag } from "@/components/jobs/curated-tag"
+import { CuratedBadge } from "@/components/magic/curated-badge"
 import { NewBadge } from "@/components/jobs/new-badge"
 import { ApplyIcon } from "@/components/jobs/apply-icon"
 import { GlassPanel } from "@/components/glass-panel"
@@ -34,7 +34,7 @@ export function JobCard({ job, saved, onOpen }: { job: RankedJob; saved?: boolea
                 )}
               </h2>
               {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
-              {job.origin === "manual" && <CuratedTag />}
+              {job.origin === "manual" && <CuratedBadge className="mt-1" />}
             </div>
             {(job.fit || job.isNew) && (
               <div className="flex shrink-0 flex-col items-end gap-1.5">
