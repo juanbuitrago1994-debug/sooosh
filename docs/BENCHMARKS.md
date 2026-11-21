@@ -251,3 +251,11 @@ Medición pequeña y puntual (2 llamadas, no un benchmark): `POST /api/email/sub
 | 1.ª (modelo en frío) | IA | 7,5 s |
 | 2.ª | IA | 2,2 s |
 Con una muestra de 2 no hay mediana ni percentiles; es solo una referencia de que el botón responde en unos segundos. Pendiente: medir con más llamadas si se quiere citar una cifra.
+
+## Propuestas del cuerpo del correo con IA local (21-nov-2026)
+Medición pequeña y puntual contra el Ollama local del servidor de desarrollo: `POST /api/email/body` con 3 peticiones en paralelo (una por ángulo; el modelo las atiende de a una), cargo «Diseñador/a UX/UI», 3 requisitos y hechos de un CV de prueba.
+| Ajustes | 1.ª en llegar | 2.ª | 3.ª |
+|---|---|---|---|
+| medio · cercano · variado (modelo recién usado con otro contexto) | 21,3 s | 35,4 s | 49,9 s |
+| corto · directo · variado | 21,0 s | 28,2 s | 36,6 s |
+En las 6 respuestas las 3 propuestas pasaron la verificación (ninguna cayó a plantilla). Es una sola corrida por fila: no hay mediana ni percentiles. **Hallazgo**: pasar `numCtx` distinto del predeterminado (8192) en las llamadas de esta función hacía que Ollama recargara el modelo en cada llamada (una tanda de 3 peticiones superó los 120 s); por eso estas llamadas usan el contexto predeterminado y solo limitan `numPredict`. La primera tanda con un solo `numCtx` fijo de 4096 y 3 propuestas en una llamada tardó entre 7,7 s y 39 s, y el modelo devolvía 1 propuesta por llamada (por eso hoy se piden por separado).

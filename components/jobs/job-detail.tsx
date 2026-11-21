@@ -271,7 +271,7 @@ export function JobDetail({ job }: { job: JobCard }) {
           </Button>
         </div>
       </main>
-      {mailTo.length > 0 && <ApplyEmailPanel open={mailOpen} onOpenChange={setMailOpen} job={{ title: job.title, company: job.company }} emails={mailTo} subject={apply?.subject} covered={fit?.covered ?? []} />}
+      {mailTo.length > 0 && <ApplyEmailPanel open={mailOpen} onOpenChange={setMailOpen} job={{ title: job.title, company: job.company }} emails={mailTo} subject={apply?.subject} covered={fit?.covered ?? []} requirements={o.requirements} />}
     </div>
   )
 }

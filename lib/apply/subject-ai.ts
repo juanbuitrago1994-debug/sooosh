@@ -55,7 +55,7 @@ export async function suggestSubject(input: SubjectInput, avoid: string[] = [], 
   const used = (s: string) => avoid.some((a) => sameSubject(a, s))
   try {
     const user = [`Cargo: ${input.title}`, input.company ? `Empresa: ${input.company}` : null, input.name ? `Nombre: ${input.name}` : null, avoid.length ? `Ya usados (no los repitas):\n${avoid.map((a) => `- ${a}`).join("\n")}` : null].filter(Boolean).join("\n")
-    const { data } = await getProvider({ temperature: 0.8 }).generateStructured({ system: SYSTEM, user, schema, signal, options: { numCtx: 1024, numPredict: 60 } })
+    const { data } = await getProvider({ temperature: 0.8 }).generateStructured({ system: SYSTEM, user, schema, signal, options: { numPredict: 60 } })
     const subject = data.subject.trim().replace(/^["“«]+|["”»]+$/g, "")
     if (isGroundedSubject(subject, input) && !used(subject)) return { subject, source: "ia" }
   } catch {

@@ -47,8 +47,11 @@ export function pickMatches(covered: string[]): string[] {
   return out
 }
 
-/** Cuerpo base. `covered` = lo que el CV cubre de la oferta (de `/api/jobs/[id]/fit`); con menos de 2 se omite ese bloque. */
-export function buildBody(input: { cv: CV; job: EmailJob; covered: string[]; includeWeb: boolean }): string {
+/**
+ * Cuerpo del correo. `covered` = lo que el CV cubre de la oferta (de `/api/jobs/[id]/fit`); con menos de 2 se omite ese bloque. Con `middle`
+ * (propuesta de la IA o de plantilla) reemplaza ese bloque. `links` (portafolio o web) manda sobre los del CV si se pasa.
+ */
+export function buildBody(input: { cv: CV; job: EmailJob; covered: string[]; includeWeb: boolean; middle?: string; links?: { label: string; url: string }[] }): string {
   const { cv, job } = input
   const name = personName(cv)
   const matches = pickMatches(input.covered)
@@ -56,8 +59,9 @@ export function buildBody(input: { cv: CV; job: EmailJob; covered: string[]; inc
   const parts: string[] = []
   parts.push(company ? `Hola, equipo de ${company}:` : "Hola:")
   parts.push(`Me interesa la vacante de ${job.title.trim()} y te comparto mi hoja de vida para que la consideren.`)
-  if (matches.length >= 2) parts.push(["Algunos puntos de mi perfil que encajan con lo que buscan:", ...matches.map((m) => `• ${m}`)].join("\n"))
-  const links = input.includeWeb ? webLinks(cv) : []
+  if (input.middle?.trim()) parts.push(input.middle.trim())
+  else if (matches.length >= 2) parts.push(["Algunos puntos de mi perfil que encajan con lo que buscan:", ...matches.map((m) => `• ${m}`)].join("\n"))
+  const links = input.includeWeb ? (input.links ?? webLinks(cv)) : []
   if (links.length) parts.push(links.map((l) => `${l.label || "Web"}: ${l.url}`).join("\n"))
   parts.push("Adjunto mi CV. Quedo atento/a para conversar cuando les convenga.")
   parts.push("Gracias por el tiempo.")

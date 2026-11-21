@@ -6,20 +6,28 @@ import { CheckIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, SparklesIcon
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
 import { DotLoader } from "@/components/ai/dot-loader"
+import { BodyStep } from "@/components/jobs/apply-email-body-step"
+import { useEmailBody } from "@/components/jobs/use-email-body"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
-import { buildBody, buildSubject, personName, webLinks } from "@/lib/apply/email"
+import { buildSubject, personName } from "@/lib/apply/email"
 import { MOTION } from "@/lib/motion"
 import { useSearchProfile } from "@/lib/profile/search-profile"
 
 const MAX_RECIPIENTS = 10
 const EMAIL_RE = /^[^\s@,;]+@[^\s@,;]+\.[A-Za-z]{2,}$/
+
+/** Cabecera del panel: cambia con el paso (título y una descripción). */
+const HEADERS = [
+  { title: "Elige el destinatario", description: "Los correos salen de la oferta; puedes agregar otro si hace falta." },
+  { title: "Escribe el asunto", description: "Usa el que pide la oferta o pide otra propuesta a la IA local." },
+  { title: "Redacta el cuerpo", description: "La IA local arma varias versiones con tu CV y la oferta; elige una y ajústala." },
+  { title: "Copia tu correo", description: "Pega cada parte en tu correo y adjunta tu CV desde tu equipo." },
+] as const
 
 const STEPS = [
   { title: "Destinatario", description: "Elige a quién le envías tu postulación." },
@@ -38,6 +46,8 @@ export type ApplyEmailPanelProps = {
   subject?: string
   /** lo que el CV cubre de la oferta (de /api/jobs/[id]/fit) */
   covered: string[]
+  /** requisitos de la oferta (para que la IA entienda qué busca) */
+  requirements?: string[]
 }
 
 /**
@@ -59,7 +69,7 @@ export function ApplyEmailPanel(props: ApplyEmailPanelProps) {
   )
 }
 
-function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: ApplyEmailPanelProps) {
+function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requirements = [] }: ApplyEmailPanelProps) {
   const cv = useSearchProfile()?.cv ?? null
   const reduce = useReducedMotion()
   const [step, setStep] = useState(0)
@@ -69,9 +79,8 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
   const [draft, setDraft] = useState("")
   const [draftError, setDraftError] = useState<string | null>(null)
   const [subject, setSubject] = useState(() => (cv ? buildSubject({ detected, cv, job }).text : (detected ?? "")))
-  const [includeWeb, setIncludeWeb] = useState(false)
-  const [body, setBody] = useState(() => (cv ? buildBody({ cv, job, covered, includeWeb: false }) : ""))
-  const [edited, setEdited] = useState(false)
+  const email = useEmailBody({ cv, job, requirements, covered })
+  const body = email.body
   const [downloading, setDownloading] = useState(false)
   // «Pedir otro asunto»: lo ya mostrado se envía para no repetirlo; la petición se cancela si se cierra el panel.
   const [suggesting, setSuggesting] = useState(false)
@@ -119,8 +128,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
   // Los destinatarios se copian en el orden en que aparecen en la lista.
   const recipients = options.filter((o) => picked.includes(o))
 
-  const links = webLinks(cv)
-  const fromOffer = Boolean(detected)
+    const fromOffer = Boolean(detected)
   const canNext = step === 0 ? recipients.length > 0 : step === 1 ? subject.trim().length > 0 : step === 2 ? body.trim().length > 0 : false
 
   const suggestSubject = async () => {
@@ -146,15 +154,6 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
     } finally {
       if (suggestAbort.current === ctrl) setSuggesting(false)
     }
-  }
-
-  const toggleWeb = (on: boolean) => {
-    setIncludeWeb(on)
-    if (!edited) setBody(buildBody({ cv, job, covered, includeWeb: on }))
-  }
-  const resetBody = () => {
-    setBody(buildBody({ cv, job, covered, includeWeb }))
-    setEdited(false)
   }
 
   const copy = async (what: string, text: string) => {
@@ -188,8 +187,17 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <DrawerHeader className="flex flex-col gap-1 p-4 pb-6">
-        <DrawerTitle>Postular por correo</DrawerTitle>
-        <DrawerDescription>Armamos el correo con los datos de tu CV. Los destinatarios salen de la oferta; puedes agregar otro.</DrawerDescription>
+        {/* El texto de la cabecera cambia con el paso: entra con un fundido suave (sin animación con «reducir movimiento»). */}
+        <DrawerTitle>
+          <motion.span key={`t${step}`} className="block" initial={reduce ? false : { opacity: 0, y: MOTION.offset / 2 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduce ? 0 : MOTION.enter, ease: MOTION.ease }}>
+            {HEADERS[step].title}
+          </motion.span>
+        </DrawerTitle>
+        <DrawerDescription>
+          <motion.span key={`d${step}`} className="block" initial={reduce ? false : { opacity: 0, y: MOTION.offset / 2 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduce ? 0 : MOTION.enter, ease: MOTION.ease, delay: reduce ? 0 : 0.06 }}>
+            {HEADERS[step].description}
+          </motion.span>
+        </DrawerDescription>
       </DrawerHeader>
 
       <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
@@ -262,35 +270,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
           </Field>
         )}
 
-        {step === 2 && (
-          <FieldGroup className="gap-6">
-            <Field>
-              <FieldLabel htmlFor="mail-body">Cuerpo del correo</FieldLabel>
-              <Textarea
-                id="mail-body"
-                value={body}
-                onChange={(e) => {
-                  setBody(e.target.value)
-                  setEdited(true)
-                }}
-                className="h-80"
-              />
-              <FieldDescription>Solo usamos datos de tu CV y de la oferta. Revísalo y ajústalo a tu gusto.</FieldDescription>
-            </Field>
-            <Field orientation="horizontal" className="items-center justify-between pointer-coarse:min-h-11">
-              <FieldLabel htmlFor="mail-web" className="font-normal">
-                Incluir mi portafolio o web
-              </FieldLabel>
-              <Switch id="mail-web" checked={includeWeb} disabled={links.length === 0} onCheckedChange={toggleWeb} />
-            </Field>
-            {links.length === 0 && <FieldDescription>Tu CV no tiene un portafolio o web cargado.</FieldDescription>}
-            {edited && (
-              <Button type="button" variant="outline" onClick={resetBody}>
-                Volver al texto base
-              </Button>
-            )}
-          </FieldGroup>
-        )}
+        {step === 2 && <BodyStep email={email} />}
 
         {step === 3 && (
           <div className="flex flex-col gap-6">
@@ -347,7 +327,10 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
             </Button>
           )}
           {step < STEPS.length - 1 ? (
-            <Button type="button" className="flex-1" disabled={!canNext} onClick={() => setStep(step + 1)}>
+            <Button type="button" className="flex-1" disabled={!canNext} onClick={() => {
+                if (step + 1 === 2) email.ensureGenerated()
+                setStep(step + 1)
+              }}>
               Siguiente
             </Button>
           ) : (

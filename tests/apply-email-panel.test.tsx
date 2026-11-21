@@ -21,7 +21,8 @@ describe("panel de correo", () => {
   it("paso 1: muestra los correos detectados y el progreso de 4 pasos", async () => {
     const html = await render({ cv })
     expect(html).not.toContain("Paso 1 de 4")
-    expect(html).toContain("Los destinatarios salen de la oferta; puedes agregar otro.")
+    expect(html).toContain("Elige el destinatario")
+    expect(html).toContain("Los correos salen de la oferta; puedes agregar otro si hace falta.")
     expect(html).not.toContain("Encontramos estos correos")
     expect(html).toContain("candidatos@consultoravos.com")
     expect(html).toContain("rrhh@consultoravos.com")
@@ -41,5 +42,14 @@ describe("panel de correo", () => {
     const html = await render(null)
     expect(html).toContain("Primero carga tu CV")
     expect(html).not.toContain("candidatos@consultoravos.com")
+  })
+})
+
+describe("paso «Cuerpo»", () => {
+  it("normalizeUrl acepta direcciones web y rechaza lo demás", async () => {
+    const { normalizeUrl } = await import("@/components/jobs/use-email-body")
+    expect(normalizeUrl("miportafolio.com")).toBe("https://miportafolio.com")
+    expect(normalizeUrl("http://ana.design/work/")).toBe("http://ana.design/work")
+    for (const bad of ["", "hola", "ana@x.com", "ftp://x.com", "mi sitio.com", "javascript:alert(1)"]) expect(normalizeUrl(bad)).toBeNull()
   })
 })
