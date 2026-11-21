@@ -186,21 +186,22 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requ
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <DrawerHeader className="flex flex-col gap-1 p-4 pb-6">
-        {/* El texto de la cabecera cambia con el paso: entra con un fundido suave (sin animación con «reducir movimiento»). */}
-        <DrawerTitle>
-          <motion.span key={`t${step}`} className="block" initial={reduce ? false : { opacity: 0, y: MOTION.offset / 2 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduce ? 0 : MOTION.enter, ease: MOTION.ease }}>
-            {HEADERS[step].title}
-          </motion.span>
-        </DrawerTitle>
-        <DrawerDescription>
-          <motion.span key={`d${step}`} className="block" initial={reduce ? false : { opacity: 0, y: MOTION.offset / 2 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduce ? 0 : MOTION.enter, ease: MOTION.ease, delay: reduce ? 0 : 0.06 }}>
-            {HEADERS[step].description}
-          </motion.span>
-        </DrawerDescription>
-      </DrawerHeader>
 
       <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
+        {/* La cabecera va dentro de la zona con scroll: se va con el contenido en vez de quedarse fija arriba. */}
+        <DrawerHeader className="flex flex-col gap-1 pt-4">
+          {/* El texto de la cabecera cambia con el paso: entra con un fundido suave (sin animación con «reducir movimiento»). */}
+          <DrawerTitle>
+            <motion.span key={`t${step}`} className="block" initial={reduce ? false : { opacity: 0, y: MOTION.offset / 2 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduce ? 0 : MOTION.enter, ease: MOTION.ease }}>
+              {HEADERS[step].title}
+            </motion.span>
+          </DrawerTitle>
+          <DrawerDescription>
+            <motion.span key={`d${step}`} className="block" initial={reduce ? false : { opacity: 0, y: MOTION.offset / 2 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduce ? 0 : MOTION.enter, ease: MOTION.ease, delay: reduce ? 0 : 0.06 }}>
+              {HEADERS[step].description}
+            </motion.span>
+          </DrawerDescription>
+        </DrawerHeader>
         {step === 0 && (
           <FieldGroup className="gap-6">
             <Field data-invalid={draftError ? true : undefined}>
