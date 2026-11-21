@@ -2,15 +2,26 @@ import { BadgeCheckIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { EFFECT_COLORS } from "@/lib/design-tokens"
 
+const PINK = EFFECT_COLORS["curated-pink"]
+const SIZE = EFFECT_COLORS["curated-size"]
+
 /**
- * Insignia rosa «Curated by Sooosh» (en inglés por decisión de Juan, 21-nov-2026: es el nombre de la marca de curaduría, como «Match» o «Nueva» es de la app): marca las ofertas que una persona de Sooosh revisó y cargó desde el panel. Es la excepción documentada de
- * `components/magic/*` (color pedido por Juan el 21-nov-2026): usa los tokens `curated-bg` y `curated-fg` (`docs/DESIGN-TOKENS.md`), un rosa sólido que se ve igual
- * en claro y oscuro. La forma y la tipografía son las del `Badge` de shadcn.
+ * Insignia «Curated by Sooosh» (en inglés por decisión de Juan, 21-nov-2026): marca las ofertas que una persona de Sooosh revisó y cargó desde el panel.
+ * Excepción documentada de `components/magic/*`: pequeña (texto e icono de 10 px), de esquinas semiredondas, con un rosa de poca opacidad en el fondo y rosa en el
+ * texto y el icono, para que contraste poco con el fondo. El texto mezcla el rosa con el color del texto del tema, así se lee en claro (rosa profundo) y en oscuro
+ * (rosa claro). Tokens `curated-pink` y `curated-size` en `docs/DESIGN-TOKENS.md`; la forma y la tipografía base son las del `Badge` de shadcn.
  */
 export function CuratedBadge({ className }: { className?: string }) {
   return (
-    <Badge className={`h-4 gap-0.5 px-1.5 ${className ?? ""}`} style={{ backgroundColor: EFFECT_COLORS["curated-bg"], color: EFFECT_COLORS["curated-fg"] }}>
-      <BadgeCheckIcon data-icon="inline-start" aria-hidden />
+    <Badge
+      className={`h-3.5 gap-0.5 rounded-md px-1 font-medium ${className ?? ""}`}
+      style={{
+        fontSize: SIZE,
+        backgroundColor: `color-mix(in oklab, ${PINK} 14%, transparent)`,
+        color: `color-mix(in oklab, ${PINK} 75%, var(--foreground))`,
+      }}
+    >
+      <BadgeCheckIcon data-icon="inline-start" aria-hidden style={{ width: SIZE, height: SIZE }} />
       Curated by Sooosh
     </Badge>
   )

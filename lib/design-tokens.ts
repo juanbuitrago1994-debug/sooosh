@@ -21,10 +21,10 @@ export const EFFECT_COLORS = {
   "beam-rose": "oklch(0.76 0.15 8)",
   /** naranja: el color con el que termina (la cabeza) del haz en el tema claro */
   "beam-orange": "oklch(0.78 0.15 55)",
-  /** rosa llamativo: fondo de la insignia «Curated by Sooosh» (sólido, igual en claro y oscuro) */
-  "curated-bg": "oklch(0.80 0.15 5)",
-  /** texto de la insignia «Curated by Sooosh»: rosa muy oscuro, con buen contraste sobre el fondo rosa */
-  "curated-fg": "oklch(0.26 0.07 5)",
+  /** rosa de la insignia «Curated by Sooosh»: de aquí salen el fondo (translúcido) y el texto/icono (mezclado con el color del texto del tema para que se lea en claro y oscuro) */
+  "curated-pink": "oklch(0.72 0.17 5)",
+  /** tamaño del texto y del icono de esa insignia (más pequeño que `text-xs`, que es el mínimo de la escala) */
+  "curated-size": "0.625rem",
 } as const
 
 export type TokenName = keyof typeof TOKENS

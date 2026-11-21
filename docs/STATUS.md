@@ -976,3 +976,9 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - La insignia rosa se mueve **arriba del título** (tarjeta y ficha; en la ficha va junto a «Nueva», encima del título), un poco más pequeña (`h-4`, menos relleno) y con el texto **«Curated by Sooosh»** (en inglés por decisión de Juan; se escribe «Sooosh», como la marca de la app). Las fechas «Publicada el … · Agregada el …» siguen debajo del subtítulo en la ficha. Mismos colores (`curated-bg`, `curated-fg`).
 - Verificado: lint (0 errores), `tsc`, `build` y 652 pruebas en verde.
 - **Para revisar por Juan**: la oferta de Vos Consultora en la lista y en su ficha (claro/oscuro, escritorio y 375 px): la insignia arriba del título, algo más pequeña, con «Curated by Sooosh»; en la ficha junto a «Nueva» si aplica.
+
+### Insignia «Curated by Sooosh» más discreta (21-nov-2026)
+- La insignia pasa de un rosa sólido a una versión **mucho menos contrastante**: **más pequeña** (texto e icono de 10 px, altura de 14 px), de **esquinas semiredondas** (ya no es una píldora), con el **fondo rosa al 14 % de opacidad** y el **texto y el icono rosas** (el rosa mezclado al 75 % con el color del texto del tema: rosa claro en oscuro y rosa profundo en claro, para que se lea en los dos).
+- Tokens (`docs/DESIGN-TOKENS.md`, con prueba): `curated-pink` `oklch(0.72 0.17 5)` y `curated-size` `0.625rem` (reemplazan a `curated-bg` y `curated-fg`). Sigue arriba del título, en la tarjeta y en la ficha.
+- Verificado: lint (0 errores), `tsc`, `build` y las pruebas en verde.
+- **Para revisar por Juan**: la oferta de Vos Consultora en la lista y en su ficha (claro y oscuro, escritorio y 375 px): ¿se lee bien el texto de 10 px? Si el rosa se ve flojo o fuerte, se ajusta con la opacidad (14 %) o con `curated-pink`; si el texto es muy chico, con `curated-size`.
