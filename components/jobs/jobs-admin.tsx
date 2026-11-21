@@ -21,7 +21,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { applyLabel, type Apply } from "@/lib/jobs/apply"
+import { applyChannels, applyLabel, syncEmails, type Apply } from "@/lib/jobs/apply"
 import { OfferReview } from "@/components/jobs/offer-review"
 import type { FieldEvidence } from "@/lib/jobs/evidence"
 import { classifyEntry } from "@/lib/jobs/entry-kind"
@@ -185,7 +185,8 @@ export function JobsAdmin() {
     return () => clearTimeout(t)
   }, [authed, token, q, only, load])
 
-  const patch = (p: Partial<JobDraft>) => setAnalysis((a) => (a ? { ...a, draft: { ...a.draft, ...p } } : a))
+  const patch = (p: Partial<JobDraft>) =>
+    setAnalysis((a) => (a ? { ...a, draft: { ...a.draft, ...p, ...(p.apply ? { apply: syncEmails(a.draft.apply, p.apply) } : {}) } } : a))
   // El salario se edita completo (moneda y período incluidos); al guardar, si no tiene monto, se omite.
   const patchSalary = (p: Partial<Salary>) =>
     setAnalysis((a) => {
@@ -455,6 +456,12 @@ export function JobsAdmin() {
                   </div>
                 )
               })}
+              {applyChannels(d.apply).some((c) => c.email) && (
+                <Field>
+                  <FieldLabel htmlFor="d-apply-subject">Asunto que pide la oferta (si lo dice)</FieldLabel>
+                  <Input id="d-apply-subject" value={d.apply.subject ?? ""} onChange={(e) => patch({ apply: { ...d.apply, subject: e.target.value || undefined } })} placeholder="Déjalo vacío si la oferta no pide un asunto" />
+                </Field>
+              )}
               {(d.apply.alt?.length ?? 0) < 3 && (
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="outline" size="sm" onClick={() => patch({ apply: { ...d.apply, alt: [...(d.apply.alt ?? []), { method: "correo" }] } })}>

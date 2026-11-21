@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { detectApply, emailsOf } from "@/lib/jobs/apply"
+import { detectApply, emailsOf, syncEmails } from "@/lib/jobs/apply"
 import { deobfuscate, detectEmails } from "@/lib/jobs/emails"
 
 const LI = "https://www.linkedin.com/jobs/view/3912345678/"
@@ -61,5 +61,15 @@ describe("detectApply con correos", () => {
   it("emailsOf cae a las vías de datos guardados antes de `emails`", () => {
     expect(emailsOf({ method: "plataforma", url: LI, alt: [{ method: "correo", email: "a@b.com", url: "mailto:a@b.com" }] })).toEqual(["a@b.com"])
     expect(emailsOf(null)).toEqual([])
+  })
+})
+
+describe("syncEmails", () => {
+  const mail = (email: string) => ({ method: "correo" as const, email, url: `mailto:${email}` })
+  it("lo que el administrador cambia o quita sale de la lista; lo agregado entra primero; el resto se conserva", () => {
+    const prev = { ...mail("a@x.com"), emails: ["a@x.com", "b@x.com"] }
+    expect(syncEmails(prev, { ...prev, ...mail("c@x.com") }).emails).toEqual(["c@x.com", "b@x.com"])
+    expect(syncEmails(prev, { ...prev, alt: [mail("d@x.com")] }).emails).toEqual(["a@x.com", "d@x.com", "b@x.com"])
+    expect(syncEmails({ method: "plataforma", url: LI, alt: [mail("a@x.com")], emails: ["a@x.com"] }, { method: "plataforma", url: LI, emails: ["a@x.com"] })).not.toHaveProperty("emails")
   })
 })

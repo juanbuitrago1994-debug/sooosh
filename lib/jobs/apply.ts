@@ -7,6 +7,7 @@
  *  - sitio: página de la empresa.
  */
 import { detectEmails, MAX_EMAILS } from "@/lib/jobs/emails"
+import { detectSubject } from "@/lib/jobs/subject"
 
 export const APPLY_METHODS = ["plataforma", "formulario", "correo", "sitio", "desconocido"] as const
 export type ApplyMethod = (typeof APPLY_METHODS)[number]
@@ -17,6 +18,8 @@ export type Apply = ApplyChannel & {
   alt?: ApplyChannel[]
   /** Todos los correos de postulación detectados en el texto (máx. 3, el más probable primero); alimenta el panel de correo. */
   emails?: string[]
+  /** Asunto que la oferta pide para el correo (solo si lo dice de forma explícita); el panel de correo lo prellena. */
+  subject?: string
 }
 
 const PLATFORMS: [RegExp, string][] = [
@@ -99,7 +102,8 @@ export function detectApply(input: { sourceUrl: string; text?: string; applyUrl?
   if (email && primary.method !== "correo") alt.push({ method: "correo", email, url: `mailto:${email}` })
   if (extra && extra.url !== primary.url) alt.push(extra)
   const emails = [...new Set([...(primary.email ? [primary.email] : []), ...found.map((e) => e.email)])].slice(0, MAX_EMAILS)
-  return { ...primary, ...(alt.length ? { alt } : {}), ...(emails.length ? { emails } : {}) }
+  const subject = emails.length ? detectSubject(input.text) : undefined
+  return { ...primary, ...(alt.length ? { alt } : {}), ...(emails.length ? { emails } : {}), ...(subject ? { subject } : {}) }
 }
 
 /** Correos de postulación de una oferta: los detectados, o (datos guardados antes de `emails`) los de sus vías. */
@@ -180,4 +184,19 @@ export function applyHint(a?: ApplyChannel | null): string {
     default:
       return "No pudimos saber cómo se postula: abre la oferta original para verlo."
   }
+}
+
+/**
+ * Mantiene `emails` al día cuando el administrador edita las vías: lo que quitó o cambió sale de la lista, lo que agregó entra
+ * primero, y los demás correos detectados se conservan.
+ */
+export function syncEmails(prev: Apply, next: Apply): Apply {
+  const channelEmails = (a: Apply) => applyChannels(a).flatMap((c) => (c.email ? [c.email] : []))
+  const before = channelEmails(prev)
+  const now = channelEmails(next)
+  const removed = new Set(before.filter((e) => !now.includes(e)))
+  const emails = [...new Set([...now, ...(next.emails ?? []).filter((e) => !removed.has(e))])].slice(0, MAX_EMAILS)
+  const { emails: _drop, ...rest } = next
+  void _drop
+  return emails.length ? { ...rest, emails } : rest
 }
