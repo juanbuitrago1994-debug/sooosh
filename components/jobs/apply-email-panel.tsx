@@ -166,7 +166,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
                   type="email"
                   inputMode="email"
                   autoComplete="off"
-                  placeholder="Agregar otro correo: nombre@empresa.com"
+                  placeholder="nombre@empresa.com"
                   value={draft}
                   aria-invalid={draftError ? true : undefined}
                   onChange={(e) => {
@@ -180,9 +180,8 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
                     }
                   }}
                 />
-                <Button type="button" variant="outline" onClick={addRecipient} disabled={!draft.trim()}>
-                  <PlusIcon data-icon="inline-start" />
-                  Agregar
+                <Button type="button" variant="outline" size="icon" aria-label="Agregar correo" onClick={addRecipient} disabled={!draft.trim()}>
+                  <PlusIcon aria-hidden />
                 </Button>
               </div>
               {draftError && <FieldError>{draftError}</FieldError>}
