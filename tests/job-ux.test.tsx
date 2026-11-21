@@ -23,10 +23,11 @@ describe("cómo se postula", () => {
     expect(a.method).toBe("formulario")
     expect(a.url).toBe("https://jobs.lever.co/acme/abc/apply")
   })
-  it("correo: solo con un verbo de postulación cerca; un correo suelto no cuenta", () => {
+  it("correo: solo con un verbo de postulación cerca es la vía principal; uno suelto queda como alternativa", () => {
     const a = detectApply({ sourceUrl: "texto:abc", text: "Interesados enviar hoja de vida al correo talento@acme.com antes del viernes." })
-    expect(a).toEqual({ method: "correo", email: "talento@acme.com", url: "mailto:talento@acme.com" })
+    expect(a).toEqual({ method: "correo", email: "talento@acme.com", url: "mailto:talento@acme.com", emails: ["talento@acme.com"] })
     expect(detectApply({ sourceUrl: "texto:abc", text: "Para dudas del proceso: rrhh@acme.com" }).method).toBe("desconocido")
+    expect(detectApply({ sourceUrl: "texto:abc", text: "Para dudas del proceso: rrhh@acme.com" }).emails).toEqual(["rrhh@acme.com"])
   })
   it("un correo de postulación gana sobre un sitio de empresa genérico, pero no sobre un portal", () => {
     expect(detectApply({ sourceUrl: "https://careers.acme.com/1", text: "Envía tu CV a talento@acme.com" }).method).toBe("correo")

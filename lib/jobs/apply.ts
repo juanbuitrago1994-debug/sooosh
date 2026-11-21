@@ -6,12 +6,18 @@
  *  - correo: se envía el CV a un correo.
  *  - sitio: página de la empresa.
  */
+import { detectEmails, MAX_EMAILS } from "@/lib/jobs/emails"
+
 export const APPLY_METHODS = ["plataforma", "formulario", "correo", "sitio", "desconocido"] as const
 export type ApplyMethod = (typeof APPLY_METHODS)[number]
 /** Una vía de postulación. */
 export type ApplyChannel = { method: ApplyMethod; platform?: string; url?: string; email?: string }
 /** La vía principal más, si la oferta las trae, otras vías (p. ej. correo Y formulario). */
-export type Apply = ApplyChannel & { alt?: ApplyChannel[] }
+export type Apply = ApplyChannel & {
+  alt?: ApplyChannel[]
+  /** Todos los correos de postulación detectados en el texto (máx. 3, el más probable primero); alimenta el panel de correo. */
+  emails?: string[]
+}
 
 const PLATFORMS: [RegExp, string][] = [
   [/(^|\.)linkedin\.com$/, "LinkedIn"],
@@ -40,7 +46,6 @@ const hostOf = (u: string) => {
   }
 }
 
-const EMAIL_APPLY = /(?:env[ií]a(?:r|nos)?|mand(?:a|ar)|remite|postula(?:te)?|aplica(?:r)?|escr[ií]be(?:nos)?|e-?mail(?: us)?|correo(?: electr[oó]nico)?|send (?:us )?(?:your )?(?:cv|resume|application)|apply (?:by|via|at|to))[^.\n@]{0,70}?([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/i
 
 /** Enlaces a formularios que aparecen en el texto de la oferta (Google Forms, Microsoft Forms, Typeform, Tally… o un sistema de selección). */
 const FORM_HOSTS = /(^|\.)(forms\.gle|forms\.office\.com|forms\.microsoft\.com|typeform\.com|tally\.so|jotform\.com|forms\.zohopublic\.com|surveymonkey\.com)$/
@@ -85,14 +90,23 @@ function fromUrl(url: string): ApplyChannel | null {
  */
 export function detectApply(input: { sourceUrl: string; text?: string; applyUrl?: string; /** enlaces cortos de LinkedIn del texto ya resueltos (corto → destino real) */ resolved?: Record<string, string> }): Apply {
   const main = mainChannel(input)
-  const email = input.text?.match(EMAIL_APPLY)?.[1]
+  const found = detectEmails(input.text)
+  const email = found[0]?.email
   const extra = linkChannelIn(input.text, input.resolved)
   // Sin otra pista, el formulario (o la página) enlazado en el texto es la vía.
   const primary: ApplyChannel = main.method === "desconocido" && extra ? extra : main
   const alt: ApplyChannel[] = []
   if (email && primary.method !== "correo") alt.push({ method: "correo", email, url: `mailto:${email}` })
   if (extra && extra.url !== primary.url) alt.push(extra)
-  return alt.length ? { ...primary, alt } : primary
+  const emails = [...new Set([...(primary.email ? [primary.email] : []), ...found.map((e) => e.email)])].slice(0, MAX_EMAILS)
+  return { ...primary, ...(alt.length ? { alt } : {}), ...(emails.length ? { emails } : {}) }
+}
+
+/** Correos de postulación de una oferta: los detectados, o (datos guardados antes de `emails`) los de sus vías. */
+export function emailsOf(a?: Apply | null): string[] {
+  if (!a) return []
+  if (a.emails?.length) return a.emails
+  return applyChannels(a).flatMap((c) => (c.email ? [c.email] : []))
 }
 
 /** Todas las vías de postulación (la principal primero) que se pueden usar: tienen enlace o correo. */
@@ -111,7 +125,8 @@ function mainChannel(input: { sourceUrl: string; text?: string; applyUrl?: strin
     const a = fromUrl(explicit)
     if (a) return a
   }
-  const email = input.text?.match(EMAIL_APPLY)?.[1]
+  // Solo un correo «fuerte» (con verbo de postulación) manda sobre el enlace de la oferta; uno suelto queda como alternativa.
+  const email = detectEmails(input.text).find((e) => e.strong)?.email
   const fromSource = input.sourceUrl.startsWith("http") ? fromUrl(input.sourceUrl) : null
   if (email && (!fromSource || fromSource.method === "sitio")) return { method: "correo", email, url: `mailto:${email}` }
   if (fromSource) return fromSource
