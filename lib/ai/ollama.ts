@@ -46,7 +46,7 @@ export async function readNdjson(res: Response): Promise<{ content: string; firs
   return { content, firstTokenMs }
 }
 
-type OllamaConfig = { url: string; model: string; numCtx?: number; temperature?: number; keepAlive?: string }
+export type OllamaConfig = { url: string; model: string; numCtx?: number; temperature?: number; keepAlive?: string }
 
 export function createOllamaProvider(config?: Partial<OllamaConfig>): AIProvider {
   const url = (config?.url ?? process.env.OLLAMA_URL ?? "").replace(/\/$/, "")

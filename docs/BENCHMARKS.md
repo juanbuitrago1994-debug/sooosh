@@ -243,3 +243,11 @@ Mismo guion (10 consultas simultáneas por ronda sobre `select count(*) … from
 Notas de honestidad: (1) una medición intermedia dio «empresa» 86 % en ambas columnas por «crecimiento. ¿Qué buscamos?», que salía de partir la frase de apertura por «en» y pasaba el filtro de empresas; el filtro se endureció (sin «¿?», sin punto final, sin frases en minúscula) y la cifra de la tabla es posterior a ese arreglo, por eso aplica a las dos columnas; (2) el conjunto sigue siendo de desarrollo (6 de 7 casos escritos o escogidos por nosotros); (3) la protección omite la IA solo cuando quedan menos de 3 líneas dudosas: con comentarios de otras personas (hilos) el modelo sigue decidiendo esas líneas.
 
 **Prueba de punta a punta con la publicación real** (enlace vs texto pegado, mismos pasos que el administrador): por enlace ahora salen cargo «Diseñador/a UX/UI» (inferido), **empresa «Vos Consultora»** (perfil que publica, de los datos estructurados), **fecha 29-oct-2026**, 3 requisitos, correo como otra vía; pegando el texto salen el mismo cargo, los mismos 3 requisitos y el correo (sin empresa ni fecha: el texto pegado no las trae). Antes, por texto: 0 requisitos, sin correo y empresa «crecimiento. ¿Qué buscamos?».
+
+## «Pedir otro asunto» del panel de correo (21-nov-2026)
+Medición pequeña y puntual (2 llamadas, no un benchmark): `POST /api/email/subject` contra el Ollama local del servidor de desarrollo, con el cargo «Diseñador/a UX/UI», la empresa y un nombre de prueba.
+| Llamada | Origen | Tiempo |
+|---|---|---|
+| 1.ª (modelo en frío) | IA | 7,5 s |
+| 2.ª | IA | 2,2 s |
+Con una muestra de 2 no hay mediana ni percentiles; es solo una referencia de que el botón responde en unos segundos. Pendiente: medir con más llamadas si se quiere citar una cifra.

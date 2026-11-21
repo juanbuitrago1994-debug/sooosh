@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, type CSSProperties } from "react"
+import { useEffect, useRef, useState, type CSSProperties } from "react"
 import Link from "next/link"
-import { CheckIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, XIcon } from "lucide-react"
+import { CheckIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
+import { DotLoader } from "@/components/ai/dot-loader"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
@@ -13,7 +14,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { buildBody, buildSubject, webLinks } from "@/lib/apply/email"
+import { buildBody, buildSubject, personName, webLinks } from "@/lib/apply/email"
 import { MOTION } from "@/lib/motion"
 import { useSearchProfile } from "@/lib/profile/search-profile"
 
@@ -72,6 +73,12 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
   const [body, setBody] = useState(() => (cv ? buildBody({ cv, job, covered, includeWeb: false }) : ""))
   const [edited, setEdited] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  // «Pedir otro asunto»: lo ya mostrado se envía para no repetirlo; la petición se cancela si se cierra el panel.
+  const [suggesting, setSuggesting] = useState(false)
+  const [subjectHint, setSubjectHint] = useState<string | null>(null)
+  const seenSubjects = useRef<string[]>([])
+  const suggestAbort = useRef<AbortController | null>(null)
+  useEffect(() => () => suggestAbort.current?.abort(), [])
 
   if (!cv) {
     return (
@@ -115,6 +122,31 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
   const links = webLinks(cv)
   const fromOffer = Boolean(detected)
   const canNext = step === 0 ? recipients.length > 0 : step === 1 ? subject.trim().length > 0 : step === 2 ? body.trim().length > 0 : false
+
+  const suggestSubject = async () => {
+    suggestAbort.current?.abort()
+    const ctrl = new AbortController()
+    suggestAbort.current = ctrl
+    setSuggesting(true)
+    try {
+      const res = await fetch("/api/email/subject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: job.title, company: job.company ?? undefined, name: personName(cv), avoid: [...new Set([...seenSubjects.current, subject].filter(Boolean))].slice(-12) }),
+        signal: ctrl.signal,
+      })
+      if (!res.ok) throw new Error()
+      const next = (await res.json()) as { subject?: string; source?: "ia" | "plantilla" }
+      if (!next.subject) throw new Error()
+      seenSubjects.current = [...seenSubjects.current, subject, next.subject]
+      setSubject(next.subject)
+      setSubjectHint(next.source === "ia" ? "Sugerido con IA local. Puedes ajustarlo." : "Otra variante de plantilla. Puedes ajustarla.")
+    } catch {
+      if (!ctrl.signal.aborted) toast.error("No pudimos sugerir otro asunto. Inténtalo de nuevo.")
+    } finally {
+      if (suggestAbort.current === ctrl) setSuggesting(false)
+    }
+  }
 
   const toggleWeb = (on: boolean) => {
     setIncludeWeb(on)
@@ -218,8 +250,15 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
         {step === 1 && (
           <Field>
             <FieldLabel htmlFor="mail-subject">Asunto</FieldLabel>
-            <Input id="mail-subject" value={subject} onChange={(e) => setSubject(e.target.value)} className="min-h-11" />
-            <FieldDescription>{fromOffer ? "La oferta pide este asunto. Puedes ajustarlo." : "La oferta no pide un asunto; te proponemos este."}</FieldDescription>
+            <div className="flex gap-2">
+              <Input id="mail-subject" value={subject} onChange={(e) => setSubject(e.target.value)} readOnly={suggesting} aria-busy={suggesting} className={suggesting ? "opacity-60 transition-opacity" : "transition-opacity"} />
+              {!fromOffer && (
+                <Button type="button" variant="outline" size="icon" aria-label={suggesting ? "Buscando otro asunto…" : "Pedir otro asunto"} aria-busy={suggesting} disabled={suggesting} onClick={suggestSubject}>
+                  {suggesting ? <DotLoader variant="orbit" rounded /> : <SparklesIcon aria-hidden />}
+                </Button>
+              )}
+            </div>
+            <FieldDescription>{fromOffer ? "La oferta pide este asunto. Puedes ajustarlo." : (subjectHint ?? "La oferta no pide un asunto; te proponemos este. Con el botón de la derecha puedes pedir otro.")}</FieldDescription>
           </Field>
         )}
 
