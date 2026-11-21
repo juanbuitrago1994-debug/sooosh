@@ -180,7 +180,7 @@ export function JobSearch() {
         }
       })
     return () => ctrl.abort()
-  }, [region, q, fast, mode, area, effectiveSort, onlyMatches, cv, anonId, onlySaved, marks.saved, requestKey, attempt])
+  }, [region, q, fast, mode, area, effectiveSort, onlyMatches, cv, anonId, onlySaved, onlyCurated, marks.saved, requestKey, attempt])
 
   // Búsquedas populares de la región (solo las que hicieron 5 o más personas distintas que aceptaron «Para todos»; casi siempre vacío al inicio).
   useEffect(() => {
