@@ -156,14 +156,16 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
         {step === 0 && (
           <FieldGroup>
             <Field data-invalid={draftError ? true : undefined}>
-              <FieldLabel htmlFor="mail-add">Agregar otro correo</FieldLabel>
+              <FieldLabel htmlFor="mail-add" className="sr-only">
+                Agregar otro correo
+              </FieldLabel>
               <div className="flex gap-2">
                 <Input
                   id="mail-add"
                   type="email"
                   inputMode="email"
                   autoComplete="off"
-                  placeholder="nombre@empresa.com"
+                  placeholder="Agregar otro correo: nombre@empresa.com"
                   value={draft}
                   aria-invalid={draftError ? true : undefined}
                   onChange={(e) => {
@@ -185,7 +187,10 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
               {draftError && <FieldError>{draftError}</FieldError>}
             </Field>
             {/* Lista compacta: 8 px entre correos; en pantallas táctiles cada fila conserva 44 px de alto. */}
-            <div className="flex flex-col gap-2">
+            <div role="group" aria-labelledby="mail-list-label" className="flex flex-col gap-2">
+              <p id="mail-list-label" className="text-sm font-medium">
+                {options.length > 1 ? "Correos para postular" : "Correo para postular"}
+              </p>
               {options.map((e) => (
                 <Field key={e} orientation="horizontal" className="items-center pointer-coarse:min-h-11">
                   <Checkbox id={`to-${e}`} checked={picked.includes(e)} onCheckedChange={(on) => setPicked((p) => (on ? [...p, e] : p.filter((x) => x !== e)))} />
