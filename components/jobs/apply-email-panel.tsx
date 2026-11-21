@@ -158,19 +158,22 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
         {step === 0 && (
           <FieldGroup>
             <p className="text-sm text-muted-foreground">{emails.length > 1 ? "Encontramos estos correos en la oferta. Elige a cuál(es) escribir." : "Este es el correo que encontramos en la oferta."} Si hay otro, puedes agregarlo.</p>
-            {options.map((e) => (
-              <Field key={e} orientation="horizontal" className="min-h-11 items-center">
-                <Checkbox id={`to-${e}`} checked={picked.includes(e)} onCheckedChange={(on) => setPicked((p) => (on ? [...p, e] : p.filter((x) => x !== e)))} />
-                <FieldLabel htmlFor={`to-${e}`} className="min-w-0 flex-1 break-all font-normal">
-                  {e}
-                </FieldLabel>
-                {added.includes(e) && (
-                  <Button type="button" variant="ghost" size="icon" aria-label={`Quitar ${e}`} onClick={() => removeAdded(e)}>
-                    <XIcon aria-hidden />
-                  </Button>
-                )}
-              </Field>
-            ))}
+            {/* Lista compacta: 8 px entre correos; en pantallas táctiles cada fila conserva 44 px de alto. */}
+            <div className="flex flex-col gap-2">
+              {options.map((e) => (
+                <Field key={e} orientation="horizontal" className="items-center pointer-coarse:min-h-11">
+                  <Checkbox id={`to-${e}`} checked={picked.includes(e)} onCheckedChange={(on) => setPicked((p) => (on ? [...p, e] : p.filter((x) => x !== e)))} />
+                  <FieldLabel htmlFor={`to-${e}`} className="min-w-0 flex-1 break-all font-normal">
+                    {e}
+                  </FieldLabel>
+                  {added.includes(e) && (
+                    <Button type="button" variant="ghost" size="icon-xs" aria-label={`Quitar ${e}`} onClick={() => removeAdded(e)}>
+                      <XIcon aria-hidden />
+                    </Button>
+                  )}
+                </Field>
+              ))}
+            </div>
             <Field data-invalid={draftError ? true : undefined}>
               <FieldLabel htmlFor="mail-add">Agregar otro correo</FieldLabel>
               <div className="flex gap-2">
@@ -226,7 +229,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
               />
               <FieldDescription>Solo usamos datos de tu CV y de la oferta. Revísalo y ajústalo a tu gusto.</FieldDescription>
             </Field>
-            <Field orientation="horizontal" className="min-h-11 items-center justify-between">
+            <Field orientation="horizontal" className="items-center justify-between pointer-coarse:min-h-11">
               <FieldLabel htmlFor="mail-web" className="font-normal">
                 Incluir mi portafolio o web
               </FieldLabel>
