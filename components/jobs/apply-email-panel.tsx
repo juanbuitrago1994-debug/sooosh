@@ -155,22 +155,6 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
         {step === 0 && (
           <FieldGroup>
-            {/* Lista compacta: 8 px entre correos; en pantallas táctiles cada fila conserva 44 px de alto. */}
-            <div className="flex flex-col gap-2">
-              {options.map((e) => (
-                <Field key={e} orientation="horizontal" className="items-center pointer-coarse:min-h-11">
-                  <Checkbox id={`to-${e}`} checked={picked.includes(e)} onCheckedChange={(on) => setPicked((p) => (on ? [...p, e] : p.filter((x) => x !== e)))} />
-                  <FieldLabel htmlFor={`to-${e}`} className="min-w-0 flex-1 break-all font-normal">
-                    {e}
-                  </FieldLabel>
-                  {added.includes(e) && (
-                    <Button type="button" variant="ghost" size="icon-xs" aria-label={`Quitar ${e}`} onClick={() => removeAdded(e)}>
-                      <XIcon aria-hidden />
-                    </Button>
-                  )}
-                </Field>
-              ))}
-            </div>
             <Field data-invalid={draftError ? true : undefined}>
               <FieldLabel htmlFor="mail-add">Agregar otro correo</FieldLabel>
               <div className="flex gap-2">
@@ -200,6 +184,22 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
               </div>
               {draftError && <FieldError>{draftError}</FieldError>}
             </Field>
+            {/* Lista compacta: 8 px entre correos; en pantallas táctiles cada fila conserva 44 px de alto. */}
+            <div className="flex flex-col gap-2">
+              {options.map((e) => (
+                <Field key={e} orientation="horizontal" className="items-center pointer-coarse:min-h-11">
+                  <Checkbox id={`to-${e}`} checked={picked.includes(e)} onCheckedChange={(on) => setPicked((p) => (on ? [...p, e] : p.filter((x) => x !== e)))} />
+                  <FieldLabel htmlFor={`to-${e}`} className="min-w-0 flex-1 break-all font-normal">
+                    {e}
+                  </FieldLabel>
+                  {added.includes(e) && (
+                    <Button type="button" variant="ghost" size="icon-xs" aria-label={`Quitar ${e}`} onClick={() => removeAdded(e)}>
+                      <XIcon aria-hidden />
+                    </Button>
+                  )}
+                </Field>
+              ))}
+            </div>
           </FieldGroup>
         )}
 
