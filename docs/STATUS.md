@@ -924,3 +924,11 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - **Salvaguarda (código)**: `withDbTimeout` (12 s) en `/api/search` y `/api/jobs/count`: si la base no responde, la API contesta un error en vez de colgarse; el buscador espera como máximo 20 s y muestra «La búsqueda está tardando demasiado…» con **Reintentar** (antes: cargador para siempre).
 - **Pendiente de Juan** (la causa de fondo está en la conexión, no en el código): pasar `DATABASE_URL` al **modo sesión (puerto 5432)**, el recomendado para un servidor que vive mucho tiempo, o liberar las sesiones atascadas desde el panel de Supabase.
 - Verificado: lint (0 errores), `tsc`, `build` y 615 pruebas en verde (nuevas: el límite de espera).
+
+### Buscador colgado: causa encontrada y arreglada sin cambiar el puerto (20-nov-2026)
+- **Causa**: `postgres.js` encadena por defecto hasta 100 consultas por conexión (*pipelining*) y el pooler de transacciones de Supabase (6543) deja colgadas las consultas encadenadas. No eran sesiones atascadas en Postgres (las que se vieron estaban inactivas y la limpieza no encontró nada que terminar): por eso **no se crea el cron de limpieza**, no habría arreglado nada.
+- **Arreglo**: `max_pipeline: 1` (una consulta por conexión) en `lib/db/index.ts`. Medido: 5 de 80 → 80 de 80 consultas simultáneas (ver `docs/BENCHMARKS.md`); en la app, 10 búsquedas simultáneas responden en 0,8–1,8 s.
+- **Red de seguridad** (`lib/db/resilient.ts`): las lecturas de la búsqueda, el contador, las tendencias y la ficha de oferta tienen límite de 4 s y, si se atascan, descartan las conexiones y reintentan una vez con unas nuevas. Contadores de «cada cuánto pasa»: `GET /api/db/health` (`timeouts`, `resets`, `recovered`, `failed`, `lastResetAt`; se reinician al arrancar el servidor).
+- El buscador espera como máximo 20 s y, si algo falla, muestra el error con **Reintentar** (antes: cargador infinito).
+- Verificado: lint (0 errores), `tsc`, `build` y 621 pruebas en verde (nuevas: la conexión usa `max_pipeline: 1`, el reintento recrea las conexiones, un error que no es de conexión no se reintenta).
+- **Para revisar por Juan**: **reinicia `pnpm dev`** (para que tome la configuración), recarga `/ofertas` varias veces seguidas: deben aparecer resultados siempre. Abre `http://localhost:3000/api/db/health`: `resets` debe quedarse en 0; si sube, avísame.

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { getDb } from "@/lib/db"
 import { WORK_MODES } from "@/lib/jobs/draft"
 import { embedProfile, embedQuery } from "@/lib/jobs/embed"
 import { affinityFor } from "@/lib/events/server"
@@ -8,7 +7,7 @@ import { personalize } from "@/lib/events/personalize"
 import { MATCH_MIN } from "@/lib/jobs/match"
 import { rankByFit } from "@/lib/jobs/rank"
 import { isRegion } from "@/lib/jobs/region"
-import { withDbTimeout } from "@/lib/db/timeout"
+import { withDb } from "@/lib/db/resilient"
 import { getJobCards, searchJobs } from "@/lib/jobs/search"
 import { cvSchema } from "@/lib/schemas/cv"
 
@@ -48,19 +47,19 @@ export async function POST(request: Request) {
   const profile = cv?.success ? cv.data : null
   try {
     if (parsed.data.savedIds) {
-      const saved = rankByFit(await getJobCards(getDb(), parsed.data.savedIds), profile, "relevancia")
+      const saved = rankByFit(await withDb((db) => getJobCards(db, parsed.data.savedIds ?? [])), profile, "relevancia")
       return NextResponse.json({ jobs: saved, semantic: false, hasCv: !!profile, matches: null, matchMin: MATCH_MIN, scored: null, total: saved.length })
     }
     const embedding = q && !fast ? await embedQuery(q, AbortSignal.timeout(8000)).catch(() => null) : null
     const wide = !!profile && (sort === "encaje" || onlyMatches)
     // Sin texto de búsqueda, las candidatas son las más cercanas al CV (vectores); con texto, las del texto y el significado.
     const profileEmbedding = wide && !q && profile ? await embedProfile(profile, AbortSignal.timeout(8000)).catch(() => null) : null
-    const { jobs, semantic, total } = await withDbTimeout(searchJobs(getDb(), { region, q, mode, area, limit: wide ? POOL : PAGE, embedding: embedding ?? undefined, profileEmbedding: profileEmbedding ?? undefined }))
+    const { jobs, semantic, total } = await withDb((db) => searchJobs(db, { region, q, mode, area, limit: wide ? POOL : PAGE, embedding: embedding ?? undefined, profileEmbedding: profileEmbedding ?? undefined }))
     let ranked = rankByFit(jobs, profile, sort)
     // «Para mí»: con consentimiento personal y suficientes señales, la lista por relevancia se reordena suavemente según su gusto.
     let personalized = false
     if (sort === "relevancia" && parsed.data.anonId) {
-      const rows = await affinityFor(getDb(), parsed.data.anonId).catch(() => [])
+      const rows = await withDb((db) => affinityFor(db, parsed.data.anonId!)).catch(() => [])
       const re = personalize(ranked, rows)
       personalized = re !== ranked
       ranked = re

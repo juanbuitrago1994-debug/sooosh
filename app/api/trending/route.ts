@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getDb } from "@/lib/db"
+import { withDb } from "@/lib/db/resilient"
 import { trendingSearches } from "@/lib/events/server"
 import { isRegion } from "@/lib/jobs/region"
 
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const region = new URL(request.url).searchParams.get("region") ?? ""
   if (!isRegion(region) || region === "TODAS") return NextResponse.json({ searches: [] })
   try {
-    return NextResponse.json({ searches: await trendingSearches(getDb(), region) })
+    return NextResponse.json({ searches: await withDb((db) => trendingSearches(db, region)) })
   } catch (e) {
     console.error("[trending]", e)
     return NextResponse.json({ searches: [] })
