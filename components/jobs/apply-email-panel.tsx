@@ -301,11 +301,11 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
   )
 }
 
-/** Marca de un paso (solo visual): el MISMO círculo de 16 px; vacío si es el actual, relleno en gris con check si ya se superó. */
+/** Marca de un paso (solo visual): el MISMO círculo de 18 px con borde fino; vacío si es el actual, relleno en gris con check si ya se superó. */
 function StepMark({ done }: { done: boolean }) {
   return (
-    <span aria-hidden className={`flex size-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${done ? "border-muted-foreground bg-muted-foreground" : "border-foreground"}`}>
-      {done && <CheckIcon className="size-2.5 stroke-3 text-popover" />}
+    <span aria-hidden className={`flex size-4.5 shrink-0 items-center justify-center rounded-full border transition-colors ${done ? "border-muted-foreground bg-muted-foreground" : "border-foreground"}`}>
+      {done && <CheckIcon className="size-3 stroke-3 text-popover" />}
     </span>
   )
 }
