@@ -1025,3 +1025,9 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - Las ofertas ya guardadas con un solo correo no ganan los otros hasta reanalizarse (la de Vos Consultora trae uno solo en su texto).
 - Verificado: lint (0 errores), `tsc`, `build` y `pnpm test` (73 archivos, 697 pruebas) en verde.
 - **Para revisar por Juan**: abre el panel en una oferta, en el paso 1 agrega un correo (uno inválido muestra el error; uno repetido también), quítalo con la X, y confirma en el paso 4 que «Para» trae los marcados. Claro/oscuro, escritorio y 375 px.
+
+### P0.5 · S3 (ajustes de interfaz del panel de correo, 21-nov-2026)
+- Panel flotante (12 px de margen, esquinas redondeadas); campo «Agregar otro correo» arriba de la lista (placeholder corto, botón «+» solo ícono); espaciado de drawers 24/8 px y anillo de foco de los campos hacia adentro (regla en `CLAUDE.md`); botones de solo ícono pequeños semiredondos.
+- **Pasos del pie**: sin barra de progreso; lista vertical que se revela de a uno. Cada paso lleva marca (círculo vacío si es el actual, gris con check si ya se superó; mismo componente de 18 px y borde fino), título y descripción, ambos en `text-xs`. Movimiento con `motion`: entran y salen plegando la altura con fundido, con las duraciones de `MOTION` (entrada 0,5 s, salida 0,42 s) y curva suave sin rebote; el color de la marca y del texto cambia en 0,5 s. Con «reducir movimiento» no anima.
+- Nota: las reglas de `CLAUDE.md` piden duraciones cortas (≤ 300 ms); aquí Juan pidió expresamente un movimiento más lento y fluido (21-nov-2026) y se usan las constantes de `lib/motion.ts` (≈ 0,4–0,5 s).
+- **Para revisar por Juan**: avanzar y volver atrás por los 4 pasos (claro/oscuro, escritorio y 375 px): fluidez al revelar y plegar, y que el pie de 4 pasos no ocupe demasiado alto en móvil.

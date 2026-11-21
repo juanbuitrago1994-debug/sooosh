@@ -3,6 +3,7 @@
 import { useState, type CSSProperties } from "react"
 import Link from "next/link"
 import { CheckIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, XIcon } from "lucide-react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -13,12 +14,18 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { buildBody, buildSubject, webLinks } from "@/lib/apply/email"
+import { MOTION } from "@/lib/motion"
 import { useSearchProfile } from "@/lib/profile/search-profile"
 
 const MAX_RECIPIENTS = 10
 const EMAIL_RE = /^[^\s@,;]+@[^\s@,;]+\.[A-Za-z]{2,}$/
 
-const STEPS = ["Destinatario", "Asunto", "Cuerpo", "Listo"] as const
+const STEPS = [
+  { title: "Destinatario", description: "Elige a quién le envías tu postulación." },
+  { title: "Asunto", description: "Usa el que pide la oferta o ajústalo." },
+  { title: "Cuerpo", description: "Revisa el mensaje y ajústalo a tu gusto." },
+  { title: "Listo", description: "Copia cada parte en tu correo y adjunta tu CV desde tu equipo." },
+] as const
 
 export type ApplyEmailPanelProps = {
   open: boolean
@@ -53,6 +60,7 @@ export function ApplyEmailPanel(props: ApplyEmailPanelProps) {
 
 function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: ApplyEmailPanelProps) {
   const cv = useSearchProfile()?.cv ?? null
+  const reduce = useReducedMotion()
   const [step, setStep] = useState(0)
   const [picked, setPicked] = useState<string[]>(emails.slice(0, 1))
   // Correos que la persona agrega a mano (la oferta puede traer más de los que detectamos); se marcan solos.
@@ -247,7 +255,6 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
 
         {step === 3 && (
           <div className="flex flex-col gap-6">
-            <p className="text-sm text-muted-foreground">Copia cada parte en tu correo. No adjuntamos archivos: adjunta tu CV desde tu equipo.</p>
             <Piece label="Para" text={recipients.join(", ")} onCopy={() => copy("Destinatario", recipients.join(", "))} />
             <Piece label="Asunto" text={subject} onCopy={() => copy("Asunto", subject)} />
             <Piece label="Cuerpo" text={body} multiline onCopy={() => copy("Cuerpo", body)} />
@@ -260,20 +267,35 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
       </div>
 
       <DrawerFooter className="gap-6 border-t border-border/40 p-4">
-        {/* Los pasos se van revelando de a uno: solo se ven los superados (en gris, con un check sólido) y el actual. */}
-        <ol className="flex w-full flex-col gap-2 text-sm" aria-label="Pasos">
-          {STEPS.slice(0, step + 1).map((s, i) => {
-            const done = i < step
-            return (
-              <li key={s} aria-current={done ? undefined : "step"} className="flex items-center gap-2 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-200">
-                <StepMark done={done} />
-                <span className={done ? "text-muted-foreground" : "font-medium text-foreground"}>
-                  {s}
-                  {done && <span className="sr-only"> (listo)</span>}
-                </span>
-              </li>
-            )
-          })}
+        {/* Los pasos se van revelando de a uno y se pliegan al volver: solo se ven los superados (grises, con check) y el actual.
+            El movimiento es lento y suave (curva y duraciones de MOTION); con «reducir movimiento» no anima. */}
+        <ol className="flex w-full flex-col" aria-label="Pasos">
+          <AnimatePresence initial={false}>
+            {STEPS.slice(0, step + 1).map((s, i) => {
+              const done = i < step
+              return (
+                <motion.li
+                  key={s.title}
+                  aria-current={done ? undefined : "step"}
+                  className="overflow-hidden"
+                  initial={reduce ? false : { opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto", transition: reduce ? { duration: 0 } : { duration: MOTION.enter, ease: MOTION.ease } }}
+                  exit={reduce ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, height: 0, transition: { duration: MOTION.exit * 1.5, ease: MOTION.ease } }}
+                >
+                  <div className="flex items-start gap-2 py-1">
+                    <StepMark done={done} />
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <span className={`text-xs transition-colors duration-500 ${done ? "text-muted-foreground" : "font-medium text-foreground"}`}>
+                        {s.title}
+                        {done && <span className="sr-only"> (listo)</span>}
+                      </span>
+                      <span className={`text-xs transition-colors duration-500 ${done ? "text-muted-foreground/70" : "text-muted-foreground"}`}>{s.description}</span>
+                    </div>
+                  </div>
+                </motion.li>
+              )
+            })}
+          </AnimatePresence>
         </ol>
         <div className="flex gap-2">
           {step > 0 ? (
@@ -304,7 +326,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered }: Ap
 /** Marca de un paso (solo visual): el MISMO círculo de 18 px con borde fino; vacío si es el actual, relleno en gris con check si ya se superó. */
 function StepMark({ done }: { done: boolean }) {
   return (
-    <span aria-hidden className={`flex size-4.5 shrink-0 items-center justify-center rounded-full border transition-colors ${done ? "border-muted-foreground bg-muted-foreground" : "border-foreground"}`}>
+    <span aria-hidden className={`mt-px flex size-4.5 shrink-0 items-center justify-center rounded-full border transition-colors duration-500 ${done ? "border-muted-foreground bg-muted-foreground" : "border-foreground"}`}>
       {done && <CheckIcon className="size-3 stroke-3 text-popover" />}
     </span>
   )
