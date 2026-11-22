@@ -30,15 +30,15 @@ export function resolveLang(setting: BodySettings["lang"], offerLanguage?: strin
   return setting === "en" || (setting === "auto" && offerLanguage === "en") ? "en" : "es"
 }
 
-/** Valores listos para una situación típica; la persona los ajusta después. */
-export const PRESETS: { value: string; label: string; settings: Partial<BodySettings> }[] = [
-  { value: "cercano", label: "Cercano y breve", settings: { register: "cercano", warmth: "calida", style: "sencillo", length: "corto", greeting: "equipo", cta: "conversar", focus: "variado" } },
-  { value: "profesional", label: "Profesional", settings: { register: "profesional", warmth: "neutra", style: "tecnico", length: "medio", greeting: "formal", cta: "entrevista", focus: "experiencia" } },
-  { value: "directo", label: "Directo", settings: { register: "sobrio", warmth: "neutra", style: "sencillo", length: "minimo", greeting: "simple", cta: "ninguno", focus: "habilidades" } },
+/** Tono: una sola elección que fija cómo suena (registro, calidez y tipo de lenguaje juntos). La longitud, el idioma y lo demás se eligen aparte. */
+export const TONES: { value: string; label: string; hint: string; settings: Pick<BodySettings, "register" | "warmth" | "style"> }[] = [
+  { value: "cercano", label: "Cercano", hint: "Amable y natural, con palabras simples.", settings: { register: "cercano", warmth: "calida", style: "sencillo" } },
+  { value: "profesional", label: "Profesional", hint: "Formal y claro, con el vocabulario de la oferta.", settings: { register: "profesional", warmth: "neutra", style: "tecnico" } },
+  { value: "directo", label: "Directo", hint: "Sobrio y al grano, sin adornos.", settings: { register: "sobrio", warmth: "neutra", style: "sencillo" } },
 ]
-/** Preset cuyos valores coinciden con los ajustes actuales (o `null` si la persona los personalizó). */
-export function presetOf(s: BodySettings): string | null {
-  return PRESETS.find((p) => (Object.keys(p.settings) as (keyof BodySettings)[]).every((k) => s[k] === p.settings[k]))?.value ?? null
+/** Tono que coincide con los ajustes actuales (o `null` si la combinación no es de ninguno, p. ej. algo guardado con la versión anterior). */
+export function toneOf(s: Pick<BodySettings, "register" | "warmth" | "style">): string | null {
+  return TONES.find((t) => t.settings.register === s.register && t.settings.warmth === s.warmth && t.settings.style === s.style)?.value ?? null
 }
 
 export type CvFacts = { headline?: string; skills: string[]; roles: { role: string; company: string }[]; languages: string[] }

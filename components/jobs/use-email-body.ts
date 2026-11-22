@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { DEFAULT_CONTACT, buildBody, linkedinLink, platformLabel, webLinks, type AskValues, type ContactData, type EmailJob } from "@/lib/apply/email"
 import type { AskKey } from "@/lib/jobs/asks"
-import { CTAS, DEFAULT_SETTINGS, FOCUSES, GREETINGS, LANGS, LENGTHS, REGISTERS, STYLES, WARMTHS, cvFacts, resolveLang, type BodySettings, type Lang } from "@/lib/apply/body-settings"
+import { CTAS, DEFAULT_SETTINGS, TONES, toneOf, FOCUSES, GREETINGS, LANGS, LENGTHS, REGISTERS, STYLES, WARMTHS, cvFacts, resolveLang, type BodySettings, type Lang } from "@/lib/apply/body-settings"
 import type { CV } from "@/lib/schemas/cv"
 
 /** Ajustes de redacción: una comodidad de cada persona, se recuerdan en este navegador. */
@@ -25,13 +25,17 @@ function readContact(): ContactData | null {
 const OPTIONS: { [K in keyof BodySettings]: readonly string[] } = { length: LENGTHS, register: REGISTERS, warmth: WARMTHS, style: STYLES, lang: LANGS, focus: FOCUSES, greeting: GREETINGS, cta: CTAS }
 
 /** Lo guardado se mezcla con los valores por defecto: una clave que ya no existe o con un valor viejo se ignora. */
-function readSettings(): BodySettings {
+export function readSettings(): BodySettings {
   try {
     const d = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "null") as Record<string, unknown> | null
     if (d && typeof d === "object") {
       const out = { ...DEFAULT_SETTINGS } as Record<string, string>
       for (const k of Object.keys(OPTIONS) as (keyof BodySettings)[]) if (typeof d[k] === "string" && OPTIONS[k].includes(d[k] as string)) out[k] = d[k] as string
-      return out as unknown as BodySettings
+      const merged = out as unknown as BodySettings
+      // Ajustes de la versión anterior: una combinación sin tono vuelve al tono por defecto y «mínimo» pasa a «corto».
+      if (!toneOf(merged)) Object.assign(merged, TONES[0].settings)
+      if (merged.length === "minimo") merged.length = "corto"
+      return merged
     }
   } catch {
     /* sin almacenamiento o datos viejos */

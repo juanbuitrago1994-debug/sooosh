@@ -1,65 +1,35 @@
 "use client"
 
 import { useState } from "react"
-import { SparklesIcon, XIcon } from "lucide-react"
+import { ChevronDownIcon, SparklesIcon, XIcon } from "lucide-react"
 import { DotLoader } from "@/components/ai/dot-loader"
 import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
 import type { useEmailBody } from "@/components/jobs/use-email-body"
 import { WebUrlField } from "@/components/jobs/web-url-field"
 import { SlidingChoice } from "@/components/motion/sliding-choice"
 import { Button } from "@/components/ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Drawer, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/motion/motion-switch"
 import { platformLabel, type ContactData } from "@/lib/apply/email"
-import { PRESETS, presetOf, type BodySettings } from "@/lib/apply/body-settings"
+import { TONES, toneOf, type BodySettings } from "@/lib/apply/body-settings"
 
 type EmailBody = ReturnType<typeof useEmailBody>
 
 type Option = { value: string; label: string; hint: string }
 type Group = { key: keyof BodySettings; label: string; options: Option[] }
 
-const STYLE_GROUPS: Group[] = [
-  {
-    key: "register",
-    label: "Registro",
-    options: [
-      { value: "sobrio", label: "Sobrio", hint: "Muy formal, sin adornos ni exclamaciones." },
-      { value: "profesional", label: "Profesional", hint: "Claro y formal sin ser rígido." },
-      { value: "cercano", label: "Cercano", hint: "Amable y natural, sin exceso de confianza." },
-      { value: "casual", label: "Casual", hint: "Relajado y conversacional, sin jerga." },
-    ],
-  },
-  {
-    key: "warmth",
-    label: "Calidez",
-    options: [
-      { value: "neutra", label: "Neutra", hint: "Informativo, sin expresar emociones." },
-      { value: "calida", label: "Cálida", hint: "Con amabilidad genuina hacia el equipo." },
-      { value: "entusiasta", label: "Entusiasta", hint: "Con entusiasmo visible, sin exagerar." },
-    ],
-  },
-  {
-    key: "style",
-    label: "Tipo de lenguaje",
-    options: [
-      { value: "sencillo", label: "Sencillo", hint: "Palabras simples y frases cortas." },
-      { value: "tecnico", label: "Técnico", hint: "Usa el vocabulario y las herramientas que pide la oferta." },
-      { value: "narrativo", label: "Narrativo", hint: "Cuenta un breve recorrido, con hilo conductor." },
-    ],
-  },
-  {
-    key: "length",
-    label: "Longitud",
-    options: [
-      { value: "minimo", label: "Mínimo", hint: "Una sola frase: lo esencial." },
-      { value: "corto", label: "Corto", hint: "Unas 2 frases." },
-      { value: "medio", label: "Medio", hint: "3 o 4 frases: equilibrado." },
-      { value: "largo", label: "Largo", hint: "5 o 6 frases, con más detalle." },
-    ],
-  },
-]
+const LENGTH_GROUP: Group = {
+  key: "length",
+  label: "Longitud",
+  options: [
+    { value: "corto", label: "Corto", hint: "Unas 2 frases: lo esencial." },
+    { value: "medio", label: "Medio", hint: "3 o 4 frases: equilibrado." },
+    { value: "largo", label: "Largo", hint: "5 o 6 frases, con más detalle." },
+  ],
+}
 
 const CONTENT_GROUPS: Group[] = [
   {
@@ -103,45 +73,32 @@ const LANG_GROUP: Group = {
   ],
 }
 
-const TABS = [
-  { value: "estilo", label: "Estilo" },
-  { value: "contenido", label: "Contenido" },
-  { value: "datos", label: "Datos" },
-] as const
-
-const PRESET_OPTIONS = [
-  { value: "cercano", label: "Cercano", hint: "Cálido y breve, con saludo de equipo." },
-  { value: "profesional", label: "Profesional", hint: "Formal y completo, centrado en tu experiencia." },
-  { value: "directo", label: "Directo", hint: "Mínimo y al grano, centrado en tus habilidades." },
-]
-
 /** Datos que pueden salir en la firma, en el orden en que se muestran. */
-const CONTACT_ROWS: { key: keyof ContactData; label: string }[] = [
-  { key: "phone", label: "Teléfono" },
-  { key: "email", label: "Correo" },
-  { key: "city", label: "Ciudad" },
-  { key: "linkedin", label: "LinkedIn" },
-  { key: "web", label: "Portafolio o web" },
-  { key: "source", label: "Dónde vi la oferta" },
+const CONTACT_ROWS: { key: keyof ContactData; label: string; where: "texto" | "firma" }[] = [
+  { key: "source", label: "Dónde vi la oferta", where: "texto" },
+  { key: "phone", label: "Teléfono", where: "firma" },
+  { key: "email", label: "Correo", where: "firma" },
+  { key: "city", label: "Ciudad", where: "firma" },
+  { key: "linkedin", label: "LinkedIn", where: "firma" },
+  { key: "web", label: "Portafolio o web", where: "firma" },
 ]
 
 /**
- * Drawer aparte (se abre encima del panel de correo) con los ajustes de redacción: así el paso «Cuerpo» queda limpio. Dos pestañas:
- * «Estilo» (cómo suena) y «Datos» (qué datos de tu CV salen en el correo).
+ * Drawer aparte (se abre encima del panel de correo) con los ajustes de redacción, en un solo panel: tono, longitud e idioma; «Qué incluye
+ * tu correo» (interruptores por dato) y «Más ajustes» plegado. Al pie, una vista previa del correo que se actualiza al instante.
  */
 export function ApplyEmailSettingsDrawer({ open, onOpenChange, email, sourceName }: { open: boolean; onOpenChange: (open: boolean) => void; email: EmailBody; sourceName?: string | null }) {
-  const { settings, setSettings: onChange, loading, generate, lang, recipientName, setRecipientName } = email
-  const [tab, setTab] = useState<string>("estilo")
-  const preset = presetOf(settings)
-  const presetOptions = preset ? PRESET_OPTIONS : [...PRESET_OPTIONS, { value: "custom", label: "Personalizado", hint: "Tus propios ajustes." }]
+  const { settings, setSettings: onChange, loading, generate, lang, recipientName, setRecipientName, body, current } = email
+  const [more, setMore] = useState(false)
+  const tone = toneOf(settings) ?? TONES[0].value
   const renderGroup = (g: Group) => {
     const options = g.key === "lang" ? g.options.map((o) => (o.value === "auto" ? { ...o, hint: `Usa el idioma de la oferta (ahora: ${lang === "en" ? "inglés" : "español"}).` } : o)) : g.options
-    const current = options.find((o) => o.value === settings[g.key]) ?? options[0]
+    const currentOption = options.find((o) => o.value === settings[g.key]) ?? options[0]
     return (
       <Field key={g.key}>
         <FieldLabel id={`set-${g.key}`}>{g.label}</FieldLabel>
         <SlidingChoice label={g.label} value={settings[g.key]} options={options} onValueChange={(v) => onChange({ ...settings, [g.key]: v } as BodySettings)} />
-        <FieldDescription>{current.hint}</FieldDescription>
+        <FieldDescription>{currentOption.hint}</FieldDescription>
       </Field>
     )
   }
@@ -152,53 +109,61 @@ export function ApplyEmailSettingsDrawer({ open, onOpenChange, email, sourceName
           <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
             <DrawerHeader className="flex flex-col gap-1 p-0 pt-4">
               <DrawerTitle>Ajustes de redacción</DrawerTitle>
-              <DrawerDescription>Elige cómo suena tu correo, qué dice y qué datos tuyos salen en él. Los cambios se aplican a las versiones que pidas con el botón de abajo.</DrawerDescription>
+              <DrawerDescription>Elige cómo suena tu correo y qué datos tuyos salen en él. Los datos cambian al instante; el tono y la longitud se aplican a las versiones que pidas.</DrawerDescription>
             </DrawerHeader>
-            <Field>
-              <FieldLabel>Punto de partida</FieldLabel>
-              <SlidingChoice
-                label="Punto de partida"
-                value={preset ?? "custom"}
-                options={presetOptions}
-                onValueChange={(v) => {
-                  const p = PRESETS.find((x) => x.value === v)
-                  if (p) onChange({ ...settings, ...p.settings })
-                }}
-              />
-              <FieldDescription>{presetOptions.find((o) => o.value === (preset ?? "custom"))?.hint}</FieldDescription>
-            </Field>
-            <SlidingChoice label="Secciones de los ajustes" value={tab} options={TABS} onValueChange={setTab} />
-            {tab === "estilo" && <FieldGroup className="gap-6">{[...STYLE_GROUPS, LANG_GROUP].map(renderGroup)}</FieldGroup>}
-            {tab === "contenido" && (
-              <FieldGroup className="gap-6">
-                {CONTENT_GROUPS.map(renderGroup)}
-                <Field>
-                  <FieldLabel htmlFor="mail-recipient">Nombre de quien recibe (opcional)</FieldLabel>
-                  <Input id="mail-recipient" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Ej.: Laura" autoComplete="off" />
-                  <FieldDescription>Si lo sabes, el saludo será «Hola, Laura:». Solo se usa en este correo.</FieldDescription>
-                </Field>
-              </FieldGroup>
-            )}
-            {tab === "datos" && <DataTab email={email} sourceName={sourceName} />}
+            <FieldGroup className="gap-6">
+              <Field>
+                <FieldLabel id="set-tone">Tono</FieldLabel>
+                <SlidingChoice label="Tono" value={tone} options={TONES} onValueChange={(v) => onChange({ ...settings, ...TONES.find((t) => t.value === v)?.settings })} />
+                <FieldDescription>{TONES.find((t) => t.value === tone)?.hint}</FieldDescription>
+              </Field>
+              {[LENGTH_GROUP, LANG_GROUP].map(renderGroup)}
+            </FieldGroup>
+            <DataTab email={email} sourceName={sourceName} />
+            <Collapsible open={more} onOpenChange={setMore} className="flex flex-col gap-6">
+              <CollapsibleTrigger render={<Button type="button" variant="ghost" className="justify-between px-0" />}>
+                Más ajustes
+                <ChevronDownIcon data-icon="inline-end" className={more ? "rotate-180 transition-transform" : "transition-transform"} aria-hidden />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <FieldGroup className="gap-6">
+                  {CONTENT_GROUPS.map(renderGroup)}
+                  <Field>
+                    <FieldLabel htmlFor="mail-recipient">Nombre de quien recibe (opcional)</FieldLabel>
+                    <Input id="mail-recipient" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Ej.: Laura" autoComplete="off" />
+                    <FieldDescription>Si lo sabes, el saludo será «Hola, Laura:». Solo se usa en este correo.</FieldDescription>
+                  </Field>
+                </FieldGroup>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
-          <DrawerFooter className="flex-row gap-2 border-t border-border/40 p-4">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-              Cerrar
-            </Button>
-            {/* Acción principal: pide otras versiones con los ajustes elegidos y vuelve al paso para verlas llegar. */}
-            <Button
-              type="button"
-              className="flex-1"
-              disabled={loading}
-              aria-busy={loading}
-              onClick={() => {
-                onOpenChange(false)
-                void generate()
-              }}
-            >
-              {loading ? <DotLoader variant="orbit" rounded /> : <SparklesIcon data-icon="inline-start" />}
-              {loading ? "Escribiendo…" : "Pedir otras versiones"}
-            </Button>
+          <DrawerFooter className="gap-2 border-t border-border/40 p-4">
+            <div className="flex flex-col gap-1">
+              <p className="text-xs font-medium">Vista previa</p>
+              <p className="max-h-32 overflow-y-auto rounded-lg bg-muted/50 p-3 text-xs whitespace-pre-wrap text-muted-foreground" aria-label="Vista previa del correo" tabIndex={0}>
+                {body}
+              </p>
+              {current.override !== undefined && <p className="text-xs text-muted-foreground">Editaste este texto a mano: los datos no se le aplican hasta que lo restaures.</p>}
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+                Cerrar
+              </Button>
+              {/* Acción principal: pide otras versiones con los ajustes elegidos y vuelve al paso para verlas llegar. */}
+              <Button
+                type="button"
+                className="flex-1"
+                disabled={loading}
+                aria-busy={loading}
+                onClick={() => {
+                  onOpenChange(false)
+                  void generate()
+                }}
+              >
+                {loading ? <DotLoader variant="orbit" rounded /> : <SparklesIcon data-icon="inline-start" />}
+                {loading ? "Escribiendo…" : "Pedir otras versiones"}
+              </Button>
+            </div>
           </DrawerFooter>
         </div>
       </FloatingDrawerContent>
@@ -206,7 +171,7 @@ export function ApplyEmailSettingsDrawer({ open, onOpenChange, email, sourceName
   )
 }
 
-/** Qué datos salen en la firma: un interruptor por dato, solo para los que el CV trae, mostrando el valor que saldría. */
+/** «Qué incluye tu correo»: un interruptor por dato, solo para los que el CV trae, mostrando el valor que saldría. Agrupado en «En el texto» y «En la firma». */
 export function DataTab({ email, sourceName }: { email: EmailBody; sourceName?: string | null }) {
   const { contact, setContact, available, extraUrl, removeUrl, addUrl, links, hasWebFromCv, cvValues } = email
   const shown = CONTACT_ROWS.filter((r) => available[r.key])
@@ -215,32 +180,46 @@ export function DataTab({ email, sourceName }: { email: EmailBody; sourceName?: 
     if (key === "source") return `Vi su publicación en ${platformLabel(sourceName) ?? ""}`.trim()
     return cvValues[key] ?? ""
   }
+  const rows = (where: "texto" | "firma") =>
+    shown
+      .filter((r) => r.where === where)
+      .map((r) => (
+        <Field key={r.key} orientation="horizontal" className="items-center justify-between pointer-coarse:min-h-11">
+          <FieldContent className="min-w-0 flex-1">
+            <FieldLabel htmlFor={`contact-${r.key}`} className="font-normal">
+              {r.label}
+            </FieldLabel>
+            <FieldDescription className="text-xs break-all">{valueOf(r.key)}</FieldDescription>
+          </FieldContent>
+          {r.key === "web" && extraUrl && (
+            <Button type="button" variant="ghost" size="icon-xs" aria-label="Quitar el enlace agregado" onClick={removeUrl}>
+              <XIcon aria-hidden />
+            </Button>
+          )}
+          <Switch id={`contact-${r.key}`} checked={contact[r.key]} onCheckedChange={(on) => setContact({ ...contact, [r.key]: on })} />
+        </Field>
+      ))
+  const inText = rows("texto")
   return (
     <FieldGroup className="gap-6">
       {!hasWebFromCv && !extraUrl && <WebUrlField id="mail-url" onAdd={addUrl} />}
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium">Datos en tu firma</p>
+        <p className="text-sm font-medium">Qué incluye tu correo</p>
         <p className="text-xs text-muted-foreground">Tu nombre siempre va. Solo aparecen los datos que tu CV trae; tú decides cuáles salen.</p>
       </div>
       {shown.length === 0 && <FieldDescription>Tu CV no trae datos de contacto para mostrar aquí.</FieldDescription>}
-      <div className="flex flex-col gap-2">
-        {shown.map((r) => (
-          <Field key={r.key} orientation="horizontal" className="items-center justify-between pointer-coarse:min-h-11">
-            <FieldContent className="min-w-0 flex-1">
-              <FieldLabel htmlFor={`contact-${r.key}`} className="font-normal">
-                {r.label}
-              </FieldLabel>
-              <FieldDescription className="text-xs break-all">{valueOf(r.key)}</FieldDescription>
-            </FieldContent>
-            {r.key === "web" && extraUrl && (
-              <Button type="button" variant="ghost" size="icon-xs" aria-label="Quitar el enlace agregado" onClick={removeUrl}>
-                <XIcon aria-hidden />
-              </Button>
-            )}
-            <Switch id={`contact-${r.key}`} checked={contact[r.key]} onCheckedChange={(on) => setContact({ ...contact, [r.key]: on })} />
-          </Field>
-        ))}
-      </div>
+      {inText.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-medium text-muted-foreground">En el texto</p>
+          {inText}
+        </div>
+      )}
+      {rows("firma").length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-medium text-muted-foreground">En la firma</p>
+          {rows("firma")}
+        </div>
+      )}
     </FieldGroup>
   )
 }

@@ -6,7 +6,7 @@ import { DEFAULT_SETTINGS } from "@/lib/apply/body-settings"
 import { DEFAULT_CONTACT } from "@/lib/apply/email"
 
 type Email = ReturnType<typeof useEmailBody>
-const email = (over: Partial<Email> = {}) => ({ settings: DEFAULT_SETTINGS, setSettings: () => {}, contact: DEFAULT_CONTACT, setContact: () => {}, available: { phone: true, email: true, city: true, linkedin: false, web: false, source: true }, cvValues: { phone: "+57 300 000", email: "ana@x.com", city: "Bogotá" }, links: [], hasWebFromCv: false, extraUrl: null, addUrl: () => true, removeUrl: () => {}, loading: false, generate: async () => {}, recipientName: "", setRecipientName: () => {}, lang: "es", ...over }) as Email
+const email = (over: Partial<Email> = {}) => ({ settings: DEFAULT_SETTINGS, setSettings: () => {}, contact: DEFAULT_CONTACT, setContact: () => {}, available: { phone: true, email: true, city: true, linkedin: false, web: false, source: true }, cvValues: { phone: "+57 300 000", email: "ana@x.com", city: "Bogotá" }, links: [], hasWebFromCv: false, extraUrl: null, addUrl: () => true, removeUrl: () => {}, loading: false, generate: async () => {}, recipientName: "", setRecipientName: () => {}, lang: "es", body: "Hola, equipo de X:\nTexto de ejemplo.", current: { id: 0, middle: null, source: "base" }, ...over }) as Email
 
 const options = [
   { value: "corto", label: "Corto" },
@@ -48,26 +48,26 @@ describe("drawer de ajustes", () => {
     })
     const { ApplyEmailSettingsDrawer } = await import("@/components/jobs/apply-email-settings-drawer")
     const html = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email()} />)
-    for (const t of ["Ajustes de redacción", "Punto de partida", "Estilo", "Contenido", "Datos", "Registro", "Calidez", "Tipo de lenguaje", "Longitud", "Idioma", "Cerrar", "Pedir otras versiones"]) expect(html).toContain(t)
-    // los ajustes por defecto no coinciden con ningún punto de partida: aparece «Personalizado»
-    expect(html).toContain("Personalizado")
-    expect(html).toContain("Amable y natural, sin exceso de confianza.")
+    for (const t of ["Ajustes de redacción", "Tono", "Longitud", "Idioma", "Qué incluye tu correo", "En el texto", "En la firma", "Más ajustes", "Vista previa", "Cerrar", "Pedir otras versiones"]) expect(html).toContain(t)
+    // ya no hay pestañas ni Registro, Calidez, Tipo de lenguaje ni punto de partida
+    for (const t of ["Punto de partida", "Personalizado", "Registro", "Calidez", "Tipo de lenguaje", "Contenido"]) expect(html).not.toContain(t)
+    expect(html).toContain("Amable y natural, con palabras simples.")
     expect(html).toContain("Usa el idioma de la oferta (ahora: español).")
-    // saludo y cierre viven en la pestaña «Contenido»
-    expect(html).not.toContain("Saludo")
-    // pestañas + punto de partida + 5 ajustes de estilo
-    expect((html.match(/role="radiogroup"/g) ?? []).length).toBe(7)
+    // tono, longitud e idioma
+    expect((html.match(/role="radiogroup"/g) ?? []).length).toBe(3)
+    // «Más ajustes» empieza plegado
+    expect(html).not.toContain("Enfoque")
     const busy = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email({ loading: true })} />)
     expect(busy).toContain("Escribiendo…")
     expect(busy).toContain('data-variant="orbit"')
     vi.doUnmock("@/components/ui/drawer")
   })
 
-  it("la pestaña «Datos» ofrece un interruptor por cada dato que tiene el CV, con su valor, y el campo de portafolio si falta", async () => {
+  it("«Qué incluye tu correo» ofrece un interruptor por cada dato que tiene el CV, con su valor, y el campo de portafolio si falta", async () => {
     vi.resetModules()
     const { DataTab } = await import("@/components/jobs/apply-email-settings-drawer")
     const html = renderToStaticMarkup(<DataTab email={email()} sourceName="linkedin" />)
-    expect(html).toContain("Datos en tu firma")
+    expect(html).toContain("Qué incluye tu correo")
     expect(html).toContain("Tu nombre siempre va")
     expect(html).toContain("Teléfono")
     expect(html).toContain("+57 300 000")
