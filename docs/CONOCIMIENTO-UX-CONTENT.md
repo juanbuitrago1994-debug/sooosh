@@ -96,7 +96,7 @@ Fuentes leídas: elempleo (Colombia, 10-abr-2026), Magneto365 (Colombia), Enhanc
 | R-C6 | Si la oferta usa una palabra concreta de un requisito que la persona sí cumple, **úsala textual** una vez. | elempleo (única fuente explícita) | Baja |
 | R-C7 | **Cierre**: una sola petición (una conversación corta) + agradecimiento. | elempleo, Magneto, Enhancv, Grammarly, Workable, Underdog | Alta |
 | R-C8 | **Longitud**: el **techo** es ≈ 200 palabras (Magneto, Workable); Enhancv propone 120–180; Grammarly 75–125 para correo en frío. **Ninguna cifra tiene estudio.** Usar 120–180 como objetivo y 200 como límite duro. | Magneto, Workable, Enhancv, Grammarly | Alta para el techo; Baja para el rango |
-| R-C9 | **Asunto**: `Postulación [cargo] – [Nombre]` (+ código si existe); evitar «Hoja de vida» a secas, mayúsculas, signos de exclamación, «urgente». Corto (< 60 caracteres; NN/g: lo que pasa de 60 suele truncarse). | elempleo, Magneto, Enhancv, Proton, NN/g | Alta (patrón); Baja (cifra de largo) |
+| R-C9 | **Asunto**: `Postulación [cargo] – [Nombre]` (+ código si existe); evitar «Hoja de vida» a secas, mayúsculas, signos de exclamación, «urgente». **Que los primeros ≈ 40 caracteres ya digan «postulación + cargo»** y el nombre vaya al final (NN/g: el correo corta el asunto y quien lee ve las primeras palabras; ver R-N24). Largo total < 60 caracteres. | elempleo, Magneto, Enhancv, Proton, NN/g (2014) | Alta (patrón); Media (40 es una guía por visualización, no un umbral probado) |
 | R-C10 | **Adjunto**: PDF salvo que la oferta pida otro; nombre con **nombre y apellido + tipo de documento (+ empresa)**; sin «final_2». Menciónalo en una frase. | elempleo, Magneto, Enhancv, Proton | Alta |
 | R-C11 | **Firma**: nombre completo, teléfono con indicativo, correo, LinkedIn o portafolio, ciudad. | Magneto, Enhancv, elempleo | Alta |
 | R-C12 | **Mismo correo para varias vacantes sin adaptar** = error. | Proton, Workable | Alta |
@@ -150,7 +150,7 @@ Fuentes: artículo de prensa sobre la guía del Ministerio de Justicia de Españ
 
 ## 7. Cómo usa esto la app (propuesta para S7c)
 
-1. **Guía compacta para el modelo** (≤ ≈ 300 tokens, por petición; ver §8): principios R-P4/R-P5, estructura R-C1…R-C5, reglas de frase R-E2/R-E4/R-E5, gramática R-G1…R-G3 y las frases a evitar R-C14. Variantes según tono (§3) y longitud.
+1. **Guía compacta para el modelo** (≤ ≈ 300 tokens, por petición; ver §8; con tonos como 2–3 descriptores combinados y 1–2 ejemplos por tono, R-N28): principios R-P4/R-P5, estructura R-C1…R-C5, reglas de frase R-E2/R-E4/R-E5, gramática R-G1…R-G3 y las frases a evitar R-C14. Variantes según tono (§3) y longitud.
 2. **Verificador por reglas** (ya existe para datos inventados): agregar frases prohibidas (R-C14), exclamaciones (R-T7), emojis (R-T8), apertura «Mi nombre es» (R-C14), gerundio de posterioridad frecuente («…, desarrollando/obteniendo/logrando») y largo de frase > 25 palabras (R-E2).
 3. **Revisión final del paso 4** (por reglas): longitud total ≤ 200 palabras (R-C8), asunto < 60 caracteres (R-C9), adjunto mencionado (R-C15), nombre del adjunto (R-C10), una sola petición (R-C7).
 4. **Plantillas** de respaldo escritas siguiendo las mismas reglas.
@@ -169,7 +169,7 @@ Escribes el párrafo central de un correo para postularse a una vacante. Quien l
 - Una sola idea por frase. Sin exclamaciones ni emojis. Sin gerundios de posterioridad («…, desarrollando X y logrando Y»).
 - Trato de tú, neutro (sin formas con género).
 ```
-Variantes por tono: **Cercano** «amable y natural; frases simples» · **Profesional** «formal y preciso; usa el vocabulario de la oferta» · **Directo** «sobrio; la información mínima necesaria, sin cortesías largas».
+Variantes por tono, como **descriptores combinados** (R-N28: un solo adjetivo se exagera): **Cercano** «amable, natural, con frases simples» · **Profesional** «formal, preciso, con el vocabulario de la oferta» · **Directo** «sobrio, breve, sin cortesías largas». Se añade 1–2 ejemplos por tono (ver §10.5).
 
 ## 9. Fuentes y lo que no se pudo leer
 
@@ -178,8 +178,83 @@ Variantes por tono: **Cercano** «amable y natural; frases simples» · **Profes
 - GOV.UK A–Z (la primera mitad en texto completo; el resto por resumen) y digital.gov (plain language, principios y escritura). `plainlanguage.gov` redirige a digital.gov.
 - Mailchimp (voice and tone, writing principles, grammar and mechanics), Atlassian (voice and tone), Google developer style (tone).
 - Correo de postulación: elempleo, Magneto365, Enhancv, Proton; de reclutador o correo en frío: Workable, Underdog, Grammarly.
+- NN/g «UX Writing: Study Guide» y 25 artículos enlazados (ver §10).
 - Wikipedia en español: Queísmo, Dequeísmo, Gerundio. Prensa y resumen de lenguaje claro en español: economistjurist.es y meer.com. Correo formal: IONOS.
 
 **No se pudieron leer (no se usaron)**: RAE (DPD, Libro de estilo; error 403), Fundéu (bloqueo), PDF de la guía de lenguaje claro del DNP (certificado), PDF de SIC y Colombia Compra (el PDF no tiene texto extraíble por las herramientas), páginas de Atlassian de lenguaje y gramática, y los artículos de NN/g enlazados `applying-writing-guidelines-web-pages`, `writing-domain-experts`, `tone-voice-samples`, `tone-voice-words`.
 
 **Límites a recordar**: casi todo el material es en inglés y de sitios web, no de correos de empleo; las fuentes de empleo son blogs; en español la base es Wikipedia, dos artículos secundarios y una guía comercial (ninguna oficial colombiana). Falta validar con personas reales (Juan y sus amigos) qué tono funciona en ofertas colombianas.
+
+## 10. Ampliación: NN/g «UX Writing: Study Guide» (Kaley, mayo 2024; revisada ago-2026)
+
+La guía ([nngroup.com/articles/ux-writing-study-guide](https://www.nngroup.com/articles/ux-writing-study-guide/)) es un **índice** de ≈ 70 artículos y videos agrupados en: cómo se lee en línea, lenguaje claro, tono, jerga y expertos, formato y estructura, microcopy. Define el UX writing como escribir información pensada para el contexto, las necesidades y el comportamiento de las personas, y recuerda que el contenido suele saltarse o hacerse con prisa. No da metas de palabras ni nivel de lectura, ni trata el correo. **Se leyeron 25 de los artículos enlazados** (los de texto más pertinentes; los videos no). Cada fila indica la **base**: *estudio* (con muestra si la página la da) o *recomendación* (sin estudio descrito). Los códigos `R-N…` continúan los anteriores. Los ejemplos en español son **adaptaciones nuestras** (`[SN]`) de ejemplos en inglés.
+
+### 10.1 Cuánto se lee de verdad
+| Código | Hallazgo / regla | Base | Fuente |
+|---|---|---|---|
+| R-N1 | Se lee como máximo ≈ 28 % de las palabras de una página en una visita; ≈ 20 % es más probable. Cada 100 palabras añadidas suman ≈ 4,4 s de visita, o sea se lee ≈ 18 % del texto añadido. Solo se alcanza a leer la mitad en páginas de ≈ 111 palabras o menos. | Estudio: análisis de datos de Weinreich et al. 2008, 25 personas con alta alfabetización, 45 237 vistas (2005). No es de correos. | `how-little-do-users-read` |
+| R-N2 | La atención cae por párrafo: leyeron el 1.º 81 %, el 2.º 71 %, el 3.º 63 %, el 4.º 32 %. **Lo clave, en los 3 primeros párrafos; lo más importante, en el primero.** | Estudio: 1,5 millones de fijaciones de seguimiento ocular (sin muestras por estudio). | `website-reading` |
+| R-N3 | Se sigue **escaneando más que leyendo**, de forma no lineal; los patrones de 2006 siguen vigentes en 2019. | Estudio: 5 estudios en 13 años, > 500 personas y > 750 h de seguimiento ocular. | `how-people-read-online` (Moran, 2020) |
+| R-N4 | De cada elemento de una lista se ven **≈ 2 palabras**: pon el término útil o la acción en las 2 primeras palabras; sin relleno tipo «Presentamos…». | Estudio: 80 personas; 20 enlaces mostrados con sus primeros 11 caracteres; 35 % de los enlaces no daba idea de adónde llevaban. | `first-2-words-a-signal-for-scanning` |
+| R-N5 | La mayoría se conforma con «lo bastante bueno» (*satisficing*): pon un **resumen arriba**, títulos descriptivos y lo esencial a la vista. | Recomendación (conceptual). | `satisficing` |
+| R-N6 | Escribe para el **objetivo de quien lee**, no para la narración del autor; ve al punto y usa los términos que la gente busca. | Recomendación (opinión, 2008). | `writing-style-for-print-vs-web` |
+
+`[SN]` Consecuencia para el correo: la persona de selección ve primero el **asunto (≈ 40 caracteres)**, luego la **primera frase**; lo que está en el 4.º párrafo casi no se lee. Por eso 3 párrafos cortos y lo principal en el primero.
+
+### 10.2 Brevedad y palabras
+| Código | Regla | Ejemplo (adaptado) | Base | Fuente |
+|---|---|---|---|---|
+| R-N7 | **Recorta lo que no es 100 % necesario**: pregunta «¿lo necesita quien lee para entenderme?». | | Recomendación | `rewriting-content-brevity` (Dykes, 2023) |
+| R-N8 | **Quita las aperturas expletivas** («Es importante que…», «Hay…», «Se trata de…») y reordena la frase. | ✗ «Es importante involucrar a las partes» → ✓ «Involucrar a las partes es importante» | Recomendación | idem |
+| R-N9 | Quita **adverbios y modificadores de relleno** («muy», «sumamente», «realmente»). | ✗ «muy valiosa» → ✓ «valiosa» | Recomendación | idem; `cringeworthy-words` |
+| R-N10 | Cambia un grupo de sustantivos por **un adjetivo**; pasa lo pasivo a activo (prueba: añadir «por zombis» tras el verbo); quita redundancias («como, por ejemplo, … etcétera»). | ✗ «un sitio con buen diseño» → ✓ «un sitio bien diseñado» | Recomendación | `rewriting-content-brevity` |
+| R-N11 | **Palabras a cortar** (por parecer pretenciosas o vacías): «utilizar» (di «usar»); «permite/le permite» (di qué puede hacer la persona); «muy/realmente/extremadamente»; «entendemos que…» y «en el mundo acelerado de hoy…»; «usuario final». | ✗ «Nuestro sitio le permite encontrar boletos» → ✓ «Encuentra boletos aquí» | Estudio citado: Oppenheimer (2006): quien escribe claro parece más inteligente y confiable (método no descrito en la página). El resto, recomendación. | `cringeworthy-words` (Loranger, 2016) |
+| R-N12 | Palabras en español equivalentes a R-N11 **`[SN]`**: «llevar a cabo», «con el objetivo de», «brindar», «en aras de», «a nivel de», «proactivo» sin dato. (No vienen de NN/g: son nuestra adaptación y deben contrastarse con guías en español.) | | Síntesis nuestra | — |
+| R-N13 | Nivel de lectura: ≈ **8.º grado** para público general; para público especializado y con estudios, unos pasos por debajo de su nivel (≈ 12.º). Medir con Flesch-Kincaid o Fry (Fry preferida por el autor; cualquier fórmula es aproximada). **Las fórmulas son para inglés**; en español no las usamos como regla. | | Recomendación (+ un caso de reescritura: 65 % vs 33 % de recordación, sin muestra) | `legibility-readability-comprehension` (Nielsen, 2015) |
+| R-N14 | **Jerga**: si la mayoría conoce el término, úsalo sin explicar (explicarlo puede hacer sentir a quien sabe que no es para él); si pocos lo conocen y no es importante, usa una palabra simple; si pocos lo conocen y es importante, úsalo **con explicación en contexto** (palabra simple + término entre paréntesis). Siglas: «frase completa (SIGLA)» la primera vez. | | Recomendación | `technical-jargon` (Moran, 2023) |
+| R-N15 | **Con personas expertas**: da hechos, no interpretaciones; sin exageraciones; usa su vocabulario; revisa ortografía (juzgan la credibilidad por los errores). | | Estudio (expertos médicos, científicos e ingenieros; sin muestra en el texto) | `writing-domain-experts` (2017) |
+| R-N16 | Usa el **vocabulario del público especializado** en vez de rodeos; no lo compliques más de lo necesario. | | Recomendación | `specialized-words-specialized-audience` (Nielsen, 2014) |
+| R-N17 | **Números como cifras** cuando son datos («23», no «veintitrés»), también al inicio de frase; las cantidades vagas, con palabra («miles»). | | Estudio de seguimiento ocular 2007 (sin muestra) | `web-writing-show-numbers-as-numerals` |
+
+`[SN]` **Para un correo de postulación**: los términos de la oferta que la persona sí domina se usan tal cual (R-N14, R-N16); no se explican herramientas conocidas del sector; las cifras del CV van como cifras (R-N17).
+
+### 10.3 Estructura y formato
+| Código | Regla | Base | Fuente |
+|---|---|---|---|
+| R-N18 | **Bloques cortos** con espacio entre ellos; líneas de ≈ 50–75 caracteres; agrupa lo relacionado. | Recomendación (sin fuente en la página) | `chunking` (Moran, 2016) |
+| R-N19 | **Viñetas** (solo si hay 3 o más elementos): elementos de largo parecido, misma estructura gramatical, **sin repetir las mismas palabras iniciales**, con frase de introducción, números solo si importa el orden. | Recomendación + observación en estudios de usabilidad | `presenting-bulleted-lists` (Loranger, 2017) |
+| R-N20 | **Resalta poco**: negrita/resaltado en ≤ 30 % del texto, solo lo más importante; viñetas cortas (si es larga, negrita en sus primeras palabras); estructura primero y formato después. Para textos de > 1000 palabras. | Estudio de usabilidad (sin muestra en el texto) | `formatting-long-form-content` (2023) |
+| R-N21 | **Titulares y títulos**: específicos, con una ventaja o dato concreto, que se entiendan fuera de contexto, **sin gancho, modismos ni humor**, con las palabras clave primero. | Recomendación | `headings-pickup-lines` (2015); `microcontent…` (2017) |
+
+`[SN]` En un correo: **sin viñetas ni negritas** salvo que haya 3 o más datos que pida la oferta (R-E10, R-E12).
+
+### 10.4 Microcopy: botones, enlaces, decisiones
+| Código | Regla | Base | Fuente |
+|---|---|---|---|
+| R-N22 | **Etiquetas de enlace con las «4 S»**: específicas, sinceras (coinciden con lo que ocurre al pulsar), sustanciosas (se entienden solas) y sucintas; palabras con información primero; **nunca «Más información» a secas**. | Recomendación (apoyada en seguimiento ocular) | `better-link-labels` (Moran, 2019) |
+| R-N23 | **Llamadas a la acción**: di exactamente qué recibirá la persona; evita «Comenzar» cuando lleva a un registro. (6 de 8 personas pulsaron «Get Started» creyendo otra cosa.) | Estudio cualitativo pequeño (8 personas) | `get-started` (2017) |
+| R-N24 | **Asunto del correo** (NN/g): describe el **contenido**, no el nombre del boletín ni la fecha; las **palabras informativas primero** y ≈ **40 caracteres visibles**; no repitas el nombre de quien envía; evita el nombre de quien recibe (si lo usas: solo el nombre de pila, con mayúscula normal y no como primera palabra); no empieces con un símbolo y prueba los especiales en varios clientes. **Base**: «investigación con cientos de correos», sin muestra ni métricas; el límite de 40 es por cómo los programas recortan, no un umbral probado. Nuestro patrón `Postulación [cargo] – [Nombre]` lo cumple: palabra clave y cargo primero, nombre al final. | Recomendación (anecdótica) | `email-subject-lines` (Estes, 2014) |
+| R-N25 | **Botones de acción**: 2 a 4 palabras, empiezan con verbo, sin artículos; nunca «OK»: nombra la acción («Descartar», «Continuar a facturación»); misma etiqueta para el mismo comando en toda la app. | Recomendación | `ui-copy` (Kaley, 2019) |
+| R-N26 | **Sin presión en las decisiones**: no enmarques opciones como pérdidas, no agregues urgencia o escasez artificial, ni lenguaje emocional o moral para opciones normales; opciones neutras y de igual peso visual. | Recomendación (cita *Nudge*, 2008) | `interface-copy-decision-making` (Kane, 2019) |
+
+`[SN]` R-N26 alinea con R-M3 (no presionar con «esperamos noticias pronto»): el cierre invita, no urge.
+
+### 10.5 Tono y modelos de lenguaje (lo más útil para S7c)
+| Código | Regla | Base | Fuente |
+|---|---|---|---|
+| R-N27 | **Lista de 37 palabras de tono** de NN/g (para elegir y para anotar las que se evitan): autoritativo, afectuoso, alegre, grosero, conservador, conversacional, informal, seco, atrevido, entusiasta, formal, franco, amistoso, divertido, gracioso, humorístico, informativo, irreverente, objetivo (*matter-of-fact*), nostálgico, apasionado, juguetón, profesional, provocador, peculiar, respetuoso, romántico, sarcástico, serio, inteligente, burlón, compasivo, a la moda, sin disculpas, optimista, ingenioso, y confiable. **Método**: elige las 4 dimensiones, anota palabras «sí» y «no» y **pruébalas con personas reales** (no solo el equipo). Sin resultados de calificación publicados. | Recomendación | `tone-voice-words` (Moran, 2016; rev. 2023) |
+| R-N28 | **Al pedirle un tono a un modelo de lenguaje**: *un solo adjetivo* de tono se exagera (el modelo se «engancha» a él: de «feliz» sale texto florido); **usa 2 o 3 descriptores a la vez** (ej. «amable, profesional, informal»); **pega un texto de ejemplo real** y pide imitar su registro (fue lo que mejor funcionó); pide al modelo que describa el tono de ese texto y guarda la descripción como guía; **pide varias variantes** (3 a 5) y elige; **no nombres a una persona famosa** como referencia de tono; espera exageración en el primer borrador y edítala hacia palabras simples. | Observación informal de la autora (sin muestra, sin modelo ni puntuación): ejemplos de pares prompt/respuesta | `chatgpt-and-tone` (Dykes, 2024) |
+
+`[SN]` **Consecuencias para Sooosh (a medir, no asumidas)**
+1. Nuestros tonos ya usan **3 palabras** cada uno (§3), en línea con R-N28; en la guía al modelo se escriben como descriptores combinados, **no** como un adjetivo único.
+2. Añadir **1 o 2 ejemplos cortos** de párrafo central por tono (con datos de ejemplo, no del CV de nadie), escritos por nosotros: es lo que más funcionó en la fuente. Costo: tokens extra en cada petición → se mide el tiempo en `BENCHMARKS.md`.
+3. Ya pedimos **3 propuestas** con ángulos distintos: coincide con R-N28 (variantes).
+4. El verificador debe **recortar la exageración**: lista de palabras de R-N11/R-N12, exclamaciones, superlativos.
+
+### 10.6 Lo que esta ampliación **no** cambia ni prueba
+- Casi todas las cifras salen de estudios de **sitios web y de personas de EE. UU./alta alfabetización (2005–2020)**; no hay estudio de correos de empleo.
+- Varias reglas numéricas (50–75 caracteres, 40–60 de título, 2–4 palabras de botón, ≤ 30 % de énfasis) **no tienen fuente en la página**.
+- La guía no cubre: el correo, los asuntos como tales (solo el artículo de 2014), niveles de lectura en español ni fórmulas de legibilidad en español.
+
+### 10.7 Artículos de la guía aún sin leer (por si se quiere ampliar más)
+`tone-voice-samples`, `text-scanning-patterns-eyetracking`, `f-shaped-pattern-reading-web-content`, `layer-cake-pattern-scanning`, `exhaustive-review-eyetracking`, `mobile-content`, `best-font-for-online-reading`, `scientific-findings-online`, `passive-voice-is-redeemed-for-web`, `learn-more-links`, `link-promise`, `error-message-guidelines`, `error-messages-scoring-rubric`, `content-strategy-study-guide`, `accordions-*`, `in-page-links*` y los videos de la guía. Los de mayor valor probable para el correo: **`passive-voice-is-redeemed-for-web`** (cuándo la voz pasiva es válida, relevante porque R-E4 pide activa) y **`error-message-guidelines`** (para los mensajes de la app, no para el correo).

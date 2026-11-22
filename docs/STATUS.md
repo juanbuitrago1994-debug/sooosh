@@ -1103,3 +1103,9 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - Se leyeron 7 páginas de NN/g, GOV.UK, digital.gov, Mailchimp, Atlassian, Google, 4 guías de empleo (elempleo, Magneto365, Enhancv, Proton) y 3 de reclutador/correo en frío, Wikipedia en español (queísmo, dequeísmo, gerundio), 2 artículos de lenguaje claro y una guía comercial de correo formal. **No se pudo leer**: RAE, Fundéu y los PDF de las guías colombianas (DNP, SIC, Colombia Compra): están listados en §9 y no se usaron.
 - Sin código nuevo ni mediciones: no se afirma mejora de calidad. Se mide en la parte 2 (conectar la guía al prompt y al verificador).
 - **Para revisar por Juan**: leer §5 (correo de postulación), §3 (los 3 tonos) y §8 (guía compacta); decidir el tuteo vs «usted» (§5, pregunta abierta) y, si puedes, pegar el texto de la guía del DNP para citarla.
+
+### P0.5 · S7c (parte 1b): ampliación con la guía de estudio de UX writing de NN/g (22-nov-2026)
+- `docs/CONOCIMIENTO-UX-CONTENT.md` §10: se leyó la guía de NN/g y **25 de los artículos que enlaza** (cuánto se lee, brevedad, palabras a cortar, jerga, números, viñetas, formato, enlaces y llamadas a la acción, botones, decisiones sin presión, asuntos de correo, palabras de tono y tono con ChatGPT). Reglas nuevas `R-N1…R-N28`, cada una con su base (estudio con muestra, o recomendación sin estudio) y su fuente.
+- Cambios a lo anterior: **R-C9** (asunto: lo importante en los primeros ≈ 40 caracteres, nombre al final) y la guía compacta del §8 (tonos como 2–3 descriptores combinados y 1–2 ejemplos por tono, porque un solo adjetivo de tono hace que el modelo exagere según NN/g 2024).
+- Límites anotados en §10.6: casi todas las cifras son de sitios web y de EE. UU. (2005–2020); varias reglas numéricas no tienen fuente en su página; nada sobre correo de empleo ni niveles de lectura en español. Lista de lo no leído en §10.7.
+- Sin código ni mediciones nuevas.
