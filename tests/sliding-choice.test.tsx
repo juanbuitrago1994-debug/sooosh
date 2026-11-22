@@ -1,7 +1,11 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it, vi } from "vitest"
 import { SlidingChoice } from "@/components/motion/sliding-choice"
+import type { useEmailBody } from "@/components/jobs/use-email-body"
 import { DEFAULT_SETTINGS } from "@/lib/apply/body-settings"
+
+type Email = ReturnType<typeof useEmailBody>
+const email = (over: Partial<Email> = {}) => ({ settings: DEFAULT_SETTINGS, setSettings: () => {}, includeWeb: false, setIncludeWeb: () => {}, links: [], hasWebFromCv: false, extraUrl: null, addUrl: () => true, removeUrl: () => {}, ...over }) as Email
 
 const options = [
   { value: "corto", label: "Corto" },
@@ -42,12 +46,19 @@ describe("drawer de ajustes", () => {
       return { Drawer: Pass, DrawerContent: Pass, DrawerHeader: Pass, DrawerFooter: Pass, DrawerTitle: Pass, DrawerDescription: Pass }
     })
     const { ApplyEmailSettingsDrawer } = await import("@/components/jobs/apply-email-settings-drawer")
-    const html = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} settings={DEFAULT_SETTINGS} onChange={() => {}} />)
+    const html = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email()} />)
     for (const t of ["Ajustes de redacción", "Longitud", "Tono", "Enfoque", "Listo"]) expect(html).toContain(t)
     expect(html).toContain("3 o 4 frases: equilibrado.")
     expect(html).toContain("Cálido y empático con el equipo.")
     expect(html).toContain("Cada propuesta destaca algo distinto.")
     expect((html.match(/role="radiogroup"/g) ?? []).length).toBe(3)
+    // el CV no trae portafolio: se ofrece el campo para agregarlo (aquí, no en el paso «Cuerpo»)
+    expect(html).toContain('id="mail-url"')
+    expect(html).toContain("Tu CV no trae un portafolio o web")
+    const withLink = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email({ links: [{ label: "Portafolio", url: "https://ana.design" }], hasWebFromCv: true })} />)
+    expect(withLink).toContain("ana.design")
+    expect(withLink).toContain('id="mail-web"')
+    expect(withLink).not.toContain('id="mail-url"')
     vi.doUnmock("@/components/ui/drawer")
   })
 })

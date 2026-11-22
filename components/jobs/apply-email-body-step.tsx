@@ -1,14 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, SlidersHorizontalIcon, SparklesIcon, XIcon } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
 import { DotLoader } from "@/components/ai/dot-loader"
 import { ApplyEmailSettingsDrawer } from "@/components/jobs/apply-email-settings-drawer"
 import type { useEmailBody } from "@/components/jobs/use-email-body"
 import { Button } from "@/components/ui/button"
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 
 type EmailBody = ReturnType<typeof useEmailBody>
@@ -21,17 +19,8 @@ const SOURCE_HINT = {
 
 /** Paso «Cuerpo»: propuestas con flechas, pedir otras versiones a la IA local, ajustes de redacción y portafolio o web. */
 export function BodyStep({ email }: { email: EmailBody }) {
-  const { proposals, index, current, body, loading, settings, setSettings, includeWeb, setIncludeWeb, links, hasWebFromCv, extraUrl, addUrl, removeUrl, edit, go, generate } = email
+  const { proposals, index, current, body, loading, edit, go, generate } = email
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [urlDraft, setUrlDraft] = useState("")
-  const [urlError, setUrlError] = useState<string | null>(null)
-  const submitUrl = () => {
-    if (!urlDraft.trim()) return
-    if (addUrl(urlDraft)) {
-      setUrlDraft("")
-      setUrlError(null)
-    } else setUrlError("Escribe una dirección web válida, por ejemplo miportafolio.com.")
-  }
 
   return (
     <FieldGroup className="gap-6">
@@ -65,54 +54,8 @@ export function BodyStep({ email }: { email: EmailBody }) {
           <SlidersHorizontalIcon aria-hidden />
         </Button>
       </div>
-      <ApplyEmailSettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} settings={settings} onChange={setSettings} />
+      <ApplyEmailSettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} email={email} />
 
-      {!hasWebFromCv && !extraUrl && (
-        <Field data-invalid={urlError ? true : undefined}>
-          <FieldLabel htmlFor="mail-url">Tu portafolio o web</FieldLabel>
-          <div className="flex gap-2">
-            <Input
-              id="mail-url"
-              type="url"
-              inputMode="url"
-              autoComplete="off"
-              placeholder="miportafolio.com"
-              value={urlDraft}
-              aria-invalid={urlError ? true : undefined}
-              onChange={(e) => {
-                setUrlDraft(e.target.value)
-                setUrlError(null)
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault()
-                  submitUrl()
-                }
-              }}
-            />
-            <Button type="button" variant="outline" size="icon" aria-label="Agregar portafolio o web" onClick={submitUrl} disabled={!urlDraft.trim()}>
-              <PlusIcon aria-hidden />
-            </Button>
-          </div>
-          {urlError ? <FieldError>{urlError}</FieldError> : <FieldDescription>Tu CV no trae un portafolio o web. Si lo agregas, se usa solo en este correo.</FieldDescription>}
-        </Field>
-      )}
-
-      {links.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <Field orientation="horizontal" className="items-center justify-between pointer-coarse:min-h-11">
-            <FieldLabel htmlFor="mail-web" className="min-w-0 flex-1 font-normal break-all">
-              Incluir {links.map((l) => l.url.replace(/^https?:\/\//, "")).join(" y ")}
-            </FieldLabel>
-            {extraUrl && (
-              <Button type="button" variant="ghost" size="icon-xs" aria-label="Quitar el enlace agregado" onClick={removeUrl}>
-                <XIcon aria-hidden />
-              </Button>
-            )}
-            <Switch id="mail-web" checked={includeWeb} onCheckedChange={setIncludeWeb} />
-          </Field>
-        </div>
-      )}
     </FieldGroup>
   )
 }

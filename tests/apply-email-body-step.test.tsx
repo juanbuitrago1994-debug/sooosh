@@ -30,15 +30,15 @@ const email = (over: Partial<Email> = {}): Email =>
   }) as Email
 
 describe("paso «Cuerpo»", () => {
-  it("muestra el texto base, el botón de otras versiones y pide el portafolio si el CV no lo trae", () => {
+  it("muestra el texto base y el botón de otras versiones; el portafolio y los ajustes viven en el drawer aparte", () => {
     const html = renderToStaticMarkup(<BodyStep email={email()} />)
     expect(html).toContain("Cuerpo base")
     expect(html).toContain("Pedir otras versiones")
     // los ajustes viven en un drawer aparte: aquí solo hay un botón para abrirlo
     expect(html).toContain('aria-label="Ajustes de redacción"')
     expect(html).not.toContain("Longitud")
-    expect(html).toContain('id="mail-url"')
-    expect(html).toContain("Tu CV no trae un portafolio o web")
+    expect(html).not.toContain('id="mail-url"')
+    expect(html).not.toContain("Tu portafolio o web")
     // sin propuestas extra no hay flechas
     expect(html).not.toContain("Propuesta anterior")
   })
@@ -55,11 +55,5 @@ describe("paso «Cuerpo»", () => {
     expect(html).toContain("Escribiendo propuestas…")
     expect(html).toContain('data-variant="orbit"')
     expect(html).toContain('aria-busy="true"')
-  })
-  it("con un portafolio del CV ofrece incluirlo y no pide otro", () => {
-    const html = renderToStaticMarkup(<BodyStep email={email({ links: [{ label: "Portafolio", url: "https://ana.design" }], hasWebFromCv: true })} />)
-    expect(html).toContain("ana.design")
-    expect(html).toContain('id="mail-web"')
-    expect(html).not.toContain('id="mail-url"')
   })
 })

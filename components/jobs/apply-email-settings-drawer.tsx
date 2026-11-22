@@ -1,8 +1,13 @@
 "use client"
 
+import { useState } from "react"
+import { PlusIcon, XIcon } from "lucide-react"
+import type { useEmailBody } from "@/components/jobs/use-email-body"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
 import { SlidingChoice } from "@/components/motion/sliding-choice"
 import type { BodySettings } from "@/lib/apply/body-settings"
@@ -38,8 +43,20 @@ const GROUPS: { key: keyof BodySettings; label: string; options: { value: string
   },
 ]
 
+type EmailBody = ReturnType<typeof useEmailBody>
+
 /** Drawer aparte (se abre encima del panel de correo) con los ajustes de redacción: así el paso «Cuerpo» queda limpio. */
-export function ApplyEmailSettingsDrawer({ open, onOpenChange, settings, onChange }: { open: boolean; onOpenChange: (open: boolean) => void; settings: BodySettings; onChange: (next: BodySettings) => void }) {
+export function ApplyEmailSettingsDrawer({ open, onOpenChange, email }: { open: boolean; onOpenChange: (open: boolean) => void; email: EmailBody }) {
+  const { settings, setSettings: onChange, includeWeb, setIncludeWeb, links, hasWebFromCv, extraUrl, addUrl, removeUrl } = email
+  const [urlDraft, setUrlDraft] = useState("")
+  const [urlError, setUrlError] = useState<string | null>(null)
+  const submitUrl = () => {
+    if (!urlDraft.trim()) return
+    if (addUrl(urlDraft)) {
+      setUrlDraft("")
+      setUrlError(null)
+    } else setUrlError("Escribe una dirección web válida, por ejemplo miportafolio.com.")
+  }
   return (
     <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
       <FloatingDrawerContent>
@@ -47,9 +64,55 @@ export function ApplyEmailSettingsDrawer({ open, onOpenChange, settings, onChang
           <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
             <DrawerHeader className="flex flex-col gap-1 p-0 pt-4">
               <DrawerTitle>Ajustes de redacción</DrawerTitle>
-              <DrawerDescription>Elige cómo quieres que suene tu correo. Se aplican a las próximas versiones que pidas.</DrawerDescription>
+              <DrawerDescription>Elige cómo suena tu correo y si incluye tu portafolio o web. La redacción se aplica a las próximas versiones que pidas.</DrawerDescription>
             </DrawerHeader>
             <FieldGroup className="gap-6">
+              {!hasWebFromCv && !extraUrl && (
+                <Field data-invalid={urlError ? true : undefined}>
+                  <FieldLabel htmlFor="mail-url">Tu portafolio o web</FieldLabel>
+                  <div className="flex gap-2">
+                    <Input
+                      id="mail-url"
+                      type="url"
+                      inputMode="url"
+                      autoComplete="off"
+                      placeholder="miportafolio.com"
+                      value={urlDraft}
+                      aria-invalid={urlError ? true : undefined}
+                      onChange={(e) => {
+                        setUrlDraft(e.target.value)
+                        setUrlError(null)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          submitUrl()
+                        }
+                      }}
+                    />
+                    <Button type="button" variant="outline" size="icon" aria-label="Agregar portafolio o web" onClick={submitUrl} disabled={!urlDraft.trim()}>
+                      <PlusIcon aria-hidden />
+                    </Button>
+                  </div>
+                  {urlError ? <FieldError>{urlError}</FieldError> : <FieldDescription>Tu CV no trae un portafolio o web. Si lo agregas, se usa solo en este correo.</FieldDescription>}
+                </Field>
+              )}
+
+              {links.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <Field orientation="horizontal" className="items-center justify-between pointer-coarse:min-h-11">
+                    <FieldLabel htmlFor="mail-web" className="min-w-0 flex-1 font-normal break-all">
+                      Incluir {links.map((l) => l.url.replace(/^https?:\/\//, "")).join(" y ")}
+                    </FieldLabel>
+                    {extraUrl && (
+                      <Button type="button" variant="ghost" size="icon-xs" aria-label="Quitar el enlace agregado" onClick={removeUrl}>
+                        <XIcon aria-hidden />
+                      </Button>
+                    )}
+                    <Switch id="mail-web" checked={includeWeb} onCheckedChange={setIncludeWeb} />
+                  </Field>
+                </div>
+              )}
               {GROUPS.map((g) => {
                 const current = g.options.find((o) => o.value === settings[g.key]) ?? g.options[0]
                 return (
