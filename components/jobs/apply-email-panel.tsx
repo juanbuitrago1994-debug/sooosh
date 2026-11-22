@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react"
 import Link from "next/link"
-import { CheckIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
+import { CheckIcon, ChevronDownIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
 import { DotLoader } from "@/components/ai/dot-loader"
@@ -82,6 +82,8 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requ
   const email = useEmailBody({ cv, job, requirements, covered })
   const body = email.body
   const [downloading, setDownloading] = useState(false)
+  // El panel de pasos se puede plegar para dejar más espacio al contenido; los botones siempre quedan a la vista.
+  const [stepsOpen, setStepsOpen] = useState(true)
   // «Pedir otro asunto»: lo ya mostrado se envía para no repetirlo; la petición se cancela si se cierra el panel.
   const [suggesting, setSuggesting] = useState(false)
   const [subjectHint, setSubjectHint] = useState<string | null>(null)
@@ -289,9 +291,12 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requ
       <DrawerFooter className="gap-6 border-t border-border/40 p-4">
         {/* Los pasos se van revelando de a uno y se pliegan al volver: solo se ven los superados (grises, con check) y el actual.
             El movimiento es lento y suave (curva y duraciones de MOTION); con «reducir movimiento» no anima. */}
-        <ol className="flex w-full flex-col" aria-label="Pasos">
+        <ol id="mail-steps" className="flex w-full flex-col" aria-label="Pasos">
           <AnimatePresence initial={false}>
-            {STEPS.slice(0, step + 1).map((s, i) => {
+            {STEPS.map((s, i) => ({ s, i }))
+              .slice(0, step + 1)
+              .filter(({ i }) => stepsOpen || i === step)
+              .map(({ s, i }) => {
               const done = i < step
               return (
                 <motion.li
@@ -304,13 +309,18 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requ
                 >
                   <div className="flex items-start gap-2 py-1">
                     <StepMark done={done} />
-                    <div className="flex min-w-0 flex-col">
+                    <div className="flex min-w-0 flex-1 flex-col">
                       <span className={`text-xs leading-4 transition-colors duration-500 ${done ? "text-muted-foreground" : "font-medium text-foreground"}`}>
                         Paso {i + 1} · {s.title}
                         {done && <span className="sr-only"> (listo)</span>}
                       </span>
                       <span className={`text-xs leading-4 transition-colors duration-500 ${done ? "text-muted-foreground/70" : "text-muted-foreground"}`}>{s.description}</span>
                     </div>
+                    {!done && step > 0 && (
+                      <Button type="button" variant="ghost" size="icon-xs" aria-expanded={stepsOpen} aria-controls="mail-steps" aria-label={stepsOpen ? "Ocultar los pasos anteriores" : "Mostrar los pasos anteriores"} onClick={() => setStepsOpen((o) => !o)}>
+                        <ChevronDownIcon aria-hidden className={`transition-transform duration-300 ${stepsOpen ? "" : "rotate-180"}`} />
+                      </Button>
+                    )}
                   </div>
                 </motion.li>
               )
