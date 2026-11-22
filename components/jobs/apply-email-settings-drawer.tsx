@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { PlusIcon, XIcon } from "lucide-react"
+import { DotLoader } from "@/components/ai/dot-loader"
+import { PlusIcon, SparklesIcon, XIcon } from "lucide-react"
 import type { useEmailBody } from "@/components/jobs/use-email-body"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
@@ -47,7 +48,7 @@ type EmailBody = ReturnType<typeof useEmailBody>
 
 /** Drawer aparte (se abre encima del panel de correo) con los ajustes de redacción: así el paso «Cuerpo» queda limpio. */
 export function ApplyEmailSettingsDrawer({ open, onOpenChange, email }: { open: boolean; onOpenChange: (open: boolean) => void; email: EmailBody }) {
-  const { settings, setSettings: onChange, includeWeb, setIncludeWeb, links, hasWebFromCv, extraUrl, addUrl, removeUrl } = email
+  const { settings, setSettings: onChange, includeWeb, setIncludeWeb, links, hasWebFromCv, extraUrl, addUrl, removeUrl, loading, generate } = email
   const [urlDraft, setUrlDraft] = useState("")
   const [urlError, setUrlError] = useState<string | null>(null)
   const submitUrl = () => {
@@ -64,7 +65,7 @@ export function ApplyEmailSettingsDrawer({ open, onOpenChange, email }: { open: 
           <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
             <DrawerHeader className="flex flex-col gap-1 p-0 pt-4">
               <DrawerTitle>Ajustes de redacción</DrawerTitle>
-              <DrawerDescription>Elige cómo suena tu correo y si incluye tu portafolio o web. La redacción se aplica a las próximas versiones que pidas.</DrawerDescription>
+              <DrawerDescription>Elige cómo suena tu correo y si incluye tu portafolio o web. Se aplican a las versiones que pidas con el botón de abajo.</DrawerDescription>
             </DrawerHeader>
             <FieldGroup className="gap-6">
               {!hasWebFromCv && !extraUrl && (
@@ -125,9 +126,23 @@ export function ApplyEmailSettingsDrawer({ open, onOpenChange, email }: { open: 
               })}
             </FieldGroup>
           </div>
-          <DrawerFooter className="border-t border-border/40 p-4">
-            <Button type="button" onClick={() => onOpenChange(false)}>
-              Listo
+          <DrawerFooter className="flex-row gap-2 border-t border-border/40 p-4">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cerrar
+            </Button>
+            {/* Acción principal: pide otras versiones con los ajustes elegidos y vuelve al paso para verlas llegar. */}
+            <Button
+              type="button"
+              className="flex-1"
+              disabled={loading}
+              aria-busy={loading}
+              onClick={() => {
+                onOpenChange(false)
+                void generate()
+              }}
+            >
+              {loading ? <DotLoader variant="orbit" rounded /> : <SparklesIcon data-icon="inline-start" />}
+              {loading ? "Escribiendo…" : "Pedir otras versiones"}
             </Button>
           </DrawerFooter>
         </div>

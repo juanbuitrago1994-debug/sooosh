@@ -1056,3 +1056,9 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - Comprobado en el servidor de desarrollo con una prueba de DOM (sin capturas): se abren 2 drawers anidados, hay 3 grupos, al elegir «Largo» la píldora pasa de `translate(141px, 4px)` a `translate(277px, 4px)` con el mismo ancho (133 px), la explicación cambia a «5 o 6 frases…» y el ajuste se guarda en el navegador.
 - Verificado: lint (0 errores; 3 avisos previos), `tsc`, `build` y `pnpm test` (78 archivos, 732 pruebas) en verde.
 - **Para revisar por Juan** (claro/oscuro, escritorio y 375 px): en el paso 3, el botón de ajustes; el drawer anidado (cómo se ve el panel de atrás), el deslizamiento de la píldora en los tres grupos (el de 4 opciones, «Enfoque», a 375 px) y el botón «Listo».
+
+### P0.5 · S4 (ajuste): «Pedir otras versiones» pasa al drawer de ajustes (21-nov-2026)
+- Los ajustes solo valen para las versiones que se piden, así que la acción principal vive donde se eligen: el drawer de «Ajustes de redacción» termina con **«Cerrar»** y el botón principal **«Pedir otras versiones»** (cierra el drawer y pide las 3 propuestas con los ajustes y el portafolio elegidos; con el cargador `orbit` y «Escribiendo…» mientras trabaja).
+- En el paso «Cuerpo» queda un solo botón, **«Ajustes y otras versiones»**, que abre ese drawer; mientras la IA redacta muestra el cargador y «Escribiendo propuestas…» (las propuestas siguen llegando una a una).
+- Comprobado por DOM en el servidor de desarrollo: al pulsar el botón principal del drawer, éste se cierra y el botón del paso pasa a «Escribiendo propuestas…».
+- Verificado: lint (0 errores; 3 avisos previos), `tsc`, `build` y `pnpm test` (78 archivos, 731 pruebas) en verde.

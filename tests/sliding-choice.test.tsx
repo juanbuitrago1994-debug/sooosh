@@ -5,7 +5,7 @@ import type { useEmailBody } from "@/components/jobs/use-email-body"
 import { DEFAULT_SETTINGS } from "@/lib/apply/body-settings"
 
 type Email = ReturnType<typeof useEmailBody>
-const email = (over: Partial<Email> = {}) => ({ settings: DEFAULT_SETTINGS, setSettings: () => {}, includeWeb: false, setIncludeWeb: () => {}, links: [], hasWebFromCv: false, extraUrl: null, addUrl: () => true, removeUrl: () => {}, ...over }) as Email
+const email = (over: Partial<Email> = {}) => ({ settings: DEFAULT_SETTINGS, setSettings: () => {}, includeWeb: false, setIncludeWeb: () => {}, links: [], hasWebFromCv: false, extraUrl: null, addUrl: () => true, removeUrl: () => {}, loading: false, generate: async () => {}, ...over }) as Email
 
 const options = [
   { value: "corto", label: "Corto" },
@@ -39,7 +39,7 @@ describe("SlidingChoice (Tabs sliding de transitions.dev)", () => {
 })
 
 describe("drawer de ajustes", () => {
-  it("muestra los tres ajustes con su explicación y un botón «Listo»", async () => {
+  it("muestra los tres ajustes con su explicación y, como acción principal, «Pedir otras versiones»", async () => {
     vi.resetModules()
     vi.doMock("@/components/ui/drawer", () => {
       const Pass = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
@@ -47,7 +47,7 @@ describe("drawer de ajustes", () => {
     })
     const { ApplyEmailSettingsDrawer } = await import("@/components/jobs/apply-email-settings-drawer")
     const html = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email()} />)
-    for (const t of ["Ajustes de redacción", "Longitud", "Tono", "Enfoque", "Listo"]) expect(html).toContain(t)
+    for (const t of ["Ajustes de redacción", "Longitud", "Tono", "Enfoque", "Cerrar", "Pedir otras versiones"]) expect(html).toContain(t)
     expect(html).toContain("3 o 4 frases: equilibrado.")
     expect(html).toContain("Cálido y empático con el equipo.")
     expect(html).toContain("Cada propuesta destaca algo distinto.")
@@ -59,6 +59,9 @@ describe("drawer de ajustes", () => {
     expect(withLink).toContain("ana.design")
     expect(withLink).toContain('id="mail-web"')
     expect(withLink).not.toContain('id="mail-url"')
+    const busy = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email({ loading: true })} />)
+    expect(busy).toContain("Escribiendo…")
+    expect(busy).toContain('data-variant="orbit"')
     vi.doUnmock("@/components/ui/drawer")
   })
 })

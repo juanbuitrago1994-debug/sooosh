@@ -30,12 +30,12 @@ const email = (over: Partial<Email> = {}): Email =>
   }) as Email
 
 describe("paso «Cuerpo»", () => {
-  it("muestra el texto base y el botón de otras versiones; el portafolio y los ajustes viven en el drawer aparte", () => {
+  it("muestra el texto base y un solo botón hacia los ajustes y otras versiones; el portafolio y los ajustes viven en el drawer aparte", () => {
     const html = renderToStaticMarkup(<BodyStep email={email()} />)
     expect(html).toContain("Cuerpo base")
-    expect(html).toContain("Pedir otras versiones")
+    expect(html).toContain("Ajustes y otras versiones")
+    expect(html).not.toContain("Pedir otras versiones")
     // los ajustes viven en un drawer aparte: aquí solo hay un botón para abrirlo
-    expect(html).toContain('aria-label="Ajustes de redacción"')
     expect(html).not.toContain("Longitud")
     expect(html).not.toContain('id="mail-url"')
     expect(html).not.toContain("Tu portafolio o web")

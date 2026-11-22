@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronLeftIcon, ChevronRightIcon, SlidersHorizontalIcon, SparklesIcon } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, SlidersHorizontalIcon } from "lucide-react"
 import { DotLoader } from "@/components/ai/dot-loader"
 import { ApplyEmailSettingsDrawer } from "@/components/jobs/apply-email-settings-drawer"
 import type { useEmailBody } from "@/components/jobs/use-email-body"
@@ -12,14 +12,14 @@ import { Textarea } from "@/components/ui/textarea"
 type EmailBody = ReturnType<typeof useEmailBody>
 
 const SOURCE_HINT = {
-  base: "Texto base con datos de tu CV. Pide otras versiones para que la IA local las redacte.",
+  base: "Texto base con datos de tu CV. Con «Ajustes y otras versiones» la IA local redacta más.",
   ia: "Redactada con IA local con datos de tu CV y de la oferta. Revísala y ajústala.",
   plantilla: "Variante de plantilla con datos de tu CV. Revísala y ajústala.",
 } as const
 
 /** Paso «Cuerpo»: propuestas con flechas, pedir otras versiones a la IA local, ajustes de redacción y portafolio o web. */
 export function BodyStep({ email }: { email: EmailBody }) {
-  const { proposals, index, current, body, loading, edit, go, generate } = email
+  const { proposals, index, current, body, loading, edit, go } = email
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
@@ -45,15 +45,10 @@ export function BodyStep({ email }: { email: EmailBody }) {
         <FieldDescription>{SOURCE_HINT[current.source]}</FieldDescription>
       </Field>
 
-      <div className="flex gap-2">
-        <Button type="button" variant="outline" className="min-w-0 flex-1" onClick={generate} disabled={loading} aria-busy={loading}>
-          {loading ? <DotLoader variant="orbit" rounded /> : <SparklesIcon data-icon="inline-start" />}
-          {loading ? "Escribiendo propuestas…" : "Pedir otras versiones"}
-        </Button>
-        <Button type="button" variant="outline" size="icon" aria-label="Ajustes de redacción" onClick={() => setSettingsOpen(true)}>
-          <SlidersHorizontalIcon aria-hidden />
-        </Button>
-      </div>
+      <Button type="button" variant="outline" onClick={() => setSettingsOpen(true)} aria-busy={loading}>
+        {loading ? <DotLoader variant="orbit" rounded /> : <SlidersHorizontalIcon data-icon="inline-start" />}
+        {loading ? "Escribiendo propuestas…" : "Ajustes y otras versiones"}
+      </Button>
       <ApplyEmailSettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} email={email} />
 
     </FieldGroup>
