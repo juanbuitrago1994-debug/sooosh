@@ -1,16 +1,17 @@
 "use client"
 
-import { useEffect, useRef, useState, type CSSProperties } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { CheckIcon, ChevronDownIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
 import { DotLoader } from "@/components/ai/dot-loader"
+import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
 import { BodyStep } from "@/components/jobs/apply-email-body-step"
 import { useEmailBody } from "@/components/jobs/use-email-body"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
+import { Drawer, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -59,12 +60,9 @@ export function ApplyEmailPanel(props: ApplyEmailPanelProps) {
     <Drawer open={props.open} onOpenChange={props.onOpenChange} swipeDirection="right">
       {/* Espaciado de los paneles laterales: 24 px entre bloques (título + descripción, campo, lista) y 8 px dentro de un bloque. */}
       {/* Panel flotante, como el de shadcn: separado de los bordes (--drawer-inset), esquinas redondeadas y sin la franja de relleno del borde. */}
-      <DrawerContent
-        style={{ "--drawer-inset": "0.75rem", "--drawer-bleed-background": "transparent" } as CSSProperties}
-        className="top-0 bottom-0 left-0 h-auto w-auto border-border/40 bg-popover/60 backdrop-blur-xl data-[swipe-direction=right]:rounded-2xl data-[swipe-direction=right]:border sm:left-auto sm:w-full sm:max-w-md"
-      >
+      <FloatingDrawerContent>
         <PanelBody {...props} />
-      </DrawerContent>
+      </FloatingDrawerContent>
     </Drawer>
   )
 }

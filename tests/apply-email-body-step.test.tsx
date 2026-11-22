@@ -34,7 +34,9 @@ describe("paso «Cuerpo»", () => {
     const html = renderToStaticMarkup(<BodyStep email={email()} />)
     expect(html).toContain("Cuerpo base")
     expect(html).toContain("Pedir otras versiones")
-    expect(html).toContain("Ajustes de redacción")
+    // los ajustes viven en un drawer aparte: aquí solo hay un botón para abrirlo
+    expect(html).toContain('aria-label="Ajustes de redacción"')
+    expect(html).not.toContain("Longitud")
     expect(html).toContain('id="mail-url"')
     expect(html).toContain("Tu CV no trae un portafolio o web")
     // sin propuestas extra no hay flechas

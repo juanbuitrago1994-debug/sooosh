@@ -1,25 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, SlidersHorizontalIcon, SparklesIcon, XIcon } from "lucide-react"
 import { DotLoader } from "@/components/ai/dot-loader"
+import { ApplyEmailSettingsDrawer } from "@/components/jobs/apply-email-settings-drawer"
 import type { useEmailBody } from "@/components/jobs/use-email-body"
 import { Button } from "@/components/ui/button"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import type { BodySettings } from "@/lib/apply/body-settings"
 
 type EmailBody = ReturnType<typeof useEmailBody>
-
-const SETTING_OPTIONS: { key: keyof BodySettings; label: string; options: { value: string; label: string }[] }[] = [
-  { key: "length", label: "Longitud", options: [{ value: "corto", label: "Corto" }, { value: "medio", label: "Medio" }, { value: "largo", label: "Largo" }] },
-  { key: "tone", label: "Tono", options: [{ value: "cercano", label: "Cercano" }, { value: "profesional", label: "Profesional" }, { value: "directo", label: "Directo" }] },
-  { key: "focus", label: "Enfoque", options: [{ value: "variado", label: "Variado" }, { value: "experiencia", label: "Experiencia" }, { value: "habilidades", label: "Habilidades" }, { value: "motivacion", label: "Motivación" }] },
-]
 
 const SOURCE_HINT = {
   base: "Texto base con datos de tu CV. Pide otras versiones para que la IA local las redacte.",
@@ -30,6 +22,7 @@ const SOURCE_HINT = {
 /** Paso «Cuerpo»: propuestas con flechas, pedir otras versiones a la IA local, ajustes de redacción y portafolio o web. */
 export function BodyStep({ email }: { email: EmailBody }) {
   const { proposals, index, current, body, loading, settings, setSettings, includeWeb, setIncludeWeb, links, hasWebFromCv, extraUrl, addUrl, removeUrl, edit, go, generate } = email
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [urlDraft, setUrlDraft] = useState("")
   const [urlError, setUrlError] = useState<string | null>(null)
   const submitUrl = () => {
@@ -63,39 +56,16 @@ export function BodyStep({ email }: { email: EmailBody }) {
         <FieldDescription>{SOURCE_HINT[current.source]}</FieldDescription>
       </Field>
 
-      <Button type="button" variant="outline" onClick={generate} disabled={loading} aria-busy={loading}>
-        {loading ? <DotLoader variant="orbit" rounded /> : <SparklesIcon data-icon="inline-start" />}
-        {loading ? "Escribiendo propuestas…" : "Pedir otras versiones"}
-      </Button>
-
-      <Collapsible className="flex flex-col gap-2">
-        <CollapsibleTrigger render={<Button type="button" variant="ghost" className="group/trigger w-fit px-0 text-muted-foreground" />}>
-          Ajustes de redacción
-          <ChevronDownIcon aria-hidden data-icon="inline-end" className="transition-transform group-aria-expanded/trigger:rotate-180" />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="flex flex-col gap-6 pt-2">
-          {SETTING_OPTIONS.map((s) => (
-            <Field key={s.key}>
-              <FieldLabel id={`set-${s.key}`}>{s.label}</FieldLabel>
-              <ToggleGroup
-                variant="outline"
-                size="sm"
-                aria-labelledby={`set-${s.key}`}
-                className="flex-wrap"
-                value={[settings[s.key]]}
-                onValueChange={(v) => v[0] && setSettings({ ...settings, [s.key]: v[0] } as BodySettings)}
-              >
-                {s.options.map((o) => (
-                  <ToggleGroupItem key={o.value} value={o.value}>
-                    {o.label}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </Field>
-          ))}
-          <FieldDescription>Los ajustes se aplican a las próximas versiones que pidas.</FieldDescription>
-        </CollapsibleContent>
-      </Collapsible>
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" className="min-w-0 flex-1" onClick={generate} disabled={loading} aria-busy={loading}>
+          {loading ? <DotLoader variant="orbit" rounded /> : <SparklesIcon data-icon="inline-start" />}
+          {loading ? "Escribiendo propuestas…" : "Pedir otras versiones"}
+        </Button>
+        <Button type="button" variant="outline" size="icon" aria-label="Ajustes de redacción" onClick={() => setSettingsOpen(true)}>
+          <SlidersHorizontalIcon aria-hidden />
+        </Button>
+      </div>
+      <ApplyEmailSettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} settings={settings} onChange={setSettings} />
 
       {!hasWebFromCv && !extraUrl && (
         <Field data-invalid={urlError ? true : undefined}>
