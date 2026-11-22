@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@/components/motion/motion-switch"
 import { ResponsiveSheet } from "@/components/jobs/responsive-sheet"
 import { SavedFiltersBar } from "@/components/jobs/saved-filters-bar"
 import { REGION_OPTIONS } from "@/lib/jobs/geo"

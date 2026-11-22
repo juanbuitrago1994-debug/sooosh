@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { WebUrlField } from "@/components/jobs/web-url-field"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@/components/motion/motion-switch"
 import { ASK_LABEL } from "@/lib/jobs/asks"
 import { Textarea } from "@/components/ui/textarea"
 

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@/components/motion/motion-switch"
 
 type Rule = { id: number; text: string; source: "aprendida" | "manual"; enabled: boolean }
 type Data = { rules: Rule[]; stats: { total: number; accepted: number; rejected: number; edited: number; sinceSummary: number }; every: number }

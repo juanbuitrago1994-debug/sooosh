@@ -3,7 +3,7 @@
 import { BookmarkIcon, CheckIcon } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@/components/motion/motion-switch"
 import { clearFilters, sameFilters, saveFilters, setAutoApply, useSavedFilters, type SavedFilters } from "@/lib/profile/saved-filters"
 
 type Current = Omit<SavedFilters, "auto">

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@/components/motion/motion-switch"
 import { decide, eraseMyData, useConsent } from "@/lib/events/consent"
 import { RETENTION_DAYS, MIN_DISTINCT_USERS } from "@/lib/events/types"
 

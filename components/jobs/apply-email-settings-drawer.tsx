@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Drawer, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
+import { Switch } from "@/components/motion/motion-switch"
 import { platformLabel, type ContactData } from "@/lib/apply/email"
 import { PRESETS, presetOf, type BodySettings } from "@/lib/apply/body-settings"
 
