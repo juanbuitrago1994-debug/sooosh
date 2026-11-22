@@ -6,7 +6,7 @@ import { DEFAULT_SETTINGS } from "@/lib/apply/body-settings"
 import { DEFAULT_CONTACT } from "@/lib/apply/email"
 
 type Email = ReturnType<typeof useEmailBody>
-const email = (over: Partial<Email> = {}) => ({ settings: DEFAULT_SETTINGS, setSettings: () => {}, contact: DEFAULT_CONTACT, setContact: () => {}, available: { phone: true, email: true, city: true, linkedin: false, web: false, source: true }, cvValues: { phone: "+57 300 000", email: "ana@x.com", city: "Bogotá" }, links: [], hasWebFromCv: false, extraUrl: null, addUrl: () => true, removeUrl: () => {}, loading: false, generate: async () => {}, recipientName: "", setRecipientName: () => {}, lang: "es", body: "Hola, equipo de X:\nTexto de ejemplo.", current: { id: 0, middle: null, source: "base" }, ...over }) as Email
+const email = (over: Partial<Email> = {}) => ({ settings: DEFAULT_SETTINGS, setSettings: () => {}, contact: DEFAULT_CONTACT, setContact: () => {}, available: { phone: true, email: true, city: true, linkedin: false, web: false, source: true }, cvValues: { phone: "+57 300 000", email: "ana@x.com", city: "Bogotá" }, links: [], hasWebFromCv: false, extraUrl: null, addUrl: () => true, removeUrl: () => {}, loading: false, generate: async () => {}, recipientName: "", setRecipientName: () => {}, lang: "es", ...over }) as Email
 
 const options = [
   { value: "corto", label: "Corto" },
@@ -48,7 +48,8 @@ describe("drawer de ajustes", () => {
     })
     const { ApplyEmailSettingsDrawer } = await import("@/components/jobs/apply-email-settings-drawer")
     const html = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email()} />)
-    for (const t of ["Ajustes de redacción", "Tono", "Longitud", "Idioma", "Qué incluye tu correo", "En el texto", "En la firma", "Más ajustes", "Vista previa", "Cerrar", "Pedir otras versiones"]) expect(html).toContain(t)
+    for (const t of ["Ajustes de redacción", "Tono", "Longitud", "Idioma", "Qué incluye tu correo", "En el texto", "En la firma", "Más ajustes", "Cerrar", "Pedir otras versiones"]) expect(html).toContain(t)
+    expect(html).not.toContain("Vista previa")
     // ya no hay pestañas ni Registro, Calidez, Tipo de lenguaje ni punto de partida
     for (const t of ["Punto de partida", "Personalizado", "Registro", "Calidez", "Tipo de lenguaje", "Contenido"]) expect(html).not.toContain(t)
     expect(html).toContain("Amable y natural, con palabras simples.")

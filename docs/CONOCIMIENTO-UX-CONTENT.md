@@ -158,7 +158,7 @@ Fuentes: artículo de prensa sobre la guía del Ministerio de Justicia de Españ
 
 ## 8. Guía compacta (el texto que se le daría al modelo)
 
-> *Borrador, aún no está conectado al código. Se afina en S7c y se mide.*
+> *Implementada en `lib/apply/guidelines.ts` y **medida el 22-nov-2026: no mejoró las propuestas y la versión completa las acortó y las hizo más lentas** (`docs/BENCHMARKS.md`). Queda apagada en el prompt; el verificador de estilo, que sí sirve, sigue activo. El texto se conserva como referencia.*
 
 ```
 Escribes el párrafo central de un correo para postularse a una vacante. Quien lo lee tiene poco tiempo.

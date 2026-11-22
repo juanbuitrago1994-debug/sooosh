@@ -2,6 +2,7 @@ import { z } from "zod"
 import { getProvider } from "@/lib/ai"
 import { fold } from "@/lib/keywords/normalize"
 import { type BodySettings, type CvFacts, type Lang } from "@/lib/apply/body-settings"
+import { guideBlock, styleIssues } from "@/lib/apply/guidelines"
 
 /**
  * Propuestas del CUERPO del correo con IA local (Ollama). El modelo escribe SOLO el párrafo central (sin saludo, despedida, firma ni enlaces: eso
@@ -66,7 +67,7 @@ export function ungroundedTerms(text: string, corpus: string): string[] {
   for (const m of text.matchAll(/[A-ZÁÉÍÓÚÑ][\p{L}\d+#-]*/gu)) {
     const word = m[0]
     const before = text.slice(0, m.index)
-    const startOfSentence = before.trim() === "" || /[.!?¡¿:]\s+$|\n\s*$/.test(before)
+    const startOfSentence = before.trim() === "" || /(?:[.!?:]\s+|[¡¿]\s*)$|\n\s*$/.test(before)
     const isAcronym = word.length > 1 && word === word.toUpperCase()
     if (startOfSentence && !isAcronym) continue
     if (CAPITAL_OK.has(fold(word)) || known(word)) continue
@@ -82,12 +83,14 @@ export function ungroundedTerms(text: string, corpus: string): string[] {
 
 const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length
 
-export function isGroundedMiddle(text: string, input: BodyInput, length: BodySettings["length"]): boolean {
+/** `style`: además de los datos, el texto debe cumplir la guía de estilo (sin exclamaciones, relleno ni gerundios de posterioridad…). */
+export function isGroundedMiddle(text: string, input: BodyInput, length: BodySettings["length"], style = true): boolean {
   const t = text.trim()
   const [min, max] = LENGTH_WORDS[length]
   const n = wordCount(t)
   if (n < Math.floor(min * 0.4) || n > Math.ceil(max * 1.5)) return false
   if (/^(hola|estimad|buen|hello|dear|hi\b)/i.test(t) || /(saludos|atentamente|cordialmente|gracias|thanks|thank you|regards|sincerely)[\s.,!]*$/i.test(t)) return false
+  if (style && styleIssues(t, input.lang ?? "es").length > 0) return false
   return ungroundedTerms(t, corpusOf(input)).length === 0
 }
 
@@ -126,7 +129,7 @@ export function focusesFor(focus: BodySettings["focus"]): (Exclude<BodySettings[
   return focus === "variado" ? ["experiencia", "habilidades", "motivacion"] : [focus, focus, focus]
 }
 
-export function bodyPrompt(input: BodyInput, s: BodySettings, avoid: string[], focus: Exclude<BodySettings["focus"], "variado">, n = 0) {
+export function bodyPrompt(input: BodyInput, s: BodySettings, avoid: string[], focus: Exclude<BodySettings["focus"], "variado">, n = 0, opts: { guide?: boolean | "min" } = {}) {
   const lang: Lang = input.lang ?? "es"
   const opening = s.focus === "variado" ? "" : OPENINGS[lang][n % 3]
   const system =
@@ -142,6 +145,8 @@ Reescribe con tus propias palabras: no copies literalmente las frases de la ofer
 Usa EXCLUSIVAMENTE los hechos que te dan del CV y de la oferta. No inventes cifras, años de experiencia, empresas, títulos, certificaciones ni herramientas. Si un dato no está, no lo menciones.
 Registro: ${REGISTER_HINT.es[s.register]}. Calidez: ${WARMTH_HINT.es[s.warmth]}. Lenguaje: ${STYLE_HINT.es[s.style]}. Extensión: ${SENTENCES.es[s.length]}. Enfoque: ${FOCUS_HINT.es[focus]}. ${opening}
 Responde únicamente con el JSON {"text":"..."}.`
+  // La guía va apagada por defecto: en la medición (docs/BENCHMARKS.md) no mejoró las propuestas y las acortó. Se activa solo para probarla.
+  const guide = opts.guide ? guideBlock(s, lang, opts.guide === "min" ? "min" : "full") : ""
   const L = lang === "en"
     ? { title: "Role", company: "Company", asks: "The job post asks for", covered: "What the CV covers from the post", headline: "CV headline", roles: "Experience (most recent first)", at: "at", skills: "CV skills", langs: "Languages", avoid: "Already shown (do not repeat)" }
     : { title: "Cargo", company: "Empresa", asks: "La oferta pide", covered: "Lo que el CV cubre de la oferta", headline: "Titular del CV", roles: "Experiencia (más reciente primero)", at: "en", skills: "Habilidades del CV", langs: "Idiomas", avoid: "Ya mostradas (no las repitas)" }
@@ -158,12 +163,17 @@ Responde únicamente con el JSON {"text":"..."}.`
   ]
     .filter(Boolean)
     .join("\n")
-  return { system, user }
+  return { system: guide ? system.replace(/\n(Responde únicamente con el JSON)/, `\n${guide}\n$1`) : system, user }
+}
+
+/** Quita exclamaciones (R-T7: en un primer contacto laboral no van): «¡Hola!» → «Hola.». */
+export function calm(text: string): string {
+  return text.replace(/¡/g, "").replace(/!+/g, ".").replace(/\.{2,}/g, ".").replace(/\.\s*\./g, ".")
 }
 
 /** Arreglos seguros de errores frecuentes del modelo en español: «la área» y formas con género («estoy entusiasmado con…»). */
 export function neutralize(text: string): string {
-  return text
+  return calm(text)
     .replace(/\bla (á|a)rea\b/gi, (m) => `el ${m.slice(3)}`)
     .replace(/\bEstoy (?:muy |realmente |sumamente )?(?:entusiasmad|emocionad|motivad)[oa] (?:con|por|de) /g, "Me entusiasma ")
     .replace(/\bestoy (?:muy |realmente |sumamente )?(?:entusiasmad|emocionad|motivad)[oa] (?:con|por|de) /g, "me entusiasma ")
@@ -178,7 +188,7 @@ const norm = (s: string) => fold(s).replace(/\W+/g, " ").trim()
  * las tres por separado y vaya mostrando cada una cuando llega (el modelo local las atiende de a una). Solo se quedan las que pasan la
  * verificación; si el modelo falla, se usa una plantilla que no se haya mostrado.
  */
-export async function suggestBodies(input: BodyInput, settings: BodySettings, avoid: string[] = [], signal?: AbortSignal, angle?: number): Promise<BodyProposal[]> {
+export async function suggestBodies(input: BodyInput, settings: BodySettings, avoid: string[] = [], signal?: AbortSignal, angle?: number, opts: { guide?: boolean | "min" } = {}): Promise<BodyProposal[]> {
   const seen = new Set(avoid.map(norm))
   const out: BodyProposal[] = []
   const provider = (() => {
@@ -192,13 +202,13 @@ export async function suggestBodies(input: BodyInput, settings: BodySettings, av
   if (provider) {
     const results = await Promise.allSettled(
       angles.map(({ focus, n }) => {
-        const { system, user } = bodyPrompt(input, settings, avoid, focus, n)
+        const { system, user } = bodyPrompt(input, settings, avoid, focus, n, opts)
         return provider.generateStructured({ system, user, schema, signal, options: { numPredict: 420 } })
       }),
     )
     for (const r of results) {
       if (r.status !== "fulfilled") continue
-      const middle = input.lang === "en" ? r.value.data.text.trim() : neutralize(r.value.data.text.trim())
+      const middle = input.lang === "en" ? calm(r.value.data.text.trim()) : neutralize(r.value.data.text.trim())
       if (!seen.has(norm(middle)) && isGroundedMiddle(middle, input, settings.length)) {
         seen.add(norm(middle))
         out.push({ middle, source: "ia" })

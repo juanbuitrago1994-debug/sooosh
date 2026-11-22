@@ -85,10 +85,10 @@ const CONTACT_ROWS: { key: keyof ContactData; label: string; where: "texto" | "f
 
 /**
  * Drawer aparte (se abre encima del panel de correo) con los ajustes de redacción, en un solo panel: tono, longitud e idioma; «Qué incluye
- * tu correo» (interruptores por dato) y «Más ajustes» plegado. Al pie, una vista previa del correo que se actualiza al instante.
+ * tu correo» (interruptores por dato) y «Más ajustes» plegado.
  */
 export function ApplyEmailSettingsDrawer({ open, onOpenChange, email, sourceName }: { open: boolean; onOpenChange: (open: boolean) => void; email: EmailBody; sourceName?: string | null }) {
-  const { settings, setSettings: onChange, loading, generate, lang, recipientName, setRecipientName, body, current } = email
+  const { settings, setSettings: onChange, loading, generate, lang, recipientName, setRecipientName } = email
   const [more, setMore] = useState(false)
   const tone = toneOf(settings) ?? TONES[0].value
   const renderGroup = (g: Group) => {
@@ -109,7 +109,7 @@ export function ApplyEmailSettingsDrawer({ open, onOpenChange, email, sourceName
           <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
             <DrawerHeader className="flex flex-col gap-1 p-0 pt-4">
               <DrawerTitle>Ajustes de redacción</DrawerTitle>
-              <DrawerDescription>Elige cómo suena tu correo y qué datos tuyos salen en él. Los datos cambian al instante; el tono y la longitud se aplican a las versiones que pidas.</DrawerDescription>
+              <DrawerDescription>Elige cómo suena tu correo y qué datos tuyos salen en él. Los datos cambian al instante en tu correo; el tono y la longitud se aplican a las versiones que pidas.</DrawerDescription>
             </DrawerHeader>
             <FieldGroup className="gap-6">
               <Field>
@@ -137,33 +137,24 @@ export function ApplyEmailSettingsDrawer({ open, onOpenChange, email, sourceName
               </CollapsibleContent>
             </Collapsible>
           </div>
-          <DrawerFooter className="gap-2 border-t border-border/40 p-4">
-            <div className="flex flex-col gap-1">
-              <p className="text-xs font-medium">Vista previa</p>
-              <p className="max-h-32 overflow-y-auto rounded-lg bg-muted/50 p-3 text-xs whitespace-pre-wrap text-muted-foreground" aria-label="Vista previa del correo" tabIndex={0}>
-                {body}
-              </p>
-              {current.override !== undefined && <p className="text-xs text-muted-foreground">Editaste este texto a mano: los datos no se le aplican hasta que lo restaures.</p>}
-            </div>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-                Cerrar
-              </Button>
-              {/* Acción principal: pide otras versiones con los ajustes elegidos y vuelve al paso para verlas llegar. */}
-              <Button
-                type="button"
-                className="flex-1"
-                disabled={loading}
-                aria-busy={loading}
-                onClick={() => {
-                  onOpenChange(false)
-                  void generate()
-                }}
-              >
-                {loading ? <DotLoader variant="orbit" rounded /> : <SparklesIcon data-icon="inline-start" />}
-                {loading ? "Escribiendo…" : "Pedir otras versiones"}
-              </Button>
-            </div>
+          <DrawerFooter className="flex-row gap-2 border-t border-border/40 p-4">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Cerrar
+            </Button>
+            {/* Acción principal: pide otras versiones con los ajustes elegidos y vuelve al paso para verlas llegar. */}
+            <Button
+              type="button"
+              className="flex-1"
+              disabled={loading}
+              aria-busy={loading}
+              onClick={() => {
+                onOpenChange(false)
+                void generate()
+              }}
+            >
+              {loading ? <DotLoader variant="orbit" rounded /> : <SparklesIcon data-icon="inline-start" />}
+              {loading ? "Escribiendo…" : "Pedir otras versiones"}
+            </Button>
           </DrawerFooter>
         </div>
       </FloatingDrawerContent>

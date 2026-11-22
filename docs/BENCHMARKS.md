@@ -259,3 +259,17 @@ Medición pequeña y puntual contra el Ollama local del servidor de desarrollo: 
 | medio · cercano · variado (modelo recién usado con otro contexto) | 21,3 s | 35,4 s | 49,9 s |
 | corto · directo · variado | 21,0 s | 28,2 s | 36,6 s |
 En las 6 respuestas las 3 propuestas pasaron la verificación (ninguna cayó a plantilla). Es una sola corrida por fila: no hay mediana ni percentiles. **Hallazgo**: pasar `numCtx` distinto del predeterminado (8192) en las llamadas de esta función hacía que Ollama recargara el modelo en cada llamada (una tanda de 3 peticiones superó los 120 s); por eso estas llamadas usan el contexto predeterminado y solo limitan `numPredict`. La primera tanda con un solo `numCtx` fijo de 4096 y 3 propuestas en una llamada tardó entre 7,7 s y 39 s, y el modelo devolvía 1 propuesta por llamada (por eso hoy se piden por separado).
+
+## Guía de redacción en el prompt del cuerpo del correo (22-nov-2026)
+Pregunta: ¿agregar al prompt la guía de `docs/CONOCIMIENTO-UX-CONTENT.md` mejora las propuestas del cuerpo? Banco: `bench/email-guide.test.ts` contra el Ollama real (`qwen3.5:9b`), caso «Diseñador/a UX/UI» con hechos de un CV de prueba, 3 tonos × 3 ángulos × 2 repeticiones = 18 muestras por variante, longitud «medio», el modelo calentado antes. Métricas **por reglas** (no miden si el texto «suena mejor»): % que pasa el verificador de datos de antes, % que pasa el verificador completo (datos + estilo) y tiempo por llamada. Textos completos en `docs/bench-email-body.json` y `docs/bench-email-body-min.json`.
+
+| Variante | Mediana | Palabras (media) | Pasa datos | Pasa completo |
+|---|---|---|---|---|
+| Sin guía (corrida 1) | 10,3 s | 51 | 100 % | 89 %* |
+| Guía completa (≈ 170 palabras + 1 ejemplo por tono) | 12,1 s | 36 | 89 % | 61 % |
+| Sin guía (corrida 2) | 10,8 s | 54 | 100 % | 100 % |
+| Guía mínima (3 líneas, sin ejemplo) | 10,5 s | 52 | 94 % | 89 % |
+
+\* 2 de 18 marcados por un falso positivo del verificador («me permiten» contado como relleno); corregido antes de la corrida 2.
+
+**Lectura honesta**: (1) sin guía el modelo ya escribe casi limpio (0 exclamaciones, 0 emojis, 0 aperturas de relleno en 36 muestras), así que no hay margen que mejorar por reglas; (2) la **guía completa** costó ≈ 1,8 s de mediana, acortó los textos (36 palabras frente a 51: dos cayeron por debajo del mínimo de «medio») y **subió los rechazos**; (3) la **guía mínima** no cuesta tiempo ni longitud, pero tampoco mejora: 1 frase larga y 1 palabra con mayúscula no respaldada («Proyectos») en 18 muestras; (4) con 18 muestras por variante y un solo caso, diferencias de 1 o 2 muestras son ruido; (5) un caso de la guía completa tardó 49 s (probable recarga del modelo). **Decisión**: la guía va **apagada** en el prompt (opción `guide` de `suggestBodies`); se conserva el **verificador de estilo** (sin costo de tiempo), que sí descarta exclamaciones, emojis, aperturas y frases de relleno y gerundios de posterioridad. Quedan sin medir: calidad percibida por personas, otros casos de oferta, inglés y el efecto de ejemplos escritos con el tono real de Juan.

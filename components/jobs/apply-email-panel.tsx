@@ -16,6 +16,8 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { buildSubject, personName } from "@/lib/apply/email"
+import { reviewEmail } from "@/lib/apply/review"
+import { cvFileName } from "@/lib/pdf/filename"
 import { ASK_LABEL, type AskKey } from "@/lib/jobs/asks"
 import { MOTION } from "@/lib/motion"
 import { useSearchProfile } from "@/lib/profile/search-profile"
@@ -134,6 +136,8 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requ
   const recipients = options.filter((o) => picked.includes(o))
 
     const fromOffer = Boolean(detected)
+  const attachmentName = cvFileName(personName(cv) ?? cv.header.fullName, job.company ?? undefined, "pdf")
+  const review = reviewEmail({ recipients: recipients.length, subject, subjectFromOffer: fromOffer, jobTitle: job.title, body, lang: email.lang })
   const canNext = step === 0 ? recipients.length > 0 : step === 1 ? subject.trim().length > 0 : step === 2 ? body.trim().length > 0 : false
 
   const suggestSubject = async () => {
@@ -291,6 +295,24 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requ
               </p>
             )}
             <Piece label="Cuerpo" text={body} multiline onCopy={() => copy("Cuerpo", body)} />
+            <Piece label="Nombre del archivo adjunto" text={attachmentName} onCopy={() => copy("Nombre del archivo", attachmentName)} />
+            <section className="flex flex-col gap-2" aria-label="Revisión final">
+              <h3 className="text-sm font-medium">Revisión final</h3>
+              <ul className="flex flex-col gap-2">
+                {review.map((c) => (
+                  <li key={c.id} className="flex items-start gap-2 text-sm">
+                    {c.ok ? <CheckIcon aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" /> : <TriangleAlertIcon aria-hidden className="mt-0.5 size-4 shrink-0" />}
+                    <span className="flex min-w-0 flex-col">
+                      <span className={c.ok ? "text-muted-foreground" : ""}>
+                        <span className="sr-only">{c.ok ? "Cumple: " : "Revisa: "}</span>
+                        {c.label}
+                      </span>
+                      {!c.ok && c.hint && <span className="text-xs text-muted-foreground">{c.hint}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
             <Button type="button" variant="outline" onClick={download} disabled={downloading}>
               <DownloadIcon data-icon="inline-start" />
               {downloading ? "Preparando PDF…" : "Descargar mi CV (PDF)"}
