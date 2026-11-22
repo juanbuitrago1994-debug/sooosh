@@ -34,7 +34,7 @@ export function resolveLang(setting: BodySettings["lang"], offerLanguage?: strin
 export const TONES: { value: string; label: string; hint: string; settings: Pick<BodySettings, "register" | "warmth" | "style"> }[] = [
   { value: "cercano", label: "Cercano", hint: "Amable y natural, con palabras simples.", settings: { register: "cercano", warmth: "calida", style: "sencillo" } },
   { value: "profesional", label: "Profesional", hint: "Formal y claro, con el vocabulario de la oferta.", settings: { register: "profesional", warmth: "neutra", style: "tecnico" } },
-  { value: "directo", label: "Directo", hint: "Sobrio y al grano, sin adornos.", settings: { register: "sobrio", warmth: "neutra", style: "sencillo" } },
+  { value: "sobrio", label: "Sobrio", hint: "Formal y al grano, sin adornos.", settings: { register: "sobrio", warmth: "neutra", style: "sencillo" } },
 ]
 /** Tono que coincide con los ajustes actuales (o `null` si la combinación no es de ninguno, p. ej. algo guardado con la versión anterior). */
 export function toneOf(s: Pick<BodySettings, "register" | "warmth" | "style">): string | null {

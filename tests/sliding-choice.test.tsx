@@ -40,7 +40,7 @@ describe("SlidingChoice (Tabs sliding de transitions.dev)", () => {
 })
 
 describe("drawer de ajustes", () => {
-  it("muestra los tres ajustes con su explicación y, como acción principal, «Pedir otras versiones»", async () => {
+  it("agrupa los ajustes en tres secciones de sliders y, como acción principal, ofrece «Pedir otras versiones»", async () => {
     vi.resetModules()
     vi.doMock("@/components/ui/drawer", () => {
       const Pass = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
@@ -48,28 +48,28 @@ describe("drawer de ajustes", () => {
     })
     const { ApplyEmailSettingsDrawer } = await import("@/components/jobs/apply-email-settings-drawer")
     const html = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email()} />)
-    for (const t of ["Ajustes de redacción", "Tono", "Longitud", "Idioma", "Qué incluye tu correo", "En el texto", "En la firma", "Más ajustes", "Cerrar", "Pedir otras versiones"]) expect(html).toContain(t)
-    expect(html).not.toContain("Vista previa")
-    // ya no hay pestañas ni Registro, Calidez, Tipo de lenguaje ni punto de partida
-    for (const t of ["Punto de partida", "Personalizado", "Registro", "Calidez", "Tipo de lenguaje", "Contenido"]) expect(html).not.toContain(t)
+    // tres secciones, según lo que hace cada ajuste
+    for (const t of ["Ajustes de redacción", "Cómo suena", "Qué dice", "A quién y con qué datos", "En el texto", "En la firma", "Cerrar", "Pedir otras versiones"]) expect(html).toContain(t)
+    // seis sliders de pasos fijos: Tono, Idioma, Longitud, Enfoque, Cierre y Saludo; ya no hay pestañas, selectores ni «Más ajustes»
+    expect((html.match(/data-slot="step-slider"/g) ?? []).length).toBe(6)
+    for (const t of ["Tono", "Idioma", "Longitud", "Enfoque", "Cierre", "Saludo"]) expect(html).toContain(t)
+    for (const t of ["Punto de partida", "Personalizado", "Registro", "Calidez", "Tipo de lenguaje", "Más ajustes", "Vista previa", 'role="radiogroup"']) expect(html).not.toContain(t)
+    // el paso actual y su explicación (tono «Cercano» por defecto)
     expect(html).toContain("Amable y natural, con palabras simples.")
     expect(html).toContain("Usa el idioma de la oferta (ahora: español).")
-    // tono, longitud e idioma
-    expect((html.match(/role="radiogroup"/g) ?? []).length).toBe(3)
-    // «Más ajustes» empieza plegado
-    expect(html).not.toContain("Enfoque")
+    // el nombre de quien recibe y los datos viven en la última sección
+    expect(html).toContain('id="mail-recipient"')
+    expect(html.indexOf("A quién y con qué datos")).toBeGreaterThan(html.indexOf("Qué dice"))
     const busy = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email({ loading: true })} />)
     expect(busy).toContain("Escribiendo…")
     expect(busy).toContain('data-variant="orbit"')
     vi.doUnmock("@/components/ui/drawer")
   })
 
-  it("«Qué incluye tu correo» ofrece un interruptor por cada dato que tiene el CV, con su valor, y el campo de portafolio si falta", async () => {
+  it("los datos del correo ofrecen un interruptor por cada dato que tiene el CV, con su valor, y el campo de portafolio si falta", async () => {
     vi.resetModules()
     const { DataTab } = await import("@/components/jobs/apply-email-settings-drawer")
     const html = renderToStaticMarkup(<DataTab email={email()} sourceName="linkedin" />)
-    expect(html).toContain("Qué incluye tu correo")
-    expect(html).toContain("Tu nombre siempre va")
     expect(html).toContain("Teléfono")
     expect(html).toContain("+57 300 000")
     expect(html).toContain("ana@x.com")

@@ -18,7 +18,7 @@ export const GUIDE_ES = `Guía de redacción (síguela):
 const EXAMPLE_ES: Record<string, string> = {
   cercano: "Me gusta tomar decisiones de diseño a partir de lo que la gente necesita, y veo que buscan justo eso. Disfruto ordenar la investigación y llevarla a una interfaz clara.",
   profesional: "Mi trayectoria combina investigación y diseño de interfaces, y responde a los requisitos de la vacante. Puedo aportar un proceso ordenado, desde el análisis hasta la entrega.",
-  directo: "Diseño interfaces y manejo las herramientas que piden. Mi perfil responde a los requisitos principales de la vacante.",
+  sobrio: "Diseño interfaces y manejo las herramientas que piden. Mi perfil responde a los requisitos principales de la vacante.",
 }
 
 /** Versión mínima (sin ejemplo): solo lo que el modelo no hace solo según la medición. */

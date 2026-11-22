@@ -1,77 +1,53 @@
 "use client"
 
-import { useState } from "react"
-import { ChevronDownIcon, SparklesIcon, XIcon } from "lucide-react"
+import { XIcon, SparklesIcon } from "lucide-react"
 import { DotLoader } from "@/components/ai/dot-loader"
 import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
 import type { useEmailBody } from "@/components/jobs/use-email-body"
 import { WebUrlField } from "@/components/jobs/web-url-field"
-import { SlidingChoice } from "@/components/motion/sliding-choice"
+import { Switch } from "@/components/motion/motion-switch"
+import { StepSlider, type StepOption } from "@/components/step-slider"
 import { Button } from "@/components/ui/button"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Drawer, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/motion/motion-switch"
+import { Separator } from "@/components/ui/separator"
 import { platformLabel, type ContactData } from "@/lib/apply/email"
 import { TONES, toneOf, type BodySettings } from "@/lib/apply/body-settings"
 
 type EmailBody = ReturnType<typeof useEmailBody>
 
-type Option = { value: string; label: string; hint: string }
-type Group = { key: keyof BodySettings; label: string; options: Option[] }
-
-const LENGTH_GROUP: Group = {
-  key: "length",
-  label: "Longitud",
-  options: [
-    { value: "corto", label: "Corto", hint: "Unas 2 frases: lo esencial." },
-    { value: "medio", label: "Medio", hint: "3 o 4 frases: equilibrado." },
-    { value: "largo", label: "Largo", hint: "5 o 6 frases, con más detalle." },
-  ],
-}
-
-const CONTENT_GROUPS: Group[] = [
-  {
-    key: "focus",
-    label: "Enfoque",
-    options: [
-      { value: "variado", label: "Variado", hint: "Cada propuesta destaca algo distinto." },
-      { value: "experiencia", label: "Experiencia", hint: "Destaca tu experiencia reciente." },
-      { value: "habilidades", label: "Habilidades", hint: "Destaca las herramientas y habilidades que pide la oferta." },
-      { value: "motivacion", label: "Motivación", hint: "Destaca tu interés por el cargo y cómo puedes aportar." },
-    ],
-  },
-  {
-    key: "greeting",
-    label: "Saludo",
-    options: [
-      { value: "equipo", label: "Hola, equipo", hint: "«Hola, equipo de la empresa:»." },
-      { value: "formal", label: "Estimado", hint: "«Estimado equipo de selección de la empresa:»." },
-      { value: "simple", label: "Solo «Hola»", hint: "Un saludo breve, sin nombrar a la empresa." },
-    ],
-  },
-  {
-    key: "cta",
-    label: "Cierre",
-    options: [
-      { value: "conversar", label: "Conversar", hint: "Quedas atento/a para conversar cuando les convenga." },
-      { value: "entrevista", label: "Entrevista", hint: "Dices que te encantaría una entrevista." },
-      { value: "agradecer", label: "Agradecer", hint: "Cierras agradeciendo que consideren tu postulación." },
-      { value: "ninguno", label: "Sin cierre", hint: "Solo el agradecimiento final, sin invitar a nada." },
-    ],
-  },
+/**
+ * Cada ajuste es un slider de pasos fijos, de menos a más. Solo Tono, Longitud, Saludo y Cierre tienen un orden natural (formalidad,
+ * extensión, formalidad del saludo, cuánto pide el cierre); Idioma y Enfoque se ordenan por convención (decisión de Juan, 22-nov-2026).
+ */
+const LENGTH_OPTIONS: StepOption[] = [
+  { value: "corto", label: "Corto", hint: "Unas 2 frases: lo esencial." },
+  { value: "medio", label: "Medio", hint: "3 o 4 frases: equilibrado." },
+  { value: "largo", label: "Largo", hint: "5 o 6 frases, con más detalle." },
 ]
-
-const LANG_GROUP: Group = {
-  key: "lang",
-  label: "Idioma",
-  options: [
-    { value: "auto", label: "Automático", hint: "Usa el idioma de la oferta." },
-    { value: "es", label: "Español", hint: "El correo sale en español." },
-    { value: "en", label: "Inglés", hint: "El correo sale en inglés." },
-  ],
-}
+const LANG_OPTIONS: StepOption[] = [
+  { value: "es", label: "Español", hint: "El correo sale en español." },
+  { value: "auto", label: "Automático", hint: "Usa el idioma de la oferta." },
+  { value: "en", label: "Inglés", hint: "El correo sale en inglés." },
+]
+const FOCUS_OPTIONS: StepOption[] = [
+  { value: "variado", label: "Variado", hint: "Cada propuesta destaca algo distinto." },
+  { value: "experiencia", label: "Experiencia", hint: "Destaca tu experiencia reciente." },
+  { value: "habilidades", label: "Habilidades", hint: "Destaca las herramientas y habilidades que pide la oferta." },
+  { value: "motivacion", label: "Motivación", hint: "Destaca tu interés por el cargo y cómo puedes aportar." },
+]
+const GREETING_OPTIONS: StepOption[] = [
+  { value: "simple", label: "Solo «Hola»", hint: "Un saludo breve, sin nombrar a la empresa." },
+  { value: "equipo", label: "Hola, equipo", hint: "«Hola, equipo de la empresa:»." },
+  { value: "formal", label: "Estimado", hint: "«Estimado equipo de selección de la empresa:»." },
+]
+const CTA_OPTIONS: StepOption[] = [
+  { value: "ninguno", label: "Sin cierre", hint: "Solo el agradecimiento final, sin invitar a nada." },
+  { value: "agradecer", label: "Agradecer", hint: "Cierras agradeciendo que consideren tu postulación." },
+  { value: "conversar", label: "Conversar", hint: "Quedas atento/a para conversar cuando les convenga." },
+  { value: "entrevista", label: "Entrevista", hint: "Dices que te encantaría una entrevista." },
+]
 
 /** Datos que pueden salir en la firma, en el orden en que se muestran. */
 const CONTACT_ROWS: { key: keyof ContactData; label: string; where: "texto" | "firma" }[] = [
@@ -83,25 +59,28 @@ const CONTACT_ROWS: { key: keyof ContactData; label: string; where: "texto" | "f
   { key: "web", label: "Portafolio o web", where: "firma" },
 ]
 
+/** Una sección del panel: título, una línea que dice qué agrupa y sus controles (24 px entre ellos). */
+function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+  return (
+    <section aria-label={title} className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h3 className="text-sm font-medium">{title}</h3>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
+      <FieldGroup className="gap-6">{children}</FieldGroup>
+    </section>
+  )
+}
+
 /**
- * Drawer aparte (se abre encima del panel de correo) con los ajustes de redacción, en un solo panel: tono, longitud e idioma; «Qué incluye
- * tu correo» (interruptores por dato) y «Más ajustes» plegado.
+ * Drawer aparte (se abre encima del panel de correo) con los ajustes de redacción, en un solo panel de tres secciones según lo que hace cada
+ * ajuste: «Cómo suena» (tono e idioma), «Qué dice» (longitud, enfoque y cierre) y «A quién y con qué datos» (saludo, nombre y datos).
  */
 export function ApplyEmailSettingsDrawer({ open, onOpenChange, email, sourceName }: { open: boolean; onOpenChange: (open: boolean) => void; email: EmailBody; sourceName?: string | null }) {
   const { settings, setSettings: onChange, loading, generate, lang, recipientName, setRecipientName } = email
-  const [more, setMore] = useState(false)
   const tone = toneOf(settings) ?? TONES[0].value
-  const renderGroup = (g: Group) => {
-    const options = g.key === "lang" ? g.options.map((o) => (o.value === "auto" ? { ...o, hint: `Usa el idioma de la oferta (ahora: ${lang === "en" ? "inglés" : "español"}).` } : o)) : g.options
-    const currentOption = options.find((o) => o.value === settings[g.key]) ?? options[0]
-    return (
-      <Field key={g.key}>
-        <FieldLabel id={`set-${g.key}`}>{g.label}</FieldLabel>
-        <SlidingChoice label={g.label} value={settings[g.key]} options={options} onValueChange={(v) => onChange({ ...settings, [g.key]: v } as BodySettings)} />
-        <FieldDescription>{currentOption.hint}</FieldDescription>
-      </Field>
-    )
-  }
+  const set = <K extends keyof BodySettings>(key: K) => (value: string) => onChange({ ...settings, [key]: value } as BodySettings)
+  const langOptions = LANG_OPTIONS.map((o) => (o.value === "auto" ? { ...o, hint: `Usa el idioma de la oferta (ahora: ${lang === "en" ? "inglés" : "español"}).` } : o))
   return (
     <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
       <FloatingDrawerContent>
@@ -109,33 +88,30 @@ export function ApplyEmailSettingsDrawer({ open, onOpenChange, email, sourceName
           <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
             <DrawerHeader className="flex flex-col gap-1 p-0 pt-4">
               <DrawerTitle>Ajustes de redacción</DrawerTitle>
-              <DrawerDescription>Elige cómo suena tu correo y qué datos tuyos salen en él. Los datos cambian al instante en tu correo; el tono y la longitud se aplican a las versiones que pidas.</DrawerDescription>
+              <DrawerDescription>El tono, el idioma, la longitud y el enfoque se aplican a las versiones que pidas con el botón de abajo; lo demás cambia al instante.</DrawerDescription>
             </DrawerHeader>
-            <FieldGroup className="gap-6">
+            <Section title="Cómo suena" description="El tono y el idioma de todo el correo.">
+              <StepSlider label="Tono" options={TONES} value={tone} onValueChange={(v) => onChange({ ...settings, ...TONES.find((t) => t.value === v)?.settings })} />
+              <StepSlider label="Idioma" options={langOptions} value={settings.lang} onValueChange={set("lang")} />
+            </Section>
+            <Separator />
+            <Section title="Qué dice" description="La extensión, lo que destaca y cómo cierra.">
+              <StepSlider label="Longitud" options={LENGTH_OPTIONS} value={settings.length} onValueChange={set("length")} />
+              <StepSlider label="Enfoque" options={FOCUS_OPTIONS} value={settings.focus} onValueChange={set("focus")} />
+              <StepSlider label="Cierre" options={CTA_OPTIONS} value={settings.cta} onValueChange={set("cta")} />
+            </Section>
+            <Separator />
+            <Section title="A quién y con qué datos" description="El saludo y los datos tuyos que salen en el correo. Tu nombre siempre va; solo aparecen los datos que tu CV trae.">
+              <StepSlider label="Saludo" options={GREETING_OPTIONS} value={settings.greeting} onValueChange={set("greeting")} />
               <Field>
-                <FieldLabel id="set-tone">Tono</FieldLabel>
-                <SlidingChoice label="Tono" value={tone} options={TONES} onValueChange={(v) => onChange({ ...settings, ...TONES.find((t) => t.value === v)?.settings })} />
-                <FieldDescription>{TONES.find((t) => t.value === tone)?.hint}</FieldDescription>
+                <FieldLabel htmlFor="mail-recipient" className="font-normal">
+                  Nombre de quien recibe (opcional)
+                </FieldLabel>
+                <Input id="mail-recipient" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Ej.: Laura" autoComplete="off" />
+                <FieldDescription>Si lo sabes, el saludo será «Hola, Laura:». Solo se usa en este correo.</FieldDescription>
               </Field>
-              {[LENGTH_GROUP, LANG_GROUP].map(renderGroup)}
-            </FieldGroup>
-            <DataTab email={email} sourceName={sourceName} />
-            <Collapsible open={more} onOpenChange={setMore} className="flex flex-col gap-6">
-              <CollapsibleTrigger render={<Button type="button" variant="ghost" className="justify-between px-0" />}>
-                Más ajustes
-                <ChevronDownIcon data-icon="inline-end" className={more ? "rotate-180 transition-transform" : "transition-transform"} aria-hidden />
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <FieldGroup className="gap-6">
-                  {CONTENT_GROUPS.map(renderGroup)}
-                  <Field>
-                    <FieldLabel htmlFor="mail-recipient">Nombre de quien recibe (opcional)</FieldLabel>
-                    <Input id="mail-recipient" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Ej.: Laura" autoComplete="off" />
-                    <FieldDescription>Si lo sabes, el saludo será «Hola, Laura:». Solo se usa en este correo.</FieldDescription>
-                  </Field>
-                </FieldGroup>
-              </CollapsibleContent>
-            </Collapsible>
+              <DataTab email={email} sourceName={sourceName} />
+            </Section>
           </div>
           <DrawerFooter className="flex-row gap-2 border-t border-border/40 p-4">
             <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
@@ -162,7 +138,7 @@ export function ApplyEmailSettingsDrawer({ open, onOpenChange, email, sourceName
   )
 }
 
-/** «Qué incluye tu correo»: un interruptor por dato, solo para los que el CV trae, mostrando el valor que saldría. Agrupado en «En el texto» y «En la firma». */
+/** Datos que salen en el correo: portafolio si falta y un interruptor por dato (solo los que el CV trae), con el valor que saldría. Agrupado en «En el texto» y «En la firma». */
 export function DataTab({ email, sourceName }: { email: EmailBody; sourceName?: string | null }) {
   const { contact, setContact, available, extraUrl, removeUrl, addUrl, links, hasWebFromCv, cvValues } = email
   const shown = CONTACT_ROWS.filter((r) => available[r.key])
@@ -194,10 +170,6 @@ export function DataTab({ email, sourceName }: { email: EmailBody; sourceName?: 
   return (
     <FieldGroup className="gap-6">
       {!hasWebFromCv && !extraUrl && <WebUrlField id="mail-url" onAdd={addUrl} />}
-      <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium">Qué incluye tu correo</p>
-        <p className="text-xs text-muted-foreground">Tu nombre siempre va. Solo aparecen los datos que tu CV trae; tú decides cuáles salen.</p>
-      </div>
       {shown.length === 0 && <FieldDescription>Tu CV no trae datos de contacto para mostrar aquí.</FieldDescription>}
       {inText.length > 0 && (
         <div className="flex flex-col gap-2">

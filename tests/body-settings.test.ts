@@ -45,7 +45,7 @@ describe("ajustes guardados con la versión anterior", () => {
   })
   it("un tono válido guardado se respeta", async () => {
     const out = await withStored({ register: "sobrio", warmth: "neutra", style: "sencillo", length: "largo" })
-    expect(toneOf(out)).toBe("directo")
+    expect(toneOf(out)).toBe("sobrio")
     expect(out.length).toBe("largo")
   })
 })
