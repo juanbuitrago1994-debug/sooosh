@@ -82,3 +82,36 @@ describe("cuerpo", () => {
     expect(pickMatches(["Figma", "figma", " ", "A", "B", "C"])).toEqual(["Figma", "A", "B"])
   })
 })
+
+describe("saludo, cierre e idioma", () => {
+  const names = { ...job, sourceName: "linkedin" }
+  it("saludo: equipo, formal, simple o con el nombre de quien recibe", () => {
+    expect(body({ style: { greeting: "equipo" } })).toMatch(/^Hola, equipo de Vos Consultora:/)
+    expect(body({ style: { greeting: "formal" } })).toMatch(/^Estimado equipo de selección de Vos Consultora:/)
+    expect(body({ style: { greeting: "simple" } })).toMatch(/^Hola:/)
+    expect(body({ style: { greeting: "formal", recipientName: " Laura " } })).toMatch(/^Hola, Laura:/)
+    expect(body({ job: { title: "Analista" }, style: { greeting: "formal" } })).toMatch(/^Estimado equipo de selección:/)
+  })
+  it("cierre: conversar, entrevista, agradecer o ninguno", () => {
+    expect(body({ style: { cta: "conversar" } })).toContain("Adjunto mi CV. Quedo atento/a para conversar cuando les convenga.\n\nGracias por el tiempo.")
+    expect(body({ style: { cta: "entrevista" } })).toContain("Adjunto mi CV. Me encantaría tener la oportunidad de conversar con ustedes en una entrevista.")
+    const gracias = body({ style: { cta: "agradecer" } })
+    expect(gracias).toContain("Adjunto mi CV. Gracias por considerar mi postulación.")
+    expect(gracias).not.toContain("Gracias por el tiempo.")
+    expect(body({ style: { cta: "ninguno" } })).toContain("Adjunto mi CV.\n\nGracias por el tiempo.")
+  })
+  it("en inglés todo lo que arma el programa sale en inglés, con los mismos datos", () => {
+    const b = body({ job: names, covered: ["Figma", "Design systems"], contact: { ...ALL_OFF, source: true }, asks: { salario: "USD 3,000", disponibilidad: "Immediate" }, style: { lang: "en" } })
+    expect(b).toMatch(/^Hello, Vos Consultora team:/)
+    expect(b).toContain("I am interested in the Diseñador/a UX/UI position I saw on LinkedIn")
+    expect(b).toContain("A few points where my profile matches what you are looking for:")
+    expect(b).toContain("Salary expectation: USD 3,000\nAvailability: Immediate")
+    expect(b).toContain("My CV is attached. I would be glad to talk whenever it suits you.")
+    expect(b).toContain("Thank you for your time.")
+    expect(b).not.toMatch(/Hola|Adjunto|Gracias/)
+    expect(body({ style: { lang: "en", greeting: "formal" } })).toMatch(/^Dear Vos Consultora Hiring Team:/)
+  })
+  it("el asunto sale en inglés cuando la oferta está en inglés", () => {
+    expect(buildSubject({ cv: cv(), job, lang: "en" }).text).toBe("Application: Diseñador/a UX/UI – Ana Pérez")
+  })
+})

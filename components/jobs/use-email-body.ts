@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { DEFAULT_CONTACT, buildBody, linkedinLink, platformLabel, webLinks, type AskValues, type ContactData, type EmailJob } from "@/lib/apply/email"
 import type { AskKey } from "@/lib/jobs/asks"
-import { DEFAULT_SETTINGS, cvFacts, FOCUSES, LENGTHS, TONES, type BodySettings } from "@/lib/apply/body-settings"
+import { CTAS, DEFAULT_SETTINGS, FOCUSES, GREETINGS, LANGS, LENGTHS, REGISTERS, STYLES, WARMTHS, cvFacts, resolveLang, type BodySettings, type Lang } from "@/lib/apply/body-settings"
 import type { CV } from "@/lib/schemas/cv"
 
 /** Ajustes de redacción: una comodidad de cada persona, se recuerdan en este navegador. */
@@ -22,10 +22,17 @@ function readContact(): ContactData | null {
   return null
 }
 
+const OPTIONS: { [K in keyof BodySettings]: readonly string[] } = { length: LENGTHS, register: REGISTERS, warmth: WARMTHS, style: STYLES, lang: LANGS, focus: FOCUSES, greeting: GREETINGS, cta: CTAS }
+
+/** Lo guardado se mezcla con los valores por defecto: una clave que ya no existe o con un valor viejo se ignora. */
 function readSettings(): BodySettings {
   try {
-    const d = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "null") as Partial<BodySettings> | null
-    if (d && LENGTHS.includes(d.length as never) && TONES.includes(d.tone as never) && FOCUSES.includes(d.focus as never)) return d as BodySettings
+    const d = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "null") as Record<string, unknown> | null
+    if (d && typeof d === "object") {
+      const out = { ...DEFAULT_SETTINGS } as Record<string, string>
+      for (const k of Object.keys(OPTIONS) as (keyof BodySettings)[]) if (typeof d[k] === "string" && OPTIONS[k].includes(d[k] as string)) out[k] = d[k] as string
+      return out as unknown as BodySettings
+    }
   } catch {
     /* sin almacenamiento o datos viejos */
   }
@@ -45,15 +52,15 @@ export function normalizeUrl(raw: string): string | null {
 }
 
 /** Una propuesta del cuerpo: `middle` es el párrafo central (la plantilla base si es `null`); `override` es lo que la persona editó a mano. */
-export type Proposal = { id: number; middle: string | null; source: "base" | "ia" | "plantilla"; override?: string }
+export type Proposal = { id: number; middle: string | null; source: "base" | "ia" | "plantilla"; override?: string; /** idioma en que se redactó (la IA y la plantilla no cambian de idioma después) */ lang?: Lang }
 
-type Params = { cv: CV | null; job: EmailJob; requirements: string[]; covered: string[]; /** lo que la oferta pide en el correo */ asks: AskKey[] }
+type Params = { cv: CV | null; job: EmailJob; requirements: string[]; covered: string[]; /** lo que la oferta pide en el correo */ asks: AskKey[]; /** idioma de la oferta (`es`, `en`…): con el idioma «automático» el correo sale en el mismo */ offerLanguage?: string | null }
 
 /**
  * Estado del paso «Cuerpo»: propuestas (la plantilla base y las que pide la persona a la IA local), cuál se ve, ajustes de redacción y el
  * portafolio o web. Vive aquí (y no en el paso) para que no se pierda al ir de un paso a otro.
  */
-export function useEmailBody({ cv, job, requirements, covered, asks }: Params) {
+export function useEmailBody({ cv, job, requirements, covered, asks, offerLanguage }: Params) {
   const [proposals, setProposals] = useState<Proposal[]>([{ id: 0, middle: null, source: "base" }])
   const [index, setIndex] = useState(0)
   // El panel solo se monta cuando la persona lo abre (en el navegador), así que se puede leer lo guardado al crear el estado.
@@ -64,6 +71,8 @@ export function useEmailBody({ cv, job, requirements, covered, asks }: Params) {
     return { ...saved, linkedin: saved.linkedin || asks.includes("linkedin"), web: saved.web || asks.includes("portafolio") }
   })
   const [askValues, setAskValues] = useState<AskValues>({})
+  /** nombre de quien recibe el correo, si la persona lo sabe (solo para este correo) */
+  const [recipientName, setRecipientName] = useState("")
   const [extraUrl, setExtraUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const nextId = useRef(1)
@@ -95,7 +104,9 @@ export function useEmailBody({ cv, job, requirements, covered, asks }: Params) {
   const links = cvLinks.length ? cvLinks : extraUrl ? [{ label: "Portafolio", url: extraUrl }] : []
   const hasWebFromCv = cvLinks.length > 0
 
-  const textOf = (p: Proposal) => (cv ? (p.override ?? buildBody({ cv, job, covered, contact, asks: askValues, middle: p.middle ?? undefined, links })) : "")
+  const lang = resolveLang(settings.lang, offerLanguage)
+  const textOf = (p: Proposal) =>
+    cv ? (p.override ?? buildBody({ cv, job, covered, contact, asks: askValues, middle: p.middle ?? undefined, links, style: { lang: p.lang ?? lang, greeting: settings.greeting, cta: settings.cta, recipientName } })) : ""
   const current = proposals[Math.min(index, proposals.length - 1)]
   const body = textOf(current)
 
@@ -159,6 +170,7 @@ export function useEmailBody({ cv, job, requirements, covered, asks }: Params) {
       covered: covered.slice(0, 12),
       facts: cvFacts(cv),
       settings,
+      lang,
     }
     let arrived = 0
     await Promise.all(
@@ -170,7 +182,7 @@ export function useEmailBody({ cv, job, requirements, covered, asks }: Params) {
           for (const p of fresh ?? []) {
             if (ctrl.signal.aborted || known.has(p.middle)) continue
             known.add(p.middle)
-            setProposals((all) => [...all, { id: nextId.current++, middle: p.middle, source: p.source }])
+            setProposals((all) => [...all, { id: nextId.current++, middle: p.middle, source: p.source, lang }])
             if (arrived++ === 0) setIndex(startIndex)
           }
         } catch {
@@ -189,5 +201,5 @@ export function useEmailBody({ cv, job, requirements, covered, asks }: Params) {
     if (!requested.current) void generate()
   }
 
-  return { proposals, index, current, body, loading, settings, setSettings, contact, setContact, available, cvValues, asks, askValues, setAskValue, missingAsks, links, hasWebFromCv, extraUrl, addUrl, removeUrl, edit, resetEdit, go, generate, ensureGenerated }
+  return { proposals, index, current, body, loading, settings, setSettings, contact, setContact, available, cvValues, asks, askValues, setAskValue, recipientName, setRecipientName, lang, missingAsks, links, hasWebFromCv, extraUrl, addUrl, removeUrl, edit, resetEdit, go, generate, ensureGenerated }
 }

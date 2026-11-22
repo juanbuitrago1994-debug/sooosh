@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { FOCUSES, LENGTHS, TONES, suggestBodies } from "@/lib/apply/body-ai"
+import { CTAS, FOCUSES, GREETINGS, LANGS, LENGTHS, REGISTERS, STYLES, WARMTHS, suggestBodies } from "@/lib/apply/body-ai"
 
 /**
  * Body: `{ title, company?, requirements, covered, facts, settings, avoid? }` → `{ proposals: [{ middle, source }] }`. Recibe solo hechos
@@ -19,7 +19,9 @@ const body = z.object({
     roles: z.array(z.object({ role: short, company: short })).max(5).default([]),
     languages: z.array(short).max(6).default([]),
   }),
-  settings: z.object({ length: z.enum(LENGTHS), tone: z.enum(TONES), focus: z.enum(FOCUSES) }),
+  settings: z.object({ length: z.enum(LENGTHS), register: z.enum(REGISTERS), warmth: z.enum(WARMTHS), style: z.enum(STYLES), lang: z.enum(LANGS), focus: z.enum(FOCUSES), greeting: z.enum(GREETINGS), cta: z.enum(CTAS) }),
+  /** idioma del correo ya resuelto (el «automático» lo resuelve el navegador con el idioma de la oferta) */
+  lang: z.enum(["es", "en"]).default("es"),
   avoid: z.array(z.string().max(1800)).max(12).optional(),
   /** 0, 1 o 2: pide solo esa propuesta (el navegador las pide por separado para mostrarlas al llegar) */
   angle: z.number().int().min(0).max(2).optional(),

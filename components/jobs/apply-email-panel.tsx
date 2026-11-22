@@ -52,6 +52,8 @@ export type ApplyEmailPanelProps = {
   requirements?: string[]
   /** lo que la oferta pide en el correo (aspiración salarial, disponibilidad…) */
   asks?: AskKey[]
+  /** idioma de la oferta (`es`, `en`…) */
+  offerLanguage?: string | null
 }
 
 /**
@@ -70,7 +72,7 @@ export function ApplyEmailPanel(props: ApplyEmailPanelProps) {
   )
 }
 
-function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requirements = [], asks = [] }: ApplyEmailPanelProps) {
+function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requirements = [], asks = [], offerLanguage }: ApplyEmailPanelProps) {
   const cv = useSearchProfile()?.cv ?? null
   const reduce = useReducedMotion()
   const [step, setStep] = useState(0)
@@ -79,8 +81,8 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requ
   const [added, setAdded] = useState<string[]>([])
   const [draft, setDraft] = useState("")
   const [draftError, setDraftError] = useState<string | null>(null)
-  const [subject, setSubject] = useState(() => (cv ? buildSubject({ detected, cv, job }).text : (detected ?? "")))
-  const email = useEmailBody({ cv, job, requirements, covered, asks })
+  const [subject, setSubject] = useState(() => (cv ? buildSubject({ detected, cv, job, lang: offerLanguage === "en" ? "en" : "es" }).text : (detected ?? "")))
+  const email = useEmailBody({ cv, job, requirements, covered, asks, offerLanguage })
   const body = email.body
   const [downloading, setDownloading] = useState(false)
   // El panel de pasos se puede plegar para dejar más espacio al contenido; los botones siempre quedan a la vista.

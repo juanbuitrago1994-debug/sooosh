@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const generate = vi.fn()
 vi.mock("@/lib/ai", () => ({ getProvider: () => ({ generateStructured: generate }) }))
 
-import { cvFacts, isGroundedMiddle, neutralize, suggestBodies, templateMiddles, ungroundedTerms, type BodyInput } from "@/lib/apply/body-ai"
+import { DEFAULT_SETTINGS, cvFacts, isGroundedMiddle, neutralize, suggestBodies, templateMiddles, ungroundedTerms, type BodyInput } from "@/lib/apply/body-ai"
 import type { CV } from "@/lib/schemas/cv"
 
 const input: BodyInput = {
@@ -66,7 +66,7 @@ describe("plantillas", () => {
 })
 
 describe("suggestBodies", () => {
-  const settings = { length: "medio", tone: "cercano", focus: "variado" } as const
+  const settings = DEFAULT_SETTINGS
   it("hace una llamada por ángulo y se queda con las propuestas que pasan la verificación", async () => {
     const second = good.replace("Trabajé como", "Me desempeñé como")
     generate
@@ -114,5 +114,37 @@ describe("suggestBodies", () => {
     const r = await suggestBodies(input, settings, [good, templateMiddles(input)[0]])
     expect(r.map((p) => p.middle)).not.toContain(good)
     expect(r.map((p) => p.middle)).not.toContain(templateMiddles(input)[0])
+  })
+})
+
+describe("ajustes de estilo e idioma", () => {
+  it("el registro, la calidez, el tipo de lenguaje y la longitud llegan al modelo", async () => {
+    generate.mockResolvedValue({ data: { text: good } })
+    await suggestBodies(input, { ...DEFAULT_SETTINGS, register: "sobrio", warmth: "entusiasta", style: "tecnico", length: "minimo" }, [], undefined, 0)
+    const system = generate.mock.calls[0][0].system as string
+    expect(system).toContain("muy formal y sobrio")
+    expect(system).toContain("entusiasmo visible")
+    expect(system).toContain("vocabulario técnico de la oferta")
+    expect(system).toContain("1 sola frase de 15 a 25 palabras")
+    expect(system).toContain("siempre de tú")
+  })
+  it("en inglés el prompt, la plantilla y el verificador cambian de idioma", async () => {
+    const en = { ...input, lang: "en" as const }
+    const enGood = "I worked as UX/UI Designer at Acme and use Figma daily to prototype interfaces alongside developers. I enjoy teamwork and believe my profile matches what Vos Consultora is looking for in this role. I like turning people's needs into clear solutions, testing them with users and improving them step by step while keeping the design system consistent."
+    generate.mockResolvedValue({ data: { text: enGood } })
+    const r = await suggestBodies(en, DEFAULT_SETTINGS, [], undefined, 0)
+    expect(r).toEqual([{ middle: enGood, source: "ia" }])
+    const system = generate.mock.calls[0][0].system as string
+    expect(system).toContain("job application email in English")
+    expect(system).not.toContain("Español neutro")
+    expect(templateMiddles(en)[0]).toMatch(/^In my most recent role I worked as/)
+    expect(ungroundedTerms("I have 8 years of experience with Sketch.", corpus)).toEqual(expect.arrayContaining(["8", "Sketch", "years of experience"]))
+    expect(isGroundedMiddle("Hello team, " + enGood, en, "medio")).toBe(false)
+    expect(isGroundedMiddle(enGood + " Thank you.", en, "medio")).toBe(false)
+  })
+  it("el español de la IA se corrige solo en español", async () => {
+    generate.mockResolvedValue({ data: { text: good.replace("Trabajé como", "Estoy muy entusiasmado con la vacante; trabajé como") } })
+    const r = await suggestBodies(input, DEFAULT_SETTINGS, [], undefined, 0)
+    expect(r[0].middle).toContain("Me entusiasma la vacante")
   })
 })

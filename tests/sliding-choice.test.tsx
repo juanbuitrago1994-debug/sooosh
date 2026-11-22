@@ -6,7 +6,7 @@ import { DEFAULT_SETTINGS } from "@/lib/apply/body-settings"
 import { DEFAULT_CONTACT } from "@/lib/apply/email"
 
 type Email = ReturnType<typeof useEmailBody>
-const email = (over: Partial<Email> = {}) => ({ settings: DEFAULT_SETTINGS, setSettings: () => {}, contact: DEFAULT_CONTACT, setContact: () => {}, available: { phone: true, email: true, city: true, linkedin: false, web: false, source: true }, cvValues: { phone: "+57 300 000", email: "ana@x.com", city: "Bogotá" }, links: [], hasWebFromCv: false, extraUrl: null, addUrl: () => true, removeUrl: () => {}, loading: false, generate: async () => {}, ...over }) as Email
+const email = (over: Partial<Email> = {}) => ({ settings: DEFAULT_SETTINGS, setSettings: () => {}, contact: DEFAULT_CONTACT, setContact: () => {}, available: { phone: true, email: true, city: true, linkedin: false, web: false, source: true }, cvValues: { phone: "+57 300 000", email: "ana@x.com", city: "Bogotá" }, links: [], hasWebFromCv: false, extraUrl: null, addUrl: () => true, removeUrl: () => {}, loading: false, generate: async () => {}, recipientName: "", setRecipientName: () => {}, lang: "es", ...over }) as Email
 
 const options = [
   { value: "corto", label: "Corto" },
@@ -48,11 +48,15 @@ describe("drawer de ajustes", () => {
     })
     const { ApplyEmailSettingsDrawer } = await import("@/components/jobs/apply-email-settings-drawer")
     const html = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email()} />)
-    for (const t of ["Ajustes de redacción", "Estilo", "Datos", "Longitud", "Tono", "Enfoque", "Cerrar", "Pedir otras versiones"]) expect(html).toContain(t)
-    expect(html).toContain("3 o 4 frases: equilibrado.")
-    expect(html).toContain("Cálido y empático con el equipo.")
-    expect(html).toContain("Cada propuesta destaca algo distinto.")
-    expect((html.match(/role="radiogroup"/g) ?? []).length).toBe(4) // las pestañas + los 3 ajustes
+    for (const t of ["Ajustes de redacción", "Punto de partida", "Estilo", "Contenido", "Datos", "Registro", "Calidez", "Tipo de lenguaje", "Longitud", "Idioma", "Cerrar", "Pedir otras versiones"]) expect(html).toContain(t)
+    // los ajustes por defecto no coinciden con ningún punto de partida: aparece «Personalizado»
+    expect(html).toContain("Personalizado")
+    expect(html).toContain("Amable y natural, sin exceso de confianza.")
+    expect(html).toContain("Usa el idioma de la oferta (ahora: español).")
+    // saludo y cierre viven en la pestaña «Contenido»
+    expect(html).not.toContain("Saludo")
+    // pestañas + punto de partida + 5 ajustes de estilo
+    expect((html.match(/role="radiogroup"/g) ?? []).length).toBe(7)
     const busy = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email({ loading: true })} />)
     expect(busy).toContain("Escribiendo…")
     expect(busy).toContain('data-variant="orbit"')
