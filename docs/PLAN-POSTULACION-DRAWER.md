@@ -68,3 +68,6 @@ Más la casilla «Incluir portafolio / web» (solo si el usuario los cargó; si 
 
 ## Avance
 - **S0, S1, S2 y S3 hechos** (ver `docs/STATUS.md`). Nota: `apply.emails` guarda solo las direcciones (sin «fuente»).
+
+## Siguientes pasos propuestos
+Ver `docs/INVESTIGACION-CORREO-POSTULACION.md` (21-nov-2026): más ajustes (estilo, datos, contenido), lo que pide la oferta en el correo, revisión final y seguimiento; S5–S8 por aprobar.
