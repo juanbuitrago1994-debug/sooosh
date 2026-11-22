@@ -40,7 +40,7 @@ describe("SlidingChoice (Tabs sliding de transitions.dev)", () => {
 })
 
 describe("drawer de ajustes", () => {
-  it("agrupa los ajustes en tres secciones de sliders y, como acción principal, ofrece «Pedir otras versiones»", async () => {
+  it("agrupa los ajustes en tres secciones de selectores y, como acción principal, ofrece «Pedir otras versiones»", async () => {
     vi.resetModules()
     vi.doMock("@/components/ui/drawer", () => {
       const Pass = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>
@@ -50,8 +50,8 @@ describe("drawer de ajustes", () => {
     const html = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email()} />)
     // tres secciones, según lo que hace cada ajuste
     for (const t of ["Ajustes de redacción", "Cómo suena", "Qué dice", "A quién y con qué datos", "En el texto", "En la firma", "Cerrar", "Pedir otras versiones"]) expect(html).toContain(t)
-    // seis sliders de pasos fijos: Tono, Idioma, Longitud, Enfoque, Cierre y Saludo; ya no hay pestañas, selectores ni «Más ajustes»
-    expect((html.match(/data-slot="step-slider"/g) ?? []).length).toBe(6)
+    // seis ajustes en filas con selector: Tono, Idioma, Longitud, Enfoque, Cierre y Saludo; ya no hay pestañas ni «Más ajustes»
+    expect((html.match(/data-slot="select-trigger"/g) ?? []).length).toBe(6)
     for (const t of ["Tono", "Idioma", "Longitud", "Enfoque", "Cierre", "Saludo"]) expect(html).toContain(t)
     for (const t of ["Punto de partida", "Personalizado", "Registro", "Calidez", "Tipo de lenguaje", "Más ajustes", "Vista previa", 'role="radiogroup"']) expect(html).not.toContain(t)
     // el paso actual y su explicación (tono «Cercano» por defecto)

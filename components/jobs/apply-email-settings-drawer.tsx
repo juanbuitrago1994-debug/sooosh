@@ -6,7 +6,7 @@ import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
 import type { useEmailBody } from "@/components/jobs/use-email-body"
 import { WebUrlField } from "@/components/jobs/web-url-field"
 import { Switch } from "@/components/motion/motion-switch"
-import { StepSlider, type StepOption } from "@/components/step-slider"
+import { SettingSelect, type SettingOption } from "@/components/setting-select"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -17,32 +17,29 @@ import { TONES, toneOf, type BodySettings } from "@/lib/apply/body-settings"
 
 type EmailBody = ReturnType<typeof useEmailBody>
 
-/**
- * Cada ajuste es un slider de pasos fijos, de menos a más. Solo Tono, Longitud, Saludo y Cierre tienen un orden natural (formalidad,
- * extensión, formalidad del saludo, cuánto pide el cierre); Idioma y Enfoque se ordenan por convención (decisión de Juan, 22-nov-2026).
- */
-const LENGTH_OPTIONS: StepOption[] = [
+/** Opciones de cada ajuste, de menos a más (el orden en que se listan en el selector). */
+const LENGTH_OPTIONS: SettingOption[] = [
   { value: "corto", label: "Corto", hint: "Unas 2 frases: lo esencial." },
   { value: "medio", label: "Medio", hint: "3 o 4 frases: equilibrado." },
   { value: "largo", label: "Largo", hint: "5 o 6 frases, con más detalle." },
 ]
-const LANG_OPTIONS: StepOption[] = [
-  { value: "es", label: "Español", hint: "El correo sale en español." },
+const LANG_OPTIONS: SettingOption[] = [
   { value: "auto", label: "Automático", hint: "Usa el idioma de la oferta." },
+  { value: "es", label: "Español", hint: "El correo sale en español." },
   { value: "en", label: "Inglés", hint: "El correo sale en inglés." },
 ]
-const FOCUS_OPTIONS: StepOption[] = [
+const FOCUS_OPTIONS: SettingOption[] = [
   { value: "variado", label: "Variado", hint: "Cada propuesta destaca algo distinto." },
   { value: "experiencia", label: "Experiencia", hint: "Destaca tu experiencia reciente." },
   { value: "habilidades", label: "Habilidades", hint: "Destaca las herramientas y habilidades que pide la oferta." },
   { value: "motivacion", label: "Motivación", hint: "Destaca tu interés por el cargo y cómo puedes aportar." },
 ]
-const GREETING_OPTIONS: StepOption[] = [
+const GREETING_OPTIONS: SettingOption[] = [
   { value: "simple", label: "Solo «Hola»", hint: "Un saludo breve, sin nombrar a la empresa." },
   { value: "equipo", label: "Hola, equipo", hint: "«Hola, equipo de la empresa:»." },
   { value: "formal", label: "Estimado", hint: "«Estimado equipo de selección de la empresa:»." },
 ]
-const CTA_OPTIONS: StepOption[] = [
+const CTA_OPTIONS: SettingOption[] = [
   { value: "ninguno", label: "Sin cierre", hint: "Solo el agradecimiento final, sin invitar a nada." },
   { value: "agradecer", label: "Agradecer", hint: "Cierras agradeciendo que consideren tu postulación." },
   { value: "conversar", label: "Conversar", hint: "Quedas atento/a para conversar cuando les convenga." },
@@ -58,6 +55,11 @@ const CONTACT_ROWS: { key: keyof ContactData; label: string; where: "texto" | "f
   { key: "linkedin", label: "LinkedIn", where: "firma" },
   { key: "web", label: "Portafolio o web", where: "firma" },
 ]
+
+/** Filas de ajustes de una misma lista: 8 px entre ellas (24 px separan los bloques). */
+function Rows({ children }: { children: React.ReactNode }) {
+  return <div className="flex flex-col gap-2">{children}</div>
+}
 
 /** Una sección del panel: título, una línea que dice qué agrupa y sus controles (24 px entre ellos). */
 function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
@@ -91,18 +93,22 @@ export function ApplyEmailSettingsDrawer({ open, onOpenChange, email, sourceName
               <DrawerDescription>El tono, el idioma, la longitud y el enfoque se aplican a las versiones que pidas con el botón de abajo; lo demás cambia al instante.</DrawerDescription>
             </DrawerHeader>
             <Section title="Cómo suena" description="El tono y el idioma de todo el correo.">
-              <StepSlider label="Tono" options={TONES} value={tone} onValueChange={(v) => onChange({ ...settings, ...TONES.find((t) => t.value === v)?.settings })} />
-              <StepSlider label="Idioma" options={langOptions} value={settings.lang} onValueChange={set("lang")} />
+              <Rows>
+                <SettingSelect label="Tono" options={TONES} value={tone} onValueChange={(v) => onChange({ ...settings, ...TONES.find((t) => t.value === v)?.settings })} />
+                <SettingSelect label="Idioma" options={langOptions} value={settings.lang} onValueChange={set("lang")} />
+              </Rows>
             </Section>
             <Separator />
             <Section title="Qué dice" description="La extensión, lo que destaca y cómo cierra.">
-              <StepSlider label="Longitud" options={LENGTH_OPTIONS} value={settings.length} onValueChange={set("length")} />
-              <StepSlider label="Enfoque" options={FOCUS_OPTIONS} value={settings.focus} onValueChange={set("focus")} />
-              <StepSlider label="Cierre" options={CTA_OPTIONS} value={settings.cta} onValueChange={set("cta")} />
+              <Rows>
+                <SettingSelect label="Longitud" options={LENGTH_OPTIONS} value={settings.length} onValueChange={set("length")} />
+                <SettingSelect label="Enfoque" options={FOCUS_OPTIONS} value={settings.focus} onValueChange={set("focus")} />
+                <SettingSelect label="Cierre" options={CTA_OPTIONS} value={settings.cta} onValueChange={set("cta")} />
+              </Rows>
             </Section>
             <Separator />
             <Section title="A quién y con qué datos" description="El saludo y los datos tuyos que salen en el correo. Tu nombre siempre va; solo aparecen los datos que tu CV trae.">
-              <StepSlider label="Saludo" options={GREETING_OPTIONS} value={settings.greeting} onValueChange={set("greeting")} />
+              <SettingSelect label="Saludo" options={GREETING_OPTIONS} value={settings.greeting} onValueChange={set("greeting")} />
               <Field>
                 <FieldLabel htmlFor="mail-recipient" className="font-normal">
                   Nombre de quien recibe (opcional)
