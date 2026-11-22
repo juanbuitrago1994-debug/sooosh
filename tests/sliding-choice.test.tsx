@@ -3,9 +3,10 @@ import { describe, expect, it, vi } from "vitest"
 import { SlidingChoice } from "@/components/motion/sliding-choice"
 import type { useEmailBody } from "@/components/jobs/use-email-body"
 import { DEFAULT_SETTINGS } from "@/lib/apply/body-settings"
+import { DEFAULT_CONTACT } from "@/lib/apply/email"
 
 type Email = ReturnType<typeof useEmailBody>
-const email = (over: Partial<Email> = {}) => ({ settings: DEFAULT_SETTINGS, setSettings: () => {}, includeWeb: false, setIncludeWeb: () => {}, links: [], hasWebFromCv: false, extraUrl: null, addUrl: () => true, removeUrl: () => {}, loading: false, generate: async () => {}, ...over }) as Email
+const email = (over: Partial<Email> = {}) => ({ settings: DEFAULT_SETTINGS, setSettings: () => {}, contact: DEFAULT_CONTACT, setContact: () => {}, available: { phone: true, email: true, city: true, linkedin: false, web: false, source: true }, cvValues: { phone: "+57 300 000", email: "ana@x.com", city: "Bogotá" }, links: [], hasWebFromCv: false, extraUrl: null, addUrl: () => true, removeUrl: () => {}, loading: false, generate: async () => {}, ...over }) as Email
 
 const options = [
   { value: "corto", label: "Corto" },
@@ -47,21 +48,50 @@ describe("drawer de ajustes", () => {
     })
     const { ApplyEmailSettingsDrawer } = await import("@/components/jobs/apply-email-settings-drawer")
     const html = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email()} />)
-    for (const t of ["Ajustes de redacción", "Longitud", "Tono", "Enfoque", "Cerrar", "Pedir otras versiones"]) expect(html).toContain(t)
+    for (const t of ["Ajustes de redacción", "Estilo", "Datos", "Longitud", "Tono", "Enfoque", "Cerrar", "Pedir otras versiones"]) expect(html).toContain(t)
     expect(html).toContain("3 o 4 frases: equilibrado.")
     expect(html).toContain("Cálido y empático con el equipo.")
     expect(html).toContain("Cada propuesta destaca algo distinto.")
-    expect((html.match(/role="radiogroup"/g) ?? []).length).toBe(3)
-    // el CV no trae portafolio: se ofrece el campo para agregarlo (aquí, no en el paso «Cuerpo»)
-    expect(html).toContain('id="mail-url"')
-    expect(html).toContain("Tu CV no trae un portafolio o web")
-    const withLink = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email({ links: [{ label: "Portafolio", url: "https://ana.design" }], hasWebFromCv: true })} />)
-    expect(withLink).toContain("ana.design")
-    expect(withLink).toContain('id="mail-web"')
-    expect(withLink).not.toContain('id="mail-url"')
+    expect((html.match(/role="radiogroup"/g) ?? []).length).toBe(4) // las pestañas + los 3 ajustes
     const busy = renderToStaticMarkup(<ApplyEmailSettingsDrawer open onOpenChange={() => {}} email={email({ loading: true })} />)
     expect(busy).toContain("Escribiendo…")
     expect(busy).toContain('data-variant="orbit"')
     vi.doUnmock("@/components/ui/drawer")
+  })
+
+  it("la pestaña «Datos» ofrece un interruptor por cada dato que tiene el CV, con su valor, y el campo de portafolio si falta", async () => {
+    vi.resetModules()
+    const { DataTab } = await import("@/components/jobs/apply-email-settings-drawer")
+    const html = renderToStaticMarkup(<DataTab email={email()} sourceName="linkedin" />)
+    expect(html).toContain("Datos en tu firma")
+    expect(html).toContain("Tu nombre siempre va")
+    expect(html).toContain("Teléfono")
+    expect(html).toContain("+57 300 000")
+    expect(html).toContain("ana@x.com")
+    expect(html).toContain("Ciudad")
+    expect(html).toContain("Bogotá")
+    expect(html).toContain("Vi su publicación en LinkedIn")
+    // LinkedIn y portafolio no están en el CV: no se ofrece un interruptor para ellos
+    expect(html).not.toContain('id="contact-linkedin"')
+    expect(html).not.toContain('id="contact-web"')
+    expect(html).toContain('id="mail-url"')
+    expect(html).toContain('id="contact-phone"')
+  })
+  it("con portafolio y LinkedIn en el CV ofrece sus interruptores y no pide el campo", async () => {
+    vi.resetModules()
+    const { DataTab } = await import("@/components/jobs/apply-email-settings-drawer")
+    const html = renderToStaticMarkup(
+      <DataTab
+        email={email({ available: { phone: false, email: false, city: false, linkedin: true, web: true, source: false }, cvValues: { linkedin: "linkedin.com/in/ana" }, links: [{ label: "Portafolio", url: "https://ana.design" }], hasWebFromCv: true })}
+        sourceName="manual"
+      />,
+    )
+    expect(html).toContain('id="contact-linkedin"')
+    expect(html).toContain('id="contact-web"')
+    expect(html).toContain("ana.design")
+    expect(html).not.toContain('id="mail-url"')
+    // sin datos de contacto ni portafolio, solo queda el campo para agregarlo y el aviso
+    const empty = renderToStaticMarkup(<DataTab email={email({ available: { phone: false, email: false, city: false, linkedin: false, web: false, source: false } })} sourceName="manual" />)
+    expect(empty).toContain("no trae datos de contacto")
   })
 })

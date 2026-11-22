@@ -2,12 +2,25 @@
 
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
-import { buildBody, webLinks, type EmailJob } from "@/lib/apply/email"
+import { DEFAULT_CONTACT, buildBody, linkedinLink, platformLabel, webLinks, type AskValues, type ContactData, type EmailJob } from "@/lib/apply/email"
+import type { AskKey } from "@/lib/jobs/asks"
 import { DEFAULT_SETTINGS, cvFacts, FOCUSES, LENGTHS, TONES, type BodySettings } from "@/lib/apply/body-settings"
 import type { CV } from "@/lib/schemas/cv"
 
 /** Ajustes de redacción: una comodidad de cada persona, se recuerdan en este navegador. */
 const SETTINGS_KEY = "sooosh:correo-ajustes:v1"
+/** Qué datos salen en la firma: también una comodidad de cada persona (se recuerda en este navegador). */
+const CONTACT_KEY = "sooosh:correo-datos:v1"
+
+function readContact(): ContactData | null {
+  try {
+    const d = JSON.parse(localStorage.getItem(CONTACT_KEY) ?? "null") as Partial<ContactData> | null
+    if (d && typeof d === "object") return { ...DEFAULT_CONTACT, ...Object.fromEntries(Object.entries(d).filter(([k, v]) => k in DEFAULT_CONTACT && typeof v === "boolean")) }
+  } catch {
+    /* sin almacenamiento o datos viejos */
+  }
+  return null
+}
 
 function readSettings(): BodySettings {
   try {
@@ -34,30 +47,29 @@ export function normalizeUrl(raw: string): string | null {
 /** Una propuesta del cuerpo: `middle` es el párrafo central (la plantilla base si es `null`); `override` es lo que la persona editó a mano. */
 export type Proposal = { id: number; middle: string | null; source: "base" | "ia" | "plantilla"; override?: string }
 
-type Params = { cv: CV | null; job: EmailJob; requirements: string[]; covered: string[] }
+type Params = { cv: CV | null; job: EmailJob; requirements: string[]; covered: string[]; /** lo que la oferta pide en el correo */ asks: AskKey[] }
 
 /**
  * Estado del paso «Cuerpo»: propuestas (la plantilla base y las que pide la persona a la IA local), cuál se ve, ajustes de redacción y el
  * portafolio o web. Vive aquí (y no en el paso) para que no se pierda al ir de un paso a otro.
  */
-export function useEmailBody({ cv, job, requirements, covered }: Params) {
+export function useEmailBody({ cv, job, requirements, covered, asks }: Params) {
   const [proposals, setProposals] = useState<Proposal[]>([{ id: 0, middle: null, source: "base" }])
   const [index, setIndex] = useState(0)
-  const [settings, setSettingsState] = useState<BodySettings>(DEFAULT_SETTINGS)
-  const [includeWeb, setIncludeWeb] = useState(false)
+  // El panel solo se monta cuando la persona lo abre (en el navegador), así que se puede leer lo guardado al crear el estado.
+  const [settings, setSettingsState] = useState<BodySettings>(readSettings)
+  // Lo que la oferta pide manda sobre lo guardado: si pide LinkedIn o portafolio, salen.
+  const [contact, setContactState] = useState<ContactData>(() => {
+    const saved = readContact() ?? DEFAULT_CONTACT
+    return { ...saved, linkedin: saved.linkedin || asks.includes("linkedin"), web: saved.web || asks.includes("portafolio") }
+  })
+  const [askValues, setAskValues] = useState<AskValues>({})
   const [extraUrl, setExtraUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const nextId = useRef(1)
   const abort = useRef<AbortController | null>(null)
   const requested = useRef(false)
-  const settingsLoaded = useRef(false)
 
-  // Los ajustes guardados se leen al montar (no en el render: en el servidor no hay almacenamiento).
-  useEffect(() => {
-    if (settingsLoaded.current) return
-    settingsLoaded.current = true
-    setSettingsState(readSettings())
-  }, [])
   useEffect(() => () => abort.current?.abort(), [])
 
   const setSettings = (next: BodySettings) => {
@@ -69,28 +81,63 @@ export function useEmailBody({ cv, job, requirements, covered }: Params) {
     }
   }
 
+  const setContact = (next: ContactData) => {
+    setContactState(next)
+    try {
+      localStorage.setItem(CONTACT_KEY, JSON.stringify(next))
+    } catch {
+      /* no se pudo recordar */
+    }
+  }
+  const setAskValue = (key: keyof AskValues, value: string) => setAskValues((v) => ({ ...v, [key]: value }))
+
   const cvLinks = cv ? webLinks(cv) : []
   const links = cvLinks.length ? cvLinks : extraUrl ? [{ label: "Portafolio", url: extraUrl }] : []
   const hasWebFromCv = cvLinks.length > 0
 
-  const textOf = (p: Proposal) => (cv ? (p.override ?? buildBody({ cv, job, covered, includeWeb, middle: p.middle ?? undefined, links })) : "")
+  const textOf = (p: Proposal) => (cv ? (p.override ?? buildBody({ cv, job, covered, contact, asks: askValues, middle: p.middle ?? undefined, links })) : "")
   const current = proposals[Math.min(index, proposals.length - 1)]
   const body = textOf(current)
 
   const edit = (text: string) => setProposals((all) => all.map((p) => (p.id === current.id ? { ...p, override: text } : p)))
+  /** Quita lo que la persona editó a mano en esta propuesta: vuelve a armarse con los datos y ajustes de ahora. */
+  const resetEdit = () => setProposals((all) => all.map((p) => (p.id === current.id ? { ...p, override: undefined } : p)))
   const go = (delta: number) => setIndex((i) => Math.max(0, Math.min(proposals.length - 1, i + delta)))
 
   const addUrl = (raw: string): boolean => {
     const url = normalizeUrl(raw)
     if (!url) return false
     setExtraUrl(url)
-    setIncludeWeb(true)
+    setContact({ ...contact, web: true })
     return true
   }
   const removeUrl = () => {
     setExtraUrl(null)
-    setIncludeWeb(false)
+    setContact({ ...contact, web: false })
   }
+
+  /** Qué datos tiene el CV (solo esos se ofrecen en la firma). */
+  const available = {
+    phone: !!cv?.header.phone?.trim(),
+    email: !!cv?.header.email?.trim(),
+    city: !!cv?.header.location?.trim(),
+    linkedin: !!(cv && linkedinLink(cv)),
+    web: links.length > 0,
+    source: !!platformLabel(job.sourceName),
+  }
+  /** Valor que saldría de cada dato de contacto (para mostrarlo junto a su interruptor). */
+  const cvValues: Partial<Record<keyof ContactData, string>> = {
+    phone: cv?.header.phone?.trim(),
+    email: cv?.header.email?.trim(),
+    city: cv?.header.location?.trim(),
+    linkedin: cv ? linkedinLink(cv)?.url.replace(/^https?:\/\//, "") : undefined,
+  }
+  /** Lo que la oferta pide en el correo y todavía no está en él. */
+  const missingAsks: AskKey[] = asks.filter((k) => {
+    if (k === "salario" || k === "disponibilidad" || k === "referencias") return !askValues[k]?.trim()
+    if (k === "linkedin") return !contact.linkedin || !(available.linkedin || askValues.linkedin?.trim())
+    return !contact.web || !available.web
+  })
 
   /**
    * Pide 3 propuestas nuevas a la IA local (con plantilla de respaldo), una petición por ángulo: el modelo local las atiende de a una, así
@@ -142,5 +189,5 @@ export function useEmailBody({ cv, job, requirements, covered }: Params) {
     if (!requested.current) void generate()
   }
 
-  return { proposals, index, current, body, loading, settings, setSettings, includeWeb, setIncludeWeb, links, hasWebFromCv, extraUrl, addUrl, removeUrl, edit, go, generate, ensureGenerated }
+  return { proposals, index, current, body, loading, settings, setSettings, contact, setContact, available, cvValues, asks, askValues, setAskValue, missingAsks, links, hasWebFromCv, extraUrl, addUrl, removeUrl, edit, resetEdit, go, generate, ensureGenerated }
 }

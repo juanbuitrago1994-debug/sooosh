@@ -14,6 +14,7 @@ import { SourcesAdmin } from "@/components/jobs/sources-admin"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
@@ -22,6 +23,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { applyChannels, applyLabel, syncEmails, type Apply } from "@/lib/jobs/apply"
+import { ASK_KEYS, ASK_LABEL } from "@/lib/jobs/asks"
 import { OfferReview } from "@/components/jobs/offer-review"
 import type { FieldEvidence } from "@/lib/jobs/evidence"
 import { classifyEntry } from "@/lib/jobs/entry-kind"
@@ -460,6 +462,28 @@ export function JobsAdmin() {
                 <Field>
                   <FieldLabel htmlFor="d-apply-subject">Asunto que pide la oferta (si lo dice)</FieldLabel>
                   <Input id="d-apply-subject" value={d.apply.subject ?? ""} onChange={(e) => patch({ apply: { ...d.apply, subject: e.target.value || undefined } })} placeholder="Déjalo vacío si la oferta no pide un asunto" />
+                </Field>
+              )}
+              {applyChannels(d.apply).some((c) => c.email) && (
+                <Field>
+                  <FieldLabel>La oferta pide en el correo (si lo dice)</FieldLabel>
+                  <div className="flex flex-col gap-2">
+                    {ASK_KEYS.map((k) => (
+                      <Field key={k} orientation="horizontal" className="items-center pointer-coarse:min-h-11">
+                        <Checkbox
+                          id={`d-ask-${k}`}
+                          checked={d.apply.asks?.includes(k) ?? false}
+                          onCheckedChange={(on) => {
+                            const next = ASK_KEYS.filter((x) => (x === k ? on : (d.apply.asks?.includes(x) ?? false)))
+                            patch({ apply: { ...d.apply, asks: next.length ? next : undefined } })
+                          }}
+                        />
+                        <FieldLabel htmlFor={`d-ask-${k}`} className="font-normal">
+                          {ASK_LABEL[k]}
+                        </FieldLabel>
+                      </Field>
+                    ))}
+                  </div>
                 </Field>
               )}
               {(d.apply.alt?.length ?? 0) < 3 && (

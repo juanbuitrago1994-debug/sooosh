@@ -7,6 +7,7 @@
  *  - sitio: página de la empresa.
  */
 import { detectEmails, MAX_EMAILS } from "@/lib/jobs/emails"
+import { detectAsks, type AskKey } from "@/lib/jobs/asks"
 import { detectSubject } from "@/lib/jobs/subject"
 
 export const APPLY_METHODS = ["plataforma", "formulario", "correo", "sitio", "desconocido"] as const
@@ -20,6 +21,8 @@ export type Apply = ApplyChannel & {
   emails?: string[]
   /** Asunto que la oferta pide para el correo (solo si lo dice de forma explícita); el panel de correo lo prellena. */
   subject?: string
+  /** Datos que la oferta pide en el correo (aspiración salarial, disponibilidad…); el panel de correo los deja completar. */
+  asks?: AskKey[]
 }
 
 const PLATFORMS: [RegExp, string][] = [
@@ -103,7 +106,8 @@ export function detectApply(input: { sourceUrl: string; text?: string; applyUrl?
   if (extra && extra.url !== primary.url) alt.push(extra)
   const emails = [...new Set([...(primary.email ? [primary.email] : []), ...found.map((e) => e.email)])].slice(0, MAX_EMAILS)
   const subject = emails.length ? detectSubject(input.text) : undefined
-  return { ...primary, ...(alt.length ? { alt } : {}), ...(emails.length ? { emails } : {}), ...(subject ? { subject } : {}) }
+  const asks = emails.length ? detectAsks(input.text) : []
+  return { ...primary, ...(alt.length ? { alt } : {}), ...(emails.length ? { emails } : {}), ...(subject ? { subject } : {}), ...(asks.length ? { asks } : {}) }
 }
 
 /** Correos de postulación de una oferta: los detectados, o (datos guardados antes de `emails`) los de sus vías. */

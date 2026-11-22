@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { CheckIcon, ChevronDownIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
+import { CheckIcon, ChevronDownIcon, CopyIcon, DownloadIcon, FileTextIcon, PlusIcon, SparklesIcon, TriangleAlertIcon, XIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
 import { DotLoader } from "@/components/ai/dot-loader"
@@ -16,6 +16,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/u
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { buildSubject, personName } from "@/lib/apply/email"
+import { ASK_LABEL, type AskKey } from "@/lib/jobs/asks"
 import { MOTION } from "@/lib/motion"
 import { useSearchProfile } from "@/lib/profile/search-profile"
 
@@ -40,7 +41,7 @@ const STEPS = [
 export type ApplyEmailPanelProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  job: { title: string; company?: string | null }
+  job: { title: string; company?: string | null; /** de dónde viene la oferta (`linkedin`…) */ sourceName?: string | null }
   /** correos de postulación de la oferta (el más probable primero) */
   emails: string[]
   /** asunto que pide la oferta, si lo dice */
@@ -49,6 +50,8 @@ export type ApplyEmailPanelProps = {
   covered: string[]
   /** requisitos de la oferta (para que la IA entienda qué busca) */
   requirements?: string[]
+  /** lo que la oferta pide en el correo (aspiración salarial, disponibilidad…) */
+  asks?: AskKey[]
 }
 
 /**
@@ -67,7 +70,7 @@ export function ApplyEmailPanel(props: ApplyEmailPanelProps) {
   )
 }
 
-function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requirements = [] }: ApplyEmailPanelProps) {
+function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requirements = [], asks = [] }: ApplyEmailPanelProps) {
   const cv = useSearchProfile()?.cv ?? null
   const reduce = useReducedMotion()
   const [step, setStep] = useState(0)
@@ -77,7 +80,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requ
   const [draft, setDraft] = useState("")
   const [draftError, setDraftError] = useState<string | null>(null)
   const [subject, setSubject] = useState(() => (cv ? buildSubject({ detected, cv, job }).text : (detected ?? "")))
-  const email = useEmailBody({ cv, job, requirements, covered })
+  const email = useEmailBody({ cv, job, requirements, covered, asks })
   const body = email.body
   const [downloading, setDownloading] = useState(false)
   // El panel de pasos se puede plegar para dejar más espacio al contenido; los botones siempre quedan a la vista.
@@ -271,12 +274,20 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requ
           </Field>
         )}
 
-        {step === 2 && <BodyStep email={email} />}
+        {step === 2 && <BodyStep email={email} sourceName={job.sourceName} />}
 
         {step === 3 && (
           <div className="flex flex-col gap-6">
             <Piece label="Para" text={recipients.join(", ")} onCopy={() => copy("Destinatario", recipients.join(", "))} />
             <Piece label="Asunto" text={subject} onCopy={() => copy("Asunto", subject)} />
+            {email.missingAsks.length > 0 && (
+              <p className="flex items-start gap-2 text-sm" role="status">
+                <TriangleAlertIcon aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                <span>
+                  La oferta pide {email.missingAsks.map((k) => ASK_LABEL[k].toLowerCase()).join(", ")} y todavía no {email.missingAsks.length > 1 ? "están" : "está"} en tu correo. Puedes volver al paso 3 para agregarlo.
+                </span>
+              </p>
+            )}
             <Piece label="Cuerpo" text={body} multiline onCopy={() => copy("Cuerpo", body)} />
             <Button type="button" variant="outline" onClick={download} disabled={downloading}>
               <DownloadIcon data-icon="inline-start" />

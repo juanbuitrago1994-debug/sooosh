@@ -1,17 +1,20 @@
 "use client"
 
 import { useState } from "react"
+import { SparklesIcon, XIcon } from "lucide-react"
 import { DotLoader } from "@/components/ai/dot-loader"
-import { PlusIcon, SparklesIcon, XIcon } from "lucide-react"
+import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
 import type { useEmailBody } from "@/components/jobs/use-email-body"
+import { WebUrlField } from "@/components/jobs/web-url-field"
+import { SlidingChoice } from "@/components/motion/sliding-choice"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
-import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
-import { SlidingChoice } from "@/components/motion/sliding-choice"
+import { platformLabel, type ContactData } from "@/lib/apply/email"
 import type { BodySettings } from "@/lib/apply/body-settings"
+
+type EmailBody = ReturnType<typeof useEmailBody>
 
 const GROUPS: { key: keyof BodySettings; label: string; options: { value: string; label: string; hint: string }[] }[] = [
   {
@@ -44,20 +47,28 @@ const GROUPS: { key: keyof BodySettings; label: string; options: { value: string
   },
 ]
 
-type EmailBody = ReturnType<typeof useEmailBody>
+const TABS = [
+  { value: "estilo", label: "Estilo" },
+  { value: "datos", label: "Datos" },
+] as const
 
-/** Drawer aparte (se abre encima del panel de correo) con los ajustes de redacción: así el paso «Cuerpo» queda limpio. */
-export function ApplyEmailSettingsDrawer({ open, onOpenChange, email }: { open: boolean; onOpenChange: (open: boolean) => void; email: EmailBody }) {
-  const { settings, setSettings: onChange, includeWeb, setIncludeWeb, links, hasWebFromCv, extraUrl, addUrl, removeUrl, loading, generate } = email
-  const [urlDraft, setUrlDraft] = useState("")
-  const [urlError, setUrlError] = useState<string | null>(null)
-  const submitUrl = () => {
-    if (!urlDraft.trim()) return
-    if (addUrl(urlDraft)) {
-      setUrlDraft("")
-      setUrlError(null)
-    } else setUrlError("Escribe una dirección web válida, por ejemplo miportafolio.com.")
-  }
+/** Datos que pueden salir en la firma, en el orden en que se muestran. */
+const CONTACT_ROWS: { key: keyof ContactData; label: string }[] = [
+  { key: "phone", label: "Teléfono" },
+  { key: "email", label: "Correo" },
+  { key: "city", label: "Ciudad" },
+  { key: "linkedin", label: "LinkedIn" },
+  { key: "web", label: "Portafolio o web" },
+  { key: "source", label: "Dónde vi la oferta" },
+]
+
+/**
+ * Drawer aparte (se abre encima del panel de correo) con los ajustes de redacción: así el paso «Cuerpo» queda limpio. Dos pestañas:
+ * «Estilo» (cómo suena) y «Datos» (qué datos de tu CV salen en el correo).
+ */
+export function ApplyEmailSettingsDrawer({ open, onOpenChange, email, sourceName }: { open: boolean; onOpenChange: (open: boolean) => void; email: EmailBody; sourceName?: string | null }) {
+  const { settings, setSettings: onChange, loading, generate } = email
+  const [tab, setTab] = useState<string>("estilo")
   return (
     <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
       <FloatingDrawerContent>
@@ -65,66 +76,25 @@ export function ApplyEmailSettingsDrawer({ open, onOpenChange, email }: { open: 
           <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">
             <DrawerHeader className="flex flex-col gap-1 p-0 pt-4">
               <DrawerTitle>Ajustes de redacción</DrawerTitle>
-              <DrawerDescription>Elige cómo suena tu correo y si incluye tu portafolio o web. Se aplican a las versiones que pidas con el botón de abajo.</DrawerDescription>
+              <DrawerDescription>Elige cómo suena tu correo y qué datos tuyos salen en él. Los cambios de estilo se aplican a las versiones que pidas con el botón de abajo.</DrawerDescription>
             </DrawerHeader>
-            <FieldGroup className="gap-6">
-              {!hasWebFromCv && !extraUrl && (
-                <Field data-invalid={urlError ? true : undefined}>
-                  <FieldLabel htmlFor="mail-url">Tu portafolio o web</FieldLabel>
-                  <div className="flex gap-2">
-                    <Input
-                      id="mail-url"
-                      type="url"
-                      inputMode="url"
-                      autoComplete="off"
-                      placeholder="miportafolio.com"
-                      value={urlDraft}
-                      aria-invalid={urlError ? true : undefined}
-                      onChange={(e) => {
-                        setUrlDraft(e.target.value)
-                        setUrlError(null)
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault()
-                          submitUrl()
-                        }
-                      }}
-                    />
-                    <Button type="button" variant="outline" size="icon" aria-label="Agregar portafolio o web" onClick={submitUrl} disabled={!urlDraft.trim()}>
-                      <PlusIcon aria-hidden />
-                    </Button>
-                  </div>
-                  {urlError ? <FieldError>{urlError}</FieldError> : <FieldDescription>Tu CV no trae un portafolio o web. Si lo agregas, se usa solo en este correo.</FieldDescription>}
-                </Field>
-              )}
-
-              {links.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <Field orientation="horizontal" className="items-center justify-between pointer-coarse:min-h-11">
-                    <FieldLabel htmlFor="mail-web" className="min-w-0 flex-1 font-normal break-all">
-                      Incluir {links.map((l) => l.url.replace(/^https?:\/\//, "")).join(" y ")}
-                    </FieldLabel>
-                    {extraUrl && (
-                      <Button type="button" variant="ghost" size="icon-xs" aria-label="Quitar el enlace agregado" onClick={removeUrl}>
-                        <XIcon aria-hidden />
-                      </Button>
-                    )}
-                    <Switch id="mail-web" checked={includeWeb} onCheckedChange={setIncludeWeb} />
-                  </Field>
-                </div>
-              )}
-              {GROUPS.map((g) => {
-                const current = g.options.find((o) => o.value === settings[g.key]) ?? g.options[0]
-                return (
-                  <Field key={g.key}>
-                    <FieldLabel id={`set-${g.key}`}>{g.label}</FieldLabel>
-                    <SlidingChoice label={g.label} value={settings[g.key]} options={g.options} onValueChange={(v) => onChange({ ...settings, [g.key]: v } as BodySettings)} />
-                    <FieldDescription>{current.hint}</FieldDescription>
-                  </Field>
-                )
-              })}
-            </FieldGroup>
+            <SlidingChoice label="Secciones de los ajustes" value={tab} options={TABS} onValueChange={setTab} />
+            {tab === "estilo" ? (
+              <FieldGroup className="gap-6">
+                {GROUPS.map((g) => {
+                  const current = g.options.find((o) => o.value === settings[g.key]) ?? g.options[0]
+                  return (
+                    <Field key={g.key}>
+                      <FieldLabel id={`set-${g.key}`}>{g.label}</FieldLabel>
+                      <SlidingChoice label={g.label} value={settings[g.key]} options={g.options} onValueChange={(v) => onChange({ ...settings, [g.key]: v } as BodySettings)} />
+                      <FieldDescription>{current.hint}</FieldDescription>
+                    </Field>
+                  )
+                })}
+              </FieldGroup>
+            ) : (
+              <DataTab email={email} sourceName={sourceName} />
+            )}
           </div>
           <DrawerFooter className="flex-row gap-2 border-t border-border/40 p-4">
             <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
@@ -148,5 +118,44 @@ export function ApplyEmailSettingsDrawer({ open, onOpenChange, email }: { open: 
         </div>
       </FloatingDrawerContent>
     </Drawer>
+  )
+}
+
+/** Qué datos salen en la firma: un interruptor por dato, solo para los que el CV trae, mostrando el valor que saldría. */
+export function DataTab({ email, sourceName }: { email: EmailBody; sourceName?: string | null }) {
+  const { contact, setContact, available, extraUrl, removeUrl, addUrl, links, hasWebFromCv, cvValues } = email
+  const shown = CONTACT_ROWS.filter((r) => available[r.key])
+  const valueOf = (key: keyof ContactData): string => {
+    if (key === "web") return links.map((l) => l.url.replace(/^https?:\/\//, "")).join(" · ")
+    if (key === "source") return `Vi su publicación en ${platformLabel(sourceName) ?? ""}`.trim()
+    return cvValues[key] ?? ""
+  }
+  return (
+    <FieldGroup className="gap-6">
+      {!hasWebFromCv && !extraUrl && <WebUrlField id="mail-url" onAdd={addUrl} />}
+      <div className="flex flex-col gap-2">
+        <p className="text-sm font-medium">Datos en tu firma</p>
+        <p className="text-xs text-muted-foreground">Tu nombre siempre va. Solo aparecen los datos que tu CV trae; tú decides cuáles salen.</p>
+      </div>
+      {shown.length === 0 && <FieldDescription>Tu CV no trae datos de contacto para mostrar aquí.</FieldDescription>}
+      <div className="flex flex-col gap-2">
+        {shown.map((r) => (
+          <Field key={r.key} orientation="horizontal" className="items-center justify-between pointer-coarse:min-h-11">
+            <FieldContent className="min-w-0 flex-1">
+              <FieldLabel htmlFor={`contact-${r.key}`} className="font-normal">
+                {r.label}
+              </FieldLabel>
+              <FieldDescription className="text-xs break-all">{valueOf(r.key)}</FieldDescription>
+            </FieldContent>
+            {r.key === "web" && extraUrl && (
+              <Button type="button" variant="ghost" size="icon-xs" aria-label="Quitar el enlace agregado" onClick={removeUrl}>
+                <XIcon aria-hidden />
+              </Button>
+            )}
+            <Switch id={`contact-${r.key}`} checked={contact[r.key]} onCheckedChange={(on) => setContact({ ...contact, [r.key]: on })} />
+          </Field>
+        ))}
+      </div>
+    </FieldGroup>
   )
 }
