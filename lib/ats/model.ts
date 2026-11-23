@@ -12,7 +12,7 @@ import { detectLang, type LangDetection } from "./lang"
 export type AtsBlock = { kind: "entry"; head: string; lines: string[]; bullets: string[] } | { kind: "para"; text: string }
 export type AtsSection = { key: AtsSectionKey; title: string; blocks: AtsBlock[] }
 
-export type AtsWarningCode = "lang-undetermined" | "lang-other" | "date-year-only" | "date-unparsed" | "order-kept" | "no-experience" | "no-contact" | "summary-missing"
+export type AtsWarningCode = "lang-undetermined" | "lang-other" | "date-year-only" | "date-unparsed" | "order-kept" | "no-experience" | "no-contact" | "summary-missing" | "title-abbrev"
 export type AtsWarning = { code: AtsWarningCode; message: string }
 
 export type AtsDoc = {
@@ -57,6 +57,21 @@ function reverseChrono<T>(items: T[], start: (t: T) => string | undefined, end: 
   return { items: sorted.map((k) => k.it), kept: false }
 }
 
+/** Abreviaturas de cargo que los ATS leen peor (ATS-E10: «Sr. Account Exec» frente a «Senior Account Executive»). Solo las inequívocas. */
+const TITLE_ABBREV: Record<string, string> = { sr: "Senior", jr: "Junior", ssr: "Semi Senior" }
+const ABBREV_RE = /(?<![\p{L}\d])(sr|jr|ssr)\.?(?![\p{L}\d])/giu
+
+/** Escribe completas las abreviaturas de un cargo; devuelve el texto y lo que cambió. */
+export function spellTitle(title: string): { text: string; changed: { from: string; to: string }[] } {
+  const changed: { from: string; to: string }[] = []
+  const text = title.replace(ABBREV_RE, (m, k: string) => {
+    const to = TITLE_ABBREV[k.toLowerCase()]
+    changed.push({ from: m, to })
+    return to
+  })
+  return { text, changed }
+}
+
 const ISSUE_TEXT: Record<DateIssue, { code: AtsWarningCode; text: (raw: string) => string }> = {
   "year-only": { code: "date-year-only", text: (r) => `La fecha «${r}» solo trae el año: no se agregó un mes que el CV no dice.` },
   unparsed: { code: "date-unparsed", text: (r) => `No se entendió la fecha «${r}»: se dejó tal cual.` },
@@ -78,6 +93,11 @@ export function buildAtsDoc(cv: CV, opts: { lang?: AtsLang; summary?: string } =
     for (const i of r.issues) warn(ISSUE_TEXT[i.issue].code, ISSUE_TEXT[i.issue].text(i.raw))
     return r.text
   }
+  const title = (t: string) => {
+    const r = spellTitle(oneLine(t))
+    for (const c of r.changed) warn("title-abbrev", `En el cargo «${oneLine(t)}» se escribió «${c.from}» como «${c.to}» (los ATS leen mejor los cargos sin abreviaturas). Revisa que sea lo que querías decir.`)
+    return r.text
+  }
   const withDate = (head: string, date: string) => (date ? `${head} | ${date}` : head)
 
   // Experiencia y educación en orden cronológico inverso
@@ -92,7 +112,7 @@ export function buildAtsDoc(cv: CV, opts: { lang?: AtsLang; summary?: string } =
     summary: summaryText ? [{ kind: "para", text: oneLine(summaryText) }] : [],
     experience: exp.items.map((e) => ({
       kind: "entry" as const,
-      head: withDate(`${oneLine(e.role)} — ${clean([e.company, e.location]).join(", ")}`, range(e.startDate, e.endDate)),
+      head: withDate(`${title(e.role)} — ${clean([e.company, e.location]).join(", ")}`, range(e.startDate, e.endDate)),
       lines: [],
       bullets: e.bullets.map(cleanBullet).filter(Boolean),
     })),
@@ -126,6 +146,6 @@ export function buildAtsDoc(cv: CV, opts: { lang?: AtsLang; summary?: string } =
   if (!cv.experience.length) warn("no-experience", "El CV no trae experiencia laboral: la sección no aparece.")
   if (summarySource === "none") warn("summary-missing", "El CV no trae resumen y no se generó uno: la sección no aparece.")
 
-  const headline = cv.header.headline ? oneLine(cv.header.headline) : ""
-  return { lang, langDetection: detection, name: oneLine(cv.header.fullName), headline, contact, fileRole: headline || exp.items[0]?.role || "", sections, summarySource, warnings }
+  const headline = cv.header.headline ? title(cv.header.headline) : ""
+  return { lang, langDetection: detection, name: oneLine(cv.header.fullName), headline, contact, fileRole: headline || (exp.items[0] ? title(exp.items[0].role) : ""), sections, summarySource, warnings }
 }

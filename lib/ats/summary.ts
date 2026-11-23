@@ -27,10 +27,11 @@ export function summaryFacts(cv: CV, now = new Date()) {
 }
 
 const SYSTEM: Record<AtsLang, string> = {
-  es: "Eres redactor de CV. Escribes el resumen profesional de un CV compatible con sistemas ATS: 2 a 4 frases en español, en tercera persona implícita (sin «yo», «mi» ni «me»), sin exclamaciones ni adjetivos vacíos, que mencione el cargo, los años de experiencia (solo si se te da el dato) y 3 o 4 habilidades o herramientas de la lista. Usa ÚNICAMENTE los datos dados: no inventes cifras, empresas, herramientas ni logros. Responde en JSON {\"summary\": \"...\"}.",
-  en: "You are a CV writer. Write the professional summary of an ATS-friendly CV: 2 to 4 sentences in English, implied third person (no \"I\", \"my\" or \"me\"), no exclamation marks or empty adjectives, mentioning the job title, years of experience (only if given) and 3 or 4 skills or tools from the list. Use ONLY the data given: do not invent figures, companies, tools or achievements. Reply in JSON {\"summary\": \"...\"}.",
+  es: "Eres redactor de CV. Escribes el resumen profesional de un CV compatible con sistemas ATS: 2 a 4 frases (máximo 60 palabras en total) en español, en tercera persona implícita (sin «yo», «mi» ni «me»), sin exclamaciones ni adjetivos vacíos, que mencione el cargo, los años de experiencia (solo si se te da el dato) y 3 o 4 habilidades o herramientas de la lista. Usa ÚNICAMENTE los datos dados: no inventes cifras, empresas, herramientas ni logros. Responde en JSON {\"summary\": \"...\"}.",
+  en: "You are a CV writer. Write the professional summary of an ATS-friendly CV: 2 to 4 sentences (60 words maximum in total) in English, implied third person (no \"I\", \"my\" or \"me\"), no exclamation marks or empty adjectives, mentioning the job title, years of experience (only if given) and 3 or 4 skills or tools from the list. Use ONLY the data given: do not invent figures, companies, tools or achievements. Reply in JSON {\"summary\": \"...\"}.",
 }
 
+export const MAX_CHARS = 400
 const FIRST_PERSON = /^(yo|mi|mis|me|i|my)\b|\b(yo|mis|my)\b/i
 const sentenceCount = (s: string) => (s.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g) ?? []).filter((x) => x.trim()).length
 
@@ -43,7 +44,8 @@ export async function generateSummary(cv: CV, lang: AtsLang, opts: { provider?: 
     const res = await provider.generateStructured({ system: SYSTEM[lang], user: JSON.stringify(facts), schema, signal: opts.signal, options: { numPredict: 300 } })
     const text = res.data.summary.replace(/\s+/g, " ").trim()
     const n = sentenceCount(text)
-    if (n < 2 || n > 4 || /!/.test(text) || FIRST_PERSON.test(text)) return { summary: null, reason: "forma" }
+    // ≈ 4 líneas impresas a 10,5 pt (ATS-S3: GOO 2–4 líneas, NOV 2–3).
+    if (n < 2 || n > 4 || text.length > MAX_CHARS || /!/.test(text) || FIRST_PERSON.test(text)) return { summary: null, reason: "forma" }
     // El único dato nuevo permitido son los años de experiencia calculados.
     const guard = `${cvCorpus({ ...cv, sectionOrder: undefined })}\n${facts.yearsOfExperience ?? ""}`
     const v = verifyNoInvention(guard, text)

@@ -15,9 +15,9 @@ import { ATS_HEADINGS, ATS_LABELS } from "@/lib/ats/headings"
 import { renderAtsHtml } from "@/lib/ats/html"
 import { detectLang } from "@/lib/ats/lang"
 import { MONTH_NAMES } from "@/lib/ats/dates"
-import { buildAtsDoc, cleanBullet } from "@/lib/ats/model"
+import { buildAtsDoc, cleanBullet, spellTitle } from "@/lib/ats/model"
 import { renderAtsPdf } from "@/lib/ats/pdf"
-import { summaryFacts } from "@/lib/ats/summary"
+import { MAX_CHARS, summaryFacts } from "@/lib/ats/summary"
 import { atsToText } from "@/lib/ats/text"
 import { cvCorpus } from "@/lib/rewrite/verify"
 import { cvSchema, type CV } from "@/lib/schemas/cv"
@@ -151,6 +151,25 @@ describe("buildAtsDoc · estructura", () => {
   })
 })
 
+describe("cargos sin abreviaturas (ATS-E10)", () => {
+  it("escribe completas Sr., Jr. y Ssr., y solo eso", () => {
+    expect(spellTitle("Ssr. Product designer").text).toBe("Semi Senior Product designer")
+    expect(spellTitle("Sr Developer").text).toBe("Senior Developer")
+    expect(spellTitle("Jr. Analyst").text).toBe("Junior Analyst")
+    expect(spellTitle("Diseñador Senior").changed).toEqual([])
+    expect(spellTitle("Srinivas Engineer").text).toBe("Srinivas Engineer") // no toca palabras que empiezan igual
+  })
+  it("se aplica al titular y a los cargos, avisa de lo que cambió y el nombre de archivo lo usa", () => {
+    const d = buildAtsDoc(cvSchema.parse({ ...cv, header: { ...cv.header, headline: "Ssr. Product designer" }, experience: [{ company: "Acme", role: "Sr. Designer", startDate: "Ene 2020", endDate: "Actual", bullets: [] }] }))
+    const text = atsToText(d)
+    expect(text).toContain("Semi Senior Product designer")
+    expect(text).toContain("Senior Designer — Acme | Enero 2020 – Presente")
+    expect(text).not.toMatch(/\bSsr\b|\bSr\./)
+    expect(d.warnings.filter((w) => w.code === "title-abbrev")).toHaveLength(2)
+    expect(atsFileName(d, "pdf")).toBe("Ana-Zapata-Nunez-Semi-Senior-Product-designer.pdf")
+  })
+})
+
 describe("buildAtsDoc · nunca inventa datos del CV", () => {
   it("toda palabra y cifra del documento sale del CV, de un mes o de un texto fijo", () => {
     for (const [c, lang] of [[cv, "es"], [cvEn, "en"]] as const) {
@@ -280,6 +299,11 @@ describe("resumen con IA", () => {
     for (const s of ["Yo soy analista de datos con experiencia en Excel y SQL. Me gusta el trabajo en equipo siempre.", "Analista de datos con experiencia en Excel y SQL. ¡Gran trabajo en equipo siempre!", "Analista de datos con experiencia en Excel, SQL y Power BI para el equipo."]) {
       expect((await generateAts(noSummary, { provider: fake({ summary: s }), now: NOW })).summary?.reason).toBe("forma")
     }
+  })
+  it("rechaza un resumen de más de ~4 líneas (ATS-S3)", async () => {
+    const long = `Analista de datos con experiencia en Excel, SQL y Power BI. ${"Trabaja con equipos comerciales en reportes de ventas y consultas SQL. ".repeat(6)}`
+    expect(long.length).toBeGreaterThan(MAX_CHARS)
+    expect((await generateAts(noSummary, { provider: fake({ summary: long }), now: NOW })).summary?.reason).toBe("forma")
   })
   it("sin Ollama no hay resumen ni error", async () => {
     const r = await generateAts(noSummary, { provider: fake(new AIError("unreachable", "x")), now: NOW })

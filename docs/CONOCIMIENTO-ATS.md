@@ -9,6 +9,11 @@
 - `[IND]` Indeed, «ATS resume template» (actualizada 13-nov-2026). Artículo corto; plantilla `.docx` enlazada **no leída**.
 - `[ENH]` Enhancv UK, «How to write a CV that gets through the ATS» (actualizada 16-nov-2026). Es la única con márgenes y reglas de fecha/viñeta; se contradice en un punto (ver C3).
 - `[GOO]` Capturas de la «visión general» de Google que pasó Juan (resumen de IA que cita Resume.io, Indeed y atsverification.com; **no se leyó atsverification.com**). Aporta la plantilla de secciones y «10,5–12 pt».
+- `[WRK]` Workable, «How an ATS reads resumes» (proveedor de ATS; publicada 2014, modificada sep-2023; es marketing, no norma).
+- `[ADO]` Adobe Express, «ATS resume tips» (leída 23-nov-2026). Trae fuentes, tamaños y **márgenes**.
+- `[TOP]` Toptal, «ATS-friendly resumes: formatting, examples and common mistakes» (actualizada 2-nov-2026).
+- `[NOV]` Novoresume, «ATS resume» (26-oct-2026; lo que atribuye a Greenhouse y USAJOBS **no se verificó**; la parte final de la página llegó resumida por el lector). Es la fuente más detallada: fechas, longitud, secciones, nombre de archivo.
+- **No se pudo leer** ResumeGeni (dominio bloqueado por la red), atsverification.com ni RemakeCV (la búsqueda no los devolvió); tampoco la plantilla `.docx` de Indeed. No hay documentación oficial de Workday, Greenhouse ni Lever en esta base: lo que se dice de ellos viene de terceros.
 - `[SN]` Síntesis nuestra: decisión de producto, no es cita.
 
 **Confianza**: **Alta** = coinciden ≥ 3 fuentes. **Media** = coinciden 2, o 1 con cifra concreta. **Baja** = una sola fuente o síntesis nuestra.
@@ -26,6 +31,9 @@ Un CV ATS es **un documento de texto real, de una sola columna, en orden cronol�
 | C3 | **Fechas**: `[ENH]` dice «Mes/Año» y sus ejemplos usan `06/2023`; `[IND]` y `[GOO]` usan «Mes Año». | **Mes en texto + año** («Mayo 2023 – Presente»). Un solo formato en todo el documento. |
 | C4 | **Foto y columnas**: `[ENH]` las tolera; el resto las prohíbe. | **Sin foto y sin columnas.** Regla conservadora. |
 | C5 | **Longitud**: solo `[RIO]` da cifra (1–2 páginas). | 1–2 páginas; se avisa si pasa de 2. |
+| C6 | **Formato de fecha**: `[IND]`, `[GOO]` y `[ENH]` (texto) usan mes en palabras («June 2019 – Current»); `[NOV]`, `[GOO]` (alternativa) y los ejemplos de `[ENH]` usan `MM/AAAA`; `[TOP]` solo pide coherencia (su ejemplo es «2022–2026»); `[WRK]` pide «un formato propio del país». **No hay unanimidad.** | Se mantiene **«Mes Año» en el idioma del CV** (3 fuentes, y es el de la plantilla de `[GOO]`). **Riesgo abierto**: todas las fuentes son de EE. UU./Reino Unido; ninguna prueba que un ATS lea bien «Marzo 2021» en español. El verificador exige **un solo formato**, y acepta cualquiera de los dos. |
+| C7 | **Resumen con o sin encabezado**: `[NOV]` dice que el resumen «no necesita encabezado»; `[IND]`, `[GOO]`, `[TOP]`, `[ENH]` lo tratan como sección estándar. | Con encabezado («Resumen profesional»): 4 fuentes contra 1. |
+| C8 | **Orden de secciones**: `[NOV]` pone Habilidades antes de Educación (y dice que el orden no es obligatorio); `[IND]`, `[GOO]` y la plantilla de `[ENH]` ponen Educación antes. | Se genera Educación → Habilidades, pero **el verificador acepta ambos órdenes** (ATS-S5 pasa a peso bajo). |
 
 ## 3. Reglas (cada una es verificable sí/no)
 **Peso**: **C** crítica (si falla, el documento no se considera ATS), **A** alta, **M** media, **B** baja. Columna «Cómo se verifica» = sobre el **archivo final** (texto extraído del PDF/DOCX), no sobre los datos de entrada.
@@ -39,16 +47,17 @@ Un CV ATS es **un documento de texto real, de una sola columna, en orden cronol�
 | ATS-F4 | **Sin tablas, cuadros de texto, imágenes, íconos, gráficos ni barras de habilidades.** | DOCX: sin `w:tbl`, `w:txbxContent`, `w:drawing`, `w:pict`. PDF: sin imágenes incrustadas ni anotaciones. | C | Alta | RIO, IND, ENH, GOO |
 | ATS-F5 | **Contacto en el cuerpo**, no en encabezado ni pie de página. | DOCX: sin `header`/`footer` con texto. PDF: el nombre y el correo están en el texto de la primera página, fuera de la franja de margen. | C | Alta | RIO, IND, GOO |
 | ATS-F6 | 1–2 páginas; no se reduce fuente o márgenes para «caber». | Número de páginas ≤ 2; ver ATS-T2 y ATS-T3. | M | Media | RIO |
-| ATS-F7 | Nombre de archivo profesional: `Nombre-Apellido-Cargo.pdf/.docx`, sin espacios ni caracteres raros. | Expresión regular. | B | Baja | RIO (idea), SN (patrón) |
+| ATS-F7 | Nombre de archivo profesional: `Nombre-Apellido-Cargo.pdf/.docx`, sin espacios ni caracteres raros. | Expresión regular. | B | Media | RIO, WRK («pon tu nombre en el archivo»), NOV (ejemplo `Maria-Lopez-Project-Coordinator.pdf`) |
+| ATS-F8 | El archivo pesa **menos de 2,5 MB**. | Tamaño del archivo. | M | Baja | NOV (lo atribuye a Greenhouse, no verificado); ENH (2 MB, límite de su herramienta, no de un ATS) |
 
 ### 3.2 Tipografía y aspecto
 | Id | Regla | Cómo se verifica | Peso | Conf. | Fuente |
 |---|---|---|---|---|---|
 | ATS-T1 | Fuente **Arial, Calibri o Times New Roman**, una sola familia. | Fuentes declaradas en el archivo. | A | Alta | RIO, IND, GOO |
 | ATS-T2 | **Cuerpo entre 10 y 12 pt** (se acepta 10,5–12). Nada por debajo de 10 pt. | Tamaños en el archivo; el cuerpo es el más frecuente. | A | Alta | IND, ENH, GOO |
-| ATS-T3 | **Márgenes entre 1,25 y 2,5 cm.** | Medidas de página. | M | Baja (solo ENH) | ENH |
+| ATS-T3 | **Márgenes entre 1,25 y 2,5 cm.** | Medidas de página. | M | Media | ENH (1,25–2,5 cm), ADO (0,75–1 in = 1,9–2,5 cm) |
 | ATS-T4 | Texto oscuro sobre fondo blanco, sin sombreados. | Color de texto/fondo en el archivo. | M | Baja | GOO, SN |
-| ATS-T5 | Encabezados de sección destacados solo con **negrita o mayúsculas**, sin íconos, subrayados decorativos ni colores. | Estilo de cada encabezado. | B | Baja | SN |
+| ATS-T5 | Encabezados de sección destacados solo con **negrita o mayúsculas**, sin íconos, subrayados decorativos ni colores, y **sin espaciado entre letras**. | Estilo de cada encabezado; sin `letter-spacing`/`w:spacing` en el texto. | B | Media | NOV, WRK, SN |
 | ATS-T6 | Espacio en blanco entre secciones. | Separación vertical > interlineado. | B | Baja | ENH |
 
 ### 3.3 Secciones y orden
@@ -58,9 +67,9 @@ Orden fijo de la plantilla `[SN]` apoyado en `[IND]`, `[ENH]` y `[GOO]`: **Conta
 |---|---|---|---|---|---|
 | ATS-S1 | Encabezados **convencionales** (ver tabla 4). Sin títulos creativos. | Cada encabezado está en la lista del idioma del CV. | C | Alta | RIO, IND, ENH, GOO |
 | ATS-S2 | Están **Experiencia, Educación y Habilidades** (si el CV original las tiene). | Presencia por encabezado. | A | Alta | RIO, IND, ENH |
-| ATS-S3 | **Resumen** de 2–4 líneas (`[GOO]`: 2–4; `[ENH]`: 3–4 frases). | Líneas/frases del bloque. | M | Media | GOO, ENH, IND |
+| ATS-S3 | **Resumen** de 2–4 frases y **no más de 4 líneas impresas** (≈ 400 caracteres). | Frases y longitud del bloque; aviso, no fallo, si pasa de 4 líneas. | M | Media | GOO (2–4 líneas), NOV (2–3 líneas), ENH (3–4 frases), ADO («corto») |
 | ATS-S4 | **Cronológico inverso**: la experiencia más reciente primero. | Fechas de inicio en orden descendente. | A | Alta | RIO, ENH, GOO |
-| ATS-S5 | Las secciones salen en el orden de arriba. | Posición de cada encabezado. | M | Media | SN, IND, GOO |
+| ATS-S5 | Orden recomendado: Resumen → Experiencia → (Educación y Habilidades, **en cualquier orden**) → resto. | Posición de cada encabezado. | B | Baja | IND, GOO, ENH (plantilla); NOV invierte Educación y Habilidades y aclara que el orden no es obligatorio (C8) |
 | ATS-S6 | Un encabezado no aparece dos veces. | Conteo. | B | Baja | ENH |
 
 ### 3.4 Contacto
@@ -80,10 +89,11 @@ Orden fijo de la plantilla `[SN]` apoyado en `[IND]`, `[ENH]` y `[GOO]`: **Conta
 | ATS-E3 | Sin fechas con solo año ni huecos de formato; rango con guion largo `–`. | Patrón. | M | Baja | SN |
 | ATS-E4 | **Viñetas simples** (`•` o `–`), una idea por viñeta. | Caracteres de viñeta permitidos; sin símbolos decorativos ni flechas. | A | Media | ENH, IND |
 | ATS-E5 | Cada viñeta empieza con **verbo de acción** y **no pasa de ~25 palabras**. | Primer token en lista de verbos del idioma; conteo. | M | Baja | GOO, SN |
-| ATS-E6 | Entre 2 y 6 viñetas por puesto (ENH propone 4). | Conteo. | B | Baja | ENH, SN |
+| ATS-E6 | Entre 1 y 6 viñetas por puesto. | Conteo; aviso si hay más de 6. | B | Baja | NOV (3–4 el puesto actual, 1–3 los anteriores), ENH (4) |
 | ATS-E7 | **Educación**: `Título, campo — Institución | Mes Año` (rango `Mes Año – Mes Año` si el original trae inicio y fin). | Estructura de cada bloque. | M | Media | IND, GOO |
 | ATS-E8 | **Habilidades** en texto plano, separadas por **comas** o viñetas, una lista por grupo (≤ 15 en total por grupo de 2–3), sin `|`, sin niveles ni barras. | Separador y ausencia de patrones de nivel («80 %», «★★★»). | A | Media | ENH, GOO, IND |
 | ATS-E9 | Siglas con su forma completa **al menos una vez** (p. ej. «Search Engine Optimization (SEO)»). | Si el CV original traía la forma completa, aparece. **No se inventa** una expansión que no esté en el original. | B | Media | RIO, IND, ENH |
+| ATS-E10 | **Cargos escritos completos**, sin abreviaturas como «Sr.», «Jr.», «Ssr.». | Lista de abreviaturas en cargos y titular. El generador las expande («Sr.» → «Senior», «Jr.» → «Junior», «Ssr.» → «Semi Senior») y lo avisa. | M | Media | NOV («spell job titles out in full»; Greenhouse cita «Sr. Account Exec»), WRK («títulos estándar sin adornos, solo abreviaturas comunes») |
 
 ### 3.6 Contenido (integridad)
 | Id | Regla | Cómo se verifica | Peso | Conf. | Fuente |
@@ -160,3 +170,32 @@ Habilidad 1, Habilidad 2, Herramienta 1, …
 - **Habilidades**: se quitan duplicados (sin distinguir mayúsculas) pero **no se recorta** a 15: omitir sería perder datos (ATS-I2). El verificador solo avisa si un grupo pasa de 15.
 - **Viñetas**: en A2 se conservan **tal como las escribió la persona** (solo se quitan símbolos de viñeta y espacios). El pulido con IA (verbo de acción, concisión) queda para después de ver qué reglas ATS-E5 fallan en A3; así no se arriesga reescribir logros sin necesidad.
 - **Resumen**: si el CV trae uno, se usa tal cual. Si no, Ollama propone 2–4 frases con datos cerrados y un verificador (cifras, fechas, nombres, siglas y términos técnicos); si falla, la sección se omite. **Límite conocido**: el verificador no detecta palabras comunes en minúscula que el CV no diga (en una muestra con el modelo real se coló «modelado»). Por eso el resumen generado se marca como «Propuesto por IA» en la interfaz (A4) para que la persona lo revise.
+
+## 10. Auditoría de la plantilla contra las fuentes (23-nov-2026)
+Pedida por Juan: la plantilla no se decide por gusto sino por lo que dice la documentación. **Veredicto: la plantilla coincide con la de Google (`[GOO]`) y con Indeed en la estructura; ningún elemento va contra una fuente, salvo los puntos marcados «abierto».**
+
+| Elemento de la plantilla | Qué dicen las fuentes | Veredicto |
+|---|---|---|
+| Una sola columna | RIO, IND, ENH, GOO, ADO, TOP, NOV, WRK: todas | ✔ unanimidad |
+| Sin tablas, cuadros de texto, imágenes, íconos, barras de nivel | RIO, IND, ENH, GOO, ADO, TOP, NOV, WRK | ✔ unanimidad |
+| Contacto en el cuerpo, sin encabezado ni pie | RIO, IND, GOO, TOP, NOV, WRK (NOV: el pie, vacío o solo con número de página) | ✔ |
+| Nombre → titular → contacto | ADO («tu título» en la cabecera), NOV (titular tras el nombre), ENH (título en el encabezado); TOP e IND no lo ponen | ✔ 3 fuentes a favor, ninguna en contra |
+| Contacto: ciudad, teléfono, correo, enlaces con `|` | IND y GOO usan exactamente esa línea; TOP incluye LinkedIn; NOV dice «solo nombre, teléfono, correo y ciudad» | ✔ (los enlaces solo salen si el CV original los trae) |
+| Encabezados estándar («Experiencia laboral», «Educación», «Habilidades»…) | IND, GOO, ENH, TOP, NOV, ADO, WRK; todas prohíben títulos creativos | ✔ unanimidad |
+| Resumen con encabezado | 4 a favor, NOV en contra (C7) | ✔ mayoría |
+| Orden Resumen → Experiencia → Educación → Habilidades | IND, GOO, ENH; NOV pone Habilidades antes (C8) | ✔ aceptable, orden no obligatorio |
+| Cronológico inverso | RIO, ENH, GOO, ADO, NOV, WRK («no funcional») | ✔ |
+| `Cargo — Empresa, Ciudad | Mes Año – Mes Año` | GOO usa **exactamente** este formato; IND usa `Cargo | Empresa | Ciudad | Fechas`; TOP, `Empresa | Cargo | Fechas`; todas piden coherencia | ✔ |
+| Fechas «Mes Año» + «Presente» | 3 a favor, `MM/AAAA` en NOV y ENH (C6) | ⚠ **abierto**: sin unanimidad ni evidencia en español |
+| Viñetas «•» | TOP (ejemplo «•»), ENH («• o –») | ✔ |
+| Habilidades separadas por comas, por grupo | ENH («comas, no barras»), GOO; IND y NOV usan viñetas | ✔ |
+| Arial 10,5 pt | Arial en RIO, IND, GOO, ADO; 10–12 pt en IND, ADO, ENH; GOO 10,5–12; NOV ≥ 10 | ✔ |
+| Márgenes de 2 cm | ENH 1,25–2,5 cm; ADO 1,9–2,5 cm | ✔ (dentro de ambos rangos) |
+| PDF con texto **y** Word | Word: RIO, IND, WRK, ADO; PDF: ENH, TOP (por defecto), NOV (PDF de texto < 2,5 MB); todas: «si la oferta pide otro formato, manda la oferta» | ✔ |
+| 1–2 páginas | RIO (1–2), NOV (1 con < 10 años, máximo 2) | ✔ |
+| Sin foto | ADO, NOV; ENH la tolera (C4) | ✔ mayoría |
+| Nombre de archivo `Nombre-Apellido-Cargo` | NOV (mismo patrón), RIO, WRK | ✔ |
+
+**Ajustes que salieron de la auditoría** (ya aplicados arriba y en el generador): cargos sin abreviaturas (ATS-E10, NOV/WRK); resumen de ≤ 4 líneas (ATS-S3, GOO/NOV); tamaño de archivo < 2,5 MB (ATS-F8); orden de Educación y Habilidades flexible (ATS-S5); sin espaciado entre letras (ATS-T5); rango de viñetas más laxo (ATS-E6).
+
+**Lo que sigue sin respaldo** (honestidad): (1) ninguna fuente es documentación oficial de un ATS; son guías de empresas de empleo, así que el porcentaje seguirá siendo «cumple las guías»; (2) nada en español; (3) el formato de fecha (C6); (4) si el PDF generado por Chromium se lee igual de bien que uno de Word en cada ATS: solo lo sabríamos probándolo contra un parser real.
