@@ -1132,7 +1132,7 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - **Para revisar por Juan** (claro/oscuro, escritorio y 375 px): las 4 piezas con el botón dentro del campo (¿te gusta arriba a la derecha en el cuerpo?), el check al copiar, y el área de toque del botón a 375 px (si se queda corta, lo ampliamos).
 
 ### CV ATS · A1: base de conocimiento de reglas (23-nov-2026)
-- Nuevo `docs/CONOCIMIENTO-ATS.md`: definición de trabajo, 5 conflictos entre fuentes con su decisión, **40 reglas verificables** con id, peso (crítica/alta/media/baja), confianza y fuente, encabezados por idioma (español/inglés), plantilla exacta, reparto código/IA y **propuesta de cálculo del porcentaje** (pesos 5/3/2/1, tope de 69 % si falla una crítica).
+- Nuevo `docs/CONOCIMIENTO-ATS.md`: definición de trabajo, 5 conflictos entre fuentes con su decisión, **38 reglas verificables** con id, peso (crítica/alta/media/baja), confianza y fuente, encabezados por idioma (español/inglés), plantilla exacta, reparto código/IA y **propuesta de cálculo del porcentaje** (pesos 5/3/2/1, tope de 69 % si falla una crítica).
 - Fuentes leídas completas: Resume.io, Indeed y Enhancv UK. Las capturas de Google se usaron como apoyo; **no se leyeron** la plantilla `.docx` de Indeed ni atsverification.com. Ninguna estadística de los sitios se usa.
 - Solo documentación: no hay código, así que lint/tsc/build/test no aplican a esta etapa.
 - **Para revisar por Juan**: `docs/CONOCIMIENTO-ATS.md`, sobre todo (1) los conflictos C1–C5, (2) los pesos y el tope de 69 %, (3) que Habilidades/fechas/viñetas queden como se definieron, (4) si quieres más o menos reglas críticas. Siguiente: A2 (generador) cuando aprobes.
