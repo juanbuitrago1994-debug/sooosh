@@ -199,3 +199,27 @@ Pedida por Juan: la plantilla no se decide por gusto sino por lo que dice la doc
 **Ajustes que salieron de la auditoría** (ya aplicados arriba y en el generador): cargos sin abreviaturas (ATS-E10, NOV/WRK); resumen de ≤ 4 líneas (ATS-S3, GOO/NOV); tamaño de archivo < 2,5 MB (ATS-F8); orden de Educación y Habilidades flexible (ATS-S5); sin espaciado entre letras (ATS-T5); rango de viñetas más laxo (ATS-E6).
 
 **Lo que sigue sin respaldo** (honestidad): (1) ninguna fuente es documentación oficial de un ATS; son guías de empresas de empleo, así que el porcentaje seguirá siendo «cumple las guías»; (2) nada en español; (3) el formato de fecha (C6); (4) si el PDF generado por Chromium se lee igual de bien que uno de Word en cada ATS: solo lo sabríamos probándolo contra un parser real.
+
+## 11. Cómo mide el verificador y qué NO puede medir (A3, 23-nov-2026)
+El verificador (`lib/ats/verify.ts`) lee el **archivo** generado (PDF o Word), no los datos de entrada. Cada regla da «cumple», «no cumple» o «no aplica» (las que no aplican no suman ni restan). Las reglas de peso crítico (C) fallidas limitan el máximo a 69 %.
+
+| Tema | PDF | Word (.docx) |
+|---|---|---|
+| Texto, orden de lectura | Texto real extraído con pdf.js, agrupado por línea; se compara con el texto esperado | Párrafos de `document.xml` |
+| Fuente real | Nombres `/BaseFont` del PDF (p. ej. `ArialMT`) | `w:rFonts` de lo que el documento usa |
+| Tamaños y márgenes | Altura de cada texto y posición medida en la página | `w:sz` y `w:pgMar` |
+| Imágenes, anotaciones | Operadores de imagen y anotaciones que no son enlaces | `word/media`, `w:drawing`, `w:pict` |
+| Tablas y cuadros de texto | **No se detectan directamente**: se infieren por huecos horizontales grandes (indicio de columnas) | `w:tbl`, `w:txbxContent` |
+| Columnas | Huecos horizontales > 3 × tamaño de letra | `w:cols w:num` > 1 |
+| Encabezado/pie | Texto de contacto en la franja de 36 pt superior o inferior | Partes `header`/`footer` con texto |
+| Colores | Operadores de color de relleno y trazo | `w:color`, `w:shd`, `w:highlight` **solo de los estilos que el documento usa** |
+| Negrita de títulos | Se asocia cada texto con su fuente por el orden en que el PDF las declara (si no cuadra, queda «desconocida» y no falla) | `w:b` |
+| Páginas | Sí (≤ 2) | **No**: depende de quien lo abra; solo se mide que no haya señales de encogimiento |
+| Espaciado entre letras | **No se puede medir** | `w:spacing w:val` en el texto |
+
+**Límites que conviene tener presentes**
+- Los títulos de sección se detectan por tamaño (PDF: más grande que el cuerpo, salvo el nombre) o por el estilo «Título 1» (Word). Funciona con nuestros archivos; con un CV ajeno es una heurística.
+- ATS-E5 (verbo de acción) usa listas y terminaciones por idioma: es una **heurística** de confianza baja.
+- ATS-I1 (nada inventado) reutiliza el verificador de datos del resto de la app: revisa cifras, fechas, nombres, siglas y términos técnicos, **no palabras comunes en minúscula**.
+- ATS-T1 acepta Liberation Sans/Serif y Arimo/Tinos como equivalentes métricos de Arial/Times (así un servidor Linux no suspende al PDF).
+- Ninguna comprobación sustituye probar el archivo en un ATS real.
