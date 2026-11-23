@@ -7,7 +7,7 @@ import { extractFile, type Extraction, type Line } from "./extract"
 import { ATS_HEADINGS, ATS_LABELS, type AtsLang } from "./headings"
 import { detectLang } from "./lang"
 import { cleanBullet, spellTitle } from "./model"
-import { ATS_RULES, WEIGHT_POINTS, type RuleDef } from "./rules"
+import { ATS_RULES, WEIGHT_POINTS, type RuleDef, type RuleGroup } from "./rules"
 
 /**
  * Verificador del CV ATS (Fase A3). Lee el ARCHIVO generado (PDF o Word) y aplica las reglas de docs/CONOCIMIENTO-ATS.md. Cada regla da
@@ -438,4 +438,33 @@ export function verifyExtraction(ex: Extraction, input: VerifyInput): AtsReport 
     file: { format: ex.format, fileName, bytes: ex.bytes, pages: ex.pages, fonts: ex.fonts, bodySize: ex.bodySize },
     disclaimer: DISCLAIMER,
   }
+}
+
+// ---- vista resumida para la interfaz: grupos por tema, sin detalle de reglas ----
+export const GROUP_LABEL: Record<RuleGroup, string> = {
+  archivo: "Archivo y estructura",
+  tipografía: "Tipografía y márgenes",
+  secciones: "Secciones y orden",
+  contacto: "Datos de contacto",
+  experiencia: "Experiencia y educación",
+  contenido: "Contenido fiel a tu CV",
+}
+export type GroupView = { group: RuleGroup; label: string; status: "ok" | "revisar"; failed: number }
+export type VerifyView = { percent: number; label: Label; labelText: string; validated: boolean; groups: GroupView[]; formats: { format: "pdf" | "docx"; percent: number }[]; disclaimer: string }
+
+/** Un grupo está «ok» si todas sus reglas aplicables cumplen. Un grupo donde nada aplica no se muestra. */
+export function groupSummary(rules: Pick<RuleResult, "group" | "status">[]): GroupView[] {
+  return (Object.keys(GROUP_LABEL) as RuleGroup[]).flatMap((g) => {
+    const rs = rules.filter((r) => r.group === g && r.status !== "na")
+    if (!rs.length) return []
+    const failed = rs.filter((r) => r.status === "fail").length
+    return [{ group: g, label: GROUP_LABEL[g], status: failed ? ("revisar" as const) : ("ok" as const), failed }]
+  })
+}
+
+/** Une los informes del PDF y del Word: gana el peor porcentaje; un grupo con fallos en cualquiera de los dos queda «por revisar». «Validado» = «Listo para ATS» en todos. */
+export function combineReports(reports: AtsReport[]): VerifyView {
+  const worst = reports.reduce((a, b) => (b.percent < a.percent ? b : a))
+  const groups = groupSummary(reports.flatMap((r) => r.rules.map((x) => ({ group: x.group, status: x.status }))))
+  return { percent: worst.percent, label: worst.label, labelText: worst.labelText, validated: reports.every((r) => r.label === "listo"), groups, formats: reports.map((r) => ({ format: r.file.format, percent: r.percent })), disclaimer: DISCLAIMER }
 }
