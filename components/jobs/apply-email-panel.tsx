@@ -15,6 +15,7 @@ import { Drawer, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } fr
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupTextarea } from "@/components/ui/input-group"
 import { buildSubject, personName } from "@/lib/apply/email"
 import { reviewEmail } from "@/lib/apply/review"
 import { cvFileName } from "@/lib/pdf/filename"
@@ -294,7 +295,7 @@ function PanelBody({ onOpenChange, job, emails, subject: detected, covered, requ
                 </span>
               </p>
             )}
-            <Piece label="Cuerpo" text={body} multiline onCopy={() => copy("Cuerpo", body)} />
+            <Piece label="Cuerpo" text={body} onCopy={() => copy("Cuerpo", body)} />
             <Piece label="Nombre del archivo adjunto" text={attachmentName} onCopy={() => copy("Nombre del archivo", attachmentName)} />
             <section className="flex flex-col gap-2" aria-label="Revisión final">
               <h3 className="text-sm font-medium">Revisión final</h3>
@@ -398,20 +399,34 @@ function StepMark({ done }: { done: boolean }) {
   )
 }
 
-function Piece({ label, text, multiline, onCopy }: { label: string; text: string; multiline?: boolean; onCopy: () => void }) {
+/** Una pieza para copiar: el texto en un campo de solo lectura (crece con el contenido) y el botón de copiar DENTRO del campo, arriba a la derecha. */
+function Piece({ label, text, onCopy }: { label: string; text: string; onCopy: () => void }) {
+  const [copied, setCopied] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => void (timer.current && clearTimeout(timer.current)), [])
   return (
-    <section className="flex flex-col gap-1.5" aria-label={label}>
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-1.5 text-sm font-medium">
-          <FileTextIcon aria-hidden className="size-4 text-muted-foreground" />
-          {label}
-        </h3>
-        <Button type="button" variant="outline" size="sm" onClick={onCopy} aria-label={`Copiar ${label.toLowerCase()}`}>
-          <CopyIcon data-icon="inline-start" />
-          Copiar
-        </Button>
-      </div>
-      <p className={`rounded-lg border border-border/40 p-3 text-sm break-words ${multiline ? "whitespace-pre-wrap" : ""}`}>{text}</p>
+    <section className="flex flex-col gap-2" aria-label={label}>
+      <h3 className="flex items-center gap-2 text-sm font-medium">
+        <FileTextIcon aria-hidden className="size-4 text-muted-foreground" />
+        {label}
+      </h3>
+      <InputGroup>
+        <InputGroupTextarea readOnly rows={1} value={text} aria-label={label} className="min-h-0 text-sm" />
+        <InputGroupAddon align="inline-end" className="self-start pt-1.5">
+          <InputGroupButton
+            size="icon-xs"
+            aria-label={`Copiar ${label.toLowerCase()}`}
+            onClick={() => {
+              onCopy()
+              setCopied(true)
+              if (timer.current) clearTimeout(timer.current)
+              timer.current = setTimeout(() => setCopied(false), 1600)
+            }}
+          >
+            {copied ? <CheckIcon aria-hidden /> : <CopyIcon aria-hidden />}
+          </InputGroupButton>
+        </InputGroupAddon>
+      </InputGroup>
     </section>
   )
 }
