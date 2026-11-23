@@ -1,4 +1,4 @@
-const slug = (s: string) =>
+export const slug = (s: string) =>
   s
     .normalize("NFD")
     .replace(/\p{M}/gu, "")

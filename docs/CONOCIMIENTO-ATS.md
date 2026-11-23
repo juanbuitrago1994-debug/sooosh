@@ -67,7 +67,7 @@ Orden fijo de la plantilla `[SN]` apoyado en `[IND]`, `[ENH]` y `[GOO]`: **Conta
 | Id | Regla | Cómo se verifica | Peso | Conf. | Fuente |
 |---|---|---|---|---|---|
 | ATS-K1 | Primera línea: **nombre completo** en texto. | Primera línea no vacía = nombre del CV. | C | Alta | IND, GOO, ENH |
-| ATS-K2 | Segunda línea: **ciudad, país | teléfono | correo | enlaces**, con el separador `|`. | Línea 2 con ≥ correo y teléfono (o los que existan en el CV). | A | Alta | IND, GOO, ENH |
+| ATS-K2 | Una línea de **ciudad, país | teléfono | correo | enlaces**, con el separador `|`, entre las 3 primeras líneas (el cargo o titular del original, si lo trae, va en la línea 2). | Esa línea tiene el correo y el teléfono (o los que existan en el CV). | A | Alta | IND, GOO, ENH |
 | ATS-K3 | El correo es válido y está como texto (no solo como ícono o enlace). | Expresión regular sobre el texto extraído. | A | Media | GOO, SN |
 | ATS-K4 | LinkedIn/portafolio, **solo si estaban en el CV**, como URL completa en texto. | URL presente y con esquema o dominio completo. | B | Media | ENH, GOO |
 | ATS-K5 | **Sin foto ni datos personales sensibles** (fecha de nacimiento, estado civil, nacionalidad, documento). | Sin imagen; sin esas etiquetas en el texto. | M | Baja | SN (C4) |
@@ -81,7 +81,7 @@ Orden fijo de la plantilla `[SN]` apoyado en `[IND]`, `[ENH]` y `[GOO]`: **Conta
 | ATS-E4 | **Viñetas simples** (`•` o `–`), una idea por viñeta. | Caracteres de viñeta permitidos; sin símbolos decorativos ni flechas. | A | Media | ENH, IND |
 | ATS-E5 | Cada viñeta empieza con **verbo de acción** y **no pasa de ~25 palabras**. | Primer token en lista de verbos del idioma; conteo. | M | Baja | GOO, SN |
 | ATS-E6 | Entre 2 y 6 viñetas por puesto (ENH propone 4). | Conteo. | B | Baja | ENH, SN |
-| ATS-E7 | **Educación**: `Título — Institución, Ciudad, País | Mes Año`. | Estructura de cada bloque. | M | Media | IND, GOO |
+| ATS-E7 | **Educación**: `Título, campo — Institución | Mes Año` (rango `Mes Año – Mes Año` si el original trae inicio y fin). | Estructura de cada bloque. | M | Media | IND, GOO |
 | ATS-E8 | **Habilidades** en texto plano, separadas por **comas** o viñetas, una lista por grupo (≤ 15 en total por grupo de 2–3), sin `|`, sin niveles ni barras. | Separador y ausencia de patrones de nivel («80 %», «★★★»). | A | Media | ENH, GOO, IND |
 | ATS-E9 | Siglas con su forma completa **al menos una vez** (p. ej. «Search Engine Optimization (SEO)»). | Si el CV original traía la forma completa, aparece. **No se inventa** una expansión que no esté en el original. | B | Media | RIO, IND, ENH |
 
@@ -112,6 +112,7 @@ Contacto no lleva encabezado: es el bloque superior (nombre + línea de datos). 
 ## 5. Plantilla (estructura exacta que impone el código)
 ```
 Nombre Apellido
+Cargo o titular (solo si el CV original lo trae)
 Ciudad, País | Teléfono | correo@dominio.com | linkedin.com/in/usuario
 
 Resumen profesional
@@ -123,7 +124,7 @@ Cargo — Empresa, Ciudad, País | Mayo 2023 – Presente
 • …
 
 Educación
-Título — Institución, Ciudad, País | Mes Año
+Título, campo — Institución | Mes Año
 
 Habilidades
 Habilidad 1, Habilidad 2, Herramienta 1, …
@@ -151,3 +152,11 @@ Habilidad 1, Habilidad 2, Herramienta 1, …
 - Los verbos de acción y las palabras de relleno (ATS-E5, ATS-I4) son listas nuestras por idioma; hay que armarlas y probarlas.
 - Las estadísticas de los sitios (p. ej. «49 % de reclutadores descarta CVs de IA») **no se usan**: no están verificadas.
 - La adaptación de palabras clave a una oferta concreta **queda fuera** de esta versión (decisión de Juan: una sola versión ATS por CV).
+
+## 9. Decisiones de implementación (A2, 23-nov-2026)
+- **Titular bajo el nombre**: el cargo del original (p. ej. «Ssr. Product designer») es palabra clave valiosa; va en la línea 2 y el contacto en la 3 (ATS-K2 ajustada).
+- **Educación** no tiene ciudad en el CV estructurado, así que no se escribe (ATS-E7 ajustada).
+- **Fechas con solo el año** («2018 – 2021») se dejan así: agregar un mes sería inventar un dato. El generador lo avisa; **el verificador (A3) debe tratar ATS-E3 como «no aplicable» cuando el original no trae mes**, no como fallo.
+- **Habilidades**: se quitan duplicados (sin distinguir mayúsculas) pero **no se recorta** a 15: omitir sería perder datos (ATS-I2). El verificador solo avisa si un grupo pasa de 15.
+- **Viñetas**: en A2 se conservan **tal como las escribió la persona** (solo se quitan símbolos de viñeta y espacios). El pulido con IA (verbo de acción, concisión) queda para después de ver qué reglas ATS-E5 fallan en A3; así no se arriesga reescribir logros sin necesidad.
+- **Resumen**: si el CV trae uno, se usa tal cual. Si no, Ollama propone 2–4 frases con datos cerrados y un verificador (cifras, fechas, nombres, siglas y términos técnicos); si falla, la sección se omite. **Límite conocido**: el verificador no detecta palabras comunes en minúscula que el CV no diga (en una muestra con el modelo real se coló «modelado»). Por eso el resumen generado se marca como «Propuesto por IA» en la interfaz (A4) para que la persona lo revise.
