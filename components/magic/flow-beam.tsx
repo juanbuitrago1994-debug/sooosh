@@ -63,19 +63,28 @@ const arc = (alpha: number, whiten: number) => {
 const GLOW = (d: number) => arc(0.45 * d, 0)
 const LINE = (d: number) => arc(1, 0.3 * d)
 
-const band = (w: number) => `linear-gradient(white, transparent ${w}px, transparent calc(100% - ${w}px), white), linear-gradient(to right, white, transparent ${w}px, transparent calc(100% - ${w}px), white)`
-/** Anillo de 1 px: va con la propiedad `mask` (atajo), porque `content-box` es un valor de caja y NO es válido dentro de `mask-image`: el navegador descartaba toda la declaración y la capa quedaba sin máscara. */
-const RING = "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)"
+/**
+ * Máscaras ESTÁTICAS que siguen el contorno redondeado (SVG como imagen de máscara; se pintan una sola vez por tamaño). Las de antes eran rectángulos: la
+ * franja se armaba con dos degradados rectos que se SUMABAN, así que en las esquinas había el doble de luz y ángulos rectos aunque el contorno es redondeado, y
+ * el hilo de 1 px (máscara de rectángulo) se cortaba en la curva. Ahora la franja es un trazo difuminado del rectángulo redondeado (cae parejo hacia adentro,
+ * también en las curvas) y el hilo es un trazo de 1,5 px del mismo rectángulo.
+ */
+type Box = { w: number; h: number; r: number }
+const svgMask = (svg: string) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
+const glowMask = ({ w, h, r }: Box, band: number) =>
+  svgMask(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><filter id="b" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${(band * 0.38).toFixed(1)}"/></filter></defs><rect x="0" y="0" width="${w}" height="${h}" rx="${r}" fill="none" stroke="white" stroke-width="${(band * 0.9).toFixed(1)}" filter="url(#b)"/></svg>`)
+const lineMask = ({ w, h, r }: Box) => svgMask(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><rect x="0.75" y="0.75" width="${w - 1.5}" height="${h - 1.5}" rx="${Math.max(0, r - 0.75)}" fill="none" stroke="white" stroke-width="1.5"/></svg>`)
+const maskStyle = (img: string) => ({ WebkitMaskImage: img, maskImage: img, WebkitMaskSize: "100% 100%", maskSize: "100% 100%", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat" }) as const
 
 export function FlowBeam({ className, lap = LAP, density = 1 }: { className?: string; /** segundos por vuelta */ lap?: number; /** 1 = el del panel; más = más denso */ density?: number }) {
   const reduce = useReducedMotion()
   const box = useRef<HTMLDivElement>(null)
-  const [side, setSide] = useState(0)
+  const [dims, setDims] = useState<Box | null>(null)
 
   useLayoutEffect(() => {
     const el = box.current
     if (!el) return
-    const measure = () => setSide(Math.ceil(Math.hypot(el.clientWidth, el.clientHeight)) + 2)
+    const measure = () => setDims({ w: el.clientWidth, h: el.clientHeight, r: parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0 })
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
@@ -85,19 +94,20 @@ export function FlowBeam({ className, lap = LAP, density = 1 }: { className?: st
   if (reduce) {
     return <span aria-hidden className={`pointer-events-none absolute inset-0 ${className ?? ""}`} style={{ boxShadow: `inset 0 0 18px 2px ${tint(C["flow-blue"], 35)}` }} />
   }
+  const side = dims ? Math.ceil(Math.hypot(dims.w, dims.h)) + 2 : 0
   const arm = { position: "absolute", left: "50%", top: "50%", width: side, height: side, marginLeft: -side / 2, marginTop: -side / 2, willChange: "transform" } as const
-  const w = 28 // ancho fijo de la franja del resplandor (el de la versión anterior); la densidad solo sube la intensidad
+  const band = 28 // ancho fijo de la franja del resplandor (el de la versión anterior); la densidad solo sube la intensidad
   return (
     <div ref={box} aria-hidden data-flow-beam className={`pointer-events-none absolute inset-0 overflow-hidden ${className ?? ""}`} style={{ borderRadius: "inherit" }}>
       <style>{`@keyframes fb-turn { to { transform: rotate(360deg); } } [data-flow-beam] [data-fb-arm] { animation: fb-turn ${lap}s linear infinite; }`}</style>
-      {side > 0 && (
+      {dims && dims.w > 0 && dims.h > 0 && (
         <>
           {/* resplandor: franja de ancho fijo pegada al borde; la luz que gira debajo solo se ve ahí */}
-          <div className="absolute inset-0" style={{ maskImage: band(w), WebkitMaskImage: band(w), maskComposite: "add", WebkitMaskComposite: "source-over" }}>
+          <div className="absolute inset-0" style={maskStyle(glowMask(dims, band))}>
             <span data-fb-arm style={{ ...arm, background: GLOW(density), opacity: 1 }} />
           </div>
           {/* hilo nítido de 1 px sobre el borde */}
-          <div className="absolute inset-0 p-px" style={{ WebkitMask: RING, mask: RING, WebkitMaskComposite: "xor", maskComposite: "exclude" }}>
+          <div className="absolute inset-0" style={maskStyle(lineMask(dims))}>
             <span data-fb-arm style={{ ...arm, background: LINE(density), opacity: 1 }} />
           </div>
         </>

@@ -76,17 +76,21 @@ describe("FlowBeam: fluido (animación en la GPU), con máscaras válidas y vuel
     // la versión con `--fb-angle` repintaba capas del tamaño de la ventana en el hilo principal en cada fotograma (tirones)
     expect(code).not.toMatch(/@property|--fb-angle|filter:|blur\(/)
   })
-  it("el anillo de 1 px usa el atajo `mask`: `content-box` NO es válido dentro de `mask-image` y el navegador descartaba la máscara (se veía el degradado entero)", () => {
-    expect(src).toMatch(/WebkitMask: RING, mask: RING/)
-    expect(code).not.toMatch(/maskImage: RING|WebkitMaskImage: RING/)
+  it("las máscaras son estáticas y siguen el contorno redondeado (SVG con trazo del rectángulo redondeado): sin degradados rectos que se sumen en las esquinas ni `content-box` dentro de `mask-image` (valor inválido que dejaba la capa sin máscara)", () => {
+    expect(src).toContain("glowMask")
+    expect(src).toContain("lineMask")
+    expect(src).toContain('rx="${r}"')
+    expect(code).not.toMatch(/content-box|maskComposite|WebkitMaskComposite|linear-gradient\(white/)
+    // el radio de esquina se lee del contenedor, así la máscara coincide con su contorno
+    expect(src).toContain("borderTopLeftRadius")
   })
-  it("las máscaras son estáticas (franja de ancho fijo y anillo) y la vuelta y la densidad se reciben por propiedades", () => {
+  it("la vuelta, la densidad y el ancho de la franja: valores por defecto del panel y propiedades para la ventana completa", () => {
     expect(src).toContain("const LAP = 5")
     expect(src).toMatch(/lap = LAP, density = 1/)
-    expect(src).toContain("const w = 28")
+    expect(src).toContain("const band = 28")
   })
   it("la pantalla inicial usa el haz rápido y denso; el panel no cambia", () => {
-    expect(readFileSync(path.join(__dirname, "..", "components/wizard/entry-screen.tsx"), "utf8")).toContain("beam={{ lap: 4, density: 1.7 }}")
+    expect(readFileSync(path.join(__dirname, "..", "components/wizard/entry-screen.tsx"), "utf8")).toContain("beam={{ lap: 4, density: 1.15 }}")
     expect(readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")).not.toContain("beam={{")
   })
 })
