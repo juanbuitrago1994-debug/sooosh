@@ -82,7 +82,7 @@ const buildStyle = (lap: number, density: number) => `
 }
 `
 
-export function FlowBeam({ className, lap = LAP, density = 1 }: { className?: string; /** segundos por vuelta */ lap?: number; /** 1 = el del panel; más = más denso */ density?: number }) {
+export function FlowBeam({ className, lap = LAP, density = 1, halo = true }: { className?: string; /** segundos por vuelta */ lap?: number; /** 1 = el del panel; más = más denso */ density?: number; /** el halo difuminado (la capa con `blur`, la más cara de repintar): se quita en la ventana completa por fluidez */ halo?: boolean }) {
   const reduce = useReducedMotion()
   if (reduce) {
     return <span aria-hidden className={`pointer-events-none absolute inset-0 ${className ?? ""}`} style={{ boxShadow: `inset 0 0 18px 2px color-mix(in oklab, ${BLUE} 35%, transparent)` }} />
@@ -90,7 +90,7 @@ export function FlowBeam({ className, lap = LAP, density = 1 }: { className?: st
   return (
     <div aria-hidden data-flow-beam className={className}>
       <style>{buildStyle(lap, density)}</style>
-      <span />
+      {halo && <span />}
     </div>
   )
 }
