@@ -34,6 +34,7 @@ describe("panel «Mi CV» (panel lateral)", () => {
     expect(html).toContain('data-state="idle"')
     expect(html).toContain("Sube tu CV")
     expect(html).toContain("Arrastra el archivo o haz clic")
+    expect(html).toContain("PDF, Word o imagen")
     expect(html).toContain("flex-1 flex-col")
     expect(html).not.toContain("Generar versión ATS")
     expect(html).not.toContain("Cambiar CV")
@@ -49,6 +50,22 @@ describe("panel «Mi CV» (panel lateral)", () => {
     // el beam solo aparece mientras se arrastra: vive dentro del aviso de soltar, nunca en reposo
     expect(src.indexOf("<FlowBeam")).toBeGreaterThan(src.indexOf("data-drop-overlay"))
     expect(src.match(/<FlowBeam/g)).toHaveLength(1)
+  })
+  it("mientras se lee el CV: sin el cargador cuadrado; el haz recorre el panel y la frase va centrada y sin puntos suspensivos", () => {
+    const src = readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")
+    expect(src).not.toContain("LoadingState")
+    expect(src).toContain("(dragging || busy)")
+    expect(src).toContain("CenteredStatus")
+    expect(src).toMatch(/const READING = \["Leyendo tu CV", "Reconociendo tu experiencia", "Preparando el encaje"\]/)
+    expect(src).not.toMatch(/READING[^\n]*(…|\.\.\.)/)
+    // un solo haz para los dos momentos (arrastrar y leer)
+    expect(src.match(/<FlowBeam/g)).toHaveLength(1)
+  })
+  it("sin CV y al arrastrar usan el mismo mensaje (mismo ícono, orden y tamaños): un solo DropMessage para ambos", () => {
+    const src = readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")
+    expect(src.match(/<DropMessage/g)).toHaveLength(2)
+    expect(src).toContain("Suelta tu CV aquí")
+    expect(src).toContain("Sube tu CV")
   })
   it("se abre como panel lateral flotante, igual que «Postular por correo»", () => {
     const src = readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")

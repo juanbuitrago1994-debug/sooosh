@@ -1,10 +1,9 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FileTextIcon, UploadIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
-import { LoadingState } from "@/components/ai/loading-state"
 import { AtsVersion } from "@/components/jobs/ats-version"
 import { FlowBeam } from "@/components/magic/flow-beam"
 import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
@@ -110,14 +109,11 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
         transition={dragging ? TRANSITION_IN : TRANSITION_OUT}
       >
         {busy ? (
-          // Regla de las hojas con carga: mientras se lee el CV, solo el cargador con el avance real, centrado.
-          <div className="flex flex-1 flex-col items-center justify-center">
-            <Header className="sr-only">
-              <Title>Mi CV</Title>
-              <Description>Leyendo tu CV.</Description>
-            </Header>
-            <LoadingState messages={stage ? [stage] : ["Leyendo tu CV…", "Reconociendo tu experiencia…", "Preparando el encaje…"]} />
-          </div>
+          // Regla de las hojas con carga: mientras se lee el CV no se ve nada más que el mensaje centrado (va en el aviso de abajo) y el haz.
+          <Header className="sr-only">
+            <Title>Mi CV</Title>
+            <Description>Leyendo tu CV</Description>
+          </Header>
         ) : (
           <>
             {profile ? (
@@ -150,14 +146,10 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
               // Sin CV: todo el panel es el recuadro de subida (clic en cualquier parte o soltar el archivo).
               <Attachment state="idle" className="w-full flex-1 flex-col items-center justify-center gap-6 rounded-2xl border-0 bg-transparent text-center">
                 <AttachmentTrigger aria-label="Subir mi CV" onClick={() => input.current?.click()} />
-                <AttachmentMedia className="w-14">
-                  <UploadIcon />
-                </AttachmentMedia>
-                <Header className="flex flex-col items-center gap-1 p-0 text-center">
-                  <Title>Sube tu CV</Title>
-                  <Description>Arrastra el archivo o haz clic</Description>
-                </Header>
-                <AttachmentDescription className="whitespace-normal">PDF, Word o imagen</AttachmentDescription>
+                <DropMessage
+                  title={<Title className="text-sm font-medium">Sube tu CV</Title>}
+                  description={<Description className="text-sm text-muted-foreground">Arrastra el archivo o haz clic</Description>}
+                />
                 {error && (
                   <p role="alert" className="relative z-20 max-w-xs text-sm text-destructive">
                     {error}
@@ -176,25 +168,84 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
       </motion.div>
 
       <AnimatePresence>
-        {dragging && (
-          // El haz frío recorre TODO el borde del panel solo mientras hay un archivo encima (única aparición del haz en este panel).
+        {(dragging || busy) && (
+          // El haz recorre TODO el borde del panel solo mientras hay un archivo encima o se está leyendo el CV (únicas apariciones del haz en este panel).
+          // El mensaje va siempre centrado en vertical y en horizontal.
           <motion.div
             data-drop-overlay
-            aria-hidden
+            aria-hidden={!busy}
             className="pointer-events-none absolute inset-0 rounded-2xl"
             initial={reduce ? { opacity: 0 } : { opacity: 0, filter: `blur(${MOTION.blur}px)` }}
             animate={{ opacity: 1, filter: "blur(0px)", transition: TRANSITION_IN }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, filter: `blur(${MOTION.blur}px)`, transition: TRANSITION_OUT }}
           >
             <FlowBeam className="rounded-2xl" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
-              <UploadIcon className="size-6" />
-              <p className="text-sm font-medium">Suelta tu CV aquí</p>
-              <p className="text-xs text-muted-foreground">Un solo archivo</p>
+            <div className="absolute inset-0 flex items-center justify-center p-4">
+              {busy ? (
+                <CenteredStatus messages={stage ? [stage] : READING} />
+              ) : (
+                <DropMessage title={<p className="text-sm font-medium">Suelta tu CV aquí</p>} description={<p className="text-sm text-muted-foreground">Un solo archivo</p>} />
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  )
+}
+
+const READING = ["Leyendo tu CV", "Reconociendo tu experiencia", "Preparando el encaje"]
+const noDots = (t: string) => t.replace(/[\s….]+$/u, "")
+
+/**
+ * Mismo mensaje en los dos momentos de soltar un CV (sin CV subido y arrastrando uno nuevo): el mismo ícono, el mismo orden y los mismos
+ * tamaños; solo cambia la frase. Los formatos aceptados van siempre debajo.
+ */
+function DropMessage({ title, description }: { title: React.ReactNode; description: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-6 text-center">
+      <span className="grid size-14 place-items-center rounded-lg bg-muted text-foreground">
+        <UploadIcon className="size-4" />
+      </span>
+      <div className="flex flex-col items-center gap-1">
+        {title}
+        {description}
+      </div>
+      <p className="text-xs text-muted-foreground">PDF, Word o imagen</p>
+    </div>
+  )
+}
+
+/** Frase de estado, siempre centrada (vertical y horizontal) y sin puntos suspensivos; cambia sola cada 2,4 s con la entrada de la app (opacity, blur y translate). */
+function CenteredStatus({ messages }: { messages: string[] }) {
+  const reduce = useReducedMotion()
+  const list = messages.map(noDots)
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    if (list.length < 2) return
+    const t = setInterval(() => setI((n) => (n + 1) % list.length), 2400)
+    return () => clearInterval(t)
+  }, [list.length])
+  const text = list[i % list.length] ?? ""
+  return (
+    <div role="status" aria-live="polite" className="relative flex h-6 items-center justify-center text-sm text-muted-foreground">
+      <span className="sr-only">{list[0]}</span>
+      {reduce ? (
+        <span aria-hidden>{text}</span>
+      ) : (
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            aria-hidden
+            key={text}
+            className="whitespace-nowrap"
+            initial={{ opacity: 0, y: MOTION.offset, filter: `blur(${MOTION.blur}px)` }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)", transition: TRANSITION_IN }}
+            exit={{ opacity: 0, y: -MOTION.offset, filter: `blur(${MOTION.blur}px)`, transition: TRANSITION_OUT }}
+          >
+            {text}
+          </motion.span>
+        </AnimatePresence>
+      )}
     </div>
   )
 }
