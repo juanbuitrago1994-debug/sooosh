@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { UploadIcon, SearchIcon, SlidersHorizontalIcon } from "lucide-react"
+import { ArrowUpIcon, CheckIcon, SearchIcon, SlidersHorizontalIcon } from "lucide-react"
 import { useAutoAnimate } from "@formkit/auto-animate/react"
 import { Logo } from "@/components/brand/logo"
 import { BeamBadge } from "@/components/magic/beam-badge"
@@ -78,7 +78,8 @@ export function JobSearch() {
   const marks = useMarks()
   const anonId = consent.personal ? consent.anonId : null
   const [sort, setSort] = useState<Sort>("relevancia")
-  const cv = useSearchProfile()?.cv ?? null
+  const profile = useSearchProfile()
+  const cv = profile?.cv ?? null
   const [jobs, setJobs] = useState<RankedJob[] | null>(null)
   const [error, setError] = useState("")
   // «Reintentar» tras un error o una espera demasiado larga: cambia este número para repetir la misma búsqueda.
@@ -239,9 +240,10 @@ export function JobSearch() {
           Sooosh
         </Link>
         <div className="flex items-center">
-          <Button variant="ghost" size="icon" aria-label={cv ? "Mi CV (cargado)" : "Subir mi CV"} className="relative" onClick={() => setCvOpen(true)}>
-            <UploadIcon aria-hidden />
-            {cv && <span className="absolute top-2 right-2 size-1.5 rounded-full bg-primary" aria-hidden />}
+          {/* Con CV cargado: a la izquierda del botón, el estado de su versión ATS (¿está optimizado o no?). */}
+          {profile && <AtsBadge status={profile.ats} />}
+          <Button variant="ghost" size="icon" aria-label={cv ? "Mi CV (cargado)" : "Subir mi CV"} onClick={() => setCvOpen(true)}>
+            {cv ? <CheckIcon aria-hidden /> : <ArrowUpIcon aria-hidden />}
           </Button>
           <SourcesStatus />
           <ThemeToggle />
@@ -376,5 +378,21 @@ export function JobSearch() {
       <SearchProfileDrawer open={cvOpen} onOpenChange={setCvOpen} />
       <ConsentBanner />
     </div>
+  )
+}
+
+/** Estado de la versión ATS del CV cargado: «Optimizado para ATS» (generada; validada si se verificó), «ATS por revisar» (se verificó y no llegó al umbral) o «Sin optimizar». */
+export function atsBadgeLabel(status: { at: string; validated?: boolean } | undefined): { text: string; optimized: boolean } {
+  if (!status) return { text: "Sin optimizar", optimized: false }
+  if (status.validated === false) return { text: "ATS por revisar", optimized: false }
+  return { text: "Optimizado para ATS", optimized: true }
+}
+
+function AtsBadge({ status }: { status: { at: string; validated?: boolean } | undefined }) {
+  const { text, optimized } = atsBadgeLabel(status)
+  return (
+    <Badge variant={optimized ? "default" : "outline"} className="mr-1">
+      {text}
+    </Badge>
   )
 }

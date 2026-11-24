@@ -9,7 +9,7 @@ const cv: CV = cvSchema.parse({ header: { fullName: "Ana Pérez", headline: "Dis
 
 async function panel(profile: { cv: CV; label: string; updatedAt: string } | null) {
   vi.resetModules()
-  vi.doMock("@/lib/profile/search-profile", () => ({ useSearchProfile: () => profile, setSearchProfile: () => true, clearSearchProfile: () => {} }))
+  vi.doMock("@/lib/profile/search-profile", () => ({ useSearchProfile: () => profile, setSearchProfile: () => true, setAtsStatus: () => true, clearSearchProfile: () => {} }))
   const { SearchProfilePanel } = await import("@/components/jobs/search-profile-panel")
   const Pass = ({ children, className }: { children?: React.ReactNode; className?: string }) => <div className={className}>{children}</div>
   return renderToStaticMarkup(<SearchProfilePanel shell={{ Header: Pass, Title: Pass, Description: Pass }} />)

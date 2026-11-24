@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { clearSearchProfile, getSearchProfile, profileLabel, refreshSearchProfile, SEARCH_PROFILE_KEY, setSearchProfile } from "@/lib/profile/search-profile"
+import { atsBadgeLabel } from "@/components/jobs/job-search"
+import { clearSearchProfile, getSearchProfile, setAtsStatus, profileLabel, refreshSearchProfile, SEARCH_PROFILE_KEY, setSearchProfile } from "@/lib/profile/search-profile"
 import { cvSchema } from "@/lib/schemas/cv"
 
 const mk = (name: string, headline?: string) => cvSchema.parse({ header: { fullName: name, headline }, experience: [], skills: [{ items: ["Figma"] }] })
@@ -42,5 +43,24 @@ describe("perfil de búsqueda (el CV con el que se compara cada oferta)", () => 
   it("la etiqueta no muestra «Sin nombre»", () => {
     expect(profileLabel(mk("Sin nombre", "UX Designer"))).toBe("UX Designer")
     expect(profileLabel(mk("Sin nombre"))).toBe("Tu CV")
+  })
+
+  it("el estado ATS se guarda en el perfil sin tocar updatedAt, y se borra al cambiar de CV", () => {
+    expect(setAtsStatus({ at: "x" })).toBe(false) // sin perfil no hay dónde anotarlo
+    setSearchProfile(mk("Ana"), "a")
+    const before = getSearchProfile()!.updatedAt
+    expect(getSearchProfile()?.ats).toBeUndefined()
+    expect(setAtsStatus({ at: "2026-11-23T00:00:00Z" })).toBe(true)
+    expect(getSearchProfile()).toMatchObject({ ats: { at: "2026-11-23T00:00:00Z" }, updatedAt: before })
+    setAtsStatus({ at: "2026-11-23T00:01:00Z", validated: true })
+    expect(getSearchProfile()?.ats).toEqual({ at: "2026-11-23T00:01:00Z", validated: true })
+    setSearchProfile(mk("Luis"), "b")
+    expect(getSearchProfile()?.ats).toBeUndefined()
+  })
+  it("texto del badge: sin versión → «Sin optimizar»; generada o validada → «Optimizado para ATS»; verificada sin validar → «ATS por revisar»", () => {
+    expect(atsBadgeLabel(undefined)).toEqual({ text: "Sin optimizar", optimized: false })
+    expect(atsBadgeLabel({ at: "x" })).toEqual({ text: "Optimizado para ATS", optimized: true })
+    expect(atsBadgeLabel({ at: "x", validated: true })).toEqual({ text: "Optimizado para ATS", optimized: true })
+    expect(atsBadgeLabel({ at: "x", validated: false })).toEqual({ text: "ATS por revisar", optimized: false })
   })
 })

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Trace, TraceIcon, TraceLine, TraceTitle } from "@/components/ui/trace"
+import { setAtsStatus } from "@/lib/profile/search-profile"
 import { ATS_STAGES, generateAtsClient, saveBlob, verifyAtsClient, type AtsBundle } from "@/lib/ats/client"
 import type { VerifyView } from "@/lib/ats/verify"
 import type { CV } from "@/lib/schemas/cv"
@@ -44,6 +45,7 @@ export function AtsVersion({ cv, sourceText }: { cv: CV; /** texto original del 
       const bundle = await generateAtsClient(cv, sourceText, (i) => setPhase({ k: "working", stage: i }), ctl.signal, extras.current)
       if (ctl.signal.aborted) return
       extras.current = bundle.extras
+      setAtsStatus({ at: new Date().toISOString() })
       setPhase({ k: "ready", bundle })
     } catch (e) {
       if (!ctl.signal.aborted) setPhase({ k: "error", message: (e as Error).message })
@@ -56,7 +58,10 @@ export function AtsVersion({ cv, sourceText }: { cv: CV; /** texto original del 
     setPhase({ k: "verifying", bundle })
     try {
       const view = await verifyAtsClient(cv, sourceText, bundle, ctl.signal)
-      if (!ctl.signal.aborted) setPhase({ k: "verified", bundle, view })
+      if (!ctl.signal.aborted) {
+        setPhase({ k: "verified", bundle, view })
+        setAtsStatus({ at: new Date().toISOString(), validated: view.validated })
+      }
     } catch (e) {
       if (ctl.signal.aborted) return
       toast.error((e as Error).message)

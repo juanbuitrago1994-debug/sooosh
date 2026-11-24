@@ -9,6 +9,9 @@ import { cvSchema, type CV } from "@/lib/schemas/cv"
 export const SEARCH_PROFILE_KEY = "sooosh:perfil-busqueda:v1"
 const EVENT = "sooosh:perfil-busqueda-cambio"
 
+/** Estado de la versión ATS de este CV: se generó (`at`) y, si se verificó, si quedó «Validado». Se borra al cambiar de CV. */
+export type AtsStatus = { at: string; validated?: boolean }
+
 export type SearchProfile = {
   cv: CV
   /** nombre que se muestra («Ana Pérez · Product Designer») */
@@ -17,6 +20,7 @@ export type SearchProfile = {
   fileId?: string
   /** texto original del CV (para que la versión ATS lo relea a fondo); solo en este navegador */
   sourceText?: string
+  ats?: AtsStatus
   updatedAt: string
 }
 
@@ -37,7 +41,7 @@ export function getSearchProfile(): SearchProfile | null {
   try {
     const d = JSON.parse(raw ?? "null") as Partial<SearchProfile> | null
     const cv = cvSchema.safeParse(d?.cv)
-    if (d && cv.success) value = { cv: cv.data, label: typeof d.label === "string" ? d.label : profileLabel(cv.data), fileId: typeof d.fileId === "string" ? d.fileId : undefined, sourceText: typeof d.sourceText === "string" ? d.sourceText : undefined, updatedAt: typeof d.updatedAt === "string" ? d.updatedAt : "" }
+    if (d && cv.success) value = { cv: cv.data, label: typeof d.label === "string" ? d.label : profileLabel(cv.data), fileId: typeof d.fileId === "string" ? d.fileId : undefined, sourceText: typeof d.sourceText === "string" ? d.sourceText : undefined, ats: d.ats && typeof d.ats.at === "string" ? { at: d.ats.at, validated: typeof d.ats.validated === "boolean" ? d.ats.validated : undefined } : undefined, updatedAt: typeof d.updatedAt === "string" ? d.updatedAt : "" }
   } catch {
     value = null
   }
@@ -52,6 +56,19 @@ export function setSearchProfile(cv: CV, fileId?: string, sourceText?: string): 
   try {
     const p: SearchProfile = { cv, label: profileLabel(cv), fileId, sourceText: sourceText ? sourceText.slice(0, MAX_SOURCE_TEXT) : undefined, updatedAt: new Date().toISOString() }
     localStorage.setItem(SEARCH_PROFILE_KEY, JSON.stringify(p))
+    window.dispatchEvent(new Event(EVENT))
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Anota el estado de la versión ATS en el perfil guardado. No toca `updatedAt`: el panel no debe reiniciarse al marcar «generada» o «validada». */
+export function setAtsStatus(status: AtsStatus): boolean {
+  const cur = getSearchProfile()
+  if (!cur) return false
+  try {
+    localStorage.setItem(SEARCH_PROFILE_KEY, JSON.stringify({ ...cur, ats: status }))
     window.dispatchEvent(new Event(EVENT))
     return true
   } catch {
