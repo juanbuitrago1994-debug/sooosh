@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
 import { LoadingState } from "@/components/ai/loading-state"
 import { AtsVersion } from "@/components/jobs/ats-version"
+import { Beam } from "@/components/magic/beam"
 import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
 import { parseCvFileSafe } from "@/components/jobs/parse-cv-file"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from "@/components/ui/attachment"
@@ -176,17 +177,22 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
 
       <AnimatePresence>
         {dragging && (
+          // El haz recorre el borde del panel solo mientras hay un archivo encima (única aparición del beam en este panel).
           <motion.div
             data-drop-overlay
             aria-hidden
-            className="pointer-events-none absolute inset-2 flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-foreground/40 text-center"
+            className="pointer-events-none absolute inset-2"
             initial={reduce ? { opacity: 0 } : { opacity: 0, y: MOTION.offset, filter: `blur(${MOTION.blur}px)` }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)", transition: TRANSITION_IN }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: -MOTION.offset, filter: `blur(${MOTION.blur}px)`, transition: TRANSITION_OUT }}
           >
-            <UploadIcon className="size-6" />
-            <p className="text-sm font-medium">Suelta tu CV aquí</p>
-            <p className="text-xs text-muted-foreground">Un solo archivo</p>
+            <Beam size="md" className="flex h-full w-full">
+              <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-foreground/40 text-center">
+                <UploadIcon className="size-6" />
+                <p className="text-sm font-medium">Suelta tu CV aquí</p>
+                <p className="text-xs text-muted-foreground">Un solo archivo</p>
+              </div>
+            </Beam>
           </motion.div>
         )}
       </AnimatePresence>
