@@ -69,8 +69,8 @@ const LINE = (d: number) => arc(clamp1(d), 0.3 * d)
  * el hilo de 1 px (máscara de rectángulo) se cortaba en la curva. Ahora la franja es un trazo difuminado del rectángulo redondeado (cae parejo hacia adentro,
  * también en las curvas) y el hilo es un trazo de 1,5 px del mismo rectángulo.
  */
-/** Grosor del hilo del borde, en px (pedido por Juan el 24-nov-2026: antes 1,5). */
-const LINE_PX = 3
+/** Grosor del hilo del borde, en px (Juan: 1,5 era fino y 3 muy grueso; 2 el 24-nov-2026). */
+const LINE_PX = 2
 type Box = { w: number; h: number; r: number }
 const svgMask = (svg: string) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
 const glowMask = ({ w, h, r }: Box, band: number) =>
