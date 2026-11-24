@@ -1,19 +1,20 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { FileTextIcon, UploadIcon } from "lucide-react"
-import { AnimatePresence, motion, useReducedMotion } from "motion/react"
+import { useRef, useState } from "react"
+import { FileTextIcon } from "lucide-react"
+import { motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
-import { ProgressLine } from "@/components/ai/progress-line"
+import { CvDropOverlay } from "@/components/cv/cv-drop-overlay"
+import { DropMessage } from "@/components/cv/drop-message"
+import { ReadingStatus } from "@/components/cv/reading-status"
 import { AtsVersion } from "@/components/jobs/ats-version"
-import { FlowBeam } from "@/components/magic/flow-beam"
 import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
 import { parseCvFileSafe } from "@/components/jobs/parse-cv-file"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from "@/components/ui/attachment"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Separator } from "@/components/ui/separator"
-import { nextProgress, stageFloor, stageIndex } from "@/lib/cv/progress"
+import { stageIndex } from "@/lib/cv/progress"
 import { prefetchExtras } from "@/lib/ats/prefetch"
 import { dragHasFiles, friendlyReadError, pickCvFile } from "@/lib/profile/cv-drop"
 import { clearSearchProfile, setSearchProfile, useSearchProfile } from "@/lib/profile/search-profile"
@@ -191,67 +192,11 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
         )}
       </motion.div>
 
-      <AnimatePresence>
-        {(dragging || busy) && (
-          // El haz recorre TODO el borde del panel solo mientras hay un archivo encima o se está leyendo el CV (únicas apariciones del haz en este panel).
-          // El mensaje va siempre centrado en vertical y en horizontal.
-          <motion.div
-            data-drop-overlay
-            aria-hidden={!busy}
-            className="pointer-events-none absolute inset-0 rounded-2xl"
-            initial={reduce ? { opacity: 0 } : { opacity: 0, filter: `blur(${MOTION.blur}px)` }}
-            animate={{ opacity: 1, filter: "blur(0px)", transition: TRANSITION_IN }}
-            exit={reduce ? { opacity: 0 } : { opacity: 0, filter: `blur(${MOTION.blur}px)`, transition: TRANSITION_OUT }}
-          >
-            <FlowBeam className="rounded-2xl" />
-            <div className="absolute inset-0 flex items-center justify-center p-4">
-              {busy ? (
-                <ReadingStatus stage={stage} />
-              ) : (
-                <DropMessage title={<p className="text-sm font-medium">Suelta tu CV aquí</p>} description={<p className="text-sm text-muted-foreground">Un solo archivo</p>} />
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* El haz recorre TODO el borde del panel solo mientras hay un archivo encima o se está leyendo el CV; el mensaje va centrado. */}
+      <CvDropOverlay show={dragging || busy} hidden={!busy}>
+        {busy ? <ReadingStatus idx={stageIndex(stage)} phrase={stage} /> : <DropMessage title={<p className="text-sm font-medium">Suelta tu CV aquí</p>} description={<p className="text-sm text-muted-foreground">Un solo archivo</p>} />}
+      </CvDropOverlay>
     </div>
   )
 }
 
-const READING = ["Leyendo tu CV", "Reconociendo tu experiencia", "Preparando el encaje"]
-
-/**
- * Mismo mensaje en los dos momentos de soltar un CV (sin CV subido y arrastrando uno nuevo): el mismo ícono, el mismo orden y los mismos
- * tamaños; solo cambia la frase. Los formatos aceptados van siempre debajo.
- */
-function DropMessage({ title, description }: { title: React.ReactNode; description: React.ReactNode }) {
-  return (
-    <div className="flex flex-col items-center gap-6 text-center">
-      <span className="grid size-14 place-items-center rounded-lg bg-muted text-foreground">
-        <UploadIcon className="size-4" />
-      </span>
-      <div className="flex flex-col items-center gap-1">
-        {title}
-        {description}
-      </div>
-      <p className="text-xs text-muted-foreground">PDF, Word o imagen</p>
-    </div>
-  )
-}
-
-/** Porcentaje de la lectura (ver `lib/cv/progress.ts`: sube con la etapa real y avanza suave dentro de ella; nunca marca 100 % antes de terminar). */
-function useReadingPercent(stage: string): number {
-  const idx = stageIndex(stage)
-  const [value, setValue] = useState(0)
-  useEffect(() => {
-    const t = setInterval(() => setValue((v) => nextProgress(v, idx)), 150)
-    return () => clearInterval(t)
-  }, [idx])
-  return Math.max(Math.floor(value), stageFloor(idx))
-}
-
-/** Cargador de la lectura del CV: el mismo patrón de línea que la lista de ofertas (`ProgressLine`). */
-function ReadingStatus({ stage }: { stage: string }) {
-  const percent = useReadingPercent(stage)
-  return <ProgressLine messages={stage ? [stage] : READING} percent={percent} label="Avance de la lectura de tu CV" />
-}

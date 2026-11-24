@@ -39,3 +39,19 @@ describe("ProgressLine: spinner + frase + porcentaje en una línea", () => {
     expect(src).not.toContain("SEARCH_MESSAGES")
   })
 })
+
+describe("pantalla inicial del CV: misma experiencia que el panel «Mi CV»", () => {
+  const entry = readFileSync(path.join(__dirname, "..", "components/wizard/entry-screen.tsx"), "utf8")
+  it("al arrastrar y al leer usa la capa compartida con el haz, el mensaje compartido y la línea spinner + frase + porcentaje", () => {
+    expect(entry).toContain("<CvDropOverlay")
+    expect(entry).toContain("show={dragging || busy}")
+    expect(entry).toContain("<DropMessage")
+    expect(entry).toContain("<ReadingStatus")
+    expect(entry).not.toMatch(/MatrixLoader|ThinkingTicker|patternForStep/)
+    expect(entry).toContain('"Subiendo tu CV"')
+  })
+  it("el porcentaje sigue la etapa real (-1 mientras sube) y solo se atenúa el contenido al arrastrar", () => {
+    expect(entry).toContain('phase === "parsing" ? (work?.step ?? 0) : -1')
+    expect(entry).toContain("dragging && !reduce")
+  })
+})
