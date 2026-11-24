@@ -93,8 +93,8 @@ export function EntryScreen({
       </main>
 
       {/* Haz alrededor de la ventana y mensaje centrado: al arrastrar un archivo y mientras se sube y se lee. */}
-      {/* La ventana completa es mucho más grande que el panel: vuelta de 4 s (en vez de 5) y haz 1,15 veces más denso. */}
-      <CvDropOverlay show={dragging || busy} className="fixed inset-2" hidden={!busy} beam={{ lap: 4, density: 1.15 }}>
+      {/* La ventana completa es mucho más grande que el panel: vuelta de 4 s (en vez de 5) y haz algo más tenue que el del panel (0,8). */}
+      <CvDropOverlay show={dragging || busy} className="fixed inset-2" hidden={!busy} beam={{ lap: 4, density: 0.8 }}>
         {busy ? (
           <>
             <ReadingStatus idx={phase === "parsing" ? (work?.step ?? 0) : -1} phrase={phase === "parsing" ? work?.messages?.[work?.step ?? 0] : "Subiendo tu CV"} />

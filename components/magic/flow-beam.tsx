@@ -61,7 +61,7 @@ const arc = (alpha: number, whiten: number) => {
   return `conic-gradient(in oklab from 0deg, ${st.join(", ")})`
 }
 const GLOW = (d: number) => arc(0.45 * d, 0)
-const LINE = (d: number) => arc(1, 0.3 * d)
+const LINE = (d: number) => arc(clamp1(d), 0.3 * d)
 
 /**
  * Máscaras ESTÁTICAS que siguen el contorno redondeado (SVG como imagen de máscara; se pintan una sola vez por tamaño). Las de antes eran rectángulos: la
@@ -69,11 +69,13 @@ const LINE = (d: number) => arc(1, 0.3 * d)
  * el hilo de 1 px (máscara de rectángulo) se cortaba en la curva. Ahora la franja es un trazo difuminado del rectángulo redondeado (cae parejo hacia adentro,
  * también en las curvas) y el hilo es un trazo de 1,5 px del mismo rectángulo.
  */
+/** Grosor del hilo del borde, en px (pedido por Juan el 24-nov-2026: antes 1,5). */
+const LINE_PX = 3
 type Box = { w: number; h: number; r: number }
 const svgMask = (svg: string) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
 const glowMask = ({ w, h, r }: Box, band: number) =>
   svgMask(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs><filter id="b" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${(band * 0.38).toFixed(1)}"/></filter></defs><rect x="0" y="0" width="${w}" height="${h}" rx="${r}" fill="none" stroke="white" stroke-width="${(band * 0.9).toFixed(1)}" filter="url(#b)"/></svg>`)
-const lineMask = ({ w, h, r }: Box) => svgMask(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><rect x="0.75" y="0.75" width="${w - 1.5}" height="${h - 1.5}" rx="${Math.max(0, r - 0.75)}" fill="none" stroke="white" stroke-width="1.5"/></svg>`)
+const lineMask = ({ w, h, r }: Box) => svgMask(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><rect x="${LINE_PX / 2}" y="${LINE_PX / 2}" width="${w - LINE_PX}" height="${h - LINE_PX}" rx="${Math.max(0, r - LINE_PX / 2)}" fill="none" stroke="white" stroke-width="${LINE_PX}"/></svg>`)
 const maskStyle = (img: string) => ({ WebkitMaskImage: img, maskImage: img, WebkitMaskSize: "100% 100%", maskSize: "100% 100%", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat" }) as const
 
 export function FlowBeam({ className, lap = LAP, density = 1 }: { className?: string; /** segundos por vuelta */ lap?: number; /** 1 = el del panel; más = más denso */ density?: number }) {
