@@ -7,6 +7,7 @@ import { STAGES } from "./stages"
  * Las etapas pesan igual: es una aproximación (un PDF escaneado pasa más tiempo en la primera), no una medición.
  */
 const N = STAGES.length
+/** Total de etapas por defecto: las de la lectura del CV. La versión ATS pasa el suyo (3). */
 /** Cuánto antes del techo de la etapa se detiene la animación dentro de ella (puntos porcentuales). */
 const HEADROOM = 2
 
@@ -14,14 +15,14 @@ const HEADROOM = 2
 export const stageIndex = (label: string | undefined): number => (label ? STAGES.findIndex((s) => s === label) : -1)
 
 /** Piso del porcentaje en la etapa `i` (0 mientras se sube el archivo). */
-export const stageFloor = (i: number): number => (i < 0 ? 0 : Math.round((i / N) * 100))
+export const stageFloor = (i: number, n: number = N): number => (i < 0 ? 0 : Math.round((i / n) * 100))
 /** Techo (sin alcanzar) del porcentaje mientras dura la etapa `i`. */
-export const stageCeiling = (i: number): number => Math.max(stageFloor(i), Math.round(((Math.max(i, 0) + 1) / N) * 100) - HEADROOM)
+export const stageCeiling = (i: number, n: number = N): number => Math.max(stageFloor(i, n), Math.round(((Math.max(i, 0) + 1) / n) * 100) - HEADROOM)
 
 /** Siguiente valor mostrado: nunca baja de lo ya completado, se acerca al techo de la etapa de forma asintótica y nunca llega a 100. */
-export function nextProgress(current: number, i: number, rate = 0.06): number {
-  const floor = stageFloor(i)
-  const ceil = Math.min(99, stageCeiling(i))
+export function nextProgress(current: number, i: number, rate = 0.06, n: number = N): number {
+  const floor = stageFloor(i, n)
+  const ceil = Math.min(99, stageCeiling(i, n))
   const base = Math.max(current, floor)
   return Math.min(ceil, base + (ceil - base) * rate)
 }

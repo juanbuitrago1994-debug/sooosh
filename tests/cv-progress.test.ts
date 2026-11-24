@@ -32,3 +32,15 @@ describe("porcentaje de lectura del CV", () => {
     }
   })
 })
+
+describe("porcentaje con otro número de etapas (versión ATS: 3)", () => {
+  it("el piso y el techo se reparten entre 3 y nunca llega a 100", () => {
+    expect([0, 1, 2].map((i) => stageFloor(i, 3))).toEqual([0, 33, 67])
+    for (let i = 0; i < 3; i++) {
+      let v = stageFloor(i, 3)
+      for (let k = 0; k < 3000; k++) v = nextProgress(v, i, 0.004, 3)
+      expect(v).toBeLessThanOrEqual(stageCeiling(i, 3))
+      expect(v).toBeLessThan(100)
+    }
+  })
+})

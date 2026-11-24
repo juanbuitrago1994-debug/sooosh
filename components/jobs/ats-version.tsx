@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Trace, TraceIcon, TraceLine, TraceTitle } from "@/components/ui/trace"
+import { nextProgress, stageFloor } from "@/lib/cv/progress"
 import { setAtsStatus } from "@/lib/profile/search-profile"
 import { ATS_STAGES, generateAtsClient, saveBlob, verifyAtsClient, type AtsBundle } from "@/lib/ats/client"
 import type { VerifyView } from "@/lib/ats/verify"
@@ -27,7 +28,7 @@ type Phase =
 
 const pagesText = (n: number) => `${n} ${n === 1 ? "página" : "páginas"}`
 
-export function AtsVersion({ cv, sourceText }: { cv: CV; /** texto original del CV, para releerlo a fondo */ sourceText?: string }) {
+export function AtsVersion({ cv, sourceText, onWorkingChange }: { cv: CV; /** texto original del CV, para releerlo a fondo */ sourceText?: string; /** avisa cuando empieza y termina la generación, para que el panel oculte lo de arriba */ onWorkingChange?: (working: boolean) => void }) {
   const [phase, setPhase] = useState<Phase>({ k: "idle" })
   const abort = useRef<AbortController | null>(null)
   // La lectura a fondo es la parte lenta: se hace una vez por CV y «Generar de nuevo» la reutiliza.
@@ -35,6 +36,11 @@ export function AtsVersion({ cv, sourceText }: { cv: CV; /** texto original del 
   const hasSummary = !!cv.summary?.trim()
 
   useEffect(() => () => abort.current?.abort(), [])
+  const working = phase.k === "working"
+  useEffect(() => {
+    onWorkingChange?.(working)
+    return () => onWorkingChange?.(false)
+  }, [working, onWorkingChange])
 
   const generate = async () => {
     abort.current?.abort()
@@ -97,8 +103,9 @@ export function AtsVersion({ cv, sourceText }: { cv: CV; /** texto original del 
   )
 
   return (
-    <section aria-labelledby="ats-title" className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
+    <section aria-labelledby="ats-title" className={working ? "flex min-h-0 flex-1 flex-col items-center justify-center gap-6" : "flex flex-col gap-6"}>
+      {/* Mientras se genera, solo los pasos y el porcentaje, centrados: el título y la descripción se ocultan. */}
+      <div className={working ? "sr-only" : "flex flex-col gap-2"}>
         <h3 id="ats-title" className="text-sm font-medium">
           Versión ATS
         </h3>
@@ -113,7 +120,9 @@ export function AtsVersion({ cv, sourceText }: { cv: CV; /** texto original del 
 
       {phase.k === "working" && (
         // Pasos reales del proceso (Trace de shadcn): hechos con ✓, el actual con brillo y spinner, los siguientes atenuados.
-        <Trace role="status" aria-live="polite">
+        <div className="flex flex-col items-center gap-6">
+        <AtsPercent stage={phase.stage} />
+        <Trace role="status" aria-live="polite" className="w-fit">
           {stageLabels.map((label, i) => {
             const done = i < phase.stage || (i === 1 && hasSummary && phase.stage >= 1)
             const current = i === phase.stage && !(i === 1 && hasSummary)
@@ -125,6 +134,7 @@ export function AtsVersion({ cv, sourceText }: { cv: CV; /** texto original del 
             )
           })}
         </Trace>
+        </div>
       )}
 
       {phase.k === "error" && (
@@ -203,5 +213,25 @@ export function AtsVersion({ cv, sourceText }: { cv: CV; /** texto original del 
         </>
       )}
     </section>
+  )
+}
+
+/**
+ * Porcentaje de la generación (ver `lib/cv/progress.ts`): el piso es lo completado (etapas terminadas ÷ 3) y dentro de la etapa actual
+ * avanza suave hacia el techo de la siguiente sin alcanzarlo; nunca marca 100 % antes de terminar. La primera etapa (leer a fondo el CV) es la
+ * lenta y no avisa cuánto lleva: tardó 160–220 s en las mediciones de A5 (`docs/BENCHMARKS.md`), así que ahí el avance es muy gradual.
+ */
+function AtsPercent({ stage }: { stage: number }) {
+  const [value, setValue] = useState(0)
+  useEffect(() => {
+    const rate = stage === 0 ? 0.004 : 0.03
+    const t = setInterval(() => setValue((v) => nextProgress(v, stage, rate, ATS_STAGES.length)), 150)
+    return () => clearInterval(t)
+  }, [stage])
+  const shown = Math.max(Math.floor(value), stageFloor(stage, ATS_STAGES.length))
+  return (
+    <span role="progressbar" aria-label="Avance de la versión ATS" aria-valuemin={0} aria-valuemax={100} aria-valuenow={shown} className="text-sm text-muted-foreground tabular-nums">
+      {shown} %
+    </span>
   )
 }

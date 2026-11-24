@@ -50,6 +50,8 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
   const [stage, setStage] = useState("")
   const [error, setError] = useState("")
   const [dragging, setDragging] = useState(false)
+  // Mientras se genera la versión ATS, lo de arriba (título, tarjeta del CV) se retira hacia arriba y quedan solo los pasos.
+  const [atsWorking, setAtsWorking] = useState(false)
   // dragenter/dragleave se disparan también al pasar sobre los hijos: se cuenta para no parpadear.
   const depth = useRef(0)
 
@@ -120,29 +122,39 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
           <>
             {profile ? (
               <>
-                <Header className="flex flex-col gap-1 p-0 text-left">
-                  <Title>Mi CV</Title>
-                  <Description>Con él comparamos las ofertas y armamos tu versión ATS.</Description>
-                </Header>
-                <Attachment state="done" className="w-full">
-                  <AttachmentMedia>
-                    <FileTextIcon />
-                  </AttachmentMedia>
-                  <AttachmentContent>
-                    <AttachmentTitle>{profile.label}</AttachmentTitle>
-                    <AttachmentDescription>Arrastra otro archivo aquí para cambiarlo</AttachmentDescription>
-                  </AttachmentContent>
-                  <AttachmentActions>
-                    <Button variant="ghost" size="sm" onClick={() => input.current?.click()}>
-                      Cambiar CV
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={clearSearchProfile}>
-                      Quitar
-                    </Button>
-                  </AttachmentActions>
-                </Attachment>
-                <Separator />
-                <AtsVersion key={profile.updatedAt} cv={profile.cv} sourceText={profile.sourceText} />
+                <AnimatePresence initial={false}>
+                  {!atsWorking && (
+                    <motion.div
+                      key="top"
+                      className="flex flex-col gap-6"
+                      exit={reduce ? { opacity: 0 } : { opacity: 0, y: -MOTION.offset, filter: `blur(${MOTION.blur}px)`, transition: TRANSITION_OUT }}
+                    >
+                      <Header className="flex flex-col gap-1 p-0 text-left">
+                        <Title>Mi CV</Title>
+                        <Description>Con él comparamos las ofertas y armamos tu versión ATS.</Description>
+                      </Header>
+                      <Attachment state="done" className="w-full">
+                        <AttachmentMedia>
+                          <FileTextIcon />
+                        </AttachmentMedia>
+                        <AttachmentContent>
+                          <AttachmentTitle>{profile.label}</AttachmentTitle>
+                          <AttachmentDescription>Arrastra otro archivo aquí para cambiarlo</AttachmentDescription>
+                        </AttachmentContent>
+                        <AttachmentActions>
+                          <Button variant="ghost" size="sm" onClick={() => input.current?.click()}>
+                            Cambiar CV
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={clearSearchProfile}>
+                            Quitar
+                          </Button>
+                        </AttachmentActions>
+                      </Attachment>
+                      <Separator />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <AtsVersion key={profile.updatedAt} cv={profile.cv} sourceText={profile.sourceText} onWorkingChange={setAtsWorking} />
               </>
             ) : (
               // Sin CV: todo el panel es el recuadro de subida (clic en cualquier parte o soltar el archivo).
