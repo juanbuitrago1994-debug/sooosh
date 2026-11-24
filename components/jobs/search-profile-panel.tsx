@@ -15,7 +15,6 @@ import { Separator } from "@/components/ui/separator"
 import { dragHasFiles, friendlyReadError, pickCvFile } from "@/lib/profile/cv-drop"
 import { clearSearchProfile, setSearchProfile, useSearchProfile } from "@/lib/profile/search-profile"
 import { MOTION, TRANSITION_IN, TRANSITION_OUT } from "@/lib/motion"
-import { ACCEPT_LABEL } from "@/lib/uploads"
 
 /** Piezas de cabecera del panel (inyectables para poder probar el contenido sin el Drawer). */
 export type PanelShell = {
@@ -29,9 +28,11 @@ export type PanelShell = {
  * archivo encima, el contenido se desenfoca y aparece «Suelta tu CV aquí». Espaciado de panel: 24 px entre bloques y 8 px dentro de cada bloque.
  */
 export function SearchProfileDrawer({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const hasCv = !!useSearchProfile()
   return (
     <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
-      <FloatingDrawerContent>
+      {/* Sin CV, el borde del propio panel es el recuadro punteado de subida. */}
+      <FloatingDrawerContent className={hasCv ? undefined : "border-dashed"}>
         <SearchProfilePanel shell={{ Header: DrawerHeader, Title: DrawerTitle, Description: DrawerDescription }} />
       </FloatingDrawerContent>
     </Drawer>
@@ -103,7 +104,7 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
     <div className="relative flex min-h-0 flex-1 flex-col" {...dnd}>
       {picker}
       <motion.div
-        className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-4"
+        className={`flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto ${profile || busy ? "p-4" : "p-0"}`}
         animate={dragging && !reduce ? { opacity: 0.4, filter: `blur(${MOTION.blur}px)` } : { opacity: 1, filter: "blur(0px)" }}
         transition={dragging ? TRANSITION_IN : TRANSITION_OUT}
       >
@@ -122,7 +123,7 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
               <>
                 <Header className="flex flex-col gap-1 p-0 text-left">
                   <Title>Mi CV</Title>
-                  <Description>Con él comparamos cada oferta y armamos tu versión ATS. Se lee en tu equipo.</Description>
+                  <Description>Con él comparamos las ofertas y armamos tu versión ATS.</Description>
                 </Header>
                 <Attachment state="done" className="w-full">
                   <AttachmentMedia>
@@ -130,7 +131,7 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
                   </AttachmentMedia>
                   <AttachmentContent>
                     <AttachmentTitle>{profile.label}</AttachmentTitle>
-                    <AttachmentDescription>Arrastra otro archivo sobre este panel para cambiarlo</AttachmentDescription>
+                    <AttachmentDescription>Arrastra otro archivo aquí para cambiarlo</AttachmentDescription>
                   </AttachmentContent>
                   <AttachmentActions>
                     <Button variant="ghost" size="sm" onClick={() => input.current?.click()}>
@@ -146,23 +147,25 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
               </>
             ) : (
               // Sin CV: todo el panel es el recuadro de subida (clic en cualquier parte o soltar el archivo).
-              <Attachment state="idle" className="w-full flex-1 flex-col items-center justify-center gap-6 py-6 text-center">
+              <Attachment state="idle" className="w-full flex-1 flex-col items-center justify-center gap-6 rounded-2xl border-0 bg-transparent text-center">
                 <AttachmentTrigger aria-label="Subir mi CV" onClick={() => input.current?.click()} />
                 <AttachmentMedia className="w-14">
                   <UploadIcon />
                 </AttachmentMedia>
-                <Header className="flex flex-col items-center gap-2 p-0 text-center">
-                  <Title>Mi CV</Title>
-                  <Description>Con él comparamos cada oferta y armamos tu versión ATS. Se lee en tu equipo.</Description>
+                <Header className="flex flex-col items-center gap-1 p-0 text-center">
+                  <Title>Sube tu CV</Title>
+                  <Description>Arrastra el archivo o haz clic</Description>
                 </Header>
-                <AttachmentContent className="flex-none">
-                  <AttachmentTitle>Haz clic o suelta tu CV aquí</AttachmentTitle>
-                  <AttachmentDescription className="whitespace-normal">{ACCEPT_LABEL}</AttachmentDescription>
-                </AttachmentContent>
+                <AttachmentDescription className="whitespace-normal">PDF, Word o imagen</AttachmentDescription>
+                {error && (
+                  <p role="alert" className="relative z-20 max-w-xs text-sm text-destructive">
+                    {error}
+                  </p>
+                )}
               </Attachment>
             )}
 
-            {error && (
+            {error && profile && (
               <p role="alert" className="text-sm text-destructive">
                 {error}
               </p>
@@ -183,7 +186,7 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
           >
             <UploadIcon className="size-6" />
             <p className="text-sm font-medium">Suelta tu CV aquí</p>
-            <p className="text-xs text-muted-foreground">Un solo archivo · {ACCEPT_LABEL}</p>
+            <p className="text-xs text-muted-foreground">Un solo archivo</p>
           </motion.div>
         )}
       </AnimatePresence>
