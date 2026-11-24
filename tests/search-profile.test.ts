@@ -63,4 +63,10 @@ describe("perfil de búsqueda (el CV con el que se compara cada oferta)", () => 
     expect(atsBadgeLabel({ at: "x", validated: true })).toEqual({ text: "Optimizado para ATS", optimized: true })
     expect(atsBadgeLabel({ at: "x", validated: false })).toEqual({ text: "Con sugerencias para ATS", optimized: false })
   })
+  it("sin CV, el botón «Mi CV» lleva a su izquierda el badge «Sube tu CV»", async () => {
+    const { readFileSync } = await import("node:fs")
+    const { join } = await import("node:path")
+    const src = readFileSync(join(__dirname, "..", "components/jobs/job-search.tsx"), "utf8")
+    expect(src).toMatch(/\{profile \? \(\s*<AtsBadge status=\{profile\.ats\} \/>\s*\) : \(\s*<Badge variant="outline" className="mr-1">\s*Sube tu CV/)
+  })
 })

@@ -240,8 +240,14 @@ export function JobSearch() {
           Sooosh
         </Link>
         <div className="flex items-center">
-          {/* Con CV cargado: a la izquierda del botón, el estado de su versión ATS (¿está optimizado o no?). */}
-          {profile && <AtsBadge status={profile.ats} />}
+          {/* A la izquierda del botón: con CV cargado, el estado de su versión ATS (¿está optimizado o no?); sin CV, la invitación a subirlo. */}
+          {profile ? (
+            <AtsBadge status={profile.ats} />
+          ) : (
+            <Badge variant="outline" className="mr-1">
+              Sube tu CV
+            </Badge>
+          )}
           <Button variant="ghost" size="icon" aria-label={cv ? "Mi CV (cargado)" : "Subir mi CV"} onClick={() => setCvOpen(true)}>
             {cv ? <CheckIcon aria-hidden /> : <ArrowUpIcon aria-hidden />}
           </Button>
