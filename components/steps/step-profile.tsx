@@ -42,7 +42,11 @@ export function StepProfile({
   onPhase,
   onChange,
   entry,
+  validated = false,
+  onValidated,
 }: {
+  validated?: boolean
+  onValidated?: (all: boolean) => void
   entry?: EntryActions
   initial: ProfileData | null
   onPhase: (p: ProfilePhase) => void
@@ -106,6 +110,7 @@ export function StepProfile({
         const next: ProfileData = { file: f, cv: r.cv, sourceText: r.sourceText, source: freezeSource(r.sourceText, r.cv), diagnosis: r.diagnosis, meta: r.meta }
         setData(next)
         onChange(next)
+        onValidated?.(false)
         // El primer CV que se lee pasa a ser el perfil de búsqueda; los siguientes (adaptaciones) no lo cambian salvo que la persona lo pida.
         if (!getSearchProfile()) {
           setSearchProfile(r.cv, f.id, r.sourceText)
@@ -123,7 +128,7 @@ export function StepProfile({
         ai.stop()
       }
     },
-    [ai, onChange],
+    [ai, onChange, onValidated],
   )
 
   const reset = () => {
@@ -131,6 +136,7 @@ export function StepProfile({
     if (file && file.size > 0) fetch(`/api/upload?id=${encodeURIComponent(file.id)}`, { method: "DELETE" }).catch(() => {})
     setData(null)
     setFile(null)
+    onValidated?.(false)
     onChange(null)
     setPhase("upload")
   }
@@ -159,6 +165,8 @@ export function StepProfile({
           file={{ name: file?.name ?? "CV", detail: `${file && file.size > 0 ? `${file.type} · ${formatBytes(file.size)}` : "Reabierto desde el historial"}${meta ? ` · leído en ${Math.max(1, Math.round(meta.totalMs / 1000))} s` : ""}`, notes }}
           onChange={(cv) => update({ ...data, cv })}
           onChangeFile={reset}
+          validated={validated}
+          onValidated={onValidated}
         />
       )}
 

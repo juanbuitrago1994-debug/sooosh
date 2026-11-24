@@ -44,6 +44,8 @@ function Shell() {
   const [match, setMatch] = useState<MatchState | null>(null)
   const [review, setReview] = useState<ReviewState | null>(null)
   const [phase, setPhase] = useState<ProfilePhase>("upload")
+  // Se validaron todos los datos del CV leído (paso 1): hasta entonces «Continuar» está bloqueado.
+  const [validated, setValidated] = useState(false)
   const { work } = useAiWork()
   const mainRef = useRef<HTMLDivElement>(null)
 
@@ -89,7 +91,7 @@ function Shell() {
   const acceptedCount = reviewOk && review ? review.items.filter((i) => i.status === "changed" && review.decisions[i.id]?.status === "accepted").length : 0
 
   /** ¿El paso está completo? Entonces "Continuar" es la acción primaria; si no, lo es la acción del propio paso. */
-  const ready = isProfile ? phase === "review" && !!profile : step === 1 ? offerReady(offer) : step === 3 ? reviewOk : step === 2 ? matchReady(match, profile?.cv ?? null, offerValue) : false
+  const ready = isProfile ? phase === "review" && !!profile && validated : step === 1 ? offerReady(offer) : step === 3 ? reviewOk : step === 2 ? matchReady(match, profile?.cv ?? null, offerValue) : false
   // En la revisión, la acción primaria es decidir cada cambio; "Continuar" lo es cuando ya no quedan pendientes.
   const primaryFooter = ready && !isLast && (step !== 3 || pendingCount(review) === 0)
 
@@ -115,6 +117,7 @@ function Shell() {
     setOffer({ text: e.offerText, offer: e.offer, analyzedText: e.offerText })
     setReview({ inputKey: reviewKey(e.originalCv, e.offer), items: e.review.items, decisions: e.review.decisions })
     setPhase("review")
+    setValidated(true) // una adaptación guardada ya pasó por la validación
     goTo(3)
     toast.success("Adaptación reabierta. Puedes ajustar las decisiones y volver a exportar.")
   }
@@ -146,7 +149,7 @@ function Shell() {
   if (entry) {
     return (
       <>
-        <StepProfile initial={profile} onPhase={setPhase} onChange={setProfile} entry={headerActions} />
+        <StepProfile initial={profile} onPhase={setPhase} onChange={setProfile} entry={headerActions} validated={validated} onValidated={setValidated} />
         {dialogs}
       </>
     )
@@ -164,7 +167,7 @@ function Shell() {
           </p>
           <AiStage working={!!work} messages={work?.messages ?? []} step={work?.step ?? 0} onCancel={work?.onCancel}>
             <StepTransition id={step}>
-              {step === 0 && <StepProfile initial={profile} onPhase={setPhase} onChange={setProfile} />}
+              {step === 0 && <StepProfile initial={profile} onPhase={setPhase} onChange={setProfile} validated={validated} onValidated={setValidated} />}
               {step === 1 && <StepOffer value={offer} onChange={setOffer} />}
               {step === 2 && <StepAnalysis cv={profile?.cv ?? null} offer={offerValue} cvLanguage={profile?.diagnosis?.language} value={match} onChange={setMatch} />}
               {step === 3 && <StepReview cv={profile?.cv ?? null} guard={guard} offer={offerValue} match={matchReady(match, profile?.cv ?? null, offerValue) ? match!.result : null} style={profile?.diagnosis ? styleSentence(profile.diagnosis) : undefined} value={review} onChange={setReview} />}

@@ -1235,3 +1235,9 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - Los cambios se guardan por el mismo camino de antes (`update` → perfil de búsqueda y `/api/cv/profile`). Se retiró la tarjeta «Así leímos tu CV» de este paso (`ProfileSummary` ya no se usa aquí).
 - Verificado: lint, `tsc`, `build`, `pnpm test` (95 archivos, 921 pruebas) y, por DOM en tu servidor: grilla de 2 columnas, flujo Nombre ✓ → Rol (elegir «UX Designer») → Contacto, sin scroll horizontal. Sin capturas.
 - **Para revisar por Juan**: paso 1 en escritorio (1280) y 375 px (en móvil las columnas se apilan), oscuro. Falta: F2 (resumen, habilidades, idiomas) y F3 (cada experiencia y estudio, con botones de IA); «Continuar a Oferta» aún no exige validar.
+
+### Validación del CV, fase F2 (24-nov-2026)
+- Se suman las etapas **Resumen, Habilidades e Idiomas** (ahora son 6: Nombre → Rol → Contacto → Resumen → Habilidades → Idiomas). Resumen: texto editable. **Habilidades: se validan una por una** (cada una es una pastilla con ✕ para quitarla, y un campo para agregar otra; los grupos del CV se conservan, sin repetidas). Idiomas: filas editables (idioma y nivel). Si el CV no trae el dato: «Agregar» u «Omitir».
+- **«Continuar» queda bloqueado hasta validar todas las etapas** (`validated` en `wizard.tsx`; se reinicia al subir otro CV o cambiarlo; una adaptación reabierta del historial cuenta como validada).
+- Verificado: lint, `tsc`, `build`, `pnpm test` (95 archivos, 922 pruebas) y, subiendo un CV real (txt) en tu servidor: «Continuar» bloqueado al inicio y antes de la última etapa, habilitado al terminar.
+- Falta F3: cada experiencia y cada estudio, con botones de IA.
