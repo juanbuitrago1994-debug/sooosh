@@ -13,6 +13,7 @@ import { Logo } from "@/components/brand/logo"
 import { PrivacyLink } from "@/components/privacy/privacy-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { CvRepository } from "@/components/history/cv-repository"
 import { ApplyEmailPanel } from "@/components/jobs/apply-email-panel"
 import { applyChannels, applyCta, applyHint, applyLabel, channelHref, emailsOf } from "@/lib/jobs/apply"
 import { buildFacts, companyLine, curatedDates } from "@/lib/jobs/facts"
@@ -135,6 +136,7 @@ export function JobDetail({ job }: { job: JobCard }) {
           <Button variant="ghost" size="icon" aria-label="Compartir esta oferta" onClick={() => void share()}>
             <LinkIcon aria-hidden />
           </Button>
+          <CvRepository />
         </div>
       </header>
 

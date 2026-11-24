@@ -10,7 +10,7 @@ vi.mock("../app/fonts", () => ({ geistSans: { variable: "" }, geistMono: { varia
 import ErrorPage from "@/app/error"
 import GlobalError from "@/app/global-error"
 import NotFound from "@/app/not-found"
-import { HistoryView } from "@/components/history/history-view"
+import { CvRepositoryList, reopenHref } from "@/components/history/cv-repository"
 import type { HistoryEntry } from "@/lib/history"
 import { cvSchema } from "@/lib/schemas/cv"
 
@@ -50,22 +50,31 @@ describe("páginas de error en español", () => {
   })
 })
 
-describe("HistoryView", () => {
-  it("sin adaptaciones muestra Empty y no ofrece borrar todo", () => {
-    const html = renderToStaticMarkup(<HistoryView entries={[]} onReopen={() => {}} />)
+describe("Repositorio de CV por oferta (popover del historial)", () => {
+  it("sin adaptaciones muestra Empty", () => {
+    const html = renderToStaticMarkup(<CvRepositoryList entries={[]} onReopen={() => {}} />)
     expect(html).toContain('data-slot="empty"')
-    expect(html).toContain("Aún no hay adaptaciones guardadas")
-    expect(html).not.toContain("Borrar todo el historial")
+    expect(html).toContain("Aún no hay CV guardados")
   })
-  it("muestra oferta, fecha, cobertura antes/después y las acciones reabrir, descargar y eliminar", () => {
-    const html = renderToStaticMarkup(<HistoryView entries={[entry]} onReopen={() => {}} />)
+  it("una fila por oferta: título, empresa, fecha, cobertura y las acciones descargar, reabrir y eliminar", () => {
+    const html = renderToStaticMarkup(<CvRepositoryList entries={[entry]} onReopen={() => {}} />)
     expect(html).toContain("Analista de Datos")
     expect(html).toContain("Globex")
     expect(html).toContain("2026-11-16T20:00:00.000Z")
-    expect(html).toContain("Cobertura 40% → 70% (+30)")
-    expect(html).toContain("1 cambio aceptado")
-    for (const t of ["Reabrir", "Descargar PDF", "Eliminar", "Borrar todo el historial"]) expect(html).toContain(t)
-    expect(html).toContain("solo en este navegador")
+    expect(html).toContain("70 %")
+    expect(html).toContain("de 40 % a 70 %")
+    for (const t of ["Descargar el PDF para Analista de Datos", "Reabrir la adaptación para Analista de Datos", "Eliminar la adaptación para Analista de Datos"]) expect(html).toContain(t)
+    expect(html).toContain('data-slot="item"')
+  })
+  it("con muchas entradas la lista se desplaza dentro del popover (altura fija con scroll); con pocas no", () => {
+    const many = Array.from({ length: 6 }, (_, i) => ({ ...entry, id: `e${i}` }))
+    expect(renderToStaticMarkup(<CvRepositoryList entries={many} onReopen={() => {}} />)).toContain('data-slot="scroll-area"')
+    expect(renderToStaticMarkup(<CvRepositoryList entries={[entry]} onReopen={() => {}} />)).not.toContain('data-slot="scroll-area"')
+  })
+  it("desde otras páginas, «Reabrir» enlaza al asistente con el id de la adaptación", () => {
+    expect(reopenHref("abc 1")).toBe("/?reabrir=abc%201")
+    const html = renderToStaticMarkup(<CvRepositoryList entries={[entry]} />)
+    expect(html).toContain('href="/?reabrir=')
   })
 })
 

@@ -2,11 +2,13 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { BrainIcon, HistoryIcon, SearchIcon } from "lucide-react"
+import { BrainIcon, SearchIcon } from "lucide-react"
 import { Logo } from "@/components/brand/logo"
+import { CvRepository } from "@/components/history/cv-repository"
 import { Button, buttonVariants } from "@/components/ui/button"
+import type { HistoryEntry } from "@/lib/history"
 
-export type HeaderActions = { historyCount: number; onLearning: () => void; onHistory: () => void }
+export type HeaderActions = { onLearning: () => void; /** reabrir una adaptación guardada (desde el repositorio de CV por oferta) */ onReopen: (e: HistoryEntry) => void }
 
 /** Cabecera mínima de la UI v2: marca pequeña a la izquierda, íconos fantasma a la derecha. Sin caja ni borde. */
 export function AppHeader({ actions }: { actions: HeaderActions }) {
@@ -25,9 +27,7 @@ export function AppHeader({ actions }: { actions: HeaderActions }) {
         <Button variant="ghost" size="icon" aria-label="Lo que he aprendido" onClick={actions.onLearning}>
           <BrainIcon aria-hidden />
         </Button>
-        <Button variant="ghost" size="icon" aria-label={actions.historyCount ? `Historial (${actions.historyCount})` : "Historial"} onClick={actions.onHistory}>
-          <HistoryIcon aria-hidden />
-        </Button>
+        <CvRepository onReopen={actions.onReopen} />
       </div>
     </header>
   )

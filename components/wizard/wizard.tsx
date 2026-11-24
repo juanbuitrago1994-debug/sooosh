@@ -9,11 +9,8 @@ import { StepTransition } from "@/components/ai/step-transition"
 import { Button } from "@/components/ui/button"
 import { clearPrefill, readPrefill } from "@/lib/jobs/prefill"
 import { AppHeader, SkipLink } from "./app-header"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { LearningDialog } from "@/components/learning/learning-dialog"
 import { styleSentence } from "@/components/cv/diagnosis-card"
-import { HistoryView } from "@/components/history/history-view"
-import { useHistory } from "@/components/history/use-history"
 import { StepDots } from "./step-dots"
 import { StepProfile, type ProfileData, type ProfilePhase } from "@/components/steps/step-profile"
 import { StepExport } from "@/components/steps/step-export"
@@ -21,7 +18,7 @@ import { pendingCount, reviewKey, reviewReady, StepReview, type ReviewState } fr
 import { matchReady, StepAnalysis, type MatchState } from "@/components/steps/step-analysis"
 import { emptyOffer, offerReady, StepOffer, type OfferState } from "@/components/steps/step-offer"
 import { freezeSource, guardCorpus } from "@/lib/cv/source"
-import { addEntry, type HistoryEntry } from "@/lib/history"
+import { addEntry, parseHistory, readRaw, type HistoryEntry } from "@/lib/history"
 import { lexicalCoverage } from "@/lib/match/engine"
 import { rebuildCv } from "@/lib/rebuild/build"
 import { STEPS } from "@/lib/steps"
@@ -37,7 +34,6 @@ export function Wizard() {
 /** Stage centrada con una sola tarjeta (docs/DESIGN-PATTERNS.md): un paso, una decisión, una acción primaria. */
 function Shell() {
   const [step, setStep] = useState(0)
-  const [historyOpen, setHistoryOpen] = useState(false)
   const [learningOpen, setLearningOpen] = useState(false)
   const [profile, setProfile] = useState<ProfileData | null>(null)
   // Si la persona llega desde el buscador con «Adaptar mi CV a esta oferta», la oferta ya viene cargada (se borra en el efecto de abajo).
@@ -48,7 +44,6 @@ function Shell() {
   const [match, setMatch] = useState<MatchState | null>(null)
   const [review, setReview] = useState<ReviewState | null>(null)
   const [phase, setPhase] = useState<ProfilePhase>("upload")
-  const history = useHistory()
   const { work } = useAiWork()
   const mainRef = useRef<HTMLDivElement>(null)
 
@@ -120,10 +115,20 @@ function Shell() {
     setOffer({ text: e.offerText, offer: e.offer, analyzedText: e.offerText })
     setReview({ inputKey: reviewKey(e.originalCv, e.offer), items: e.review.items, decisions: e.review.decisions })
     setPhase("review")
-    setHistoryOpen(false)
     goTo(3)
     toast.success("Adaptación reabierta. Puedes ajustar las decisiones y volver a exportar.")
   }
+
+  // Reabrir desde otra página (el repositorio de CV por oferta enlaza a `/?reabrir=<id>`): se lee una sola vez al cargar y se limpia la dirección.
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("reabrir")
+    if (!id) return
+    const found = parseHistory(readRaw()).find((e) => e.id === id)
+    window.history.replaceState(null, "", window.location.pathname)
+    if (found) window.setTimeout(() => reopen(found), 0)
+    else toast.error("No encontramos esa adaptación en este navegador.")
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al cargar
+  }, [])
 
   const next = () => {
     if (isLast) toast.success("¡Listo! Si ya descargaste tu PDF, revísalo antes de enviarlo.")
@@ -131,21 +136,11 @@ function Shell() {
   }
 
   // Entrada (UI v2): sin tarjeta; la pantalla completa es el degradado y la zona de soltar.
-  const headerActions = { historyCount: history.length, onLearning: () => setLearningOpen(true), onHistory: () => setHistoryOpen(true) }
+  const headerActions = { onLearning: () => setLearningOpen(true), onReopen: reopen }
   const entry = isProfile && phase !== "review"
   const dialogs = (
     <>
       <LearningDialog open={learningOpen} onOpenChange={setLearningOpen} />
-      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Historial</DialogTitle>
-          </DialogHeader>
-          <div className="max-h-96 overflow-y-auto">
-            <HistoryView entries={history} onReopen={reopen} />
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   )
   if (entry) {
