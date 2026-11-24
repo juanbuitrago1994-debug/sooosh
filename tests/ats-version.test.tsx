@@ -47,8 +47,8 @@ describe("panel «Mi CV» (panel lateral)", () => {
     expect(src).toContain("useReducedMotion")
     expect(src).not.toMatch(/scale|rotate|conic-gradient/)
     // el beam solo aparece mientras se arrastra: vive dentro del aviso de soltar, nunca en reposo
-    expect(src.indexOf("<FlowBeam")).toBeGreaterThan(src.indexOf("data-drop-overlay"))
-    expect(src.match(/<FlowBeam/g)).toHaveLength(1)
+    expect(src.indexOf("<Beam")).toBeGreaterThan(src.indexOf("data-drop-overlay"))
+    expect(src.match(/<Beam/g)).toHaveLength(1)
   })
   it("se abre como panel lateral flotante, igual que «Postular por correo»", () => {
     const src = readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")

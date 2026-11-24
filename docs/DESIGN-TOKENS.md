@@ -31,7 +31,5 @@ Solo para `components/magic/*` (excepción documentada en `CLAUDE.md`); el resto
 | `beam-lilac` | `oklch(0.78 0.11 305)` | lila pálido: cabeza del haz |
 | `beam-rose` | `oklch(0.76 0.15 8)` | rosa: cola del haz en el tema claro |
 | `beam-orange` | `oklch(0.78 0.15 55)` | naranja: cabeza del haz en el tema claro |
-| `flow-blue` | `oklch(0.68 0.13 250)` | azul frío: cabeza del haz `FlowBeam` que recorre el borde de «Mi CV» al soltar un archivo (23-nov-2026) |
-| `flow-gray` | `oklch(0.78 0.03 250)` | gris azulado: cola del mismo haz |
 | `curated-pink` | `oklch(0.72 0.17 5)` | rosa de la insignia «Curated by Sooosh»: fondo al 14 % de opacidad; texto e icono mezclados al 75 % con el color del texto del tema (rosa claro en oscuro, rosa profundo en claro) |
 | `curated-size` | `0.625rem` | tamaño del texto y del icono de esa insignia (10 px; más pequeño que `text-xs`, el mínimo de la escala; pedido por Juan el 21-nov-2026) |

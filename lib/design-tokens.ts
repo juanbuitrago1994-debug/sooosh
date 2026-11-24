@@ -21,10 +21,6 @@ export const EFFECT_COLORS = {
   "beam-rose": "oklch(0.76 0.15 8)",
   /** naranja: el color con el que termina (la cabeza) del haz en el tema claro */
   "beam-orange": "oklch(0.78 0.15 55)",
-  /** azul frío: la cabeza del haz `FlowBeam` de «Mi CV» al soltar un archivo (pedido por Juan el 23-nov-2026) */
-  "flow-blue": "oklch(0.68 0.13 250)",
-  /** gris azulado: la cola del mismo haz */
-  "flow-gray": "oklch(0.78 0.03 250)",
   /** rosa de la insignia «Curated by Sooosh»: de aquí salen el fondo (translúcido) y el texto/icono (mezclado con el color del texto del tema para que se lea en claro y oscuro) */
   "curated-pink": "oklch(0.72 0.17 5)",
   /** tamaño del texto y del icono de esa insignia (más pequeño que `text-xs`, que es el mínimo de la escala) */

@@ -6,7 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
 import { LoadingState } from "@/components/ai/loading-state"
 import { AtsVersion } from "@/components/jobs/ats-version"
-import { FlowBeam } from "@/components/magic/flow-beam"
+import { Beam } from "@/components/magic/beam"
 import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
 import { parseCvFileSafe } from "@/components/jobs/parse-cv-file"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from "@/components/ui/attachment"
@@ -177,7 +177,7 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
 
       <AnimatePresence>
         {dragging && (
-          // El haz frío recorre TODO el borde del panel solo mientras hay un archivo encima (única aparición del haz en este panel).
+          // El haz frío viaja por el borde del panel solo mientras hay un archivo encima (única aparición del haz en este panel).
           <motion.div
             data-drop-overlay
             aria-hidden
@@ -186,7 +186,13 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
             animate={{ opacity: 1, filter: "blur(0px)", transition: TRANSITION_IN }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, filter: `blur(${MOTION.blur}px)`, transition: TRANSITION_OUT }}
           >
-            <FlowBeam className="rounded-2xl" />
+            {/* Estilo «line» de la librería (el del buscador de su demo): una luz que viaja por el borde inferior y sube como resplandor. Tonos fríos («ice»). */}
+            {/* La librería fuerza `position: relative` en su contenedor: el absoluto va en este div y el haz lo llena. */}
+            <div className="absolute inset-0">
+              <Beam size="line" colorVariant="ice" duration={3.5} strength={1.5} className="block h-full w-full">
+                <div className="h-full w-full rounded-2xl" />
+              </Beam>
+            </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
               <UploadIcon className="size-6" />
               <p className="text-sm font-medium">Suelta tu CV aquí</p>
