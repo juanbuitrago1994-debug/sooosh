@@ -71,7 +71,7 @@ describe("verificar la versión ATS (cliente + ruta)", () => {
     expect(view.groups.map((g) => g.label)).toEqual(["Archivo y estructura", "Tipografía y márgenes", "Secciones y orden", "Datos de contacto", "Experiencia y educación", "Contenido fiel a tu CV"])
     expect(view.groups.every((g) => g.status === "ok")).toBe(true)
     expect(view.formats.map((f) => f.format)).toEqual(["pdf", "docx"])
-    expect(Object.keys(view).sort()).toEqual(["disclaimer", "formats", "groups", "label", "labelText", "percent", "readRate", "tips", "validated"])
+    expect(Object.keys(view).sort()).toEqual(["disclaimer", "formats", "groups", "label", "labelText", "percent", "readRate", "readback", "tips", "validated"])
     expect(JSON.stringify(view)).not.toMatch(/ATS-[A-Z]\d/)
     expect(view.disclaimer).toMatch(/no garantiza/)
   }, 90_000)
@@ -89,4 +89,42 @@ describe("verificar la versión ATS (cliente + ruta)", () => {
     const b = await generateAtsClient(withSummary, undefined, () => {})
     await expect(verifyAtsClient(withSummary, undefined, { ...b, docx: { ...b.docx, base64: Buffer.from("no es un word").toString("base64") } })).rejects.toThrow(/No se pudo verificar/)
   }, 90_000)
+})
+
+describe("lectura profunda en segundo plano (A8)", () => {
+  it("la ruta «read» responde sin archivos: sin texto original o sin IA devuelve extras nulos y no falla", async () => {
+    const res = await POST(req({ action: "read", cv: noSummary }))
+    expect(res.status).toBe(200)
+    expect((await res.json()).extras).toBeNull()
+  })
+  it("dos pedidos de la misma lectura comparten una sola llamada (Ollama es uno solo) y «Generar» espera a la que está en curso", async () => {
+    const { readExtrasClient, pendingExtras } = await import("@/lib/ats/client")
+    let calls = 0
+    vi.stubGlobal("fetch", async () => {
+      calls++
+      await new Promise((r) => setTimeout(r, 30))
+      return new Response(JSON.stringify({ extras: { roles: [], certifications: ["Curso"], volunteering: [], skillGroups: [], projects: [] } }), { status: 200 })
+    })
+    const src = "x".repeat(300)
+    const a = readExtrasClient(noSummary, src)
+    const b = readExtrasClient(noSummary, src)
+    expect(pendingExtras(noSummary, src)).toBeDefined()
+    expect(await a).toEqual(await b)
+    expect(calls).toBe(1)
+    expect(pendingExtras(noSummary, src)).toBeUndefined()
+  })
+  it("prefetchExtras guarda lo leído en el perfil solo si sigue siendo el mismo CV", async () => {
+    vi.resetModules()
+    const saved: unknown[] = []
+    vi.doMock("@/lib/profile/search-profile", () => ({ setProfileExtras: (e: unknown, id?: string) => saved.push([e, id]) }))
+    vi.doMock("@/lib/ats/client", () => ({ readExtrasClient: async () => ({ roles: [], certifications: [], volunteering: [], skillGroups: [], projects: [] }) }))
+    const { prefetchExtras } = await import("@/lib/ats/prefetch")
+    prefetchExtras(noSummary, "y".repeat(300), "archivo-1")
+    prefetchExtras(noSummary, "corto", "archivo-2") // sin texto suficiente: no hace nada
+    await new Promise((r) => setTimeout(r, 10))
+    expect(saved).toHaveLength(1)
+    expect((saved[0] as unknown[])[1]).toBe("archivo-1")
+    vi.doUnmock("@/lib/profile/search-profile")
+    vi.doUnmock("@/lib/ats/client")
+  })
 })

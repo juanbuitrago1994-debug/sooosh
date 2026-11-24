@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { buildOverview } from "@/lib/cv/overview"
+import { prefetchExtras } from "@/lib/ats/prefetch"
 import { setSearchProfile, useSearchProfile } from "@/lib/profile/search-profile"
 import type { CV } from "@/lib/schemas/cv"
 import type { Diagnosis } from "@/lib/schemas/diagnosis"
@@ -129,7 +130,10 @@ export function ProfileSummary({
         {isSearchProfile ? (
           <p className="text-sm text-muted-foreground">Este es el CV con el que comparamos las ofertas del buscador.</p>
         ) : (
-          <Button variant="secondary" onClick={() => setSearchProfile(cv, fileId, sourceText)}>
+          <Button variant="secondary" onClick={() => {
+              setSearchProfile(cv, fileId, sourceText)
+              prefetchExtras(cv, sourceText, fileId)
+            }}>
             Usar este CV para buscar ofertas
           </Button>
         )}

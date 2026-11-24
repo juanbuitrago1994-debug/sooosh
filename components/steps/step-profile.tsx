@@ -11,6 +11,7 @@ import { EntryScreen, type EntryActions } from "@/components/wizard/entry-screen
 import { CV_FORM_ID, CvForm } from "@/components/cv/cv-form"
 import { ProfileSummary } from "@/components/cv/profile-summary"
 import { freezeSource, type Source } from "@/lib/cv/source"
+import { prefetchExtras } from "@/lib/ats/prefetch"
 import { getSearchProfile, refreshSearchProfile, setSearchProfile } from "@/lib/profile/search-profile"
 import { STAGES } from "@/lib/cv/stages"
 import { formatBytes, type UploadedFile } from "@/lib/uploads"
@@ -107,7 +108,10 @@ export function StepProfile({
         setData(next)
         onChange(next)
         // El primer CV que se lee pasa a ser el perfil de búsqueda; los siguientes (adaptaciones) no lo cambian salvo que la persona lo pida.
-        if (!getSearchProfile()) setSearchProfile(r.cv, f.id, r.sourceText)
+        if (!getSearchProfile()) {
+          setSearchProfile(r.cv, f.id, r.sourceText)
+          prefetchExtras(r.cv, r.sourceText, f.id)
+        }
         setPhase("review")
       } catch (e) {
         if ((e as Error).name === "AbortError") {

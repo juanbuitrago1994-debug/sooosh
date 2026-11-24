@@ -105,7 +105,7 @@ describe("validación por grupos (sin detalle)", () => {
   })
   it("al unir PDF y Word gana el peor porcentaje y «Validado» exige «Listo» en ambos", () => {
     const rep = (format: "pdf" | "docx", percent: number, label: AtsReport["label"], status: "pass" | "fail") =>
-      ({ percent, label, labelText: label, file: { format }, rules: [{ id: "ATS-F1", group: "archivo", status }], tips: [], readRate: 100 }) as unknown as AtsReport
+      ({ percent, label, labelText: label, file: { format }, rules: [{ id: "ATS-F1", group: "archivo", status }], tips: [], readRate: 100, readback: [] }) as unknown as AtsReport
     const ok = combineReports([rep("pdf", 100, "listo", "pass"), rep("docx", 100, "listo", "pass")])
     expect(ok).toMatchObject({ percent: 100, validated: true })
     const mix = combineReports([rep("pdf", 100, "listo", "pass"), rep("docx", 82, "casi", "fail")])

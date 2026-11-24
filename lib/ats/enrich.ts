@@ -1,5 +1,6 @@
 import { z } from "zod"
-import { getProvider, type AIProvider } from "@/lib/ai"
+import type { AIProvider } from "@/lib/ai"
+import { atsProvider } from "./provider"
 import { isOpen } from "@/lib/cv/dates"
 import { fold } from "@/lib/keywords/normalize"
 import type { CV } from "@/lib/schemas/cv"
@@ -151,7 +152,7 @@ export async function extractExtras(cv: CV, sourceText: string | undefined, opts
   const source = sourceText?.trim()
   if (!source || source.length < 200) return { extras: EMPTY_EXTRAS, reason: "sin-texto" }
   try {
-    const provider = opts.provider ?? getProvider({ temperature: 0 })
+    const provider = opts.provider ?? atsProvider(0)
     const res = await provider.generateStructured({
       system: SYSTEM,
       user: `${digest(cv)}\n\nTEXTO ORIGINAL (líneas numeradas):\n${numbered(source)}`,

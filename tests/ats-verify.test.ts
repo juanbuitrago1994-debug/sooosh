@@ -175,6 +175,23 @@ describe("reglas de contenido del original que el generador no reescribe", () =>
     expect(r.percent).toBe(100)
   })
 
+  it("«Así te lee un ATS»: nuestro archivo se lee campo por campo (nombre, correo, teléfono, puestos con fechas, educación, habilidades)", async () => {
+    const { pdf } = await renderAtsPdf(doc)
+    const r = await verifyAtsFile({ file: pdf, fileName: atsFileName(doc, "pdf"), cv, expectedText })
+    const byLabel = Object.fromEntries(r.readback.map((x) => [x.label, x]))
+    expect(byLabel["Nombre"].value).toBe("Ana Zapata Núñez")
+    expect(byLabel["Correo"].value).toBe("ana@ejemplo.com")
+    expect(byLabel["Puestos"].value).toBe("2 (2 con fechas)")
+    expect(r.readback.every((x) => x.ok)).toBe(true)
+  }, 60_000)
+
+  it("«Así te lee un ATS» marca lo que NO se lee: un puesto sin fecha", async () => {
+    const noDate = cvSchema.parse({ ...cv, experience: cv.experience.map((e) => ({ ...e, startDate: "", endDate: "" })) })
+    const d = buildAtsDoc(noDate)
+    const r = await verifyAtsFile({ file: await renderAtsDocx(d), fileName: atsFileName(d, "docx"), cv: noDate, expectedText: atsToText(d) })
+    expect(r.readback.find((x) => x.label === "Puestos")).toMatchObject({ ok: false })
+  })
+
   it("consejos de contenido: pocas cifras y viñetas que empiezan igual (ATS-Q1, ATS-Q2)", async () => {
     const dull = cvSchema.parse({ ...cv, experience: [{ company: "Initech", role: "Analista", startDate: "03/2021", endDate: "Actual", bullets: ["Responsable de reportes.", "Responsable de tableros.", "Responsable de consultas.", "Responsable de la carga de datos."] }] })
     const d = buildAtsDoc(dull)

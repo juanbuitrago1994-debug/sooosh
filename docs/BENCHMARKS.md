@@ -285,3 +285,26 @@ Medición propia, qwen2.5:7b-instruct local (Ollama), un CV real de 11 500 carac
 | 4 | La IA solo identifica puestos; el código lee viñetas por bloques | **162 s** | Puestos, fechas y 14 viñetas correctos; 3 páginas; 91 % |
 
 Lecciones: pedirle a un modelo de 7 B que reproduzca texto largo es lento y se corta; que cuente líneas es poco fiable; que **solo identifique** y deje el copiado al código es lo que funciona. La lectura se hace una vez por CV; «Generar de nuevo» la reutiliza. Los tiempos incluyen la carga del modelo y varían con la máquina.
+
+## Versión ATS · lectura profunda por modelo (A8, 24-nov-2026)
+Medición propia: un CV real de 11 500 caracteres de texto OCR (12 puestos; 6 son los que la lectura debe encontrar), Mac M4 de 16 GB, Ollama local, `bench/ats-extract.test.ts` (el CV es un dato personal y se pasa por entorno; no está en el repositorio). **Una muestra por celda salvo donde se indica: no es un benchmark estadístico.** «Falla» = no devolvió un resultado válido dentro del límite de 5 min por llamada (`REQUEST_TIMEOUT_MS`), con reintentos.
+
+| Modelo | Tiempo | Resultado |
+|---|---|---|
+| `gemma4:e4b` (9,5 GB) | **43 · 53 · 52 s** (3 corridas; una cuarta tardó 96 s con la memoria saturada por modelos anteriores) | 6 de 6 puestos con fechas, 14 viñetas, 19–20 habilidades, 7 de 7 proyectos con texto, 4 certificaciones |
+| `qwen2.5:7b-instruct` (4,7 GB), el modelo anterior | 134 s (en A5: 162–220 s) | igual calidad |
+| `qwen3.5:9b` (7,6 GB) | falla (183 y 330 s) | modelo con razonamiento; no devolvió JSON válido a tiempo |
+| `qwen2.5:14b-instruct` (9,0 GB) | falla (300 s, dos corridas) | agota los 5 min por llamada |
+| `qwen3:14b` (9,3 GB) | falla (300 s, dos corridas) | idem |
+| `phi4` (9,1 GB) | falla (682–969 s) | idem |
+
+**Modo «reducido»** (la IA solo escribe puestos, habilidades y nombres de proyecto; el código copia lo demás): con `gemma4` 47 s frente a 43 s del modo completo y peor resultado en proyectos (5 de 7 con texto); con `qwen2.5:7b` falló. **No se adoptó y se eliminó del código.**
+
+**De punta a punta** (lectura profunda + documento + PDF + Word + verificación, con `gemma4:e4b`): **33 s** frente a 162 s con `qwen2.5:7b` (A5); formato 100 %, tasa de lectura 100 %.
+
+**Decisión**: la versión ATS usa `gemma4:e4b` (`OLLAMA_ATS_MODEL`), con `keepAlive` de 2 min para no mantener dos modelos de ~9 GB cargados a la vez. El resto de la app sigue con `qwen2.5:7b-instruct`.
+
+**Lecciones y límites**
+- **La medición de la primera tanda salió contaminada**: con 16 GB, dejar cargados modelos de 9 GB uno tras otro (Ollama los conserva 60 min) hizo que el equipo usara el disco, y hasta `gemma4` falló en una repetición. Se corrigió descargando cada modelo antes de medir el siguiente; los números de la tabla son de la tanda corregida.
+- Los modelos de 14 B no se descartan por calidad sino por tiempo: en este equipo no terminan en 5 min. En una máquina con más memoria podrían servir.
+- Un solo CV, una sola máquina. El modelo y el tiempo pueden variar con otro CV (p. ej. un PDF sin texto, que pasa por OCR).

@@ -31,7 +31,29 @@ const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.doc
 
 const friendly = (m: string) => (/fetch|network|failed/i.test(m) ? "No se pudo conectar con el servidor. ¿Está la app corriendo?" : m)
 
+/** Lecturas profundas en curso, por CV: «Generar» espera a la que ya empezó al subir el CV en vez de lanzar otra (Ollama es uno solo). */
+const inflight = new Map<string, Promise<AtsExtras | null>>()
+const keyOf = (cv: CV, sourceText: string) => `${cv.header.fullName}|${sourceText.length}|${sourceText.slice(0, 64)}|${sourceText.slice(-64)}`
+
+/** Pide la lectura profunda sin generar archivos. Devuelve null si no se pudo (sin IA, sin texto, sin conexión): la versión ATS sale igual, sin ese extra. */
+export function readExtrasClient(cv: CV, sourceText: string): Promise<AtsExtras | null> {
+  const key = keyOf(cv, sourceText)
+  const hit = inflight.get(key)
+  if (hit) return hit
+  const p = fetch("/api/ats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "read", cv, sourceText }) })
+    .then(async (res) => (res.ok ? ((await res.json()) as { extras?: AtsExtras }).extras ?? null : null))
+    .catch(() => null)
+    .finally(() => inflight.delete(key))
+  inflight.set(key, p)
+  return p
+}
+
+export const pendingExtras = (cv: CV, sourceText: string | undefined): Promise<AtsExtras | null> | undefined => (sourceText ? inflight.get(keyOf(cv, sourceText)) : undefined)
+
 export async function generateAtsClient(cv: CV, sourceText: string | undefined, onStage: (i: number) => void, signal?: AbortSignal, priorExtras?: AtsExtras | null): Promise<AtsBundle> {
+  // Si la lectura profunda ya está en curso (se lanzó al subir el CV), se espera a esa en vez de repetirla.
+  const waiting = priorExtras ? undefined : pendingExtras(cv, sourceText)
+  if (waiting) priorExtras = await waiting
   let res: Response
   try {
     res = await fetch("/api/ats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "generate", cv, sourceText, extras: priorExtras ?? undefined }), signal })

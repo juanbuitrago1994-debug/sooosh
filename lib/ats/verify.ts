@@ -17,6 +17,7 @@ import { ATS_RULES, isTip, WEIGHT_POINTS, type RuleDef, type RuleGroup } from ".
  */
 export type Status = "pass" | "fail" | "na"
 export type RuleResult = RuleDef & { status: Status; detail: string; evidence?: string[] }
+export type ReadbackItem = { label: string; value: string; ok: boolean }
 export type Tip = { id: string; title: string; fix: string; detail: string }
 export type Label = "listo" | "casi" | "cambios" | "esencial"
 export type AtsReport = {
@@ -33,6 +34,8 @@ export type AtsReport = {
   tips: Tip[]
   /** % de las palabras esperadas que un lector recupera del archivo (si se conoce el texto esperado) */
   readRate: number | null
+  /** lo que un lector automático logra extraer del archivo, campo por campo (A8) */
+  readback: ReadbackItem[]
   counts: { pass: number; fail: number; na: number }
   file: { format: "pdf" | "docx"; fileName: string; bytes: number; pages: number | null; fonts: string[]; bodySize: number | null }
   disclaimer: string
@@ -461,6 +464,24 @@ export function verifyExtraction(ex: Extraction, input: VerifyInput): AtsReport 
   // El porcentaje mide solo el formato; los consejos de contenido van aparte.
   const score = scoreRules(rules.filter((r) => !isTip(r.id)))
   const tips: Tip[] = rules.filter((r) => isTip(r.id) && r.status === "fail").map((r) => ({ id: r.id, title: r.title, fix: r.fix, detail: r.detail }))
+  // «Así te lee un ATS»: lo que se recupera del ARCHIVO (no de los datos de entrada), campo por campo, como el informe de Enhancv.
+  const readback: ReadbackItem[] = (() => {
+    const email = fullText.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/)?.[0]
+    const phone = fullText.match(/\+?\d[\d\s().-]{7,}\d/)?.[0]?.trim()
+    const name = (top[0]?.text ?? "").trim()
+    const dated = entries.filter((e) => /(?:19|20)\d{2}/.test(e.head.text)).length
+    const eduHeads = (sec("education")?.lines ?? []).filter((l) => !isBullet(l))
+    const skills = (sec("skills")?.lines ?? []).flatMap((l) => l.text.replace(/^[^:]{1,40}:\s*/, "").split(/[,;·]/)).map((x) => x.trim()).filter(Boolean)
+    const items: ReadbackItem[] = [
+      { label: "Nombre", value: name || "no se encontró", ok: name.length > 3 && !name.includes("|") && !name.includes("@") },
+      { label: "Correo", value: email ?? "no se encontró", ok: !!email },
+      { label: "Teléfono", value: phone ?? "no se encontró", ok: cv.header.phone ? !!phone : true },
+      { label: "Puestos", value: entries.length ? `${entries.length} (${dated} con fechas)` : "ninguno", ok: entries.length > 0 && dated === entries.length },
+      { label: "Educación", value: eduHeads.length ? `${eduHeads.length} entradas` : "ninguna", ok: cv.education.length === 0 || eduHeads.length > 0 },
+      { label: "Habilidades", value: skills.length ? `${skills.length} leídas` : "ninguna", ok: cv.skills.length === 0 || skills.length > 0 },
+    ]
+    return items.filter((i) => !(i.label === "Teléfono" && !cv.header.phone) && !(i.label === "Educación" && !cv.education.length && !eduHeads.length) && !(i.label === "Habilidades" && !cv.skills.length && !skills.length))
+  })()
   const readRate = (() => {
     if (!expectedText) return null
     const exp = new Set(words(expectedText))
@@ -472,6 +493,7 @@ export function verifyExtraction(ex: Extraction, input: VerifyInput): AtsReport 
     rules,
     tips,
     readRate,
+    readback,
     counts: { pass: rules.filter((r) => r.status === "pass").length, fail: rules.filter((r) => r.status === "fail").length, na: rules.filter((r) => r.status === "na").length },
     file: { format: ex.format, fileName, bytes: ex.bytes, pages: ex.pages, fonts: ex.fonts, bodySize: ex.bodySize },
     disclaimer: DISCLAIMER,
@@ -488,7 +510,7 @@ export const GROUP_LABEL: Record<RuleGroup, string> = {
   contenido: "Contenido fiel a tu CV",
 }
 export type GroupView = { group: RuleGroup; label: string; status: "ok" | "revisar"; failed: number }
-export type VerifyView = { percent: number; label: Label; labelText: string; validated: boolean; groups: GroupView[]; /** consejos de contenido (no restan del porcentaje) */ tips: { id: string; title: string; fix: string; detail: string }[]; /** % del contenido que un lector recupera del archivo */ readRate: number | null; formats: { format: "pdf" | "docx"; percent: number }[]; disclaimer: string }
+export type VerifyView = { percent: number; label: Label; labelText: string; validated: boolean; groups: GroupView[]; /** consejos de contenido (no restan del porcentaje) */ tips: { id: string; title: string; fix: string; detail: string }[]; /** % del contenido que un lector recupera del archivo */ readRate: number | null; /** campo por campo, lo que se logra leer del archivo */ readback: ReadbackItem[]; formats: { format: "pdf" | "docx"; percent: number }[]; disclaimer: string }
 
 /** Un grupo está «ok» si todas sus reglas aplicables cumplen. Un grupo donde nada aplica no se muestra. */
 export function groupSummary(rules: (Pick<RuleResult, "group" | "status"> & { id?: string })[]): GroupView[] {
@@ -504,5 +526,5 @@ export function groupSummary(rules: (Pick<RuleResult, "group" | "status"> & { id
 export function combineReports(reports: AtsReport[]): VerifyView {
   const worst = reports.reduce((a, b) => (b.percent < a.percent ? b : a))
   const groups = groupSummary(reports.flatMap((r) => r.rules.map((x) => ({ id: x.id, group: x.group, status: x.status }))))
-  return { percent: worst.percent, label: worst.label, labelText: worst.labelText, validated: reports.every((r) => r.label === "listo"), groups, tips: [...new Map(reports.flatMap((r) => r.tips).map((t) => [t.id, t])).values()], readRate: reports.reduce<number | null>((m, r) => (r.readRate == null ? m : m == null ? r.readRate : Math.min(m, r.readRate)), null), formats: reports.map((r) => ({ format: r.file.format, percent: r.percent })), disclaimer: DISCLAIMER }
+  return { percent: worst.percent, label: worst.label, labelText: worst.labelText, validated: reports.every((r) => r.label === "listo"), groups, tips: [...new Map(reports.flatMap((r) => r.tips).map((t) => [t.id, t])).values()], readRate: reports.reduce<number | null>((m, r) => (r.readRate == null ? m : m == null ? r.readRate : Math.min(m, r.readRate)), null), readback: reports[0]?.readback ?? [], formats: reports.map((r) => ({ format: r.file.format, percent: r.percent })), disclaimer: DISCLAIMER }
 }

@@ -14,6 +14,7 @@ import { Drawer, DrawerDescription, DrawerHeader, DrawerTitle } from "@/componen
 import { Spinner } from "@/components/ui/spinner"
 import { Separator } from "@/components/ui/separator"
 import { nextProgress, stageFloor, stageIndex } from "@/lib/cv/progress"
+import { prefetchExtras } from "@/lib/ats/prefetch"
 import { dragHasFiles, friendlyReadError, pickCvFile } from "@/lib/profile/cv-drop"
 import { clearSearchProfile, setSearchProfile, useSearchProfile } from "@/lib/profile/search-profile"
 import { MOTION, TRANSITION_IN, TRANSITION_OUT } from "@/lib/motion"
@@ -67,6 +68,7 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
     try {
       const r = await parseCvFileSafe(picked.file, setStage)
       setSearchProfile(r.cv, r.fileId, r.sourceText)
+      prefetchExtras(r.cv, r.sourceText, r.fileId)
       toast.success("CV listo: ya ves el encaje de cada oferta")
     } catch (e) {
       setError(friendlyReadError((e as Error).message))
@@ -162,7 +164,7 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
                   <Separator />
                   </motion.div>
                 </motion.div>
-                <AtsVersion key={profile.updatedAt} cv={profile.cv} sourceText={profile.sourceText} onWorkingChange={setAtsWorking} />
+                <AtsVersion key={profile.updatedAt} cv={profile.cv} sourceText={profile.sourceText} savedExtras={profile.extras} onWorkingChange={setAtsWorking} />
               </>
             ) : (
               // Sin CV: todo el panel es el recuadro de subida (clic en cualquier parte o soltar el archivo).

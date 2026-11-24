@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Trace, TraceDescription, TraceIcon, TraceLine, TraceTitle } from "@/components/ui/trace"
 import { nextProgress } from "@/lib/cv/progress"
-import { setAtsStatus } from "@/lib/profile/search-profile"
+import { setAtsStatus, setProfileExtras } from "@/lib/profile/search-profile"
 import { ATS_STAGES, generateAtsClient, saveBlob, verifyAtsClient, type AtsBundle } from "@/lib/ats/client"
 import type { VerifyView } from "@/lib/ats/verify"
 import type { CV } from "@/lib/schemas/cv"
@@ -28,11 +28,14 @@ type Phase =
 
 const pagesText = (n: number) => `${n} ${n === 1 ? "página" : "páginas"}`
 
-export function AtsVersion({ cv, sourceText, onWorkingChange }: { cv: CV; /** texto original del CV, para releerlo a fondo */ sourceText?: string; /** avisa cuando empieza y termina la generación, para que el panel oculte lo de arriba */ onWorkingChange?: (working: boolean) => void }) {
+export function AtsVersion({ cv, sourceText, savedExtras, onWorkingChange }: { cv: CV; /** lectura profunda ya guardada en el perfil (se hizo al subir el CV) */ savedExtras?: AtsBundle["extras"]; /** texto original del CV, para releerlo a fondo */ sourceText?: string; /** avisa cuando empieza y termina la generación, para que el panel oculte lo de arriba */ onWorkingChange?: (working: boolean) => void }) {
   const [phase, setPhase] = useState<Phase>({ k: "idle" })
   const abort = useRef<AbortController | null>(null)
   // La lectura a fondo es la parte lenta: se hace una vez por CV y «Generar de nuevo» la reutiliza.
-  const extras = useRef<AtsBundle["extras"]>(null)
+  const extras = useRef<AtsBundle["extras"]>(savedExtras ?? null)
+  useEffect(() => {
+    if (savedExtras && !extras.current) extras.current = savedExtras
+  }, [savedExtras])
   const hasSummary = !!cv.summary?.trim()
 
   useEffect(() => () => abort.current?.abort(), [])
@@ -51,6 +54,7 @@ export function AtsVersion({ cv, sourceText, onWorkingChange }: { cv: CV; /** te
       const bundle = await generateAtsClient(cv, sourceText, (i) => setPhase({ k: "working", stage: i }), ctl.signal, extras.current)
       if (ctl.signal.aborted) return
       extras.current = bundle.extras
+      if (bundle.extras) setProfileExtras(bundle.extras)
       setAtsStatus({ at: new Date().toISOString() })
       setPhase({ k: "ready", bundle })
     } catch (e) {
@@ -182,6 +186,21 @@ export function AtsVersion({ cv, sourceText, onWorkingChange }: { cv: CV; /** te
                   </li>
                 ))}
               </ul>
+              {phase.view.readback.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm font-medium">Así te lee un ATS</p>
+                  <p className="text-xs text-muted-foreground">Lo que un lector automático logra extraer de tu archivo.</p>
+                  <ul className="flex flex-col gap-2 text-sm">
+                    {phase.view.readback.map((r) => (
+                      <li key={r.label} className="flex items-center gap-2">
+                        {r.ok ? <CheckIcon className="size-4 shrink-0" /> : <CircleAlertIcon className="size-4 shrink-0 text-destructive" />}
+                        <span>{r.label}</span>
+                        <span className="min-w-0 truncate text-xs text-muted-foreground">· {r.value}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {phase.view.tips.length > 0 && (
                 <div className="flex flex-col gap-2">
                   <p className="text-sm font-medium">Consejos para tu CV</p>

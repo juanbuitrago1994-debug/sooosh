@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { renderAtsDocx } from "@/lib/ats/docx"
 import { atsFileName } from "@/lib/ats/filename"
-import { atsExtrasSchema, regroundExtras, EMPTY_EXTRAS, type AtsExtras } from "@/lib/ats/enrich"
+import { extractExtras, atsExtrasSchema, regroundExtras, EMPTY_EXTRAS, type AtsExtras } from "@/lib/ats/enrich"
 import { generateAts } from "@/lib/ats/generate"
 import { buildAtsDoc, withExtras } from "@/lib/ats/model"
 import { renderAtsPdf } from "@/lib/ats/pdf"
@@ -23,6 +23,13 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { action?: unknown; cv?: unknown; summary?: unknown; sourceText?: unknown; extras?: unknown; pdf?: unknown; docx?: unknown } | null
   const cv = cvSchema.safeParse(body?.cv)
   if (!cv.success) return NextResponse.json({ error: "El CV no es válido o está incompleto." }, { status: 400 })
+
+  // Lectura profunda sola (sin archivos): se lanza al subir el CV; el resultado se guarda en el navegador y «generate» lo reutiliza.
+  if (body?.action === "read") {
+    const sourceText = typeof body.sourceText === "string" ? body.sourceText.slice(0, MAX_SOURCE) : undefined
+    const r = await extractExtras(cv.data, sourceText, { signal: request.signal })
+    return NextResponse.json({ extras: r.reason ? null : r.extras }, { headers: { "Cache-Control": "no-store" } })
+  }
 
   if (body?.action === "verify") {
     const b64 = (x: unknown) => (typeof x === "string" && x.length > 0 && x.length < MAX_B64 ? Buffer.from(x, "base64") : null)

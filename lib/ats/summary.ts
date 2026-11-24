@@ -1,5 +1,6 @@
 import { z } from "zod"
-import { getProvider, type AIProvider } from "@/lib/ai"
+import type { AIProvider } from "@/lib/ai"
+import { atsProvider } from "./provider"
 import { totalYears } from "@/lib/cv/dates"
 import { cvCorpus, verifyNoInvention } from "@/lib/rewrite/verify"
 import type { CV } from "@/lib/schemas/cv"
@@ -40,7 +41,7 @@ export async function generateSummary(cv: CV, lang: AtsLang, opts: { provider?: 
   if (!facts.headline && !facts.roles.length) return { summary: null, reason: "sin-datos" }
   let provider = opts.provider
   try {
-    provider ??= getProvider({ temperature: 0.2 })
+    provider ??= atsProvider(0.2)
     const res = await provider.generateStructured({ system: SYSTEM[lang], user: JSON.stringify(facts), schema, signal: opts.signal, options: { numPredict: 300 } })
     const text = res.data.summary.replace(/\s+/g, " ").trim()
     const n = sentenceCount(text)

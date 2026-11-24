@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react"
+import type { AtsExtras } from "@/lib/ats/enrich"
 import { cvSchema, type CV } from "@/lib/schemas/cv"
 
 /**
@@ -21,6 +22,8 @@ export type SearchProfile = {
   /** texto original del CV (para que la versión ATS lo relea a fondo); solo en este navegador */
   sourceText?: string
   ats?: AtsStatus
+  /** lectura profunda del CV para la versión ATS (A8): se hace al subir el CV y se reutiliza al generar */
+  extras?: AtsExtras
   updatedAt: string
 }
 
@@ -41,7 +44,7 @@ export function getSearchProfile(): SearchProfile | null {
   try {
     const d = JSON.parse(raw ?? "null") as Partial<SearchProfile> | null
     const cv = cvSchema.safeParse(d?.cv)
-    if (d && cv.success) value = { cv: cv.data, label: typeof d.label === "string" ? d.label : profileLabel(cv.data), fileId: typeof d.fileId === "string" ? d.fileId : undefined, sourceText: typeof d.sourceText === "string" ? d.sourceText : undefined, ats: d.ats && typeof d.ats.at === "string" ? { at: d.ats.at, validated: typeof d.ats.validated === "boolean" ? d.ats.validated : undefined } : undefined, updatedAt: typeof d.updatedAt === "string" ? d.updatedAt : "" }
+    if (d && cv.success) value = { cv: cv.data, label: typeof d.label === "string" ? d.label : profileLabel(cv.data), fileId: typeof d.fileId === "string" ? d.fileId : undefined, sourceText: typeof d.sourceText === "string" ? d.sourceText : undefined, extras: d.extras && typeof d.extras === "object" && Array.isArray((d.extras as AtsExtras).roles) ? (d.extras as AtsExtras) : undefined, ats: d.ats && typeof d.ats.at === "string" ? { at: d.ats.at, validated: typeof d.ats.validated === "boolean" ? d.ats.validated : undefined } : undefined, updatedAt: typeof d.updatedAt === "string" ? d.updatedAt : "" }
   } catch {
     value = null
   }
@@ -69,6 +72,19 @@ export function setAtsStatus(status: AtsStatus): boolean {
   if (!cur) return false
   try {
     localStorage.setItem(SEARCH_PROFILE_KEY, JSON.stringify({ ...cur, ats: status }))
+    window.dispatchEvent(new Event(EVENT))
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Guarda la lectura profunda en el perfil. Si se indica `fileId`, solo si sigue siendo el mismo CV (la persona pudo cambiarlo mientras se leía). No toca `updatedAt`. */
+export function setProfileExtras(extras: AtsExtras, fileId?: string): boolean {
+  const cur = getSearchProfile()
+  if (!cur || (fileId !== undefined && cur.fileId !== fileId)) return false
+  try {
+    localStorage.setItem(SEARCH_PROFILE_KEY, JSON.stringify({ ...cur, extras }))
     window.dispatchEvent(new Event(EVENT))
     return true
   } catch {
