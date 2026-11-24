@@ -18,9 +18,8 @@ import { Input } from "@/components/ui/input"
 import { ConsentBanner } from "@/components/privacy/consent-banner"
 import { PrivacyLink } from "@/components/privacy/privacy-dialog"
 import { JobCard } from "@/components/jobs/job-card"
-import { ResponsiveSheet } from "@/components/jobs/responsive-sheet"
 import { AREA_LABEL, MODE_LABEL, SearchFiltersSheet } from "@/components/jobs/search-filters-sheet"
-import { SearchProfilePanel } from "@/components/jobs/search-profile-panel"
+import { SearchProfileDrawer } from "@/components/jobs/search-profile-panel"
 import { SourcesStatus } from "@/components/jobs/sources-status"
 import { markFirstSearch, shouldAsk, track, useConsent } from "@/lib/events/consent"
 import { useMarks } from "@/lib/profile/job-marks"
@@ -372,9 +371,7 @@ export function JobSearch() {
         />
       )}
 
-      <ResponsiveSheet open={cvOpen} onOpenChange={setCvOpen}>
-        {(shell) => <SearchProfilePanel shell={shell} />}
-      </ResponsiveSheet>
+      <SearchProfileDrawer open={cvOpen} onOpenChange={setCvOpen} />
       <ConsentBanner />
     </div>
   )

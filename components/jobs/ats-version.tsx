@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react"
 import { CheckIcon, CircleAlertIcon, CircleIcon, DownloadIcon, FileTextIcon } from "lucide-react"
 import { toast } from "sonner"
-import type { CvMotionState } from "@/components/ai/cv-motion"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from "@/components/ui/attachment"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -27,7 +26,7 @@ type Phase =
 
 const pagesText = (n: number) => `${n} ${n === 1 ? "página" : "páginas"}`
 
-export function AtsVersion({ cv, sourceText, onMotion }: { cv: CV; /** texto original del CV, para releerlo a fondo */ sourceText?: string; onMotion?: (s: CvMotionState) => void }) {
+export function AtsVersion({ cv, sourceText }: { cv: CV; /** texto original del CV, para releerlo a fondo */ sourceText?: string }) {
   const [phase, setPhase] = useState<Phase>({ k: "idle" })
   const abort = useRef<AbortController | null>(null)
   // La lectura a fondo es la parte lenta: se hace una vez por CV y «Generar de nuevo» la reutiliza.
@@ -35,9 +34,6 @@ export function AtsVersion({ cv, sourceText, onMotion }: { cv: CV; /** texto ori
   const hasSummary = !!cv.summary?.trim()
 
   useEffect(() => () => abort.current?.abort(), [])
-  useEffect(() => {
-    onMotion?.(phase.k === "working" || phase.k === "verifying" ? "working" : phase.k === "ready" || phase.k === "verified" ? "done" : "idle")
-  }, [phase.k, onMotion])
 
   const generate = async () => {
     abort.current?.abort()

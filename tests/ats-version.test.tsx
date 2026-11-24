@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs"
 import path from "node:path"
 import { renderToStaticMarkup } from "react-dom/server"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { CvMotion } from "@/components/ai/cv-motion"
 import { cvSchema, type CV } from "@/lib/schemas/cv"
 import { combineReports, groupSummary, type AtsReport } from "@/lib/ats/verify"
 
@@ -17,71 +16,48 @@ async function panel(profile: { cv: CV; label: string; updatedAt: string } | nul
 }
 afterEach(() => vi.doUnmock("@/lib/profile/search-profile"))
 
-describe("panel «Mi CV»", () => {
-  it("con CV: CV animado en reposo, título, nombre, Cambiar/Quitar y el bloque Versión ATS", async () => {
+describe("panel «Mi CV» (panel lateral)", () => {
+  it("con CV: nombre en un Attachment, Cambiar/Quitar y el bloque Versión ATS; sin hoja animada ni degradado", async () => {
     const html = await panel({ cv, label: "Ana Pérez · Diseñadora", updatedAt: "x" })
-    expect(html).toContain('data-cv-motion="idle"')
     expect(html).toContain("Mi CV")
     expect(html).toContain("Ana Pérez · Diseñadora")
+    expect(html).toContain('data-slot="attachment"')
     expect(html).toContain("Cambiar CV")
     expect(html).toContain("Quitar")
-    // A7: escenario con degradado que se desvanece, CV en un Attachment de shadcn
-    expect(html).toContain("data-cv-stage")
-    expect(html).toContain("data-cv-fade")
-    expect(html).toContain('data-slot="attachment"')
     expect(html).toContain("Versión ATS")
     expect(html).toContain("Generar versión ATS")
     expect(html).not.toContain("Validado")
+    expect(html).not.toMatch(/data-cv-|bg-linear|gradient/)
   })
-  it("sin CV: solo invita a subirlo; no ofrece la versión ATS", async () => {
+  it("sin CV: solo el recuadro de subida (Attachment idle) que invita a hacer clic o soltar; no ofrece la versión ATS", async () => {
     const html = await panel(null)
-    expect(html).toContain("Subir mi CV")
-    // A7: estado vacío = recuadro de subida (Attachment «idle» con borde punteado) y los 3 pasos numerados
     expect(html).toContain('data-state="idle"')
     expect(html).toContain("Sube tu CV")
-    expect(html).toContain("Haz clic o suelta el archivo aquí")
-    expect(html).toMatch(/>1<\/span>[\s\S]*>2<\/span>[\s\S]*>3<\/span>/)
+    expect(html).toContain("Haz clic o suéltalo aquí")
     expect(html).not.toContain("Generar versión ATS")
     expect(html).not.toContain("Cambiar CV")
+    // la zona de soltar no se muestra hasta que se arrastra un archivo
+    expect(html).not.toContain("data-drop-overlay")
   })
-  it("sigue la regla de espaciado de paneles: 24 px entre bloques (gap-6) y título dentro de la zona con scroll, sin relleno propio", async () => {
-    const html = await panel({ cv, label: "Ana", updatedAt: "x" })
-    expect(html).toMatch(/gap-6[^"]*overflow-y-auto|overflow-y-auto[^"]*gap-6/)
-    expect(html).toContain("p-0")
+  it("todo el panel es zona de soltar: maneja arrastrar y soltar y muestra el aviso con motion (opacity/blur/translate)", () => {
+    const src = readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")
+    for (const h of ["onDragEnter", "onDragOver", "onDragLeave", "onDrop"]) expect(src).toContain(h)
+    expect(src).toContain("Suelta tu CV aquí")
+    expect(src).toContain("useReducedMotion")
+    expect(src).not.toMatch(/scale|rotate|conic-gradient/)
+  })
+  it("se abre como panel lateral flotante, igual que «Postular por correo»", () => {
+    const src = readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")
+    expect(src).toContain('swipeDirection="right"')
+    expect(src).toContain("FloatingDrawerContent")
   })
   it("la interfaz solo usa tokens del tema: sin colores ni valores arbitrarios", () => {
-    for (const f of ["components/jobs/ats-version.tsx", "components/jobs/search-profile-panel.tsx", "components/ai/cv-motion.tsx", "components/magic/cv-stage.tsx"]) {
+    for (const f of ["components/jobs/ats-version.tsx", "components/jobs/search-profile-panel.tsx"]) {
       const src = readFileSync(path.join(__dirname, "..", f), "utf8")
       expect(src, f).not.toMatch(/\b(?:bg|text|border|fill|stroke)-(?:red|blue|green|amber|yellow|orange|purple|pink|slate|gray|zinc|neutral|stone|black|white)\b/)
       expect(src, f).not.toMatch(/\b[a-z-]+-\[[^\]]+\]/)
       expect(src, f).not.toMatch(/#[0-9a-fA-F]{3,6}\b/)
     }
-  })
-})
-
-describe("CvMotion (CV animado monocromático)", () => {
-  const lines = (h: string) => (h.match(/data-cv-line/g) ?? []).length
-  it("reposo: 9 líneas escritas, sin cubiertas, sin barrido y sin marca", () => {
-    const h = renderToStaticMarkup(<CvMotion state="idle" />)
-    expect(lines(h)).toBe(9)
-    expect(h).not.toMatch(/data-cv-cover|data-cv-sweep|data-cv-check/)
-  })
-  it("trabajando: una cubierta por línea que se desliza y un barrido tenue", () => {
-    const h = renderToStaticMarkup(<CvMotion state="working" />)
-    expect((h.match(/data-cv-cover/g) ?? []).length).toBe(9)
-    expect(h).toContain("data-cv-sweep")
-    expect(h).toContain('data-cv-motion="working"')
-  })
-  it("listo: líneas escritas y marca de check", () => {
-    const h = renderToStaticMarkup(<CvMotion state="done" />)
-    expect(h).toContain("data-cv-check")
-    expect(h).not.toContain("data-cv-cover")
-  })
-  it("es decorativo, usa un solo color del tema en tonos y respeta «reducir movimiento»", () => {
-    const h = renderToStaticMarkup(<CvMotion />)
-    expect(h).toContain('aria-hidden="true"')
-    expect([...new Set(h.match(/bg-(?!card|muted)[a-z]+(?=\/|\s|")/g))]).toEqual(["bg-primary"])
-    expect(readFileSync(path.join(__dirname, "..", "components/ai/cv-motion.tsx"), "utf8")).toContain("useReducedMotion")
   })
 })
 
