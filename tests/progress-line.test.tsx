@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs"
 import path from "node:path"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
+import { FlowBeam } from "@/components/magic/flow-beam"
 import { ProgressLine } from "@/components/ai/progress-line"
 import { SearchLoading } from "@/components/jobs/search-loading"
 import { MOTION, TRANSITION_SOFT } from "@/lib/motion"
@@ -64,5 +65,21 @@ describe("pantalla inicial del CV: misma experiencia que el panel «Mi CV»", ()
   it("el porcentaje sigue la etapa real (-1 mientras sube) y solo se atenúa el contenido al arrastrar", () => {
     expect(entry).toContain('phase === "parsing" ? (work?.step ?? 0) : -1')
     expect(entry).toContain("dragging && !reduce")
+  })
+})
+
+describe("FlowBeam: vuelta y densidad configurables (la ventana completa pide más velocidad y más densidad que el panel)", () => {
+  it("por defecto: vuelta de 5 s y opacidades del panel; la ventana completa: 2,8 s y más denso", () => {
+    const base = renderToStaticMarkup(<FlowBeam />)
+    expect(base).toContain("fb-spin 5s linear")
+    expect(base).toContain("opacity: 0.6;")
+    const full = renderToStaticMarkup(<FlowBeam lap={2.8} density={1.7} />)
+    expect(full).toContain("fb-spin 2.8s linear")
+    expect(full).not.toContain("opacity: 0.6;")
+    expect(full.match(/opacity: 1;/g)?.length).toBeGreaterThanOrEqual(2) // hilo y brillo interior al máximo
+  })
+  it("la pantalla inicial usa el haz rápido y denso; el panel no cambia", () => {
+    expect(readFileSync(path.join(__dirname, "..", "components/wizard/entry-screen.tsx"), "utf8")).toContain("beam={{ lap: 2.8, density: 1.7 }}")
+    expect(readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")).not.toContain("beam={{")
   })
 })

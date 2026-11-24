@@ -16,7 +16,9 @@ import { EFFECT_COLORS } from "@/lib/design-tokens"
  * Una vuelta cada 5 s a velocidad constante. Con «reducir movimiento» no gira: queda un resplandor interior quieto. Decorativo; el radio de
  * esquina se hereda del contenedor (`rounded-2xl`).
  */
+/** Valores por defecto (el panel «Mi CV»); la ventana completa pide una vuelta más corta y un haz más denso. */
 const LAP = 5
+const clamp1 = (n: number) => Math.min(1, n)
 const [BLUE, GRAY] = [EFFECT_COLORS["flow-blue"], EFFECT_COLORS["flow-gray"]]
 // Un matiz por mancha, en el mismo orden y con los mismos matices que la variante `colorful` de la librería (rosa, azul, verde, turquesa, violeta, azul, naranja, magenta, azul).
 const C = EFFECT_COLORS
@@ -49,21 +51,22 @@ const EDGE = "linear-gradient(white, transparent 28px, transparent calc(100% - 2
 const BLOOM_ARC = `conic-gradient(from var(--fb-angle), transparent 0%, transparent 58%, color-mix(in oklab, ${BLUE} 5%, transparent) 62%, color-mix(in oklab, ${BLUE} 20%, transparent) 66%, color-mix(in oklab, ${BLUE} 70%, transparent) 69%, color-mix(in oklab, ${CORE} 85%, transparent) 70.5%, color-mix(in oklab, ${BLUE} 45%, transparent) 72%, color-mix(in oklab, ${BLUE} 12%, transparent) 76%, transparent 82%)`
 
 // Opacidades por capa (las de la librería multiplicadas por 3: sobre el fondo oscuro del panel, las originales casi no se ven).
-const STYLE = `
+/** `density` multiplica la opacidad de las tres capas y el tamaño de las manchas de color: más denso = más luz y más ancha. */
+const buildStyle = (lap: number, density: number) => `
 @property --fb-angle { syntax: "<angle>"; initial-value: 0deg; inherits: true; }
 @keyframes fb-spin { to { --fb-angle: 360deg; } }
-[data-flow-beam] { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; animation: fb-spin ${LAP}s linear infinite; }
+[data-flow-beam] { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; animation: fb-spin ${lap}s linear infinite; }
 [data-flow-beam]::after {
-  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; z-index: 2; opacity: .6;
-  background: ${ARC_CORE}, ${blobs(1)};
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; z-index: 2; opacity: ${clamp1(0.6 * density)};
+  background: ${ARC_CORE}, ${blobs(1, density)};
   -webkit-mask: ${MASK_ARC}, linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: source-in, xor;
   mask: ${MASK_ARC}, linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: intersect, exclude;
 }
 [data-flow-beam]::before {
-  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 1; opacity: .63;
-  background: ${blobs(0.22, 0.9)};
+  content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 1; opacity: ${clamp1(0.63 * density)};
+  background: ${blobs(Math.min(1, 0.22 * density), 0.9 * density)};
   box-shadow: inset 0 0 9px 1px color-mix(in oklab, ${BLUE} 27%, transparent);
   -webkit-mask-image: ${MASK_ARC}, ${EDGE};
   -webkit-mask-composite: source-in, source-over;
@@ -71,7 +74,7 @@ const STYLE = `
   mask-composite: intersect, add;
 }
 [data-flow-beam] > span {
-  position: absolute; inset: 0; border-radius: inherit; padding: 1px; z-index: 3; opacity: .36;
+  position: absolute; inset: 0; border-radius: inherit; padding: 1px; z-index: 3; opacity: ${clamp1(0.36 * density)};
   background: ${BLOOM_ARC};
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor;
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude;
@@ -79,14 +82,14 @@ const STYLE = `
 }
 `
 
-export function FlowBeam({ className }: { className?: string }) {
+export function FlowBeam({ className, lap = LAP, density = 1 }: { className?: string; /** segundos por vuelta */ lap?: number; /** 1 = el del panel; más = más denso */ density?: number }) {
   const reduce = useReducedMotion()
   if (reduce) {
     return <span aria-hidden className={`pointer-events-none absolute inset-0 ${className ?? ""}`} style={{ boxShadow: `inset 0 0 18px 2px color-mix(in oklab, ${BLUE} 35%, transparent)` }} />
   }
   return (
     <div aria-hidden data-flow-beam className={className}>
-      <style>{STYLE}</style>
+      <style>{buildStyle(lap, density)}</style>
       <span />
     </div>
   )
