@@ -44,7 +44,7 @@ export function CvMotion({ state = "idle", className }: { state?: CvMotionState;
   const reduce = useReducedMotion()
   const working = state === "working" && !reduce
   return (
-    <div aria-hidden data-cv-motion={state} className={`relative flex h-36 w-28 flex-col gap-2 overflow-hidden rounded-lg border bg-card p-3 ${className ?? ""}`}>
+    <div aria-hidden data-cv-motion={state} className={`relative flex h-36 w-32 flex-col gap-2 overflow-hidden rounded-lg border bg-card p-3 ${className ?? ""}`}>
       <div className="flex items-center gap-2">
         <span className="size-5 shrink-0 rounded-full bg-primary/30" />
         <span className="block h-1.5 w-10 rounded-full bg-primary/60" />

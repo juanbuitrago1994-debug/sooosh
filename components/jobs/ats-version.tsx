@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { CheckIcon, CircleAlertIcon, DownloadIcon } from "lucide-react"
+import { CheckIcon, CircleAlertIcon, CircleIcon, DownloadIcon, FileTextIcon } from "lucide-react"
 import { toast } from "sonner"
 import type { CvMotionState } from "@/components/ai/cv-motion"
+import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from "@/components/ui/attachment"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
+import { Trace, TraceIcon, TraceLine, TraceTitle } from "@/components/ui/trace"
 import { ATS_STAGES, generateAtsClient, saveBlob, verifyAtsClient, type AtsBundle } from "@/lib/ats/client"
 import type { VerifyView } from "@/lib/ats/verify"
 import type { CV } from "@/lib/schemas/cv"
@@ -69,17 +71,28 @@ export function AtsVersion({ cv, sourceText, onMotion }: { cv: CV; /** texto ori
   const stageLabels = ATS_STAGES.map((l, i) => (i === 1 && hasSummary ? "Conservando tu resumen" : l))
 
   const bundle = "bundle" in phase ? phase.bundle : null
-  const downloads = bundle && (
-    <>
-      <Button variant="outline" onClick={() => saveBlob(bundle.pdf.blob, bundle.pdf.name)}>
-        <DownloadIcon data-icon="inline-start" />
-        PDF
-      </Button>
-      <Button variant="outline" onClick={() => saveBlob(bundle.docx.blob, bundle.docx.name)}>
-        <DownloadIcon data-icon="inline-start" />
-        Word
-      </Button>
-    </>
+  const files = bundle && (
+    <div className="flex flex-col gap-2">
+      {([["PDF", bundle.pdf, `${pagesText(bundle.pages)}`], ["Word", bundle.docx, "Documento .docx"]] as const).map(([kind, f, note]) => (
+        <Attachment key={kind} state="done" className="w-full">
+          <AttachmentTrigger aria-label={`Descargar ${kind}`} onClick={() => saveBlob(f.blob, f.name)} />
+          <AttachmentMedia>
+            <FileTextIcon />
+          </AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>{f.name}</AttachmentTitle>
+            <AttachmentDescription>
+              {kind} · {note}
+            </AttachmentDescription>
+          </AttachmentContent>
+          <AttachmentActions>
+            <span aria-hidden className="grid size-6 place-items-center">
+              <DownloadIcon className="size-4" />
+            </span>
+          </AttachmentActions>
+        </Attachment>
+      ))}
+    </div>
   )
 
   return (
@@ -98,20 +111,19 @@ export function AtsVersion({ cv, sourceText, onMotion }: { cv: CV; /** texto ori
       )}
 
       {phase.k === "working" && (
-        <ol role="status" aria-live="polite" className="flex flex-col gap-2 text-sm">
+        // Pasos reales del proceso (Trace de shadcn): hechos con ✓, el actual con brillo y spinner, los siguientes atenuados.
+        <Trace role="status" aria-live="polite">
           {stageLabels.map((label, i) => {
             const done = i < phase.stage || (i === 1 && hasSummary && phase.stage >= 1)
             const current = i === phase.stage && !(i === 1 && hasSummary)
             return (
-              <li key={label} className={`flex items-center gap-2 ${done || current ? "" : "text-muted-foreground"}`} aria-current={current ? "step" : undefined}>
-                <span className={`grid size-5 shrink-0 place-items-center rounded-full ${done ? "bg-primary text-primary-foreground" : "border"}`}>
-                  {done ? <CheckIcon className="size-3" /> : current ? <Spinner className="size-3" /> : null}
-                </span>
-                {label}
-              </li>
+              <TraceLine key={label} status={current ? "running" : done ? undefined : "pending"} aria-current={current ? "step" : undefined}>
+                <TraceIcon>{done ? <CheckIcon /> : current ? <Spinner /> : <CircleIcon />}</TraceIcon>
+                <TraceTitle>{label}</TraceTitle>
+              </TraceLine>
             )
           })}
-        </ol>
+        </Trace>
       )}
 
       {phase.k === "error" && (
@@ -129,7 +141,6 @@ export function AtsVersion({ cv, sourceText, onMotion }: { cv: CV; /** texto ori
         <>
           <div className="flex flex-col gap-2">
             <p className="text-sm font-medium">Tu versión ATS está lista</p>
-            <p className="text-xs text-muted-foreground">{pagesText(bundle.pages)} · {bundle.pdf.name.replace(/\.pdf$/, "")}</p>
             {bundle.summary && <p className="text-xs text-muted-foreground">El resumen lo propuso la IA local a partir de tu CV: revísalo antes de enviarlo.</p>}
             {!bundle.summary && !bundle.summaryFromCv && bundle.summaryReason && <p className="text-xs text-muted-foreground">Tu CV no traía resumen y no se pudo redactar uno sin inventar datos: esa sección no aparece.</p>}
             {bundle.warnings.map((w) => (
@@ -175,6 +186,8 @@ export function AtsVersion({ cv, sourceText, onMotion }: { cv: CV; /** texto ori
             </div>
           ) : null}
 
+          {files}
+
           <div className="flex flex-wrap gap-2">
             {phase.k !== "verified" && (
               <Button disabled={phase.k === "verifying"} onClick={() => void verify(bundle)}>
@@ -182,7 +195,6 @@ export function AtsVersion({ cv, sourceText, onMotion }: { cv: CV; /** texto ori
                 {phase.k === "verifying" ? "Verificando…" : "Verificar"}
               </Button>
             )}
-            {downloads}
             <Button variant="ghost" className="text-muted-foreground" disabled={phase.k === "verifying"} onClick={() => void generate()}>
               Generar de nuevo
             </Button>

@@ -25,6 +25,10 @@ describe("panel «Mi CV»", () => {
     expect(html).toContain("Ana Pérez · Diseñadora")
     expect(html).toContain("Cambiar CV")
     expect(html).toContain("Quitar")
+    // A7: escenario con degradado que se desvanece, CV en un Attachment de shadcn
+    expect(html).toContain("data-cv-stage")
+    expect(html).toContain("data-cv-fade")
+    expect(html).toContain('data-slot="attachment"')
     expect(html).toContain("Versión ATS")
     expect(html).toContain("Generar versión ATS")
     expect(html).not.toContain("Validado")
@@ -32,6 +36,11 @@ describe("panel «Mi CV»", () => {
   it("sin CV: solo invita a subirlo; no ofrece la versión ATS", async () => {
     const html = await panel(null)
     expect(html).toContain("Subir mi CV")
+    // A7: estado vacío = recuadro de subida (Attachment «idle» con borde punteado) y los 3 pasos numerados
+    expect(html).toContain('data-state="idle"')
+    expect(html).toContain("Sube tu CV")
+    expect(html).toContain("Haz clic o suelta el archivo aquí")
+    expect(html).toMatch(/>1<\/span>[\s\S]*>2<\/span>[\s\S]*>3<\/span>/)
     expect(html).not.toContain("Generar versión ATS")
     expect(html).not.toContain("Cambiar CV")
   })
@@ -41,7 +50,7 @@ describe("panel «Mi CV»", () => {
     expect(html).toContain("p-0")
   })
   it("la interfaz solo usa tokens del tema: sin colores ni valores arbitrarios", () => {
-    for (const f of ["components/jobs/ats-version.tsx", "components/jobs/search-profile-panel.tsx", "components/ai/cv-motion.tsx"]) {
+    for (const f of ["components/jobs/ats-version.tsx", "components/jobs/search-profile-panel.tsx", "components/ai/cv-motion.tsx", "components/magic/cv-stage.tsx"]) {
       const src = readFileSync(path.join(__dirname, "..", f), "utf8")
       expect(src, f).not.toMatch(/\b(?:bg|text|border|fill|stroke)-(?:red|blue|green|amber|yellow|orange|purple|pink|slate|gray|zinc|neutral|stone|black|white)\b/)
       expect(src, f).not.toMatch(/\b[a-z-]+-\[[^\]]+\]/)

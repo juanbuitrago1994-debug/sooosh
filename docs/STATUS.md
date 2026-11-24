@@ -1188,3 +1188,13 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - **No comprobado**: solo 1 CV real y 1 documento ajeno calibrados; no se re-subió a Enhancv; no vi el panel en un navegador.
 - **Decisión pendiente**: «Validado» sigue siendo «Listo para ATS» (≥ 90 % y sin fallos críticos); con el porcentaje solo de formato, ¿lo exigimos al 100 %?
 - **Para revisar por Juan**: genera tu versión ATS, pulsa Verificar y mira la tasa de lectura y los consejos. Siguiente: A7 (diseño).
+
+### CV ATS · A7: rediseño de «Mi CV» con degradado, Attachment, Trace y beam (23-nov-2026)
+- **Escenario** (`components/magic/cv-stage.tsx`): la hoja de CV monocromática sobre un degradado del color `primary` del tema que se desvanece hacia el fondo; el título va centrado debajo, como tu referencia. Es una excepción a «sin degradados», limitada a ese escenario, documentada en `CLAUDE.md` y `docs/DESIGN-TOKENS.md` (sección «Hoja Mi CV»).
+- **Estado vacío**: tres pasos numerados y un recuadro de subida (`Attachment` en estado `idle`, borde punteado) que se puede **hacer clic o soltar el archivo encima**, con el resplandor suave `Beam pulse-inner` que «respira».
+- **Mientras la IA lee el CV o genera la versión ATS**: el haz `Beam` (`mono`) recorre el borde de **todo el panel**; en reposo está apagado. La lectura mantiene la regla de las hojas con carga (solo cargador + hoja animada).
+- **Con CV**: tu CV en un `Attachment` (con Cambiar CV / Quitar). Pasos de la generación con `Trace` (hecho con ✓, actual con brillo y spinner, siguientes atenuados). Los archivos generados son dos `Attachment` descargables (PDF y Word); «Verificar» y «Generar de nuevo» siguen como botones.
+- **Verificado**: lint (0 errores; 3 avisos previos), `tsc`, `build`, `pnpm test` (88 archivos, 876 pruebas; actualizadas las del panel: escenario, Attachment, pasos numerados, solo tokens del tema en `cv-stage.tsx`).
+- **No comprobado (la auditoría visual es tuya)**: no abrí la pantalla. Riesgos que quiero que mires: (1) si el beam alrededor del panel respeta bien el radio y el alto de la ventana; (2) si la hoja se «pierde» en el título como en tu referencia (el solape es de 4 rem y el desvanecido de 7 rem: ajustables); (3) el tema claro; (4) 375 px; (5) que el brillo del `Trace` se vea; (6) soltar un archivo sobre el recuadro.
+- **Para revisar por Juan** (claro/oscuro, escritorio y 375 px): «Mi CV» (a) sin CV; (b) subiendo un CV (lectura); (c) con CV, generar la versión ATS (≈ 3 min la primera vez); (d) tras verificar, consejos y descargas.
+- **Pendiente**: el cambio de una línea en `components/steps/step-profile.tsx` (guardar el texto original al subir por el asistente) sigue sin commitear junto a tu trabajo.

@@ -14,6 +14,18 @@ Ajuste: título y subtítulo más pequeños, más juntos y con menos espaciado e
 
 Uso: `components/jobs/job-search.tsx` (portada). El título de portada es la única excepción a la escala tipográfica general (`CLAUDE.md`).
 
+## Hoja «Mi CV»: escenario con degradado, beam y componentes (23-nov-2026, pedido por Juan)
+Juan pidió replicar una imagen de referencia (hoja oscura, ilustración que se desvanece hacia un título centrado y una lista numerada) y usar beam en toda la hoja. Se registra aquí porque rompe, solo en este lugar, dos reglas generales. No añade colores nuevos: todo sale del tema.
+
+| Elemento | Dónde | Cómo | Por qué es excepción |
+|---|---|---|---|
+| Escenario `CvStage` | `components/magic/cv-stage.tsx` | Degradado `bg-linear-to-b from-primary/15 via-primary/5 to-transparent` y un desvanecido `to-background` de 7 rem sobre la hoja `CvMotion` | «Sin degradados»: aquí el degradado **es** el efecto pedido (la hoja «se pierde» en el título). Nunca como fondo de la app |
+| Haz del panel | `components/jobs/search-profile-panel.tsx` con `Beam` (`size="md"`, `mono`) | Activo solo mientras se lee el CV o se genera la versión ATS; apagado en reposo | El beam estaba limitado al distintivo «Ofertas encontradas»; ahora también aquí, por pedido expreso |
+| Resplandor del recuadro de subida | Mismo archivo, `Beam` `pulse-inner` | Respira suave en el estado vacío para invitar a subir el CV | Idem |
+| Componentes de shadcn | `Attachment` (estados `idle`, `done`), `Trace` (`running`, `pending`) | Recuadro de subida y archivos descargables; pasos reales del proceso | Ya instalados; sin cambios |
+
+Condiciones: monocromático (un color del tema en varios tonos), solo `opacity`/`translate` en lo animado propio, `prefers-reduced-motion` respetado (el beam lo respeta la librería; `CvMotion` queda quieto), y la **regla de las hojas con carga** se mantiene: mientras se lee el CV solo se ve el cargador (con la hoja animada), sin título ni botones.
+
 ## Cómo añadir o cambiar un token
 1. Cambia el valor en `lib/design-tokens.ts`.
 2. Actualiza la fila de esta tabla (misma cadena de clases).
