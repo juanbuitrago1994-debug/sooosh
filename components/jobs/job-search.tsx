@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { FileUserIcon, SearchIcon, SlidersHorizontalIcon } from "lucide-react"
+import { UploadIcon, SearchIcon, SlidersHorizontalIcon } from "lucide-react"
 import { useAutoAnimate } from "@formkit/auto-animate/react"
 import { Logo } from "@/components/brand/logo"
 import { BeamBadge } from "@/components/magic/beam-badge"
@@ -240,7 +240,7 @@ export function JobSearch() {
         </Link>
         <div className="flex items-center">
           <Button variant="ghost" size="icon" aria-label={cv ? "Mi CV (cargado)" : "Subir mi CV"} className="relative" onClick={() => setCvOpen(true)}>
-            <FileUserIcon aria-hidden />
+            <UploadIcon aria-hidden />
             {cv && <span className="absolute top-2 right-2 size-1.5 rounded-full bg-primary" aria-hidden />}
           </Button>
           <SourcesStatus />
