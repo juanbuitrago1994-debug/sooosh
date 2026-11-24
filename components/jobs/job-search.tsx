@@ -6,6 +6,7 @@ import { FileUpIcon, SearchIcon, SlidersHorizontalIcon } from "lucide-react"
 import { useAutoAnimate } from "@formkit/auto-animate/react"
 import { Logo } from "@/components/brand/logo"
 import { BeamBadge } from "@/components/magic/beam-badge"
+import { useAnyOverlayOpen } from "@/lib/use-overlay-open"
 import { DrumNumber } from "@/components/magic/digit-drum"
 import { LoadingState } from "@/components/ai/loading-state"
 import { BlurReveal } from "@/components/motion/blur-reveal"
@@ -65,6 +66,7 @@ export function JobSearch() {
   const [platformTotal, setPlatformTotal] = useState<number | null | "error">(null)
   const [filtersTouched, setFiltersTouched] = useState(false)
   const [cvOpen, setCvOpen] = useState(false)
+  const overlayOpen = useAnyOverlayOpen()
   const [settled, setSettled] = useState("") // clave de la última petición terminada: mientras no coincida con la actual, se está buscando
   const [mode, setMode] = useState("")
   const [area, setArea] = useState<Area>("tecnologia") // el buscador abre en Tecnología
@@ -335,8 +337,8 @@ export function JobSearch() {
         </div>
       </main>
 
-      {/* Distintivo inferior: cuántas ofertas cumplen lo que se ve ahora (cambia con cada búsqueda o filtro). */}
-      <BlurReveal show={shown !== null && jobs !== null} className="pointer-events-none fixed inset-x-0 bottom-6 z-20 flex justify-center px-4">
+      {/* Distintivo inferior: cuántas ofertas cumplen lo que se ve ahora (cambia con cada búsqueda o filtro). Se oculta mientras hay un panel abierto. */}
+      <BlurReveal show={shown !== null && jobs !== null && !overlayOpen} className="pointer-events-none fixed inset-x-0 bottom-6 z-20 flex justify-center px-4">
         <div role="status" aria-live="polite">
           <BeamBadge>
             <span className="flex items-center gap-1 whitespace-nowrap">
