@@ -22,11 +22,46 @@ const C = EFFECT_COLORS
 const clamp1 = (n: number) => Math.min(1, n)
 const tint = (color: string, pct: number) => `color-mix(in oklab, ${color} ${pct}%, transparent)`
 
-// Colores a lo largo del arco: de la cola (turquesa) a la cabeza (naranja), como la variante `colorful` de la librería. Empieza transparente.
-const stops = (from: number) =>
-  `transparent 0deg, transparent ${from}deg, ${tint(C["flow-teal"], 40)} ${from + 45}deg, ${tint(C["flow-green"], 75)} ${from + 75}deg, ${tint(C["flow-blue"], 100)} ${from + 105}deg, ${tint(C["flow-violet"], 100)} ${from + 135}deg, ${tint(C["flow-magenta"], 100)} ${from + 165}deg, ${tint(C["flow-pink"], 100)} ${from + 190}deg, ${tint(C["flow-orange"], 100)} ${Math.min(from + 210, 352)}deg, transparent 360deg`
-const GLOW = `conic-gradient(in oklab from 0deg, ${stops(120)})`
-const LINE = `conic-gradient(in oklab from 0deg, ${stops(150)})`
+/**
+ * Aspecto del haz (el que Juan aprobó con la versión de máscara animada, 24-nov-2026): una ventana de luz de ≈ 65 % del contorno con el mismo perfil de
+ * intensidad (nace despacio, núcleo pleno en el centro, se apaga al final) y los colores de la paleta repartidos a lo largo de ella, en el mismo
+ * orden que el anillo de color de entonces: naranja → rosa → magenta → violeta → azul → turquesa → verde. Ahora los colores y la intensidad van
+ * dentro de UN degradado cónico que gira (transform), así que se ve igual pero sin repintar nada en cada fotograma.
+ */
+const PALETTE = [C["flow-orange"], C["flow-pink"], C["flow-magenta"], C["flow-violet"], C["flow-blue"], C["flow-teal"], C["flow-green"]]
+const CORE = `color-mix(in oklab, ${C["flow-gray"]} 100%, white)`
+const START = 108 // grados: donde nace la luz (30 % del giro)
+const END = 342 // grados: donde se apaga (95 %)
+// Perfil de intensidad de la ventana (los mismos puntos de la máscara de la versión anterior).
+const PROFILE: [number, number][] = [[108, 0], [129.6, 0.1], [158.4, 0.35], [187.2, 1], [288, 1], [309.6, 0.35], [331.2, 0.1], [342, 0]]
+const profileAt = (deg: number) => {
+  for (let i = 1; i < PROFILE.length; i++) {
+    const [d0, a0] = PROFILE[i - 1]
+    const [d1, a1] = PROFILE[i]
+    if (deg <= d1) return a0 + ((a1 - a0) * (deg - d0)) / (d1 - d0)
+  }
+  return 0
+}
+/** Color de la paleta a lo largo de la ventana, mezclando los dos vecinos. */
+const colorAt = (deg: number) => {
+  const f = ((deg - START) / (END - START)) * (PALETTE.length - 1)
+  const i = Math.min(PALETTE.length - 2, Math.floor(f))
+  return `color-mix(in oklab, ${PALETTE[i + 1]} ${Math.round((f - i) * 100)}%, ${PALETTE[i]})`
+}
+/** `alpha`: intensidad de los colores; `whiten`: cuánto se aclara el centro (el hilo lleva un núcleo claro, como el original). */
+const arc = (alpha: number, whiten: number) => {
+  const st: string[] = ["transparent 0deg", `transparent ${START}deg`]
+  for (let d = START + 6; d <= END; d += 6) {
+    const a = profileAt(d)
+    const core = Math.round(whiten * a * 100)
+    const color = core > 0 ? `color-mix(in oklab, ${CORE} ${core}%, ${colorAt(d)})` : colorAt(d)
+    st.push(`color-mix(in oklab, ${color} ${Math.round(clamp1(alpha * a) * 100)}%, transparent) ${d}deg`)
+  }
+  st.push("transparent 360deg")
+  return `conic-gradient(in oklab from 0deg, ${st.join(", ")})`
+}
+const GLOW = (d: number) => arc(0.45 * d, 0)
+const LINE = (d: number) => arc(1, 0.3 * d)
 
 const band = (w: number) => `linear-gradient(white, transparent ${w}px, transparent calc(100% - ${w}px), white), linear-gradient(to right, white, transparent ${w}px, transparent calc(100% - ${w}px), white)`
 /** Anillo de 1 px: va con la propiedad `mask` (atajo), porque `content-box` es un valor de caja y NO es válido dentro de `mask-image`: el navegador descartaba toda la declaración y la capa quedaba sin máscara. */
@@ -51,7 +86,7 @@ export function FlowBeam({ className, lap = LAP, density = 1 }: { className?: st
     return <span aria-hidden className={`pointer-events-none absolute inset-0 ${className ?? ""}`} style={{ boxShadow: `inset 0 0 18px 2px ${tint(C["flow-blue"], 35)}` }} />
   }
   const arm = { position: "absolute", left: "50%", top: "50%", width: side, height: side, marginLeft: -side / 2, marginTop: -side / 2, willChange: "transform" } as const
-  const w = 44 // ancho fijo de la franja del resplandor; la densidad solo sube la intensidad
+  const w = 28 // ancho fijo de la franja del resplandor (el de la versión anterior); la densidad solo sube la intensidad
   return (
     <div ref={box} aria-hidden data-flow-beam className={`pointer-events-none absolute inset-0 overflow-hidden ${className ?? ""}`} style={{ borderRadius: "inherit" }}>
       <style>{`@keyframes fb-turn { to { transform: rotate(360deg); } } [data-flow-beam] [data-fb-arm] { animation: fb-turn ${lap}s linear infinite; }`}</style>
@@ -59,11 +94,11 @@ export function FlowBeam({ className, lap = LAP, density = 1 }: { className?: st
         <>
           {/* resplandor: franja de ancho fijo pegada al borde; la luz que gira debajo solo se ve ahí */}
           <div className="absolute inset-0" style={{ maskImage: band(w), WebkitMaskImage: band(w), maskComposite: "add", WebkitMaskComposite: "source-over" }}>
-            <span data-fb-arm style={{ ...arm, background: GLOW, opacity: clamp1(0.75 * density) }} />
+            <span data-fb-arm style={{ ...arm, background: GLOW(density), opacity: 1 }} />
           </div>
           {/* hilo nítido de 1 px sobre el borde */}
           <div className="absolute inset-0 p-px" style={{ WebkitMask: RING, mask: RING, WebkitMaskComposite: "xor", maskComposite: "exclude" }}>
-            <span data-fb-arm style={{ ...arm, background: LINE, opacity: clamp1(0.9 * density) }} />
+            <span data-fb-arm style={{ ...arm, background: LINE(density), opacity: 1 }} />
           </div>
         </>
       )}

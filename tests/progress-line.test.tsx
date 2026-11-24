@@ -83,10 +83,10 @@ describe("FlowBeam: fluido (animación en la GPU), con máscaras válidas y vuel
   it("las máscaras son estáticas (franja de ancho fijo y anillo) y la vuelta y la densidad se reciben por propiedades", () => {
     expect(src).toContain("const LAP = 5")
     expect(src).toMatch(/lap = LAP, density = 1/)
-    expect(src).toContain("const w = 44")
+    expect(src).toContain("const w = 28")
   })
   it("la pantalla inicial usa el haz rápido y denso; el panel no cambia", () => {
-    expect(readFileSync(path.join(__dirname, "..", "components/wizard/entry-screen.tsx"), "utf8")).toContain("beam={{ lap: 2.8, density: 1.7 }}")
+    expect(readFileSync(path.join(__dirname, "..", "components/wizard/entry-screen.tsx"), "utf8")).toContain("beam={{ lap: 4, density: 1.7 }}")
     expect(readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")).not.toContain("beam={{")
   })
 })
