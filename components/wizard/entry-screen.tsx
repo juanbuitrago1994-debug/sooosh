@@ -10,6 +10,7 @@ import { AppHeader, SkipLink, type HeaderActions } from "./app-header"
 import { Rise } from "@/components/motion/rise"
 import { Button } from "@/components/ui/button"
 import type { UploadedFile } from "@/lib/uploads"
+import { dropCopy, fileSummary } from "@/lib/profile/cv-drop"
 import { MOTION, TRANSITION_IN, TRANSITION_OUT } from "@/lib/motion"
 
 export type EntryActions = HeaderActions
@@ -23,6 +24,8 @@ export type EntryActions = HeaderActions
 export function EntryScreen({
   phase,
   fileName,
+  fileSize,
+  fileType,
   error,
   actions,
   onFile,
@@ -31,6 +34,8 @@ export function EntryScreen({
 }: {
   phase: "upload" | "parsing" | "error"
   fileName?: string
+  fileSize?: number
+  fileType?: string
   error?: string
   actions: EntryActions
   onFile: (file: UploadedFile) => void
@@ -38,11 +43,13 @@ export function EntryScreen({
   onReset: () => void
 }) {
   const { work } = useAiWork()
-  const { state, isDragActive, rootProps, inputProps } = useCvDropzone({ disabled: phase === "parsing", onChange: (f) => f && onFile(f) })
+  const { state, isDragActive, dragInfo, rootProps, inputProps } = useCvDropzone({ disabled: phase === "parsing", onChange: (f) => f && onFile(f) })
   const reduce = useReducedMotion()
   // Subiendo o leyendo: solo el haz y el avance. Arrastrando (sin estar ocupado): el aviso de soltar.
   const busy = phase === "parsing" || state.status === "uploading"
   const dragging = isDragActive && !busy && phase === "upload"
+  // Mientras se arrastra, el aviso dice lo que el navegador deja ver: cuántos archivos y de qué tipo (nunca el nombre ni el peso hasta soltarlo).
+  const copy = dropCopy(dragInfo)
 
   return (
     <div {...rootProps} className="relative flex min-h-dvh flex-col">
@@ -80,7 +87,7 @@ export function EntryScreen({
           ) : (
             // En reposo, el mismo mensaje que el panel «Mi CV» sin CV (ícono en cuadro, título, línea y formatos), centrado; al arrastrar cambia solo la frase.
             <section className="flex flex-col items-center gap-4">
-              <DropMessage title={<h1 className="text-sm font-medium">Sube tu CV</h1>} description={<p className="text-sm text-muted-foreground">Arrastra el archivo o haz clic</p>} />
+              <DropMessage title={<h1 className="text-sm font-medium">Sube tu CV</h1>} description={<p className="text-sm text-muted-foreground">Arrastra el archivo aquí</p>} />
               {state.status === "error" && (
                 <p role="alert" className="text-center text-sm text-destructive">
                   {state.message}
@@ -99,7 +106,7 @@ export function EntryScreen({
           <>
             <ReadingStatus idx={phase === "parsing" ? (work?.step ?? 0) : -1} phrase={phase === "parsing" ? work?.messages?.[work?.step ?? 0] : "Subiendo tu CV"} />
             <div className="flex max-w-sm flex-col items-center gap-2">
-              <p className="text-xs break-all text-muted-foreground">{fileName ?? (state.status === "uploading" ? state.name : "")}</p>
+              <p className="text-xs break-all text-muted-foreground">{state.status === "uploading" ? fileSummary(state) : fileName ? fileSummary({ name: fileName, size: fileSize ?? 0, type: fileType }) : ""}</p>
               {phase === "parsing" && work?.onCancel && (
                 <Button variant="ghost" size="sm" className="pointer-events-auto text-muted-foreground" onClick={work.onCancel}>
                   Cancelar
@@ -108,7 +115,7 @@ export function EntryScreen({
             </div>
           </>
         ) : (
-          <DropMessage title={<p className="text-sm font-medium">Suelta tu CV aquí</p>} description={<p className="text-sm text-muted-foreground">Un solo archivo</p>} />
+          <DropMessage title={<p className="text-sm font-medium">{copy.title}</p>} description={<p className="text-sm text-muted-foreground">{copy.description}</p>} />
         )}
       </CvDropOverlay>
     </div>

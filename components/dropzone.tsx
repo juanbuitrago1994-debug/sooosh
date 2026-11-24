@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react"
 import { useDropzone, type FileRejection } from "react-dropzone"
+import { describeDrag, type DragInfo } from "@/lib/profile/cv-drop"
 import {
   ACCEPT,
   ACCEPT_LABEL,
@@ -13,7 +14,7 @@ import {
 
 export type DropState =
   | { status: "idle" }
-  | { status: "uploading"; name: string; progress: number }
+  | { status: "uploading"; name: string; size: number; type: string; progress: number }
   | { status: "ready"; file: UploadedFile }
   | { status: "error"; message: string }
 
@@ -51,6 +52,8 @@ function sendFile(file: File, onProgress: (pct: number) => void): Promise<Upload
 export function useCvDropzone({ onChange, disabled }: { onChange?: (file: UploadedFile | null) => void; disabled?: boolean }) {
   const [state, setState] = useState<DropState>({ status: "idle" })
   const currentId = useRef<string | null>(null)
+  // Lo que se ve del archivo mientras se arrastra (cuántos y de qué tipo; nunca nombre ni peso).
+  const [dragInfo, setDragInfo] = useState<DragInfo | null>(null)
 
   const removeStored = useCallback(async () => {
     const id = currentId.current
@@ -66,9 +69,9 @@ export function useCvDropzone({ onChange, disabled }: { onChange?: (file: Upload
         onChange?.(null)
         return
       }
-      setState({ status: "uploading", name: file.name, progress: 0 })
+      setState({ status: "uploading", name: file.name, size: file.size, type: file.type, progress: 0 })
       try {
-        const saved = await sendFile(file, (progress) => setState({ status: "uploading", name: file.name, progress }))
+        const saved = await sendFile(file, (progress) => setState({ status: "uploading", name: file.name, size: file.size, type: file.type, progress }))
         await removeStored() // reemplazo: borra el anterior
         currentId.current = saved.id
         setState({ status: "ready", file: saved })
@@ -87,6 +90,10 @@ export function useCvDropzone({ onChange, disabled }: { onChange?: (file: Upload
     multiple: false,
     noClick: true, // solo se admite arrastrar y soltar
     noKeyboard: true,
+    onDragEnter: (e) => setDragInfo(describeDrag((e as unknown as DragEvent).dataTransfer?.items)),
+    onDragOver: (e) => setDragInfo((cur) => cur ?? describeDrag((e as unknown as DragEvent).dataTransfer?.items)),
+    onDragLeave: () => setDragInfo(null),
+    onDrop: () => setDragInfo(null),
     disabled: disabled || state.status === "uploading",
     onDropAccepted: (files) => void upload(files[0]),
     onDropRejected: (rejections) => {
@@ -98,6 +105,8 @@ export function useCvDropzone({ onChange, disabled }: { onChange?: (file: Upload
   return {
     state,
     isDragActive,
+    /** Qué se ve del archivo que se está arrastrando (antes de soltar); null si el navegador no lo dice. */
+    dragInfo,
     /** Props del contenedor que actúa como zona de soltar. */
     rootProps: getRootProps(),
     /** Entrada oculta de archivo: colócala dentro del contenedor. */

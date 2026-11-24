@@ -16,7 +16,7 @@ import { Drawer, DrawerDescription, DrawerHeader, DrawerTitle } from "@/componen
 import { Separator } from "@/components/ui/separator"
 import { stageIndex } from "@/lib/cv/progress"
 import { prefetchExtras } from "@/lib/ats/prefetch"
-import { dragHasFiles, friendlyReadError, pickCvFile } from "@/lib/profile/cv-drop"
+import { describeDrag, dragHasFiles, dropCopy, fileSummary, friendlyReadError, pickCvFile, type DragInfo } from "@/lib/profile/cv-drop"
 import { clearSearchProfile, setSearchProfile, useSearchProfile } from "@/lib/profile/search-profile"
 import { MOTION, TRANSITION_IN, TRANSITION_OUT } from "@/lib/motion"
 
@@ -52,6 +52,9 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
   const [stage, setStage] = useState("")
   const [error, setError] = useState("")
   const [dragging, setDragging] = useState(false)
+  // Lo que se ve del archivo mientras se arrastra (cuántos y de qué tipo) y, ya soltado, su nombre, peso y tipo.
+  const [dragInfo, setDragInfo] = useState<DragInfo | null>(null)
+  const [picked, setPicked] = useState<{ name: string; size: number; type: string } | null>(null)
   // Mientras se genera la versión ATS, lo de arriba (título, tarjeta del CV) se retira hacia arriba y quedan solo los pasos.
   const [atsWorking, setAtsWorking] = useState(false)
   // dragenter/dragleave se disparan también al pasar sobre los hijos: se cuenta para no parpadear.
@@ -59,15 +62,16 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
 
   const onFiles = async (files: ArrayLike<File> | null | undefined) => {
     if (busy) return
-    const picked = pickCvFile(files)
-    if (!picked.file) {
-      setError(picked.error ?? "No llegó ningún archivo.")
+    const choice = pickCvFile(files)
+    if (!choice.file) {
+      setError(choice.error ?? "No llegó ningún archivo.")
       return
     }
     setBusy(true)
     setError("")
+    setPicked({ name: choice.file.name, size: choice.file.size, type: choice.file.type })
     try {
-      const r = await parseCvFileSafe(picked.file, setStage)
+      const r = await parseCvFileSafe(choice.file, setStage)
       setSearchProfile(r.cv, r.fileId, r.sourceText)
       prefetchExtras(r.cv, r.sourceText, r.fileId)
       toast.success("CV listo: ya ves el encaje de cada oferta")
@@ -86,6 +90,7 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
       e.preventDefault()
       depth.current++
       setDragging(true)
+      setDragInfo(describeDrag(e.dataTransfer?.items))
     },
     onDragOver: (e: React.DragEvent) => {
       if (dragHasFiles(e.dataTransfer?.types)) e.preventDefault()
@@ -93,12 +98,16 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
     onDragLeave: (e: React.DragEvent) => {
       if (!dragHasFiles(e.dataTransfer?.types)) return
       depth.current = Math.max(0, depth.current - 1)
-      if (depth.current === 0) setDragging(false)
+      if (depth.current === 0) {
+        setDragging(false)
+        setDragInfo(null)
+      }
     },
     onDrop: (e: React.DragEvent) => {
       e.preventDefault()
       depth.current = 0
       setDragging(false)
+      setDragInfo(null)
       void onFiles(e.dataTransfer?.files)
     },
   }
@@ -194,7 +203,14 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
 
       {/* El haz recorre TODO el borde del panel solo mientras hay un archivo encima o se está leyendo el CV; el mensaje va centrado. */}
       <CvDropOverlay show={dragging || busy} hidden={!busy}>
-        {busy ? <ReadingStatus idx={stageIndex(stage)} phrase={stage} /> : <DropMessage title={<p className="text-sm font-medium">Suelta tu CV aquí</p>} description={<p className="text-sm text-muted-foreground">Un solo archivo</p>} />}
+        {busy ? (
+          <>
+            <ReadingStatus idx={stageIndex(stage)} phrase={stage} />
+            {picked && <p className="max-w-xs text-center text-xs break-all text-muted-foreground">{fileSummary(picked)}</p>}
+          </>
+        ) : (
+          <DropMessage title={<p className="text-sm font-medium">{dropCopy(dragInfo).title}</p>} description={<p className="text-sm text-muted-foreground">{dropCopy(dragInfo).description}</p>} />
+        )}
       </CvDropOverlay>
     </div>
   )

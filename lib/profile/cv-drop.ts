@@ -1,4 +1,4 @@
-import { ACCEPT_LABEL, formatBytes, getExtension, isAllowedExtension, MAX_UPLOAD_BYTES } from "@/lib/uploads"
+import { ACCEPT, ACCEPT_LABEL, formatBytes, getExtension, isAllowedExtension, MAX_UPLOAD_BYTES } from "@/lib/uploads"
 
 /**
  * Elegir el CV desde el selector o soltándolo sobre el panel: valida lo que llegó y devuelve un mensaje claro en español (qué pasó y qué
@@ -30,4 +30,50 @@ export function friendlyReadError(message: string): string {
   if (/cancelad/i.test(m)) return "Se canceló la lectura de tu CV."
   if (/escane|sin texto|ocr|no se pudo extraer|vac[ií]o/i.test(m)) return `${m.replace(/\.$/, "")}. Prueba con otra copia (por ejemplo, exportada a PDF desde Word o Google Docs).`
   return m || "No pudimos leer tu CV. Prueba con otro archivo."
+}
+
+/**
+ * Lo que el navegador deja ver MIENTRAS se arrastra (antes de soltar): cuántos archivos son y su tipo (MIME). Nunca el nombre ni el peso: son datos
+ * protegidos hasta el `drop`. En algunos formatos (`.md`, `.heic`, a veces `.docx`) el tipo llega vacío: entonces no se afirma nada.
+ */
+export type DragInfo = { count: number; /** «PDF», «Word», «Imagen»… si el tipo llegó y es de los que leemos */ label?: string; /** el tipo llegó y NO es de los que leemos */ unsupported: boolean }
+
+const MIME_LABEL: Record<string, string> = {
+  "application/pdf": "PDF",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "Word",
+  "application/msword": "Word",
+  "application/vnd.oasis.opendocument.text": "ODT",
+  "application/rtf": "RTF",
+  "text/rtf": "RTF",
+  "text/plain": "Texto",
+  "text/markdown": "Markdown",
+  "image/jpeg": "Imagen",
+  "image/png": "Imagen",
+  "image/heic": "Imagen",
+  "image/heif": "Imagen",
+}
+export const mimeLabel = (mime: string): string | undefined => MIME_LABEL[mime.toLowerCase()]
+const accepted = (mime: string) => mime.toLowerCase() in ACCEPT || mime.toLowerCase() === "image/heif"
+
+export function describeDrag(items: ArrayLike<{ kind: string; type: string }> | null | undefined): DragInfo | null {
+  const files = items ? Array.from(items).filter((i) => i.kind === "file") : []
+  if (!files.length) return null
+  if (files.length > 1) return { count: files.length, unsupported: false }
+  const type = files[0].type.trim()
+  if (!type) return { count: 1, unsupported: false }
+  return accepted(type) ? { count: 1, label: mimeLabel(type), unsupported: false } : { count: 1, unsupported: true }
+}
+
+/** Texto del aviso de soltar según lo que se ve en el arrastre. */
+export function dropCopy(info: DragInfo | null): { title: string; description: string } {
+  if (!info) return { title: "Suelta tu CV aquí", description: "Un solo archivo" }
+  if (info.count > 1) return { title: "Suelta un solo archivo", description: `Traes ${info.count} archivos` }
+  if (info.unsupported) return { title: "Ese formato no lo leemos", description: "Prueba con PDF, Word o una imagen" }
+  return { title: "Suelta tu CV aquí", description: info.label ? `${info.label} · un solo archivo` : "Un solo archivo" }
+}
+
+/** Una línea con lo que SÍ se sabe una vez soltado el archivo: nombre, peso y tipo. */
+export function fileSummary(file: { name: string; size: number; type?: string }): string {
+  const kind = (file.type && mimeLabel(file.type)) || getExtension(file.name).toUpperCase()
+  return [file.name, file.size > 0 ? formatBytes(file.size) : "", kind].filter(Boolean).join(" · ")
 }

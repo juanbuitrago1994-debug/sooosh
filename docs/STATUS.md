@@ -1215,3 +1215,9 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - **Verificado**: lint (0 errores; 3 avisos previos), `tsc`, `build`, `pnpm test`. En tu CV real, con el pipeline completo: formato 100 %, tasa de lectura 100 %, 6 puestos con fechas y 14 viñetas.
 - **Límites**: tiempos de un solo CV y una máquina; las pruebas de modelos tuvieron una tanda contaminada por memoria (documentado). El documento sigue saliendo en 3 páginas (consejo de contenido). Reduje al mínimo lo medido, no prometo estos tiempos con otros CV.
 - **Para revisar por Juan**: reinicia `pnpm dev`, sube tu CV y espera ~1 min; luego «Generar versión ATS» debería ser casi inmediato. Pulsa «Verificar» y mira «Así te lee un ATS».
+
+### CV · pantalla inicial y panel «Mi CV»: lo que se ve al arrastrar y al leer (24-nov-2026)
+- **Antes de soltar** (`describeDrag`/`dropCopy` en `lib/profile/cv-drop.ts`): el aviso dice **cuántos archivos** trae («Traes 2 archivos», pide uno solo) y **de qué tipo** («PDF · un solo archivo»), y avisa de un formato que no leemos («Ese formato no lo leemos»). **Nunca el nombre ni el peso**: el navegador los oculta hasta el `drop`. Algunos tipos (`.md`, `.heic`, a veces `.docx`) llegan vacíos: entonces solo dice «Un solo archivo». Verificado en WebKit con arrastres **simulados**; **no probado con un arrastre real del sistema**, donde el tipo puede llegar distinto.
+- **Al soltar** (`fileSummary`): bajo la línea de lectura, «Mi-CV.pdf · 1.2 MB · PDF», en la pantalla inicial y en el panel.
+- La pantalla inicial decía «Arrastra el archivo o haz clic» pero el clic está desactivado a propósito (la página entera es la zona de soltar): ahora dice «Arrastra el archivo aquí».
+- El haz (`FlowBeam`): animado solo con `transform` (GPU) y máscaras SVG estáticas que siguen el contorno redondeado; tonos fríos; hilo de 2 px; densidad 0,6 y vuelta de 4 s en la ventana completa. Verificado con capturas de WebKit (claro y oscuro, 4 esquinas).

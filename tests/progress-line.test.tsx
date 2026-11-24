@@ -53,7 +53,9 @@ describe("pantalla inicial del CV: misma experiencia que el panel «Mi CV»", ()
   it("en reposo usa el mismo mensaje centrado e ícono en cuadro que el panel «Mi CV» sin CV (DropMessage), no el ícono suelto ni el texto largo de antes", () => {
     expect(entry.match(/<DropMessage/g)).toHaveLength(2) // reposo + arrastrando
     expect(entry).toContain("Sube tu CV")
-    expect(entry).toContain("Arrastra el archivo o haz clic")
+    // esta pantalla solo admite arrastrar (el clic está desactivado a propósito): no promete «haz clic»
+    expect(entry).toContain("Arrastra el archivo aquí")
+    expect(entry).not.toContain("haz clic")
     expect(entry).not.toMatch(/FileTextIcon|se lee en tu equipo|MAX_UPLOAD_BYTES/)
     // sin el contador «1 de 5», y el cuadro del ícono es pequeño (36 px para un ícono de 16 px) en todos los lugares donde se usa
     expect(entry).not.toMatch(/STEPS|\d de \$\{/)

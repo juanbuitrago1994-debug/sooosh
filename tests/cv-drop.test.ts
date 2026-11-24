@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { dragHasFiles, friendlyReadError, pickCvFile } from "@/lib/profile/cv-drop"
+import { describeDrag, dragHasFiles, dropCopy, fileSummary, friendlyReadError, pickCvFile } from "@/lib/profile/cv-drop"
 
 const f = (name: string, size = 1000) => new File([new Uint8Array(size)], name)
 
@@ -29,5 +29,42 @@ describe("pickCvFile (soltar o elegir el CV)", () => {
     expect(friendlyReadError("Lectura cancelada.")).toMatch(/canceló/)
     expect(friendlyReadError("El PDF es un escaneo sin texto.")).toMatch(/otra copia/)
     expect(friendlyReadError("Algo raro")).toBe("Algo raro")
+  })
+})
+
+describe("lo que se ve mientras se arrastra (antes de soltar)", () => {
+  const item = (type: string, kind = "file") => ({ kind, type })
+  it("un PDF: dice el tipo; sin nombre ni peso (el navegador no los da hasta soltar)", () => {
+    const i = describeDrag([item("application/pdf")])
+    expect(i).toEqual({ count: 1, label: "PDF", unsupported: false })
+    expect(dropCopy(i)).toEqual({ title: "Suelta tu CV aquí", description: "PDF · un solo archivo" })
+  })
+  it("Word, imagen y texto se reconocen por su tipo", () => {
+    expect(describeDrag([item("application/vnd.openxmlformats-officedocument.wordprocessingml.document")])?.label).toBe("Word")
+    expect(describeDrag([item("image/png")])?.label).toBe("Imagen")
+    expect(describeDrag([item("text/markdown")])?.label).toBe("Markdown")
+  })
+  it("varios archivos: avisa cuántos y pide uno solo", () => {
+    const i = describeDrag([item("application/pdf"), item("application/pdf"), item("image/png")])
+    expect(i?.count).toBe(3)
+    expect(dropCopy(i)).toEqual({ title: "Suelta un solo archivo", description: "Traes 3 archivos" })
+  })
+  it("un formato que no leemos se avisa antes de soltar", () => {
+    const i = describeDrag([item("application/x-msdownload")])
+    expect(i).toEqual({ count: 1, unsupported: true })
+    expect(dropCopy(i).title).toBe("Ese formato no lo leemos")
+    expect(describeDrag([item("image/gif")])?.unsupported).toBe(true)
+  })
+  it("tipo vacío (algunos .md, .heic, .docx): no afirma nada; texto, enlaces y nada: sin aviso especial", () => {
+    expect(describeDrag([item("")])).toEqual({ count: 1, unsupported: false })
+    expect(dropCopy(describeDrag([item("")]))).toEqual({ title: "Suelta tu CV aquí", description: "Un solo archivo" })
+    expect(describeDrag([item("text/uri-list", "string")])).toBeNull()
+    expect(describeDrag(undefined)).toBeNull()
+    expect(dropCopy(null).description).toBe("Un solo archivo")
+  })
+  it("ya soltado: una línea con nombre, peso y tipo", () => {
+    expect(fileSummary({ name: "cv.pdf", size: 1_258_291, type: "application/pdf" })).toBe("cv.pdf · 1.2 MB · PDF")
+    expect(fileSummary({ name: "cv.md", size: 2048, type: "" })).toBe("cv.md · 2 KB · MD")
+    expect(fileSummary({ name: "reabierto.pdf", size: 0 })).toBe("reabierto.pdf · PDF")
   })
 })

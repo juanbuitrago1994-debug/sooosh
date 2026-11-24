@@ -159,7 +159,7 @@ export function StepProfile({
   // En modo Entrada, al terminar la lectura el shell cambia de layout y vuelve a montar este paso en «review».
   if (entry) {
     if (phase === "review") return null
-    return <EntryScreen phase={phase} fileName={file?.name} error={error} actions={entry} onFile={(f) => void parse(f)} onRetry={() => file && void parse(file)} onReset={reset} />
+    return <EntryScreen phase={phase} fileName={file?.name} fileSize={file?.size} fileType={file?.type} error={error} actions={entry} onFile={(f) => void parse(f)} onRetry={() => file && void parse(file)} onReset={reset} />
   }
 
   const meta = data?.meta
