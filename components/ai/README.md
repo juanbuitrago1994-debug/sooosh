@@ -26,3 +26,4 @@ ai.start(["Leyendo tu CV", "Estructurando"], cancel)  // al empezar
 ai.advance(1)                                          // cuando el pipeline pasa de verdad a la etapa 2
 ai.stop()                                              // al terminar o fallar
 ```
+| `ProgressLine` | Carga en UNA línea (spinner de shadcn + frase que cambia sola cada 2,4 s + porcentaje), centrada. La usan el panel «Mi CV» (lectura del CV) y la lista de ofertas (búsqueda). Frases sin puntos suspensivos. Con `soft`, las tres piezas entran una tras otra (spinner → frase → porcentaje) con `TRANSITION_SOFT` (0,9 s) y `MOTION.softStagger` entre ellas. Solo opacity, blur y translate; con movimiento reducido no anima. El porcentaje lo calcula quien la usa. |

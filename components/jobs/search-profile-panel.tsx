@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { FileTextIcon, UploadIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
+import { ProgressLine } from "@/components/ai/progress-line"
 import { AtsVersion } from "@/components/jobs/ats-version"
 import { FlowBeam } from "@/components/magic/flow-beam"
 import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
@@ -11,7 +12,6 @@ import { parseCvFileSafe } from "@/components/jobs/parse-cv-file"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from "@/components/ui/attachment"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
-import { Spinner } from "@/components/ui/spinner"
 import { Separator } from "@/components/ui/separator"
 import { nextProgress, stageFloor, stageIndex } from "@/lib/cv/progress"
 import { prefetchExtras } from "@/lib/ats/prefetch"
@@ -206,12 +206,7 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
             <FlowBeam className="rounded-2xl" />
             <div className="absolute inset-0 flex items-center justify-center p-4">
               {busy ? (
-                // Una sola línea, sutil, como el Spinner de shadcn: ícono que gira + frase que cambia + porcentaje; centrada en el panel.
-                <div role="status" aria-live="polite" className="flex items-center justify-center gap-2 text-sm">
-                  <Spinner aria-hidden role="presentation" />
-                  <CenteredStatus messages={stage ? [stage] : READING} />
-                  <ReadingPercent stage={stage} />
-                </div>
+                <ReadingStatus stage={stage} />
               ) : (
                 <DropMessage title={<p className="text-sm font-medium">Suelta tu CV aquí</p>} description={<p className="text-sm text-muted-foreground">Un solo archivo</p>} />
               )}
@@ -224,7 +219,6 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
 }
 
 const READING = ["Leyendo tu CV", "Reconociendo tu experiencia", "Preparando el encaje"]
-const noDots = (t: string) => t.replace(/[\s….]+$/u, "")
 
 /**
  * Mismo mensaje en los dos momentos de soltar un CV (sin CV subido y arrastrando uno nuevo): el mismo ícono, el mismo orden y los mismos
@@ -245,50 +239,19 @@ function DropMessage({ title, description }: { title: React.ReactNode; descripti
   )
 }
 
-/** Frase de estado, siempre centrada (vertical y horizontal) y sin puntos suspensivos; cambia sola cada 2,4 s con la entrada de la app (opacity, blur y translate). */
-function CenteredStatus({ messages }: { messages: string[] }) {
-  const reduce = useReducedMotion()
-  const list = messages.map(noDots)
-  const [i, setI] = useState(0)
-  useEffect(() => {
-    if (list.length < 2) return
-    const t = setInterval(() => setI((n) => (n + 1) % list.length), 2400)
-    return () => clearInterval(t)
-  }, [list.length])
-  const text = list[i % list.length] ?? ""
-  return (
-    <div className="relative flex h-6 items-center justify-center text-sm text-muted-foreground">
-      {reduce ? (
-        <span>{text}</span>
-      ) : (
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.span
-            key={text}
-            className="whitespace-nowrap"
-            initial={{ opacity: 0, y: MOTION.offset, filter: `blur(${MOTION.blur}px)` }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)", transition: TRANSITION_IN }}
-            exit={{ opacity: 0, y: -MOTION.offset, filter: `blur(${MOTION.blur}px)`, transition: TRANSITION_OUT }}
-          >
-            {text}
-          </motion.span>
-        </AnimatePresence>
-      )}
-    </div>
-  )
-}
-
 /** Porcentaje de la lectura (ver `lib/cv/progress.ts`: sube con la etapa real y avanza suave dentro de ella; nunca marca 100 % antes de terminar). */
-function ReadingPercent({ stage }: { stage: string }) {
+function useReadingPercent(stage: string): number {
   const idx = stageIndex(stage)
   const [value, setValue] = useState(0)
   useEffect(() => {
     const t = setInterval(() => setValue((v) => nextProgress(v, idx)), 150)
     return () => clearInterval(t)
   }, [idx])
-  const shown = Math.max(Math.floor(value), stageFloor(idx))
-  return (
-    <span role="progressbar" aria-label="Avance de la lectura de tu CV" aria-valuemin={0} aria-valuemax={100} aria-valuenow={shown} className="text-muted-foreground tabular-nums">
-      {shown} %
-    </span>
-  )
+  return Math.max(Math.floor(value), stageFloor(idx))
+}
+
+/** Cargador de la lectura del CV: el mismo patrón de línea que la lista de ofertas (`ProgressLine`). */
+function ReadingStatus({ stage }: { stage: string }) {
+  const percent = useReadingPercent(stage)
+  return <ProgressLine messages={stage ? [stage] : READING} percent={percent} label="Avance de la lectura de tu CV" />
 }

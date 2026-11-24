@@ -6,6 +6,9 @@
 export const MOTION = {
   /** entradas, en segundos */
   enter: 0.5,
+  /** entradas MUY suaves (p. ej. el cargador de la lista de ofertas), en segundos, y retardo entre las piezas que entran una tras otra */
+  enterSoft: 0.9,
+  softStagger: 0.16,
   /** salidas, en segundos (más cortas que las entradas) */
   exit: 0.28,
   ease: [0.22, 1, 0.36, 1] as const,
@@ -37,4 +40,5 @@ export const MOTION = {
 } as const
 
 export const TRANSITION_IN = { duration: MOTION.enter, ease: MOTION.ease }
+export const TRANSITION_SOFT = { duration: MOTION.enterSoft, ease: MOTION.ease }
 export const TRANSITION_OUT = { duration: MOTION.exit, ease: MOTION.ease }
