@@ -5,7 +5,7 @@ import { EFFECT_COLORS } from "@/lib/design-tokens"
 
 /**
  * FlowBeam — port del mecanismo de `border-beam` (MIT; el mismo de https://libraries.dev/beam, leído de `node_modules/border-beam/dist`) con
- * los tonos de la app (azul frío y gris azulado), para la zona de soltar de «Mi CV» (pedido por Juan el 23-nov-2026).
+ * una paleta de varios colores (azul, rosa, verde, turquesa, violeta, naranja y magenta; pedida por Juan el 23-nov-2026) para la zona de soltar de «Mi CV».
  *
  * Cómo funciona (igual que la librería): el color NO viaja. Hay manchas de color FIJAS repartidas por el borde y una máscara cónica cuyo
  * ángulo (`--fb-angle`, registrado con `@property` para poder animarlo) gira sin parar; la máscara solo deja ver las manchas por donde pasa, así
@@ -18,9 +18,9 @@ import { EFFECT_COLORS } from "@/lib/design-tokens"
  */
 const LAP = 5
 const [BLUE, GRAY] = [EFFECT_COLORS["flow-blue"], EFFECT_COLORS["flow-gray"]]
-const mixed = (a: number) => `color-mix(in oklab, ${BLUE} ${a}%, ${GRAY})`
-// Seis tonos entre el gris azulado y el azul; se reparten por las manchas.
-const TONES = [BLUE, mixed(70), GRAY, mixed(40), mixed(85), mixed(20)]
+// Un matiz por mancha, en el mismo orden y con los mismos matices que la variante `colorful` de la librería (rosa, azul, verde, turquesa, violeta, azul, naranja, magenta, azul).
+const C = EFFECT_COLORS
+const TONES = [C["flow-pink"], BLUE, C["flow-green"], C["flow-teal"], C["flow-violet"], BLUE, C["flow-orange"], C["flow-magenta"], BLUE]
 
 // Posición y tamaño de las manchas del preset de borde de la librería (en % del panel y px).
 const BLOBS = [
