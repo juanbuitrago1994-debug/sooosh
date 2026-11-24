@@ -177,26 +177,25 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
 
       <AnimatePresence>
         {dragging && (
-          // El haz frío viaja por el borde del panel solo mientras hay un archivo encima (única aparición del haz en este panel).
+          // Tarjeta central para soltar, con el haz de la librería (estilo «line», el del buscador de su demo) en su borde inferior. Va en el
+          // centro (no en el borde del panel) para que se vea siempre: el borde inferior del panel puede quedar tapado por el Dock o la barra del navegador.
           <motion.div
             data-drop-overlay
             aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-2xl"
-            initial={reduce ? { opacity: 0 } : { opacity: 0, filter: `blur(${MOTION.blur}px)` }}
-            animate={{ opacity: 1, filter: "blur(0px)", transition: TRANSITION_IN }}
-            exit={reduce ? { opacity: 0 } : { opacity: 0, filter: `blur(${MOTION.blur}px)`, transition: TRANSITION_OUT }}
+            className="pointer-events-none absolute inset-0 flex items-center justify-center p-4"
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: MOTION.offset, filter: `blur(${MOTION.blur}px)` }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)", transition: TRANSITION_IN }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, y: -MOTION.offset, filter: `blur(${MOTION.blur}px)`, transition: TRANSITION_OUT }}
           >
-            {/* Estilo «line» de la librería (el del buscador de su demo): una luz que viaja por el borde inferior y sube como resplandor. Tonos fríos («ice»). */}
-            {/* La librería fuerza `position: relative` en su contenedor: el absoluto va en este div y el haz lo llena. */}
-            <div className="absolute inset-0">
-              <Beam size="line" colorVariant="ice" duration={3.5} strength={1.5} className="block h-full w-full">
-                <div className="h-full w-full rounded-2xl" />
+            {/* La librería fuerza `position: relative` y `display` en su contenedor: el ancho se fija en este div. */}
+            <div className="w-full">
+              <Beam size="line" colorVariant="ice" duration={3.5} strength={1.5} className="block w-full">
+                <div className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-10 text-center">
+                  <UploadIcon className="size-6" />
+                  <p className="text-sm font-medium">Suelta tu CV aquí</p>
+                  <p className="text-xs text-muted-foreground">Un solo archivo</p>
+                </div>
               </Beam>
-            </div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
-              <UploadIcon className="size-6" />
-              <p className="text-sm font-medium">Suelta tu CV aquí</p>
-              <p className="text-xs text-muted-foreground">Un solo archivo</p>
             </div>
           </motion.div>
         )}
