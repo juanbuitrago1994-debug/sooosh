@@ -71,7 +71,7 @@ describe("verificar la versión ATS (cliente + ruta)", () => {
     expect(view.groups.map((g) => g.label)).toEqual(["Archivo y estructura", "Tipografía y márgenes", "Secciones y orden", "Datos de contacto", "Experiencia y educación", "Contenido fiel a tu CV"])
     expect(view.groups.every((g) => g.status === "ok")).toBe(true)
     expect(view.formats.map((f) => f.format)).toEqual(["pdf", "docx"])
-    expect(Object.keys(view).sort()).toEqual(["disclaimer", "formats", "groups", "label", "labelText", "percent", "validated"])
+    expect(Object.keys(view).sort()).toEqual(["disclaimer", "formats", "groups", "label", "labelText", "percent", "readRate", "tips", "validated"])
     expect(JSON.stringify(view)).not.toMatch(/ATS-[A-Z]\d/)
     expect(view.disclaimer).toMatch(/no garantiza/)
   }, 90_000)

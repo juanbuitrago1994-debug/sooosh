@@ -149,6 +149,7 @@ export function AtsVersion({ cv, sourceText, onMotion }: { cv: CV; /** texto ori
                   </Badge>
                   <span className="text-sm font-medium tabular-nums">{phase.view.percent} %</span>
                 </div>
+                {phase.view.readRate != null && <p className="text-xs text-muted-foreground">Un lector automático recupera el {phase.view.readRate} % del contenido del archivo.</p>}
                 <p className="text-xs text-muted-foreground">{phase.view.disclaimer}</p>
               </div>
               <ul className="flex flex-col gap-2 text-sm">
@@ -160,6 +161,17 @@ export function AtsVersion({ cv, sourceText, onMotion }: { cv: CV; /** texto ori
                   </li>
                 ))}
               </ul>
+              {phase.view.tips.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm font-medium">Consejos para tu CV</p>
+                  <p className="text-xs text-muted-foreground">Dependen de lo que escribiste, no del formato; no restan del porcentaje.</p>
+                  <ul className="flex flex-col gap-2 text-xs text-muted-foreground">
+                    {phase.view.tips.map((t) => (
+                      <li key={t.id}>{t.fix}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           ) : null}
 

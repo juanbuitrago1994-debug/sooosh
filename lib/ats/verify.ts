@@ -7,7 +7,7 @@ import { extractFile, type Extraction, type Line } from "./extract"
 import { ATS_HEADINGS, ATS_LABELS, type AtsLang } from "./headings"
 import { detectLang } from "./lang"
 import { cleanBullet, spellTitle } from "./model"
-import { ATS_RULES, WEIGHT_POINTS, type RuleDef, type RuleGroup } from "./rules"
+import { ATS_RULES, isTip, WEIGHT_POINTS, type RuleDef, type RuleGroup } from "./rules"
 
 /**
  * Verificador del CV ATS (Fase A3). Lee el ARCHIVO generado (PDF o Word) y aplica las reglas de docs/CONOCIMIENTO-ATS.md. Cada regla da
@@ -17,6 +17,7 @@ import { ATS_RULES, WEIGHT_POINTS, type RuleDef, type RuleGroup } from "./rules"
  */
 export type Status = "pass" | "fail" | "na"
 export type RuleResult = RuleDef & { status: Status; detail: string; evidence?: string[] }
+export type Tip = { id: string; title: string; fix: string; detail: string }
 export type Label = "listo" | "casi" | "cambios" | "esencial"
 export type AtsReport = {
   percent: number
@@ -28,6 +29,10 @@ export type AtsReport = {
   earned: number
   possible: number
   rules: RuleResult[]
+  /** consejos de contenido (no restan del porcentaje) */
+  tips: Tip[]
+  /** % de las palabras esperadas que un lector recupera del archivo (si se conoce el texto esperado) */
+  readRate: number | null
   counts: { pass: number; fail: number; na: number }
   file: { format: "pdf" | "docx"; fileName: string; bytes: number; pages: number | null; fonts: string[]; bodySize: number | null }
   disclaimer: string
@@ -68,7 +73,7 @@ function headingInfo(title: string): { key: Key; lang: AtsLang } | null {
   for (const lang of ["es", "en"] as const) for (const [key, names] of Object.entries(SYN[lang]) as [Key, string[]][]) if (names.includes(t)) return { key, lang }
   return null
 }
-const RANK: Record<Key, number> = { summary: 0, experience: 1, education: 2, skills: 2, languages: 3, projects: 3, certifications: 3, volunteering: 3 }
+const RANK: Record<Key, number> = { summary: 0, experience: 1, education: 2, skills: 2, certifications: 2, languages: 3, projects: 3, volunteering: 4 }
 
 const BULLET_START = /^[•·▪▫■□◦‣⁃●○◆◇➢➤►▶*\-–—]\s/
 const isBullet = (l: Line) => (l.bullet != null ? true : BULLET_START.test(l.text))
@@ -103,7 +108,8 @@ export async function verifyAtsFile(input: VerifyInput): Promise<AtsReport> {
 
 export function verifyExtraction(ex: Extraction, input: VerifyInput): AtsReport {
   const { cv, fileName, expectedText } = input
-  const lines = ex.lines
+  // Archivos ajenos (Word con títulos en negrita y mayúsculas, no con estilo «Título»): una línea corta que es exactamente un título conocido es un título.
+  const lines = ex.lines.map((l) => (!l.heading && l.text.length <= 40 && !/^[•·▪●○◦‣\-–—*]\s/.test(l.text) && headingInfo(l.text.replace(/\s*:$/, "")) ? { ...l, heading: true, text: l.text.replace(/\s*:$/, "") } : l))
   const headings = lines.filter((l) => l.heading)
   const firstHeadingAt = lines.findIndex((l) => l.heading)
   const top = firstHeadingAt < 0 ? lines : lines.slice(0, firstHeadingAt)
@@ -298,9 +304,19 @@ export function verifyExtraction(ex: Extraction, input: VerifyInput): AtsReport 
   }
 
   // ---------- experiencia ----------
-  const expHeads = (sec("experience")?.lines ?? []).filter((l) => !isBullet(l))
+  // Un puesto empieza en una línea sin viñeta que trae « — »; lo demás (descripción, líneas partidas, viñetas) pertenece al puesto.
+  const entries: { head: Line; bullets: number; desc: number }[] = []
+  for (const l of sec("experience")?.lines ?? []) {
+    if (isBullet(l)) {
+      if (entries.length) entries[entries.length - 1].bullets++
+    }
+    else if (l.text.includes(" — ")) entries.push({ head: l, bullets: 0, desc: 0 })
+    else if (entries.length) entries[entries.length - 1].desc++
+  }
+  const expHeads = entries.map((e) => e.head)
+  const strayHeads = (sec("experience")?.lines ?? []).filter((l) => !isBullet(l) && !l.text.includes(" — ") && /(?:19|20)\d{2}/.test(l.text) && !entries.length)
   R["ATS-E1"] = () => {
-    if (!expHeads.length) return na("No hay puestos.")
+    if (!expHeads.length) return strayHeads.length ? fail("Puestos que no siguen «Cargo — Empresa | fechas».", strayHeads.slice(0, 3).map((h) => h.text.slice(0, 80))) : na("No hay puestos.")
     const noShape = expHeads.filter((h) => !/^.+ — .+/.test(h.text))
     const withYear = expHeads.filter((h) => /(?:19|20)\d{2}/.test(h.text)).length
     const wantYear = cv.experience.filter((e) => /\d{4}/.test(e.startDate)).length
@@ -341,13 +357,10 @@ export function verifyExtraction(ex: Extraction, input: VerifyInput): AtsReport 
   R["ATS-E6"] = () => {
     const s = sec("experience")
     if (!s || !expHeads.length) return na("No hay puestos.")
-    const counts: number[] = []
-    for (const l of s.lines) {
-      if (!isBullet(l)) counts.push(0)
-      else if (counts.length) counts[counts.length - 1]++
-    }
-    const bad = counts.filter((c) => c < 1 || c > 6)
-    return bad.length ? fail(`${bad.length} puesto(s) con ${bad.some((c) => c < 1) ? "0" : "más de 6"} viñetas.`) : pass()
+    // Un puesto con descripción pero sin viñetas se acepta; sin ninguna de las dos, o con más de 6 viñetas, es un consejo.
+    const bare = entries.filter((e) => e.bullets === 0 && e.desc === 0).length
+    const many = entries.filter((e) => e.bullets > 6).length
+    return bare || many ? fail([bare && `${bare} puesto(s) sin viñetas ni descripción.`, many && `${many} puesto(s) con más de 6 viñetas.`].filter(Boolean).join(" ")) : pass()
   }
   R["ATS-E7"] = () => {
     const s = sec("education")
@@ -414,6 +427,20 @@ export function verifyExtraction(ex: Extraction, input: VerifyInput): AtsReport 
     const found = BUZZ.filter((b) => text.includes(fold(b)))
     return found.length ? fail("Frases vagas de moda.", found) : pass()
   }
+  R["ATS-Q1"] = () => {
+    const bs = bulletsOf(sec("experience")).map((l) => stripBullet(l.text))
+    if (bs.length < 4) return na("Pocas viñetas para medirlo.")
+    const withNumber = bs.filter((b) => /\d/.test(b)).length
+    return withNumber / bs.length >= 0.25 ? pass(`${withNumber} de ${bs.length} traen una cifra.`) : fail(`Solo ${withNumber} de ${bs.length} viñetas traen una cifra o resultado medible.`)
+  }
+  R["ATS-Q2"] = () => {
+    const bs = bulletsOf(sec("experience")).map((l) => fold(stripBullet(l.text).split(/\s+/)[0] ?? "")).filter((w) => w.length > 2)
+    if (bs.length < 4) return na("Pocas viñetas para medirlo.")
+    const freq = new Map<string, number>()
+    for (const w of bs) freq.set(w, (freq.get(w) ?? 0) + 1)
+    const rep = [...freq].filter(([, n]) => n >= 3).map(([w, n]) => `${w} ×${n}`)
+    return rep.length ? fail("Viñetas que empiezan con la misma palabra.", rep) : pass()
+  }
   R["ATS-I5"] = () => {
     const d = detectLang(cv)
     if (d.detected === "otro") return na("No se pudo identificar el idioma del CV original.")
@@ -431,10 +458,20 @@ export function verifyExtraction(ex: Extraction, input: VerifyInput): AtsReport 
     return { ...def, ...o }
   })
 
-  const score = scoreRules(rules)
+  // El porcentaje mide solo el formato; los consejos de contenido van aparte.
+  const score = scoreRules(rules.filter((r) => !isTip(r.id)))
+  const tips: Tip[] = rules.filter((r) => isTip(r.id) && r.status === "fail").map((r) => ({ id: r.id, title: r.title, fix: r.fix, detail: r.detail }))
+  const readRate = (() => {
+    if (!expectedText) return null
+    const exp = new Set(words(expectedText))
+    const got = new Set(words(fullText))
+    return exp.size ? Math.round(([...exp].filter((w) => got.has(w)).length / exp.size) * 100) : null
+  })()
   return {
     ...score,
     rules,
+    tips,
+    readRate,
     counts: { pass: rules.filter((r) => r.status === "pass").length, fail: rules.filter((r) => r.status === "fail").length, na: rules.filter((r) => r.status === "na").length },
     file: { format: ex.format, fileName, bytes: ex.bytes, pages: ex.pages, fonts: ex.fonts, bodySize: ex.bodySize },
     disclaimer: DISCLAIMER,
@@ -451,12 +488,12 @@ export const GROUP_LABEL: Record<RuleGroup, string> = {
   contenido: "Contenido fiel a tu CV",
 }
 export type GroupView = { group: RuleGroup; label: string; status: "ok" | "revisar"; failed: number }
-export type VerifyView = { percent: number; label: Label; labelText: string; validated: boolean; groups: GroupView[]; formats: { format: "pdf" | "docx"; percent: number }[]; disclaimer: string }
+export type VerifyView = { percent: number; label: Label; labelText: string; validated: boolean; groups: GroupView[]; /** consejos de contenido (no restan del porcentaje) */ tips: { id: string; title: string; fix: string; detail: string }[]; /** % del contenido que un lector recupera del archivo */ readRate: number | null; formats: { format: "pdf" | "docx"; percent: number }[]; disclaimer: string }
 
 /** Un grupo está «ok» si todas sus reglas aplicables cumplen. Un grupo donde nada aplica no se muestra. */
-export function groupSummary(rules: Pick<RuleResult, "group" | "status">[]): GroupView[] {
+export function groupSummary(rules: (Pick<RuleResult, "group" | "status"> & { id?: string })[]): GroupView[] {
   return (Object.keys(GROUP_LABEL) as RuleGroup[]).flatMap((g) => {
-    const rs = rules.filter((r) => r.group === g && r.status !== "na")
+    const rs = rules.filter((r) => r.group === g && r.status !== "na" && !isTip((r as { id?: string }).id ?? ""))
     if (!rs.length) return []
     const failed = rs.filter((r) => r.status === "fail").length
     return [{ group: g, label: GROUP_LABEL[g], status: failed ? ("revisar" as const) : ("ok" as const), failed }]
@@ -466,6 +503,6 @@ export function groupSummary(rules: Pick<RuleResult, "group" | "status">[]): Gro
 /** Une los informes del PDF y del Word: gana el peor porcentaje; un grupo con fallos en cualquiera de los dos queda «por revisar». «Validado» = «Listo para ATS» en todos. */
 export function combineReports(reports: AtsReport[]): VerifyView {
   const worst = reports.reduce((a, b) => (b.percent < a.percent ? b : a))
-  const groups = groupSummary(reports.flatMap((r) => r.rules.map((x) => ({ group: x.group, status: x.status }))))
-  return { percent: worst.percent, label: worst.label, labelText: worst.labelText, validated: reports.every((r) => r.label === "listo"), groups, formats: reports.map((r) => ({ format: r.file.format, percent: r.percent })), disclaimer: DISCLAIMER }
+  const groups = groupSummary(reports.flatMap((r) => r.rules.map((x) => ({ id: x.id, group: x.group, status: x.status }))))
+  return { percent: worst.percent, label: worst.label, labelText: worst.labelText, validated: reports.every((r) => r.label === "listo"), groups, tips: [...new Map(reports.flatMap((r) => r.tips).map((t) => [t.id, t])).values()], readRate: reports.reduce<number | null>((m, r) => (r.readRate == null ? m : m == null ? r.readRate : Math.min(m, r.readRate)), null), formats: reports.map((r) => ({ format: r.file.format, percent: r.percent })), disclaimer: DISCLAIMER }
 }

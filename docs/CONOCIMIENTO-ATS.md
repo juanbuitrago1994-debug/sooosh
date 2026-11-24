@@ -102,6 +102,8 @@ Orden fijo de la plantilla `[SN]` apoyado en `[IND]`, `[ENH]` y `[GOO]`: **Conta
 | ATS-I2 | **Nada omitido** sin motivo: todos los empleos y estudios del original están. | Conteo de bloques frente al CV estructurado. | A | Regla del producto | SN |
 | ATS-I3 | Sin **relleno de palabras clave** (la misma palabra ≥ 5 veces en el resumen + habilidades). | Frecuencia. | M | Media | RIO, IND, ENH |
 | ATS-I4 | Sin frases vagas de moda («apasionado», «proactivo», «orientado a resultados») sin evidencia. | Lista de términos. | B | Baja | RIO, SN |
+| ATS-Q1 | **Cifras en los logros**: al menos 1 de cada 4 viñetas trae un número o resultado medible. | Proporción de viñetas con dígitos ≥ 25 % (solo con 4 o más viñetas). **Consejo**, no resta. | B | Baja | ENH |
+| ATS-Q2 | **Variedad al empezar**: ninguna palabra inicial se repite 3 veces o más entre las viñetas. | Frecuencia de la primera palabra. **Consejo**, no resta. | B | Baja | ENH |
 | ATS-I5 | **Mismo idioma que el CV original** (detectado al subirlo), incluidos los encabezados. | Detección de idioma del texto y de los encabezados. | A | Decisión de Juan 23-nov | — |
 
 ## 4. Encabezados estándar por idioma `[SN]`
@@ -238,3 +240,15 @@ El verificador (`lib/ats/verify.ts`) lee el **archivo** generado (PDF o Word), n
 - ATS-I1 (nada inventado) reutiliza el verificador de datos del resto de la app: revisa cifras, fechas, nombres, siglas y términos técnicos, **no palabras comunes en minúscula**.
 - ATS-T1 acepta Liberation Sans/Serif y Arimo/Tinos como equivalentes métricos de Arial/Times (así un servidor Linux no suspende al PDF).
 - Ninguna comprobación sustituye probar el archivo en un ATS real.
+
+## 12. Calibración del verificador (A6, 23-nov-2026)
+Motivo: con el CV real de Juan el porcentaje no llegaba a 100 % por cosas que el generador no controla, y un Word ajeno (hecho por otra herramienta) daba un fallo crítico falso.
+- **Dos clases de regla** (`lib/ats/rules.ts`, `TIP_IDS`). **Formato**: lo controla el generador; define el porcentaje y debe poder llegar a 100 %. **Consejo** (ATS-F6 páginas, S3 resumen, E5 verbos y longitud, E6 viñetas por puesto, E9 siglas, I3 relleno, I4 frases vagas, y las nuevas Q1 y Q2): dependen de lo que la persona escribió; se muestran aparte en «Consejos para tu CV» y **no restan**. Razón: el generador no puede acortar un CV de 12 puestos sin omitir datos, y omitir viola ATS-I2.
+- **Títulos en archivos ajenos**: además del estilo «Título» (Word) o el tamaño (PDF), una línea corta que es exactamente un título conocido («EXPERIENCIA LABORAL», «Habilidades:») cuenta como título. Con esto el Word de referencia dejó de fallar ATS-S1 (falso crítico).
+- **Un puesto** empieza en una línea con « — »; sus descripciones y líneas partidas ya no se cuentan como puestos (falsos fallos de ATS-E1 y ATS-E6). Un puesto con descripción pero sin viñetas es válido.
+- **Orden de secciones** (ATS-S5): Certificaciones se acepta junto a Educación y Habilidades; Voluntariado al final.
+- **Tasa de lectura** (idea de Enhancv): se muestra el % de las palabras esperadas que se recupera del archivo (`readRate`).
+- **Nuevas, Enhancv** (ENH): ATS-Q1 (≥ 25 % de viñetas con cifra) y ATS-Q2 (sin 3 viñetas que empiecen igual). Ambas B, confianza baja, consejos. Reglas: **42**.
+- **Rangos con guion corto** copiados de certificaciones («2018 - 2021») se escriben con « – » (solo puntuación).
+- **Resultado**: el Word de referencia pasa de 69 % por S1 falso a 69 % por **ATS-I1** (su contenido es de otra versión del CV, correcto que falle); nuestros archivos: 100 % de formato.
+- **Límite**: 1 solo CV real y 1 documento ajeno calibrados; es una heurística, no una prueba contra un ATS real.

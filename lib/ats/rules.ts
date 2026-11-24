@@ -7,6 +7,12 @@ export type Confidence = "Alta" | "Media" | "Baja"
 export type RuleGroup = "archivo" | "tipografía" | "secciones" | "contacto" | "experiencia" | "contenido"
 
 export type RuleDef = { id: string; group: RuleGroup; title: string; weight: Weight; confidence: Confidence; fix: string }
+/**
+ * Dos clases de regla (A6). **Formato**: lo controla el generador; suma al porcentaje y debe poder llegar a 100 %. **Consejo**: depende del
+ * CONTENIDO que escribió la persona (cuántas páginas ocupa, si sus viñetas traen cifras o verbos…); se muestra aparte y no resta del porcentaje.
+ */
+export const TIP_IDS: ReadonlySet<string> = new Set(["ATS-F6", "ATS-S3", "ATS-E5", "ATS-E6", "ATS-E9", "ATS-I3", "ATS-I4", "ATS-Q1", "ATS-Q2"])
+export const isTip = (id: string) => TIP_IDS.has(id)
 export const WEIGHT_POINTS: Record<Weight, number> = { C: 5, A: 3, M: 2, B: 1 }
 
 export const ATS_RULES: RuleDef[] = [
@@ -49,6 +55,8 @@ export const ATS_RULES: RuleDef[] = [
   { id: "ATS-I2", group: "contenido", title: "Nada omitido: puestos, estudios, viñetas y habilidades están", weight: "A", confidence: "Alta", fix: "Vuelve a incluir lo que falta de tu CV original." },
   { id: "ATS-I3", group: "contenido", title: "Sin relleno de palabras clave", weight: "M", confidence: "Media", fix: "No repitas la misma palabra más de 4 veces en el resumen y las habilidades." },
   { id: "ATS-I4", group: "contenido", title: "Sin frases vagas de moda sin evidencia", weight: "B", confidence: "Baja", fix: "Cambia «proactivo», «apasionado»… por un resultado concreto." },
+  { id: "ATS-Q1", group: "contenido", title: "Al menos 1 de cada 4 viñetas trae una cifra o resultado medible", weight: "B", confidence: "Baja", fix: "Agrega cifras (%, tiempos, cantidades) a tus logros cuando las tengas; no las inventes." },
+  { id: "ATS-Q2", group: "contenido", title: "Las viñetas no empiezan todas con la misma palabra", weight: "B", confidence: "Baja", fix: "Varía cómo empiezan tus viñetas: repetir la misma palabra tres veces o más se lee mecánico." },
   { id: "ATS-I5", group: "contenido", title: "Mismo idioma que el CV original, también en los títulos", weight: "A", confidence: "Alta", fix: "Usa los títulos de sección en el idioma de tu CV." },
 ]
 

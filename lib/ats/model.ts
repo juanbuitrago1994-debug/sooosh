@@ -34,6 +34,8 @@ export type AtsDoc = {
 const BULLET_LEAD = /^(?:[\s•·▪▫■□◦‣⁃●○◆◇➢➤►▶*\-–—]+|[+«»]\s+)+/
 const oneLine = (s: string) => s.replace(/\s+/g, " ").trim()
 export const cleanBullet = (s: string) => oneLine(s.replace(BULLET_LEAD, ""))
+/** Rangos de años con guion corto → guion largo (ATS-E3). Solo puntuación; no cambia ningún dato. */
+const dashRanges = (s: string) => s.replace(/((?:19|20)\d{2})\s+-\s+((?:19|20)\d{2}|Presente|Present|Actual\w*|Current)/g, "$1 – $2")
 const clean = (xs: (string | undefined)[]) => xs.map((x) => (x ? oneLine(x) : "")).filter(Boolean)
 
 function dedupe(xs: string[]): string[] {
@@ -202,7 +204,7 @@ export function buildAtsDoc(original: CV, opts: { lang?: AtsLang; summary?: stri
     return {
       kind: "entry" as const,
       head: withDate(`${title(e.role)} — ${clean([e.company, e.location]).join(", ")}`, range(e.startDate, e.endDate)),
-      lines: note ? [oneLine(note)] : [],
+      lines: note ? [dashRanges(oneLine(note))] : [],
       bullets: e.bullets.map(cleanBullet).filter(Boolean),
     }
   })
@@ -212,8 +214,8 @@ export function buildAtsDoc(original: CV, opts: { lang?: AtsLang; summary?: stri
     const w = comparable(c).split(" ").filter((x) => x.length > 2 && !/^\d+$/.test(x))
     return w.length > 0 && w.filter((x) => eduText.includes(x)).length / w.length >= 0.8
   }
-  const certs = dedupe(clean((extras?.certifications ?? []).filter((c) => !inEducation(c))))
-  const volunteering = dedupe(clean(extras?.volunteering ?? []))
+  const certs = dedupe(clean((extras?.certifications ?? []).filter((c) => !inEducation(c))).map(dashRanges))
+  const volunteering = dedupe(clean(extras?.volunteering ?? []).map(dashRanges))
   const filled = cv !== original || usedNotes.size > 0 || certs.length > 0 || volunteering.length > 0
   if (filled) warn("extras-used", "Se completó con contenido de tu CV original que el análisis general no había recogido (viñetas, descripciones de empresa, certificaciones, habilidades o voluntariado).")
 

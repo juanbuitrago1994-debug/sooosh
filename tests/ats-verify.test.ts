@@ -59,7 +59,9 @@ describe("CV ATS generado por nosotros", () => {
     expect(r.percent).toBe(100)
     expect(r.label).toBe("listo")
     expect(r.file).toMatchObject({ format: "pdf", pages: 1, fonts: ["arial"], bodySize: 10.5 })
-    expect(r.rules).toHaveLength(40)
+    expect(r.rules).toHaveLength(42)
+    expect(r.readRate).toBe(100)
+    expect(r.tips.map((t) => t.id)).toEqual([])
     expect(r.disclaimer).toMatch(/no garantiza/)
   }, 60_000)
 
@@ -168,8 +170,44 @@ describe("reglas de contenido del original que el generador no reescribe", () =>
     const r = await verifyAtsFile({ file: await renderAtsDocx(d), fileName: atsFileName(d, "docx"), cv: weak, expectedText: atsToText(d) })
     expect(failed(r)).toEqual(expect.arrayContaining(["ATS-E5", "ATS-I4"]))
     expect(failed(r).some((id) => ATS_RULES.find((x) => x.id === id)?.weight === "C")).toBe(false)
-    expect(r.percent).toBeLessThan(100)
-    expect(r.percent).toBeGreaterThanOrEqual(80)
+    // A6: lo que depende del contenido son consejos y no restan del porcentaje de formato.
+    expect(r.tips.map((t) => t.id)).toEqual(expect.arrayContaining(["ATS-E5", "ATS-I4"]))
+    expect(r.percent).toBe(100)
+  })
+
+  it("consejos de contenido: pocas cifras y viñetas que empiezan igual (ATS-Q1, ATS-Q2)", async () => {
+    const dull = cvSchema.parse({ ...cv, experience: [{ company: "Initech", role: "Analista", startDate: "03/2021", endDate: "Actual", bullets: ["Responsable de reportes.", "Responsable de tableros.", "Responsable de consultas.", "Responsable de la carga de datos."] }] })
+    const d = buildAtsDoc(dull)
+    const r = await verifyAtsFile({ file: await renderAtsDocx(d), fileName: atsFileName(d, "docx"), cv: dull, expectedText: atsToText(d) })
+    expect(r.tips.map((t) => t.id)).toEqual(expect.arrayContaining(["ATS-Q1", "ATS-Q2"]))
+    expect(r.percent).toBe(100)
+  })
+
+  it("un Word ajeno con títulos en negrita y mayúsculas (sin estilo «Título») también se lee: ATS-S1 ya no falla", async () => {
+    const run = (t: string, bold = false) => new TextRun({ text: t, bold, font: "Arial", size: 21 })
+    const plain = new Document({ sections: [{ children: [
+      new Paragraph({ children: [run("Ana Zapata Núñez", true)] }),
+      new Paragraph({ children: [run("Lima, Perú | ana@ejemplo.com")] }),
+      new Paragraph({ children: [run("EXPERIENCIA LABORAL", true)] }),
+      new Paragraph({ children: [run("Analista de Datos Senior — Initech | 03/2021 – Presente", true)] }),
+      new Paragraph({ children: [run("Empresa de software de gestión.")] }),
+      new Paragraph({ children: [run("Reduje en 30% el tiempo de los reportes.")] }),
+      new Paragraph({ children: [run("EDUCACIÓN", true)] }),
+      new Paragraph({ children: [run("Licenciatura — Universidad Nacional | 2017")] }),
+      new Paragraph({ children: [run("HABILIDADES:", true)] }),
+      new Paragraph({ children: [run("Excel, SQL")] }),
+    ] }] })
+    const r = await verifyAtsFile({ file: await Packer.toBuffer(plain), fileName: "Ana-Zapata.docx", cv })
+    expect(r.rules.find((x) => x.id === "ATS-S1")?.status).toBe("pass")
+    expect(r.rules.find((x) => x.id === "ATS-S2")?.status).toBe("pass")
+  })
+
+  it("una descripción bajo el puesto, sin viñetas, no se cuenta como puesto vacío (ATS-E6) ni rompe ATS-E1", async () => {
+    const desc = buildAtsDoc(cv, { extras: { roles: [{ company: "Initech", role: "Analista de Datos Senior", companyNote: "Empresa de software.", bullets: [] }], certifications: [], volunteering: [], skillGroups: [], projects: [] } })
+    expect(atsToText(desc)).toContain("Empresa de software.")
+    const r = await verifyAtsFile({ file: await renderAtsDocx(desc), fileName: atsFileName(desc, "docx"), cv, expectedText: atsToText(desc), source: "Empresa de software." })
+    expect(r.rules.find((x) => x.id === "ATS-E1")?.status).toBe("pass")
+    expect(r.rules.find((x) => x.id === "ATS-E6")?.status).toBe("pass")
   })
 })
 
