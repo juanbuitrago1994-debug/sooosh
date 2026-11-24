@@ -79,7 +79,7 @@ describe("FlowBeam: vuelta y densidad configurables (la ventana completa pide m�
     expect(full.match(/opacity: 1;/g)?.length).toBeGreaterThanOrEqual(2) // hilo y brillo interior al máximo
   })
   it("la pantalla inicial usa el haz rápido y denso; el panel no cambia", () => {
-    expect(readFileSync(path.join(__dirname, "..", "components/wizard/entry-screen.tsx"), "utf8")).toContain("beam={{ lap: 2.8, density: 1.7, halo: false }}")
+    expect(readFileSync(path.join(__dirname, "..", "components/wizard/entry-screen.tsx"), "utf8")).toContain("beam={{ lap: 2.8, density: 1.7, halo: false, continuous: true }}")
     expect(readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")).not.toContain("beam={{")
   })
 })

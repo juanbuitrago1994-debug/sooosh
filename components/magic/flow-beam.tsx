@@ -51,14 +51,23 @@ const EDGE = "linear-gradient(white, transparent 28px, transparent calc(100% - 2
 const BLOOM_ARC = `conic-gradient(from var(--fb-angle), transparent 0%, transparent 58%, color-mix(in oklab, ${BLUE} 5%, transparent) 62%, color-mix(in oklab, ${BLUE} 20%, transparent) 66%, color-mix(in oklab, ${BLUE} 70%, transparent) 69%, color-mix(in oklab, ${CORE} 85%, transparent) 70.5%, color-mix(in oklab, ${BLUE} 45%, transparent) 72%, color-mix(in oklab, ${BLUE} 12%, transparent) 76%, transparent 82%)`
 
 // Opacidades por capa (las de la librería multiplicadas por 3: sobre el fondo oscuro del panel, las originales casi no se ven).
+/**
+ * Anillo de color CONTINUO (modo `continuous`): un solo degradado cónico con los colores de la paleta repartidos por todo el contorno, en vez de las
+ * 9 manchas sueltas del preset de la librería. Las manchas están calculadas para un panel de ≈ 450 px; en una ventana de 1.280 px solo el 5–22 % del
+ * borde tenía color en cada instante, con huecos oscuros largos (medido en WebKit), y los colores aparecían a saltos. Con el anillo, la luz que
+ * recorre el borde lleva color siempre y el color cambia de forma gradual. Mismo mecanismo (colores fijos, máscara cónica que gira) y una sola capa.
+ */
+const PALETTE = [C["flow-orange"], C["flow-pink"], C["flow-magenta"], C["flow-violet"], BLUE, C["flow-teal"], C["flow-green"]]
+const colorRing = (alpha: number) => `conic-gradient(in oklab from 0deg, ${[...PALETTE, PALETTE[0]].map((c, i) => `color-mix(in oklab, ${c} ${Math.round(alpha * 100)}%, transparent) ${((i * 360) / PALETTE.length).toFixed(1)}deg`).join(", ")})`
+
 /** `density` multiplica la opacidad de las tres capas y el tamaño de las manchas de color: más denso = más luz y más ancha. */
-const buildStyle = (lap: number, density: number) => `
+const buildStyle = (lap: number, density: number, continuous: boolean) => `
 @property --fb-angle { syntax: "<angle>"; initial-value: 0deg; inherits: true; }
 @keyframes fb-spin { to { --fb-angle: 360deg; } }
 [data-flow-beam] { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; animation: fb-spin ${lap}s linear infinite; }
 [data-flow-beam]::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; z-index: 2; opacity: ${clamp1(0.6 * density)};
-  background: ${ARC_CORE}, ${blobs(1, density)};
+  background: ${ARC_CORE}, ${continuous ? colorRing(1) : blobs(1, density)};
   -webkit-mask: ${MASK_ARC}, linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: source-in, xor;
   mask: ${MASK_ARC}, linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -66,7 +75,7 @@ const buildStyle = (lap: number, density: number) => `
 }
 [data-flow-beam]::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 1; opacity: ${clamp1(0.63 * density)};
-  background: ${blobs(Math.min(1, 0.22 * density), 0.9 * density)};
+  background: ${continuous ? colorRing(Math.min(1, 0.45 * density)) : blobs(Math.min(1, 0.22 * density), 0.9 * density)};
   box-shadow: inset 0 0 9px 1px color-mix(in oklab, ${BLUE} 27%, transparent);
   -webkit-mask-image: ${MASK_ARC}, ${EDGE};
   -webkit-mask-composite: source-in, source-over;
@@ -82,14 +91,14 @@ const buildStyle = (lap: number, density: number) => `
 }
 `
 
-export function FlowBeam({ className, lap = LAP, density = 1, halo = true }: { className?: string; /** segundos por vuelta */ lap?: number; /** 1 = el del panel; más = más denso */ density?: number; /** el halo difuminado (la capa con `blur`, la más cara de repintar): se quita en la ventana completa por fluidez */ halo?: boolean }) {
+export function FlowBeam({ className, lap = LAP, density = 1, halo = true, continuous = false }: { className?: string; /** anillo de color continuo en vez de manchas sueltas: para contenedores grandes (la ventana completa) */ continuous?: boolean; /** segundos por vuelta */ lap?: number; /** 1 = el del panel; más = más denso */ density?: number; /** el halo difuminado (la capa con `blur`, la más cara de repintar): se quita en la ventana completa por fluidez */ halo?: boolean }) {
   const reduce = useReducedMotion()
   if (reduce) {
     return <span aria-hidden className={`pointer-events-none absolute inset-0 ${className ?? ""}`} style={{ boxShadow: `inset 0 0 18px 2px color-mix(in oklab, ${BLUE} 35%, transparent)` }} />
   }
   return (
     <div aria-hidden data-flow-beam className={className}>
-      <style>{buildStyle(lap, density)}</style>
+      <style>{buildStyle(lap, density, continuous)}</style>
       {halo && <span />}
     </div>
   )

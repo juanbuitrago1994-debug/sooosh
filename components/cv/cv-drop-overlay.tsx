@@ -9,7 +9,7 @@ import { TRANSITION_IN, TRANSITION_OUT } from "@/lib/motion"
  * vertical y horizontal. La usan el panel «Mi CV» (cubre el panel) y la pantalla inicial (cubre la ventana, con `className="fixed inset-2"`), para que
  * el efecto sea el mismo. Entra y sale solo con opacity (sin `filter`, por fluidez). El haz solo aparece aquí (ver CLAUDE.md).
  */
-export function CvDropOverlay({ show, className = "absolute inset-0", hidden = false, beam, children }: { show: boolean; className?: string; /** `aria-hidden` (p. ej. cuando solo es decorativo, al arrastrar) */ hidden?: boolean; /** vuelta (s) y densidad del haz; la ventana completa lo pide más rápido y más denso que el panel */ beam?: { lap?: number; density?: number; halo?: boolean }; children: React.ReactNode }) {
+export function CvDropOverlay({ show, className = "absolute inset-0", hidden = false, beam, children }: { show: boolean; className?: string; /** `aria-hidden` (p. ej. cuando solo es decorativo, al arrastrar) */ hidden?: boolean; /** vuelta (s) y densidad del haz; la ventana completa lo pide más rápido y más denso que el panel */ beam?: { lap?: number; density?: number; halo?: boolean; continuous?: boolean }; children: React.ReactNode }) {
   return (
     <AnimatePresence>
       {show && (
@@ -22,7 +22,7 @@ export function CvDropOverlay({ show, className = "absolute inset-0", hidden = f
           animate={{ opacity: 1, transition: TRANSITION_IN }}
           exit={{ opacity: 0, transition: TRANSITION_OUT }}
         >
-          <FlowBeam className="rounded-2xl" lap={beam?.lap} density={beam?.density} halo={beam?.halo} />
+          <FlowBeam className="rounded-2xl" lap={beam?.lap} density={beam?.density} halo={beam?.halo} continuous={beam?.continuous} />
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-4">{children}</div>
         </motion.div>
       )}

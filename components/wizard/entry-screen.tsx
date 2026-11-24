@@ -93,8 +93,8 @@ export function EntryScreen({
       </main>
 
       {/* Haz alrededor de la ventana y mensaje centrado: al arrastrar un archivo y mientras se sube y se lee. */}
-      {/* La ventana completa es mucho más grande que el panel: vuelta de 2,8 s (en vez de 5), haz 1,7 veces más denso y sin el halo difuminado (la capa con `blur`, la más cara de repintar). */}
-      <CvDropOverlay show={dragging || busy} className="fixed inset-2" hidden={!busy} beam={{ lap: 2.8, density: 1.7, halo: false }}>
+      {/* La ventana completa es mucho más grande que el panel: vuelta de 2,8 s (en vez de 5), haz 1,7 veces más denso sin el halo difuminado (la capa con `blur`, la más cara de repintar) y con anillo de color continuo (las manchas sueltas dejaban el 80–95 % del borde sin color). */}
+      <CvDropOverlay show={dragging || busy} className="fixed inset-2" hidden={!busy} beam={{ lap: 2.8, density: 1.7, halo: false, continuous: true }}>
         {busy ? (
           <>
             <ReadingStatus idx={phase === "parsing" ? (work?.step ?? 0) : -1} phrase={phase === "parsing" ? work?.messages?.[work?.step ?? 0] : "Subiendo tu CV"} />
