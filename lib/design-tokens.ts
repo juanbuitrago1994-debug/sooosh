@@ -23,13 +23,10 @@ export const EFFECT_COLORS = {
   "beam-orange": "oklch(0.78 0.15 55)",
   /** azul frío: la cabeza del haz `FlowBeam` de «Mi CV» al soltar un archivo (pedido por Juan el 23-nov-2026) */
   "flow-blue": "oklch(0.68 0.13 250)",
-  /** más matices del mismo haz (paleta de la variante `colorful` de la librería): rosa, verde, turquesa, violeta, naranja y magenta */
-  "flow-pink": "oklch(0.66 0.23 12)",
-  "flow-green": "oklch(0.74 0.19 145)",
-  "flow-teal": "oklch(0.72 0.12 190)",
-  "flow-violet": "oklch(0.55 0.25 285)",
-  "flow-orange": "oklch(0.74 0.17 55)",
-  "flow-magenta": "oklch(0.62 0.25 340)",
+  /** más tonos fríos del mismo haz (24-nov-2026): hielo, cielo y pizarra */
+  "flow-ice": "oklch(0.86 0.07 225)",
+  "flow-sky": "oklch(0.74 0.12 240)",
+  "flow-slate": "oklch(0.6 0.04 255)",
   /** gris azulado: la cola del mismo haz */
   "flow-gray": "oklch(0.78 0.03 250)",
   /** rosa de la insignia «Curated by Sooosh»: de aquí salen el fondo (translúcido) y el texto/icono (mezclado con el color del texto del tema para que se lea en claro y oscuro) */

@@ -25,10 +25,10 @@ const tint = (color: string, pct: number) => `color-mix(in oklab, ${color} ${pct
 /**
  * Aspecto del haz (el que Juan aprobó con la versión de máscara animada, 24-nov-2026): una ventana de luz de ≈ 65 % del contorno con el mismo perfil de
  * intensidad (nace despacio, núcleo pleno en el centro, se apaga al final) y los colores de la paleta repartidos a lo largo de ella, en el mismo
- * orden que el anillo de color de entonces: naranja → rosa → magenta → violeta → azul → turquesa → verde. Ahora los colores y la intensidad van
+ * orden de la ventana: pizarra → gris → azul → cielo → hielo → gris → azul (tonos fríos, azules y grises; antes era de varios colores). Ahora los colores y la intensidad van
  * dentro de UN degradado cónico que gira (transform), así que se ve igual pero sin repintar nada en cada fotograma.
  */
-const PALETTE = [C["flow-orange"], C["flow-pink"], C["flow-magenta"], C["flow-violet"], C["flow-blue"], C["flow-teal"], C["flow-green"]]
+const PALETTE = [C["flow-slate"], C["flow-gray"], C["flow-blue"], C["flow-sky"], C["flow-ice"], C["flow-gray"], C["flow-blue"]]
 const CORE = `color-mix(in oklab, ${C["flow-gray"]} 100%, white)`
 const START = 108 // grados: donde nace la luz (30 % del giro)
 const END = 342 // grados: donde se apaga (95 %)

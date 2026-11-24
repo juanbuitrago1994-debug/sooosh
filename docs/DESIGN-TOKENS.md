@@ -31,13 +31,10 @@ Solo para `components/magic/*` (excepción documentada en `CLAUDE.md`); el resto
 | `beam-lilac` | `oklch(0.78 0.11 305)` | lila pálido: cabeza del haz |
 | `beam-rose` | `oklch(0.76 0.15 8)` | rosa: cola del haz en el tema claro |
 | `beam-orange` | `oklch(0.78 0.15 55)` | naranja: cabeza del haz en el tema claro |
-| `flow-blue` | `oklch(0.68 0.13 250)` | azul frío: cabeza del haz `FlowBeam` que recorre el borde de «Mi CV» al soltar un archivo (23-nov-2026) |
-| `flow-pink` | `oklch(0.66 0.23 12)` | rosa: una de las manchas del haz `FlowBeam` (paleta de la variante `colorful` de `border-beam`, pedida por Juan el 23-nov-2026) |
-| `flow-green` | `oklch(0.74 0.19 145)` | verde del mismo haz |
-| `flow-teal` | `oklch(0.72 0.12 190)` | turquesa del mismo haz |
-| `flow-violet` | `oklch(0.55 0.25 285)` | violeta del mismo haz |
-| `flow-orange` | `oklch(0.74 0.17 55)` | naranja del mismo haz |
-| `flow-magenta` | `oklch(0.62 0.25 340)` | magenta del mismo haz |
-| `flow-gray` | `oklch(0.78 0.03 250)` | gris azulado: cola del mismo haz |
+| `flow-blue` | `oklch(0.68 0.13 250)` | azul frío: tono central del haz `FlowBeam` que recorre el borde de «Mi CV» y de la pantalla inicial al soltar o leer un CV (23-nov-2026) |
+| `flow-ice` | `oklch(0.86 0.07 225)` | hielo: tono más claro del haz `FlowBeam` (paleta fría de azules y grises, pedida por Juan el 24-nov-2026; antes era de varios colores) |
+| `flow-sky` | `oklch(0.74 0.12 240)` | cielo: azul medio del mismo haz |
+| `flow-slate` | `oklch(0.6 0.04 255)` | pizarra: gris azulado oscuro del mismo haz |
+| `flow-gray` | `oklch(0.78 0.03 250)` | gris azulado: el gris del mismo haz y el núcleo claro de su hilo |
 | `curated-pink` | `oklch(0.72 0.17 5)` | rosa de la insignia «Curated by Sooosh»: fondo al 14 % de opacidad; texto e icono mezclados al 75 % con el color del texto del tema (rosa claro en oscuro, rosa profundo en claro) |
 | `curated-size` | `0.625rem` | tamaño del texto y del icono de esa insignia (10 px; más pequeño que `text-xs`, el mínimo de la escala; pedido por Juan el 21-nov-2026) |
