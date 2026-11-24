@@ -7,8 +7,8 @@ import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { Trace, TraceIcon, TraceLine, TraceTitle } from "@/components/ui/trace"
-import { nextProgress, stageFloor } from "@/lib/cv/progress"
+import { Trace, TraceDescription, TraceIcon, TraceLine, TraceTitle } from "@/components/ui/trace"
+import { nextProgress } from "@/lib/cv/progress"
 import { setAtsStatus } from "@/lib/profile/search-profile"
 import { ATS_STAGES, generateAtsClient, saveBlob, verifyAtsClient, type AtsBundle } from "@/lib/ats/client"
 import type { VerifyView } from "@/lib/ats/verify"
@@ -103,9 +103,8 @@ export function AtsVersion({ cv, sourceText, onWorkingChange }: { cv: CV; /** te
   )
 
   return (
-    <section aria-labelledby="ats-title" className={working ? "flex min-h-0 flex-1 flex-col items-center justify-center gap-6" : "flex flex-col gap-6"}>
-      {/* Mientras se genera, solo los pasos y el porcentaje, centrados: el título y la descripción se ocultan. */}
-      <div className={working ? "sr-only" : "flex flex-col gap-2"}>
+    <section aria-labelledby="ats-title" className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
         <h3 id="ats-title" className="text-sm font-medium">
           Versión ATS
         </h3>
@@ -120,9 +119,7 @@ export function AtsVersion({ cv, sourceText, onWorkingChange }: { cv: CV; /** te
 
       {phase.k === "working" && (
         // Pasos reales del proceso (Trace de shadcn): hechos con ✓, el actual con brillo y spinner, los siguientes atenuados.
-        <div className="flex flex-col items-center gap-6">
-        <AtsPercent stage={phase.stage} />
-        <Trace role="status" aria-live="polite" className="w-fit">
+        <Trace role="status" aria-live="polite">
           {stageLabels.map((label, i) => {
             const done = i < phase.stage || (i === 1 && hasSummary && phase.stage >= 1)
             const current = i === phase.stage && !(i === 1 && hasSummary)
@@ -130,11 +127,13 @@ export function AtsVersion({ cv, sourceText, onWorkingChange }: { cv: CV; /** te
               <TraceLine key={label} status={current ? "running" : done ? undefined : "pending"} aria-current={current ? "step" : undefined}>
                 <TraceIcon>{done ? <CheckIcon /> : current ? <Spinner /> : <CircleIcon />}</TraceIcon>
                 <TraceTitle>{label}</TraceTitle>
+                <TraceDescription>
+                  <StepPercent state={done ? "done" : current ? "running" : "pending"} slow={i === 0} />
+                </TraceDescription>
               </TraceLine>
             )
           })}
         </Trace>
-        </div>
       )}
 
       {phase.k === "error" && (
@@ -217,20 +216,21 @@ export function AtsVersion({ cv, sourceText, onWorkingChange }: { cv: CV; /** te
 }
 
 /**
- * Porcentaje de la generación (ver `lib/cv/progress.ts`): el piso es lo completado (etapas terminadas ÷ 3) y dentro de la etapa actual
- * avanza suave hacia el techo de la siguiente sin alcanzarlo; nunca marca 100 % antes de terminar. La primera etapa (leer a fondo el CV) es la
- * lenta y no avisa cuánto lleva: tardó 160–220 s en las mediciones de A5 (`docs/BENCHMARKS.md`), así que ahí el avance es muy gradual.
+ * Porcentaje de CADA paso de la generación: el hecho marca 100 %, el pendiente 0 % y el actual avanza suave hacia 98 % sin alcanzarlo hasta
+ * que el servidor avisa que terminó (`lib/cv/progress.ts`). El primer paso (leer a fondo el CV) es el lento y no avisa cuánto lleva: tardó
+ * 160–220 s en las mediciones de A5 (`docs/BENCHMARKS.md`), así que su avance es muy gradual; es una aproximación, no una medición.
  */
-function AtsPercent({ stage }: { stage: number }) {
+function StepPercent({ state, slow }: { state: "done" | "running" | "pending"; slow: boolean }) {
   const [value, setValue] = useState(0)
   useEffect(() => {
-    const rate = stage === 0 ? 0.004 : 0.03
-    const t = setInterval(() => setValue((v) => nextProgress(v, stage, rate, ATS_STAGES.length)), 150)
+    if (state !== "running") return
+    const rate = slow ? 0.004 : 0.03
+    const t = setInterval(() => setValue((v) => nextProgress(v, 0, rate, 1)), 150)
     return () => clearInterval(t)
-  }, [stage])
-  const shown = Math.max(Math.floor(value), stageFloor(stage, ATS_STAGES.length))
+  }, [state, slow])
+  const shown = state === "done" ? 100 : state === "pending" ? 0 : Math.floor(value)
   return (
-    <span role="progressbar" aria-label="Avance de la versión ATS" aria-valuemin={0} aria-valuemax={100} aria-valuenow={shown} className="text-sm text-muted-foreground tabular-nums">
+    <span role="progressbar" aria-label="Avance del paso" aria-valuemin={0} aria-valuemax={100} aria-valuenow={shown}>
       {shown} %
     </span>
   )

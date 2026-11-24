@@ -34,7 +34,6 @@ export const MOTION = {
   loaderActive: 0.65,
   /** una deriva completa del aura ambiental, en segundos */
   drift: 16,
-  /** CV animado del panel «Mi CV»: un ciclo de escritura de las líneas, retardo entre líneas y un recorrido del barrido, en segundos */
 } as const
 
 export const TRANSITION_IN = { duration: MOTION.enter, ease: MOTION.ease }

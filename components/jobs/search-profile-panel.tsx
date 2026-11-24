@@ -122,38 +122,46 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
           <>
             {profile ? (
               <>
-                <AnimatePresence initial={false}>
-                  {!atsWorking && (
-                    <motion.div
-                      key="top"
-                      className="flex flex-col gap-6"
-                      exit={reduce ? { opacity: 0 } : { opacity: 0, y: -MOTION.offset, filter: `blur(${MOTION.blur}px)`, transition: TRANSITION_OUT }}
-                    >
-                      <Header className="flex flex-col gap-1 p-0 text-left">
-                        <Title>Mi CV</Title>
-                        <Description>Con él comparamos las ofertas y armamos tu versión ATS.</Description>
-                      </Header>
-                      <Attachment state="done" className="w-full">
-                        <AttachmentMedia>
-                          <FileTextIcon />
-                        </AttachmentMedia>
-                        <AttachmentContent>
-                          <AttachmentTitle>{profile.label}</AttachmentTitle>
-                          <AttachmentDescription>Arrastra otro archivo aquí para cambiarlo</AttachmentDescription>
-                        </AttachmentContent>
-                        <AttachmentActions>
-                          <Button variant="ghost" size="sm" onClick={() => input.current?.click()}>
-                            Cambiar CV
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={clearSearchProfile}>
-                            Quitar
-                          </Button>
-                        </AttachmentActions>
-                      </Attachment>
-                      <Separator />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {/* Mientras se genera la versión ATS, esta primera parte sube y se oculta; al terminar vuelve a su posición. Siempre montada para animar en los dos sentidos. */}
+                <motion.div
+                  className="overflow-hidden"
+                  aria-hidden={atsWorking}
+                  inert={atsWorking}
+                  initial={false}
+                  animate={atsWorking ? { height: 0, marginBottom: -24 } : { height: "auto", marginBottom: 0 }}
+                  transition={reduce ? { duration: 0 } : TRANSITION_IN}
+                >
+                  {/* El contenido sube entero (su propia altura) mientras se desvanece y desenfoca; el bloque de arriba colapsa y el resto sube con él. */}
+                  <motion.div
+                    className="flex flex-col gap-6"
+                    initial={false}
+                    animate={atsWorking ? { y: "-100%", opacity: 0, filter: `blur(${MOTION.blur}px)` } : { y: "0%", opacity: 1, filter: "blur(0px)" }}
+                    transition={reduce ? { duration: 0 } : TRANSITION_IN}
+                  >
+                  <Header className="flex flex-col gap-1 p-0 text-left">
+                    <Title>Mi CV</Title>
+                    <Description>Con él comparamos las ofertas y armamos tu versión ATS.</Description>
+                  </Header>
+                  <Attachment state="done" className="w-full">
+                    <AttachmentMedia>
+                      <FileTextIcon />
+                    </AttachmentMedia>
+                    <AttachmentContent>
+                      <AttachmentTitle>{profile.label}</AttachmentTitle>
+                      <AttachmentDescription>Arrastra otro archivo aquí para cambiarlo</AttachmentDescription>
+                    </AttachmentContent>
+                    <AttachmentActions>
+                      <Button variant="ghost" size="sm" onClick={() => input.current?.click()}>
+                        Cambiar CV
+                      </Button>
+                      <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={clearSearchProfile}>
+                        Quitar
+                      </Button>
+                    </AttachmentActions>
+                  </Attachment>
+                  <Separator />
+                  </motion.div>
+                </motion.div>
                 <AtsVersion key={profile.updatedAt} cv={profile.cv} sourceText={profile.sourceText} onWorkingChange={setAtsWorking} />
               </>
             ) : (

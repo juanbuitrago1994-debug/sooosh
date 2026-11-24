@@ -69,6 +69,16 @@ describe("panel «Mi CV» (panel lateral)", () => {
     expect(src).toContain("Suelta tu CV aquí")
     expect(src).toContain("Sube tu CV")
   })
+  it("al generar la versión ATS solo la primera parte (título, subtítulo y tarjeta del CV) sube y se oculta con motion; el resto no cambia, y cada paso lleva su porcentaje", () => {
+    const panelSrc = readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")
+    expect(panelSrc).toContain("atsWorking")
+    expect(panelSrc).toContain('y: "-100%"')
+    expect(panelSrc).toContain("inert={atsWorking}")
+    const atsSrc = readFileSync(path.join(__dirname, "..", "components/jobs/ats-version.tsx"), "utf8")
+    expect(atsSrc).toContain("<StepPercent")
+    // el bloque «Versión ATS» conserva su título y su descripción mientras se genera
+    expect(atsSrc).not.toMatch(/working \? "sr-only"/)
+  })
   it("se abre como panel lateral flotante, igual que «Postular por correo»", () => {
     const src = readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")
     expect(src).toContain('swipeDirection="right"')
