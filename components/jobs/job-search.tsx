@@ -11,7 +11,6 @@ import { DrumNumber } from "@/components/magic/digit-drum"
 import { BlurReveal } from "@/components/motion/blur-reveal"
 import { Rise } from "@/components/motion/rise"
 import { token } from "@/lib/design-tokens"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -251,7 +250,6 @@ export function JobSearch() {
             {cv ? <CheckIcon aria-hidden /> : <ArrowUpIcon aria-hidden />}
           </Button>
           <SourcesStatus />
-          <ThemeToggle />
         </div>
       </header>
 

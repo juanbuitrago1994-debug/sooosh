@@ -11,7 +11,6 @@ import { NewBadge } from "@/components/jobs/new-badge"
 import { Rise } from "@/components/motion/rise"
 import { Logo } from "@/components/brand/logo"
 import { PrivacyLink } from "@/components/privacy/privacy-dialog"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { ApplyEmailPanel } from "@/components/jobs/apply-email-panel"
@@ -136,7 +135,6 @@ export function JobDetail({ job }: { job: JobCard }) {
           <Button variant="ghost" size="icon" aria-label="Compartir esta oferta" onClick={() => void share()}>
             <LinkIcon aria-hidden />
           </Button>
-          <ThemeToggle />
         </div>
       </header>
 

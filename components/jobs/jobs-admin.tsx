@@ -11,7 +11,6 @@ import { BeamBadge } from "@/components/magic/beam-badge"
 import { BlurReveal } from "@/components/motion/blur-reveal"
 import { ResponsiveSheet } from "@/components/jobs/responsive-sheet"
 import { SourcesAdmin } from "@/components/jobs/sources-admin"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -229,7 +228,6 @@ export function JobsAdmin() {
         <Link href="/ofertas" className={buttonVariants({ variant: "ghost", size: "sm", className: "text-muted-foreground" })}>
           Volver a la app
         </Link>
-        <ThemeToggle />
       </div>
     </header>
   )

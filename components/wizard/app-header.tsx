@@ -4,7 +4,6 @@ import { useState } from "react"
 import Link from "next/link"
 import { BrainIcon, HistoryIcon, SearchIcon } from "lucide-react"
 import { Logo } from "@/components/brand/logo"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Button, buttonVariants } from "@/components/ui/button"
 
 export type HeaderActions = { historyCount: number; onLearning: () => void; onHistory: () => void }
@@ -29,7 +28,6 @@ export function AppHeader({ actions }: { actions: HeaderActions }) {
         <Button variant="ghost" size="icon" aria-label={actions.historyCount ? `Historial (${actions.historyCount})` : "Historial"} onClick={actions.onHistory}>
           <HistoryIcon aria-hidden />
         </Button>
-        <ThemeToggle />
       </div>
     </header>
   )
