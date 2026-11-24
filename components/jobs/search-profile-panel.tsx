@@ -186,7 +186,8 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
             animate={{ opacity: 1, y: 0, filter: "blur(0px)", transition: TRANSITION_IN }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: -MOTION.offset, filter: `blur(${MOTION.blur}px)`, transition: TRANSITION_OUT }}
           >
-            <Beam size="md" className="flex h-full w-full">
+            {/* Intensidad 3: con la de siempre (0,5 en oscuro) las capas del haz quedaban al 6–10 % de opacidad y no se veía; medido en el navegador, con 3 suben al 63 % y 39 %. */}
+            <Beam size="md" strength={3} className="flex h-full w-full">
               <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-foreground/40 text-center">
                 <UploadIcon className="size-6" />
                 <p className="text-sm font-medium">Suelta tu CV aquí</p>
