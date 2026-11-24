@@ -11,6 +11,7 @@ import { parseCvFileSafe } from "@/components/jobs/parse-cv-file"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from "@/components/ui/attachment"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
+import { Spinner } from "@/components/ui/spinner"
 import { Separator } from "@/components/ui/separator"
 import { nextProgress, stageFloor, stageIndex } from "@/lib/cv/progress"
 import { dragHasFiles, friendlyReadError, pickCvFile } from "@/lib/profile/cv-drop"
@@ -183,9 +184,11 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
             <FlowBeam className="rounded-2xl" />
             <div className="absolute inset-0 flex items-center justify-center p-4">
               {busy ? (
-                <div className="flex flex-col items-center gap-6">
-                  <ReadingProgress stage={stage} />
+                // Una sola línea, sutil, como el Spinner de shadcn: ícono que gira + frase que cambia + porcentaje; centrada en el panel.
+                <div role="status" aria-live="polite" className="flex items-center justify-center gap-2 text-sm">
+                  <Spinner aria-hidden role="presentation" />
                   <CenteredStatus messages={stage ? [stage] : READING} />
+                  <ReadingPercent stage={stage} />
                 </div>
               ) : (
                 <DropMessage title={<p className="text-sm font-medium">Suelta tu CV aquí</p>} description={<p className="text-sm text-muted-foreground">Un solo archivo</p>} />
@@ -232,14 +235,12 @@ function CenteredStatus({ messages }: { messages: string[] }) {
   }, [list.length])
   const text = list[i % list.length] ?? ""
   return (
-    <div role="status" aria-live="polite" className="relative flex h-6 items-center justify-center text-sm text-muted-foreground">
-      <span className="sr-only">{list[0]}</span>
+    <div className="relative flex h-6 items-center justify-center text-sm text-muted-foreground">
       {reduce ? (
-        <span aria-hidden>{text}</span>
+        <span>{text}</span>
       ) : (
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.span
-            aria-hidden
             key={text}
             className="whitespace-nowrap"
             initial={{ opacity: 0, y: MOTION.offset, filter: `blur(${MOTION.blur}px)` }}
@@ -254,13 +255,8 @@ function CenteredStatus({ messages }: { messages: string[] }) {
   )
 }
 
-/**
- * Avance de la lectura como anillo con el porcentaje al centro (ver `lib/cv/progress.ts`: sube con la etapa real y avanza suave dentro de ella;
- * nunca marca 100 % antes de terminar). Anillo SVG con tokens del tema: pista `muted`, avance `primary`.
- */
-// Círculo que empieza arriba y avanza en sentido horario (dos semiarcos), con longitud normalizada a 100 para que el avance sea el porcentaje.
-const RING = "M50 6 a44 44 0 1 1 0 88 a44 44 0 1 1 0 -88"
-function ReadingProgress({ stage }: { stage: string }) {
+/** Porcentaje de la lectura (ver `lib/cv/progress.ts`: sube con la etapa real y avanza suave dentro de ella; nunca marca 100 % antes de terminar). */
+function ReadingPercent({ stage }: { stage: string }) {
   const idx = stageIndex(stage)
   const [value, setValue] = useState(0)
   useEffect(() => {
@@ -269,21 +265,8 @@ function ReadingProgress({ stage }: { stage: string }) {
   }, [idx])
   const shown = Math.max(Math.floor(value), stageFloor(idx))
   return (
-    <div role="progressbar" aria-label="Avance de la lectura de tu CV" aria-valuemin={0} aria-valuemax={100} aria-valuenow={shown} className="relative grid size-24 place-items-center">
-      <svg viewBox="0 0 100 100" aria-hidden className="absolute inset-0 size-full">
-        <path d={RING} fill="none" strokeWidth="5" className="stroke-muted" />
-        <path
-          d={RING}
-          fill="none"
-          strokeWidth="5"
-          strokeLinecap="round"
-          pathLength={100}
-          strokeDasharray={100}
-          strokeDashoffset={100 - shown}
-          className="stroke-primary transition-all duration-300 motion-reduce:transition-none"
-        />
-      </svg>
-      <span className="text-base font-medium tabular-nums">{shown} %</span>
-    </div>
+    <span role="progressbar" aria-label="Avance de la lectura de tu CV" aria-valuemin={0} aria-valuemax={100} aria-valuenow={shown} className="text-muted-foreground tabular-nums">
+      {shown} %
+    </span>
   )
 }
