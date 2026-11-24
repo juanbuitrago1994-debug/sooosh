@@ -107,7 +107,7 @@ export function StepProfile({
         setData(next)
         onChange(next)
         // El primer CV que se lee pasa a ser el perfil de búsqueda; los siguientes (adaptaciones) no lo cambian salvo que la persona lo pida.
-        if (!getSearchProfile()) setSearchProfile(r.cv, f.id)
+        if (!getSearchProfile()) setSearchProfile(r.cv, f.id, r.sourceText)
         setPhase("review")
       } catch (e) {
         if ((e as Error).name === "AbortError") {
