@@ -1,6 +1,5 @@
 "use client"
 
-import { FileTextIcon } from "lucide-react"
 import { motion, useReducedMotion } from "motion/react"
 import { useAiWork } from "@/components/ai/ai-work"
 import { CvDropOverlay } from "@/components/cv/cv-drop-overlay"
@@ -10,7 +9,7 @@ import { useCvDropzone } from "@/components/dropzone"
 import { AppHeader, SkipLink, type HeaderActions } from "./app-header"
 import { Rise } from "@/components/motion/rise"
 import { Button } from "@/components/ui/button"
-import { MAX_UPLOAD_BYTES, formatBytes, type UploadedFile } from "@/lib/uploads"
+import type { UploadedFile } from "@/lib/uploads"
 import { MOTION, TRANSITION_IN, TRANSITION_OUT } from "@/lib/motion"
 import { STEPS } from "@/lib/steps"
 
@@ -62,7 +61,7 @@ export function EntryScreen({
           {/* Mientras se sube o se lee, solo el haz y el avance (igual que el panel «Mi CV»): el contador de pasos se oculta. */}
           {!busy && (
             <Rise>
-              <p className="text-xs text-muted-foreground" aria-label={`Paso 1 de ${STEPS.length}: ${STEPS[0].label}`}>
+              <p className="self-center text-xs text-muted-foreground" aria-label={`Paso 1 de ${STEPS.length}: ${STEPS[0].label}`}>
                 1 de {STEPS.length}
               </p>
             </Rise>
@@ -89,16 +88,11 @@ export function EntryScreen({
           ) : state.status === "uploading" ? (
             <h1 className="sr-only">Subiendo tu CV</h1>
           ) : (
-            <section className="flex flex-col gap-4">
-              <FileTextIcon className="size-6 text-muted-foreground/60" aria-hidden />
-              <div className="flex flex-col gap-1">
-                <h1 className="text-lg font-medium">{isDragActive ? "Suéltalo aquí" : "Suelta tu CV"}</h1>
-                <p className="text-xs text-muted-foreground">
-                  PDF, Word o imagen · máx. {formatBytes(MAX_UPLOAD_BYTES)} · se lee en tu equipo
-                </p>
-              </div>
+            // En reposo, el mismo mensaje que el panel «Mi CV» sin CV (ícono en cuadro, título, línea y formatos), centrado; al arrastrar cambia solo la frase.
+            <section className="flex flex-col items-center gap-4">
+              <DropMessage title={<h1 className="text-sm font-medium">Sube tu CV</h1>} description={<p className="text-sm text-muted-foreground">Arrastra el archivo o haz clic</p>} />
               {state.status === "error" && (
-                <p role="alert" className="text-sm text-destructive">
+                <p role="alert" className="text-center text-sm text-destructive">
                   {state.message}
                 </p>
               )}

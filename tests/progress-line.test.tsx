@@ -50,6 +50,12 @@ describe("pantalla inicial del CV: misma experiencia que el panel «Mi CV»", ()
     expect(entry).not.toMatch(/MatrixLoader|ThinkingTicker|patternForStep/)
     expect(entry).toContain('"Subiendo tu CV"')
   })
+  it("en reposo usa el mismo mensaje centrado e ícono en cuadro que el panel «Mi CV» sin CV (DropMessage), no el ícono suelto ni el texto largo de antes", () => {
+    expect(entry.match(/<DropMessage/g)).toHaveLength(2) // reposo + arrastrando
+    expect(entry).toContain("Sube tu CV")
+    expect(entry).toContain("Arrastra el archivo o haz clic")
+    expect(entry).not.toMatch(/FileTextIcon|se lee en tu equipo|MAX_UPLOAD_BYTES/)
+  })
   it("el porcentaje sigue la etapa real (-1 mientras sube) y solo se atenúa el contenido al arrastrar", () => {
     expect(entry).toContain('phase === "parsing" ? (work?.step ?? 0) : -1')
     expect(entry).toContain("dragging && !reduce")
