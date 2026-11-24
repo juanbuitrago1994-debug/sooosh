@@ -57,10 +57,10 @@ describe("perfil de búsqueda (el CV con el que se compara cada oferta)", () => 
     setSearchProfile(mk("Luis"), "b")
     expect(getSearchProfile()?.ats).toBeUndefined()
   })
-  it("texto del badge: sin versión → «Sin optimizar»; generada o validada → «Optimizado para ATS»; verificada sin validar → «ATS por revisar»", () => {
+  it("texto del badge: sin versión → «Sin optimizar»; generada o validada → «Optimizado para ATS»; verificada sin validar → «Con sugerencias para ATS»", () => {
     expect(atsBadgeLabel(undefined)).toEqual({ text: "Sin optimizar", optimized: false })
     expect(atsBadgeLabel({ at: "x" })).toEqual({ text: "Optimizado para ATS", optimized: true })
     expect(atsBadgeLabel({ at: "x", validated: true })).toEqual({ text: "Optimizado para ATS", optimized: true })
-    expect(atsBadgeLabel({ at: "x", validated: false })).toEqual({ text: "ATS por revisar", optimized: false })
+    expect(atsBadgeLabel({ at: "x", validated: false })).toEqual({ text: "Con sugerencias para ATS", optimized: false })
   })
 })

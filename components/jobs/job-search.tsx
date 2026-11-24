@@ -381,10 +381,10 @@ export function JobSearch() {
   )
 }
 
-/** Estado de la versión ATS del CV cargado: «Optimizado para ATS» (generada; validada si se verificó), «ATS por revisar» (se verificó y no llegó al umbral) o «Sin optimizar». */
+/** Estado de la versión ATS del CV cargado: «Optimizado para ATS» (generada; validada si se verificó), «Con sugerencias para ATS» (se verificó y no llegó al umbral) o «Sin optimizar». */
 export function atsBadgeLabel(status: { at: string; validated?: boolean } | undefined): { text: string; optimized: boolean } {
   if (!status) return { text: "Sin optimizar", optimized: false }
-  if (status.validated === false) return { text: "ATS por revisar", optimized: false }
+  if (status.validated === false) return { text: "Con sugerencias para ATS", optimized: false }
   return { text: "Optimizado para ATS", optimized: true }
 }
 
