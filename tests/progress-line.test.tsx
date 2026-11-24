@@ -89,9 +89,9 @@ describe("FlowBeam: fluido (animación en la GPU), con máscaras válidas y vuel
   it("la vuelta, la densidad y el ancho de la franja: valores por defecto del panel y propiedades para la ventana completa", () => {
     expect(src).toContain("const LAP = 5")
     expect(src).toMatch(/lap = LAP, density = 1/)
-    expect(src).toContain("const band = 28")
-    // hilo de 2 px (1,5 era fino y 3 muy grueso) y tonos fríos de baja saturación
-    expect(src).toContain("const LINE_PX = 2")
+    expect(src).toContain("const band = 14")
+    // hilo de 1 px y franja de 14 px (la mitad de 2 y 28) y tonos fríos de baja saturación
+    expect(src).toContain("const LINE_PX = 1")
   })
   it("la pantalla inicial usa el haz rápido y denso; el panel no cambia", () => {
     expect(readFileSync(path.join(__dirname, "..", "components/wizard/entry-screen.tsx"), "utf8")).toContain("beam={{ lap: 4, density: 0.6 }}")

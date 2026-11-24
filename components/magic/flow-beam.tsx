@@ -69,8 +69,8 @@ const LINE = (d: number) => arc(clamp1(d), 0.3 * d)
  * el hilo de 1 px (máscara de rectángulo) se cortaba en la curva. Ahora la franja es un trazo difuminado del rectángulo redondeado (cae parejo hacia adentro,
  * también en las curvas) y el hilo es un trazo de 1,5 px del mismo rectángulo.
  */
-/** Grosor del hilo del borde, en px (Juan: 1,5 era fino y 3 muy grueso; 2 el 24-nov-2026). */
-const LINE_PX = 2
+/** Grosor del hilo del borde, en px (Juan lo pidió a la mitad de 2 el 24-nov-2026). */
+const LINE_PX = 1
 type Box = { w: number; h: number; r: number }
 const svgMask = (svg: string) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
 const glowMask = ({ w, h, r }: Box, band: number) =>
@@ -98,7 +98,7 @@ export function FlowBeam({ className, lap = LAP, density = 1 }: { className?: st
   }
   const side = dims ? Math.ceil(Math.hypot(dims.w, dims.h)) + 2 : 0
   const arm = { position: "absolute", left: "50%", top: "50%", width: side, height: side, marginLeft: -side / 2, marginTop: -side / 2, willChange: "transform" } as const
-  const band = 28 // ancho fijo de la franja del resplandor (el de la versión anterior); la densidad solo sube la intensidad
+  const band = 14 // ancho fijo de la franja del resplandor (la mitad de los 28 px de antes, pedido el 24-nov-2026); la densidad solo sube la intensidad
   return (
     <div ref={box} aria-hidden data-flow-beam className={`pointer-events-none absolute inset-0 overflow-hidden ${className ?? ""}`} style={{ borderRadius: "inherit" }}>
       <style>{`@keyframes fb-turn { to { transform: rotate(360deg); } } [data-flow-beam] [data-fb-arm] { animation: fb-turn ${lap}s linear infinite; }`}</style>
