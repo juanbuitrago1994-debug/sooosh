@@ -55,6 +55,11 @@ describe("pantalla inicial del CV: misma experiencia que el panel «Mi CV»", ()
     expect(entry).toContain("Sube tu CV")
     expect(entry).toContain("Arrastra el archivo o haz clic")
     expect(entry).not.toMatch(/FileTextIcon|se lee en tu equipo|MAX_UPLOAD_BYTES/)
+    // sin el contador «1 de 5», y el cuadro del ícono es pequeño (36 px para un ícono de 16 px) en todos los lugares donde se usa
+    expect(entry).not.toMatch(/STEPS|\d de \$\{/)
+    const drop = readFileSync(path.join(__dirname, "..", "components/cv/drop-message.tsx"), "utf8")
+    expect(drop).toContain("size-9")
+    expect(drop).not.toContain("size-14")
   })
   it("el porcentaje sigue la etapa real (-1 mientras sube) y solo se atenúa el contenido al arrastrar", () => {
     expect(entry).toContain('phase === "parsing" ? (work?.step ?? 0) : -1')

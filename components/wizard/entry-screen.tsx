@@ -11,7 +11,6 @@ import { Rise } from "@/components/motion/rise"
 import { Button } from "@/components/ui/button"
 import type { UploadedFile } from "@/lib/uploads"
 import { MOTION, TRANSITION_IN, TRANSITION_OUT } from "@/lib/motion"
-import { STEPS } from "@/lib/steps"
 
 export type EntryActions = HeaderActions
 
@@ -58,15 +57,6 @@ export function EntryScreen({
           animate={dragging && !reduce ? { opacity: 0.4, filter: `blur(${MOTION.blur}px)` } : { opacity: 1, filter: "blur(0px)" }}
           transition={dragging ? TRANSITION_IN : TRANSITION_OUT}
         >
-          {/* Mientras se sube o se lee, solo el haz y el avance (igual que el panel «Mi CV»): el contador de pasos se oculta. */}
-          {!busy && (
-            <Rise>
-              <p className="self-center text-xs text-muted-foreground" aria-label={`Paso 1 de ${STEPS.length}: ${STEPS[0].label}`}>
-                1 de {STEPS.length}
-              </p>
-            </Rise>
-          )}
-
           {/* Cada estado (soltar, subiendo, leyendo, error) sube al aparecer: la clave lo vuelve a montar al cambiar de estado. */}
           <Rise key={phase === "upload" ? state.status : phase} step={1}>
           {phase === "parsing" ? (
