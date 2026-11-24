@@ -56,6 +56,7 @@ describe("panel «Mi CV» (panel lateral)", () => {
     expect(src).not.toContain("LoadingState")
     expect(src).toContain("(dragging || busy)")
     expect(src).toContain("CenteredStatus")
+    expect(src).toContain("ReadingProgress")
     expect(src).toMatch(/const READING = \["Leyendo tu CV", "Reconociendo tu experiencia", "Preparando el encaje"\]/)
     expect(src).not.toMatch(/READING[^\n]*(…|\.\.\.)/)
     // un solo haz para los dos momentos (arrastrar y leer)
