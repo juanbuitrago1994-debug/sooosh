@@ -158,7 +158,7 @@ function Shell() {
       <AppHeader actions={headerActions} />
 
       <main id="contenido" ref={mainRef} tabIndex={-1} className="flex-1 outline-none">
-        <div className="mx-auto w-full max-w-xl px-6 pt-4 pb-32">
+        <div className={`mx-auto w-full px-6 pt-4 pb-32 ${isProfile ? "max-w-4xl" : "max-w-xl"}`}>
           <p className="pb-6 text-xs text-muted-foreground" aria-label={`Paso ${step + 1} de ${STEPS.length}: ${STEPS[step].label}`}>
             {step + 1} de {STEPS.length} · {STEPS[step].label}
           </p>
@@ -175,7 +175,7 @@ function Shell() {
       </main>
 
       <footer className="fixed inset-x-0 bottom-0 z-10 bg-background/60 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-xl gap-2 px-6 py-4">
+        <div className={`mx-auto flex w-full gap-2 px-6 py-4 ${isProfile ? "max-w-4xl" : "max-w-xl"}`}>
           {step > 0 && (
             <Button variant="ghost" size="icon" onClick={() => goTo(step - 1)} aria-label="Paso anterior">
               <ArrowLeftIcon aria-hidden />

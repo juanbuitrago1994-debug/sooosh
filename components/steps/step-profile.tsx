@@ -1,7 +1,6 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { FileTextIcon, InfoIcon } from "lucide-react"
 import { toast } from "sonner"
 import { useAiWork } from "@/components/ai/ai-work"
 import { StepHeader } from "@/components/wizard/step-header"
@@ -9,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { EntryScreen, type EntryActions } from "@/components/wizard/entry-screen"
 import { CV_FORM_ID, CvForm } from "@/components/cv/cv-form"
-import { ProfileSummary } from "@/components/cv/profile-summary"
+import { ValidationFlow } from "@/components/cv/validation-flow"
 import { freezeSource, type Source } from "@/lib/cv/source"
 import { prefetchExtras } from "@/lib/ats/prefetch"
 import { getSearchProfile, refreshSearchProfile, setSearchProfile } from "@/lib/profile/search-profile"
@@ -143,19 +142,6 @@ export function StepProfile({
     fetch("/api/cv/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next.cv) }).catch(() => {})
   }
 
-  const answer = (id: NonNullable<Diagnosis["question"]>["id"], value: string) => {
-    if (!data?.diagnosis) return
-    const diagnosis: Diagnosis = { ...data.diagnosis, question: null }
-    if (id === "fullName") {
-      update({ ...data, cv: { ...data.cv, header: { ...data.cv.header, fullName: value } }, diagnosis: { ...diagnosis, confidence: { ...diagnosis.confidence, name: "alta" } } })
-    } else if (id === "language") {
-      update({ ...data, diagnosis: { ...diagnosis, language: value === "Inglés" ? "en" : "es", confidence: { ...diagnosis.confidence, language: "alta" } } })
-    } else {
-      update({ ...data, diagnosis })
-      if (value.startsWith("Sí")) setCorrecting(true)
-    }
-  }
-
   // En modo Entrada, al terminar la lectura el shell cambia de layout y vuelve a montar este paso en «review».
   if (entry) {
     if (phase === "review") return null
@@ -163,46 +149,17 @@ export function StepProfile({
   }
 
   const meta = data?.meta
+  const notes = [meta?.method.includes("ocr") && "Leído con OCR: el texto salió de una imagen y puede tener errores. Revisa bien los datos.", meta?.truncated && "CV muy largo: solo se leyó el inicio. Usa «Corregir» para agregar lo que falte."].filter((n): n is string => !!n)
   return (
-    <div className="flex flex-col gap-5">
-      <StepHeader title="Así leímos tu CV" description="Revisa que los datos principales estén bien. Corrige solo lo que esté mal." />
-      <div className="flex items-center gap-3">
-        <FileTextIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-        <p className="min-w-0 flex-1 text-xs text-muted-foreground">
-          <span className="block truncate text-sm font-medium text-foreground">{file?.name}</span>
-          {file && file.size > 0 ? `${file.type} · ${formatBytes(file.size)}` : "Reabierto desde el historial"}
-          {meta && ` · leído en ${Math.max(1, Math.round(meta.totalMs / 1000))} s`}
-        </p>
-        <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={reset}>
-          Cambiar
-        </Button>
-      </div>
-
-      {meta?.method.includes("ocr") && (
-        <p className="flex items-start gap-2 text-xs text-muted-foreground">
-          <InfoIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-          <span>Leído con OCR: el texto salió de una imagen y puede tener errores. Revisa bien los datos.</span>
-        </p>
-      )}
-      {meta?.truncated && (
-        <p className="flex items-start gap-2 text-xs text-muted-foreground">
-          <InfoIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-          <span>CV muy largo: solo se leyó el inicio. Usa «Corregir» para agregar lo que falte.</span>
-        </p>
-      )}
-
-      {data && data.diagnosis ? (
-        <ProfileSummary cv={data.cv} fileId={data.file.id} diagnosis={data.diagnosis} sourceText={data.sourceText} onAnswer={answer} onCorrect={() => setCorrecting(true)} />
-      ) : (
-        data && (
-          <div className="flex flex-col gap-3">
-            <p className="text-lg font-medium">{data.cv.header.fullName}</p>
-            <p className="text-sm text-muted-foreground">Adaptación reabierta desde el historial.</p>
-            <Button variant="ghost" className="self-start" onClick={() => setCorrecting(true)}>
-              Corregir
-            </Button>
-          </div>
-        )
+    <div className="flex flex-col gap-8">
+      <StepHeader title="Validemos tu CV" description="Confirma cada dato que leímos. Con ellos armaremos tus CV para cada oferta." />
+      {data && (
+        <ValidationFlow
+          cv={data.cv}
+          file={{ name: file?.name ?? "CV", detail: `${file && file.size > 0 ? `${file.type} · ${formatBytes(file.size)}` : "Reabierto desde el historial"}${meta ? ` · leído en ${Math.max(1, Math.round(meta.totalMs / 1000))} s` : ""}`, notes }}
+          onChange={(cv) => update({ ...data, cv })}
+          onChangeFile={reset}
+        />
       )}
 
       <Dialog open={correcting} onOpenChange={setCorrecting}>
