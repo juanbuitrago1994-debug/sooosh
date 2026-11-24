@@ -10,11 +10,13 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Trace, TraceDescription, TraceIcon, TraceLine, TraceTitle } from "@/components/ui/trace"
 import { FileTextIcon } from "lucide-react"
-import { applyStage, contactParts, flatSkills, languagesText, roleSuggestions, VALIDATION_STAGES, type ValidationStage } from "@/lib/cv/validate"
+import { applyStage, contactParts, dropStage, entryLine, flatSkills, languagesText, removeEntry, roleSuggestions, stagesFor, type Stage, type StageKind } from "@/lib/cv/validate"
 import type { CV } from "@/lib/schemas/cv"
 
-const TITLES: Record<ValidationStage, string> = { name: "Nombre", role: "Rol", contact: "Contacto", summary: "Resumen", skills: "Habilidades", languages: "Idiomas" }
-const QUESTIONS: Record<ValidationStage, string> = {
+const TITLES: Record<StageKind, string> = { name: "Nombre", role: "Rol", contact: "Contacto", summary: "Resumen", experience: "Experiencia", education: "Educación", skills: "Habilidades", languages: "Idiomas" }
+const QUESTIONS: Record<StageKind, string> = {
+  experience: "Esta es una experiencia que leímos. ¿Es correcta?",
+  education: "Este es un estudio que leímos. ¿Es correcto?",
   name: "Identificamos este nombre. ¿Es correcto?",
   role: "Este es el rol con el que te presentas. ¿Es correcto?",
   contact: "Estos son tus datos de contacto. ¿Son correctos?",
@@ -23,12 +25,13 @@ const QUESTIONS: Record<ValidationStage, string> = {
   languages: "Estos son los idiomas que leímos. ¿Son correctos?",
 }
 
-const shown = (cv: CV, s: ValidationStage) => {
-  if (s === "name") return cv.header.fullName
-  if (s === "role") return cv.header.headline?.trim() || ""
-  if (s === "summary") return cv.summary?.trim() || ""
-  if (s === "skills") return flatSkills(cv).join(" · ")
-  if (s === "languages") return languagesText(cv)
+const shown = (cv: CV, s: Stage) => {
+  if (s.kind === "name") return cv.header.fullName
+  if (s.kind === "role") return cv.header.headline?.trim() || ""
+  if (s.kind === "summary") return cv.summary?.trim() || ""
+  if (s.kind === "skills") return flatSkills(cv).join(" · ")
+  if (s.kind === "languages") return languagesText(cv)
+  if (s.kind === "experience" || s.kind === "education") return entryLine(cv, s)
   return contactParts(cv).filter(Boolean).join(" · ")
 }
 
@@ -40,16 +43,23 @@ export type FileFacts = { name: string; detail: string; notes: string[] }
  * se puede escoger entre los cargos que ya trae el CV. Nunca se inventa un dato.
  */
 export function ValidationFlow({ cv, file, onChange, onChangeFile, validated = false, onValidated }: { cv: CV; file: FileFacts; onChange: (cv: CV) => void; onChangeFile: () => void; /** ya se validó todo (al volver a este paso) */ validated?: boolean; /** avisa cuando se validan todas las etapas */ onValidated?: (all: boolean) => void }) {
-  const [done, setDone] = useState<ValidationStage[]>(validated ? [...VALIDATION_STAGES] : [])
+  // Las etapas se arman una vez con el CV leído (una por experiencia y por estudio); `step` es la actual y las anteriores ya se confirmaron.
+  const [stages, setStages] = useState<Stage[]>(() => stagesFor(cv))
+  const [step, setStep] = useState(validated ? Infinity : 0)
   const [editing, setEditing] = useState(false)
-  const current = VALIDATION_STAGES.find((s) => !done.includes(s))
-
-  const all = done.length === VALIDATION_STAGES.length
+  const all = step >= stages.length
+  const current = all ? null : stages[step]
   useEffect(() => onValidated?.(all), [all, onValidated])
 
-  const confirm = (s: ValidationStage) => {
+  const confirm = () => {
     setEditing(false)
-    setDone((d) => [...d, s])
+    setStep((n) => n + 1)
+  }
+  /** La persona dice que esa experiencia o estudio no va: se quita del CV y la etapa desaparece. */
+  const remove = (at: number) => {
+    onChange(removeEntry(cv, stages[at]))
+    setStages((l) => dropStage(l, at))
+    setEditing(false)
   }
 
   return (
@@ -78,38 +88,45 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, validated = f
       </section>
 
       <section aria-label="Validación de tus datos" className="flex flex-col gap-6">
-        {VALIDATION_STAGES.map((s) => {
-          const isDone = done.includes(s)
-          const isCurrent = s === current
+        {stages.map((s, at) => {
+          const isDone = at < step
+          const isCurrent = at === step
           return (
-            <div key={s} className="flex flex-col gap-3">
+            <div key={`${s.kind}-${s.idx ?? ""}-${at}`} className="flex flex-col gap-3">
               <Trace>
                 <TraceLine status={isCurrent ? undefined : isDone ? undefined : "pending"} aria-current={isCurrent ? "step" : undefined}>
                   <TraceIcon>{isDone ? <CheckIcon /> : <CircleIcon />}</TraceIcon>
-                  <TraceTitle>{TITLES[s]}</TraceTitle>
+                  <TraceTitle>{s.kind === "experience" || s.kind === "education" ? `${TITLES[s.kind]} ${(s.idx ?? 0) + 1}` : TITLES[s.kind]}</TraceTitle>
                   {isDone && <TraceDescription>{shown(cv, s) || "Sin dato"}</TraceDescription>}
                 </TraceLine>
               </Trace>
               {isCurrent && (
                 <div className="flex flex-col gap-3 pl-6">
-                  <p className="text-sm text-muted-foreground">{QUESTIONS[s]}</p>
+                  <p className="text-sm text-muted-foreground">{QUESTIONS[s.kind]}</p>
                   {!editing ? (
                     <>
                       <p className="text-base font-medium break-words">{shown(cv, s) || "No encontramos este dato"}</p>
+                      {s.kind === "experience" && s.idx != null && cv.experience[s.idx]?.bullets.length > 0 && (
+                        <ul className="flex list-disc flex-col gap-1 pl-4 text-sm text-muted-foreground" aria-label="Lo que dice tu CV de esta experiencia">
+                          {cv.experience[s.idx].bullets.map((b) => (
+                            <li key={b}>{b}</li>
+                          ))}
+                        </ul>
+                      )}
                       <div className="flex flex-wrap gap-2">
-                        {shown(cv, s) && <Button onClick={() => confirm(s)}>Es correcto</Button>}
+                        {shown(cv, s) && <Button onClick={confirm}>Es correcto</Button>}
                         <Button variant="outline" onClick={() => setEditing(true)}>
                           {shown(cv, s) ? "No es correcto" : "Agregar"}
                         </Button>
                         {!shown(cv, s) && (
-                          <Button variant="ghost" className="text-muted-foreground" onClick={() => confirm(s)}>
+                          <Button variant="ghost" className="text-muted-foreground" onClick={confirm}>
                             Omitir
                           </Button>
                         )}
                       </div>
                     </>
                   ) : (
-                    <StageEditor stage={s} cv={cv} onSave={(next) => { onChange(next); confirm(s) }} onCancel={() => setEditing(false)} />
+                    <StageEditor stage={s} cv={cv} onSave={(next) => { onChange(next); confirm() }} onCancel={() => setEditing(false)} onRemove={s.idx != null ? () => remove(at) : undefined} />
                   )}
                 </div>
               )}
@@ -122,7 +139,12 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, validated = f
   )
 }
 
-function StageEditor({ stage, cv, onSave, onCancel }: { stage: ValidationStage; cv: CV; onSave: (cv: CV) => void; onCancel: () => void }) {
+function StageEditor({ stage: st, cv, onSave, onCancel, onRemove }: { stage: Stage; cv: CV; onSave: (cv: CV) => void; onCancel: () => void; onRemove?: () => void }) {
+  const stage = st.kind
+  const exp = stage === "experience" && st.idx != null ? cv.experience[st.idx] : undefined
+  const edu = stage === "education" && st.idx != null ? cv.education[st.idx] : undefined
+  const [e, setE] = useState({ role: exp?.role ?? "", company: exp?.company ?? "", location: exp?.location ?? "", startDate: exp?.startDate ?? "", endDate: exp?.endDate ?? "", bullets: (exp?.bullets ?? []).join("\n") })
+  const [d, setD] = useState({ institution: edu?.institution ?? "", degree: edu?.degree ?? "", field: edu?.field ?? "", startDate: edu?.startDate ?? "", endDate: edu?.endDate ?? "" })
   const [name, setName] = useState(cv.header.fullName)
   const [role, setRole] = useState(cv.header.headline ?? "")
   const [email, setEmail] = useState(cv.header.email ?? "")
@@ -136,14 +158,14 @@ function StageEditor({ stage, cv, onSave, onCancel }: { stage: ValidationStage; 
   const options = roleSuggestions(cv)
   /** lo que está escrito y aún no se agregó con «+» también cuenta al guardar */
   const pendingSkills = () => (newSkill.trim() ? [...skills, newSkill.trim()] : skills)
-  const valid = stage === "name" ? name.trim().length > 0 : true
+  const valid = stage === "name" ? name.trim().length > 0 : stage === "experience" ? !!e.role.trim() && !!e.company.trim() : stage === "education" ? !!d.institution.trim() : true
 
   return (
     <form
       className="flex flex-col gap-3"
-      onSubmit={(e) => {
-        e.preventDefault()
-        if (valid) onSave(applyStage(cv, stage, { name, role, email, phone, location, summary, skills: pendingSkills(), languages: langs }))
+      onSubmit={(ev) => {
+        ev.preventDefault()
+        if (valid) onSave(applyStage(cv, st, { experience: { ...e, bullets: e.bullets.split("\n") }, education: d, name, role, email, phone, location, summary, skills: pendingSkills(), languages: langs }))
       }}
     >
       {stage === "name" && (
@@ -190,6 +212,62 @@ function StageEditor({ stage, cv, onSave, onCancel }: { stage: ValidationStage; 
             <FieldLabel htmlFor="v-loc">Ciudad y país</FieldLabel>
             <Input id="v-loc" value={location} onChange={(e) => setLocation(e.target.value)} autoComplete="address-level2" />
           </Field>
+        </>
+      )}
+      {stage === "experience" && (
+        <>
+          <Field>
+            <FieldLabel htmlFor="v-erole">Cargo</FieldLabel>
+            <Input id="v-erole" value={e.role} onChange={(x) => setE({ ...e, role: x.target.value })} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="v-eco">Empresa</FieldLabel>
+            <Input id="v-eco" value={e.company} onChange={(x) => setE({ ...e, company: x.target.value })} />
+          </Field>
+          <div className="grid grid-cols-2 gap-2">
+            <Field>
+              <FieldLabel htmlFor="v-es">Desde</FieldLabel>
+              <Input id="v-es" value={e.startDate} onChange={(x) => setE({ ...e, startDate: x.target.value })} />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="v-ee">Hasta</FieldLabel>
+              <Input id="v-ee" value={e.endDate} onChange={(x) => setE({ ...e, endDate: x.target.value })} />
+            </Field>
+          </div>
+          <Field>
+            <FieldLabel htmlFor="v-el">Ciudad</FieldLabel>
+            <Input id="v-el" value={e.location} onChange={(x) => setE({ ...e, location: x.target.value })} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="v-eb">Logros (uno por línea)</FieldLabel>
+            <Textarea id="v-eb" rows={5} value={e.bullets} onChange={(x) => setE({ ...e, bullets: x.target.value })} />
+          </Field>
+        </>
+      )}
+      {stage === "education" && (
+        <>
+          <Field>
+            <FieldLabel htmlFor="v-di">Institución</FieldLabel>
+            <Input id="v-di" value={d.institution} onChange={(x) => setD({ ...d, institution: x.target.value })} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="v-dd">Título</FieldLabel>
+            <Input id="v-dd" value={d.degree} onChange={(x) => setD({ ...d, degree: x.target.value })} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="v-df">Área</FieldLabel>
+            <Input id="v-df" value={d.field} onChange={(x) => setD({ ...d, field: x.target.value })} />
+          </Field>
+          <div className="grid grid-cols-2 gap-2">
+            <Field>
+              <FieldLabel htmlFor="v-ds">Desde</FieldLabel>
+              <Input id="v-ds" value={d.startDate} onChange={(x) => setD({ ...d, startDate: x.target.value })} />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="v-de">Hasta</FieldLabel>
+              <Input id="v-de" value={d.endDate} onChange={(x) => setD({ ...d, endDate: x.target.value })} />
+            </Field>
+          </div>
         </>
       )}
       {stage === "summary" && (
@@ -257,6 +335,11 @@ function StageEditor({ stage, cv, onSave, onCancel }: { stage: ValidationStage; 
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancelar
         </Button>
+        {onRemove && (
+          <Button type="button" variant="ghost" className="ml-auto text-muted-foreground" onClick={onRemove}>
+            Quitar del CV
+          </Button>
+        )}
       </div>
     </form>
   )

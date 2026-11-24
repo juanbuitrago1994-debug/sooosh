@@ -1241,3 +1241,9 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - **«Continuar» queda bloqueado hasta validar todas las etapas** (`validated` en `wizard.tsx`; se reinicia al subir otro CV o cambiarlo; una adaptación reabierta del historial cuenta como validada).
 - Verificado: lint, `tsc`, `build`, `pnpm test` (95 archivos, 922 pruebas) y, subiendo un CV real (txt) en tu servidor: «Continuar» bloqueado al inicio y antes de la última etapa, habilitado al terminar.
 - Falta F3: cada experiencia y cada estudio, con botones de IA.
+
+### Validación del CV, fase F3 (24-nov-2026)
+- **Una etapa por cada experiencia y cada estudio** (además de Nombre, Rol, Contacto, Resumen, Habilidades e Idiomas): se muestra la línea (cargo · empresa · fechas; título · institución · fechas) y, en la experiencia, los logros que dice el CV. «Es correcto» la confirma; «No es correcto» abre cargo, empresa, fechas, ciudad y logros (uno por línea) o título, institución, área y fechas. **«Quitar del CV»** elimina esa entrada (las etapas siguientes se renumeran). Lo que se corrige o quita es la base con la que se generan los CV por oferta.
+- Sin botones de IA en estas etapas, a propósito: una experiencia o un estudio son hechos del usuario y cualquier propuesta generada sería invención (regla «nunca inventar datos del CV»). El único asistente es «Sugerir desde mi CV» del rol (cargos ya escritos en el CV).
+- Verificado: lint, `tsc`, `build`, `pnpm test` (95 archivos, 923 pruebas) y, subiendo un CV real con 3 experiencias y 1 estudio: 4 etapas de entradas, corregir un cargo, quitar una experiencia, «Continuar» bloqueado hasta el final.
+- **Para revisar por Juan**: paso 1 completo en 1280 y 375 px (oscuro): una experiencia con muchos logros, el editor de experiencia y el de estudio, y el bloqueo de «Continuar».
