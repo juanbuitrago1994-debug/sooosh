@@ -32,8 +32,8 @@ describe("panel «Mi CV» (panel lateral)", () => {
   it("sin CV: solo el recuadro de subida (Attachment idle) que invita a hacer clic o soltar; no ofrece la versión ATS", async () => {
     const html = await panel(null)
     expect(html).toContain('data-state="idle"')
-    expect(html).toContain("Sube tu CV")
-    expect(html).toContain("Haz clic o suéltalo aquí")
+    expect(html).toContain("Haz clic o suelta tu CV aquí")
+    expect(html).toContain("flex-1 flex-col")
     expect(html).not.toContain("Generar versión ATS")
     expect(html).not.toContain("Cambiar CV")
     // la zona de soltar no se muestra hasta que se arrastra un archivo

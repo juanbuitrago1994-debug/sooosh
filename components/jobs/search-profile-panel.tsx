@@ -118,13 +118,12 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
           </div>
         ) : (
           <>
-            <Header className="flex flex-col gap-1 p-0 text-left">
-              <Title>Mi CV</Title>
-              <Description>Con él comparamos cada oferta y armamos tu versión ATS. Se lee en tu equipo.</Description>
-            </Header>
-
             {profile ? (
               <>
+                <Header className="flex flex-col gap-1 p-0 text-left">
+                  <Title>Mi CV</Title>
+                  <Description>Con él comparamos cada oferta y armamos tu versión ATS. Se lee en tu equipo.</Description>
+                </Header>
                 <Attachment state="done" className="w-full">
                   <AttachmentMedia>
                     <FileTextIcon />
@@ -146,14 +145,19 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
                 <AtsVersion key={profile.updatedAt} cv={profile.cv} sourceText={profile.sourceText} />
               </>
             ) : (
-              <Attachment state="idle" className="w-full justify-center py-6">
+              // Sin CV: todo el panel es el recuadro de subida (clic en cualquier parte o soltar el archivo).
+              <Attachment state="idle" className="w-full flex-1 flex-col items-center justify-center gap-6 py-6 text-center">
                 <AttachmentTrigger aria-label="Subir mi CV" onClick={() => input.current?.click()} />
-                <AttachmentMedia>
+                <AttachmentMedia className="w-14">
                   <UploadIcon />
                 </AttachmentMedia>
-                <AttachmentContent>
-                  <AttachmentTitle>Sube tu CV</AttachmentTitle>
-                  <AttachmentDescription>Haz clic o suéltalo aquí · {ACCEPT_LABEL}</AttachmentDescription>
+                <Header className="flex flex-col items-center gap-2 p-0 text-center">
+                  <Title>Mi CV</Title>
+                  <Description>Con él comparamos cada oferta y armamos tu versión ATS. Se lee en tu equipo.</Description>
+                </Header>
+                <AttachmentContent className="flex-none">
+                  <AttachmentTitle>Haz clic o suelta tu CV aquí</AttachmentTitle>
+                  <AttachmentDescription className="whitespace-normal">{ACCEPT_LABEL}</AttachmentDescription>
                 </AttachmentContent>
               </Attachment>
             )}
