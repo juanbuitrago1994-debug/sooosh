@@ -129,7 +129,7 @@ export function ProfileSummary({
         {isSearchProfile ? (
           <p className="text-sm text-muted-foreground">Este es el CV con el que comparamos las ofertas del buscador.</p>
         ) : (
-          <Button variant="secondary" onClick={() => setSearchProfile(cv, fileId)}>
+          <Button variant="secondary" onClick={() => setSearchProfile(cv, fileId, sourceText)}>
             Usar este CV para buscar ofertas
           </Button>
         )}

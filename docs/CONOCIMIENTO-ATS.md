@@ -28,10 +28,10 @@ Un CV ATS es **un documento de texto real, de una sola columna, en orden cronol�
 |---|---|---|
 | C1 | **Archivo**: `[RIO]`/`[IND]` prefieren Word; `[ENH]` dice que PDF es lo más seguro. | Generamos **los dos**: PDF con texto real y DOCX. Nunca PDF de imagen. Se avisa que, si la oferta pide un formato, manda la oferta. |
 | C2 | **Fuente**: `[ENH]` admite Lato, Rubik, Volkhov; `[RIO]`/`[IND]` solo Arial, Calibri, Times New Roman. | Solo **Arial, Calibri o Times New Roman** (las que coinciden en 2 de 3). |
-| C3 | **Fechas**: `[ENH]` dice «Mes/Año» y sus ejemplos usan `06/2023`; `[IND]` y `[GOO]` usan «Mes Año». | **Mes en texto + año** («Mayo 2023 – Presente»). Un solo formato en todo el documento. |
+| C3 | **Fechas**: `[ENH]` dice «Mes/Año» y sus ejemplos usan `06/2023`; `[IND]` y `[GOO]` usan «Mes Año». | **`MM/AAAA`** («05/2023 – Presente»), ver C6 (resuelto en A5; antes era «Mes Año»). Un solo formato en todo el documento. |
 | C4 | **Foto y columnas**: `[ENH]` las tolera; el resto las prohíbe. | **Sin foto y sin columnas.** Regla conservadora. |
 | C5 | **Longitud**: solo `[RIO]` da cifra (1–2 páginas). | 1–2 páginas; se avisa si pasa de 2. |
-| C6 | **Formato de fecha**: `[IND]`, `[GOO]` y `[ENH]` (texto) usan mes en palabras («June 2019 – Current»); `[NOV]`, `[GOO]` (alternativa) y los ejemplos de `[ENH]` usan `MM/AAAA`; `[TOP]` solo pide coherencia (su ejemplo es «2022–2026»); `[WRK]` pide «un formato propio del país». **No hay unanimidad.** | Se mantiene **«Mes Año» en el idioma del CV** (3 fuentes, y es el de la plantilla de `[GOO]`). **Riesgo abierto**: todas las fuentes son de EE. UU./Reino Unido; ninguna prueba que un ATS lea bien «Marzo 2021» en español. El verificador exige **un solo formato**, y acepta cualquiera de los dos. |
+| C6 | **Formato de fecha**: `[IND]`, `[GOO]` y `[ENH]` (texto) usan mes en palabras («June 2019 – Current»); `[NOV]`, `[GOO]` (alternativa) y los ejemplos de `[ENH]` usan `MM/AAAA`; `[TOP]` solo pide coherencia (su ejemplo es «2022–2026»); `[WRK]` pide «un formato propio del país». **No hay unanimidad.** | **RESUELTO el 23-nov-2026 (decisión de Juan, con evidencia): `MM/AAAA`** (`03/2021 – Presente`). Prueba con el lector de Enhancv sobre un CV ficticio generado por nosotros: con «Marzo 2021 – Presente» **no leyó ninguna fecha**; con la misma plantilla y `03/2021 – Presente` **las leyó todas**. El formato numérico además no depende del idioma. Es 1 prueba con 1 lector (no probé «Mar 2021»). El verificador sigue exigiendo **un solo formato** y acepta cualquiera de los dos (así revisa también archivos ajenos). |
 | C7 | **Resumen con o sin encabezado**: `[NOV]` dice que el resumen «no necesita encabezado»; `[IND]`, `[GOO]`, `[TOP]`, `[ENH]` lo tratan como sección estándar. | Con encabezado («Resumen profesional»): 4 fuentes contra 1. |
 | C8 | **Orden de secciones**: `[NOV]` pone Habilidades antes de Educación (y dice que el orden no es obligatorio); `[IND]`, `[GOO]` y la plantilla de `[ENH]` ponen Educación antes. | Se genera Educación → Habilidades, pero **el verificador acepta ambos órdenes** (ATS-S5 pasa a peso bajo). |
 
@@ -84,13 +84,13 @@ Orden fijo de la plantilla `[SN]` apoyado en `[IND]`, `[ENH]` y `[GOO]`: **Conta
 ### 3.5 Experiencia, educación y habilidades
 | Id | Regla | Cómo se verifica | Peso | Conf. | Fuente |
 |---|---|---|---|---|---|
-| ATS-E1 | Cada puesto: `Cargo — Empresa, Ciudad, País | Mes Año – Mes Año`. | Cada bloque tiene cargo, empresa y fechas en el orden y separadores definidos. | A | Alta | IND, ENH, GOO |
-| ATS-E2 | **Un solo formato de fecha** en todo el documento: `Mes Año – Mes Año` o `Mes Año – Presente`. | Todas las fechas coinciden con el patrón; sin `06/2023` mezclado. | A | Media | IND, GOO, ENH (C3) |
+| ATS-E1 | Cada puesto: `Cargo — Empresa, Ciudad, País | MM/AAAA – MM/AAAA`. | Cada bloque tiene cargo, empresa y fechas en el orden y separadores definidos. | A | Alta | IND, ENH, GOO |
+| ATS-E2 | **Un solo formato de fecha** en todo el documento: `MM/AAAA – MM/AAAA` o `MM/AAAA – Presente`. | Todas las fechas coinciden con el patrón; sin «Mes Año» mezclado (el verificador acepta uno u otro, pero no los dos). | A | Media | IND, GOO, ENH (C3) |
 | ATS-E3 | Sin fechas con solo año ni huecos de formato; rango con guion largo `–`. | Patrón. | M | Baja | SN |
 | ATS-E4 | **Viñetas simples** (`•` o `–`), una idea por viñeta. | Caracteres de viñeta permitidos; sin símbolos decorativos ni flechas. | A | Media | ENH, IND |
 | ATS-E5 | Cada viñeta empieza con **verbo de acción** y **no pasa de ~25 palabras**. | Primer token en lista de verbos del idioma; conteo. | M | Baja | GOO, SN |
 | ATS-E6 | Entre 1 y 6 viñetas por puesto. | Conteo; aviso si hay más de 6. | B | Baja | NOV (3–4 el puesto actual, 1–3 los anteriores), ENH (4) |
-| ATS-E7 | **Educación**: `Título, campo — Institución | Mes Año` (rango `Mes Año – Mes Año` si el original trae inicio y fin). | Estructura de cada bloque. | M | Media | IND, GOO |
+| ATS-E7 | **Educación**: `Título, campo — Institución | MM/AAAA` (rango `MM/AAAA – MM/AAAA` si el original trae inicio y fin). | Estructura de cada bloque. | M | Media | IND, GOO |
 | ATS-E8 | **Habilidades** en texto plano, separadas por **comas** o viñetas, una lista por grupo (≤ 15 en total por grupo de 2–3), sin `|`, sin niveles ni barras. | Separador y ausencia de patrones de nivel («80 %», «★★★»). | A | Media | ENH, GOO, IND |
 | ATS-E9 | Siglas con su forma completa **al menos una vez** (p. ej. «Search Engine Optimization (SEO)»). | Si el CV original traía la forma completa, aparece. **No se inventa** una expansión que no esté en el original. | B | Media | RIO, IND, ENH |
 | ATS-E10 | **Cargos escritos completos**, sin abreviaturas como «Sr.», «Jr.», «Ssr.». | Lista de abreviaturas en cargos y titular. El generador las expande («Sr.» → «Senior», «Jr.» → «Junior», «Ssr.» → «Semi Senior») y lo avisa. | M | Media | NOV («spell job titles out in full»; Greenhouse cita «Sr. Account Exec»), WRK («títulos estándar sin adornos, solo abreviaturas comunes») |
@@ -129,12 +129,16 @@ Resumen profesional
 <2–4 líneas, solo con datos del CV>
 
 Experiencia laboral
-Cargo — Empresa, Ciudad, País | Mayo 2023 – Presente
+Cargo — Empresa, Ciudad, País | 05/2023 – Presente
+Descripción de la empresa (solo si el original la trae)
 • Verbo + tarea + resultado (solo si el original lo trae)
 • …
 
 Educación
-Título, campo — Institución | Mes Año
+Título, campo — Institución | MM/AAAA
+
+Certificaciones
+Curso o certificación — año (solo si el original los trae)
 
 Habilidades
 Habilidad 1, Habilidad 2, Herramienta 1, …
@@ -171,6 +175,17 @@ Habilidad 1, Habilidad 2, Herramienta 1, …
 - **Viñetas**: en A2 se conservan **tal como las escribió la persona** (solo se quitan símbolos de viñeta y espacios). El pulido con IA (verbo de acción, concisión) queda para después de ver qué reglas ATS-E5 fallan en A3; así no se arriesga reescribir logros sin necesidad.
 - **Resumen**: si el CV trae uno, se usa tal cual. Si no, Ollama propone 2–4 frases con datos cerrados y un verificador (cifras, fechas, nombres, siglas y términos técnicos); si falla, la sección se omite. **Límite conocido**: el verificador no detecta palabras comunes en minúscula que el CV no diga (en una muestra con el modelo real se coló «modelado»). Por eso el resumen generado se marca como «Propuesto por IA» en la interfaz (A4) para que la persona lo revise.
 
+## 9b. Decisiones de implementación (A5, 23-nov-2026): leer el CV a fondo
+Problema: con un PDF de diseño (columnas, OCR) el análisis general del CV deja puestos sin viñetas, vuelca párrafos o porcentajes en «Habilidades» y pierde certificaciones, voluntariado y proyectos. Resultado: una versión ATS pobre y puntajes bajos que no eran de formato.
+- **Segundo pase con la IA local sobre el TEXTO ORIGINAL** (`lib/ats/enrich.ts`). El modelo solo **localiza y copia**: devuelve fragmentos literales (viñetas, nota de la empresa, certificaciones, voluntariado, habilidades agrupadas, proyectos). El código descarta todo fragmento que no aparezca **tal cual** en el texto original (comparación sin tildes, mayúsculas ni signos, tolerante a líneas partidas por el OCR). Así no puede inventar ni reescribir.
+- **Solo rellena, nunca pisa**: viñetas solo en puestos que quedaron vacíos; habilidades solo si las actuales parecen rotas (ítems de más de 40 caracteres, más de 60 ítems o con «%»); proyectos solo si no había. Los porcentajes de dominio («Figma 100 %») se reducen al nombre de la herramienta, porque un porcentaje no es una habilidad escrita.
+- **Secciones nuevas**: Certificaciones (después de Educación) y Voluntariado (al final). El CV estructurado de la app no tiene dónde guardarlas; viven solo en la versión ATS.
+- **Fechas**: `MM/AAAA` (C6). Lo que **no trae fecha** (un curso sin año) ya no impide ordenar: queda al final y no genera aviso. Solo una fecha escrita pero ilegible («verano») hace que se respete el orden original, con un mensaje que lo explica.
+- **Resumen largo**: si el del CV pasa de 4 frases o 400 caracteres (ATS-S3) se cortan las últimas frases completas; no se reescribe nada y se avisa.
+- **Verificador**: compara contra el CV **con lo recuperado** y el contenido nuevo se rastrea hasta el texto original completo (ATS-I1/I2).
+- **Costo**: la lectura profunda es la parte lenta (una llamada larga a Ollama). Se hace **una vez por CV**: «Generar de nuevo» reutiliza lo recuperado. Medición en `docs/BENCHMARKS.md`.
+- **Límites**: el texto original se guarda en el navegador junto al perfil (hasta 40 000 caracteres); un CV subido antes de A5 no lo tiene y se genera sin lectura profunda hasta que se vuelva a subir. Un modelo pequeño puede omitir contenido (no inventarlo).
+
 ## 10. Auditoría de la plantilla contra las fuentes (23-nov-2026)
 Pedida por Juan: la plantilla no se decide por gusto sino por lo que dice la documentación. **Veredicto: la plantilla coincide con la de Google (`[GOO]`) y con Indeed en la estructura; ningún elemento va contra una fuente, salvo los puntos marcados «abierto».**
 
@@ -185,8 +200,8 @@ Pedida por Juan: la plantilla no se decide por gusto sino por lo que dice la doc
 | Resumen con encabezado | 4 a favor, NOV en contra (C7) | ✔ mayoría |
 | Orden Resumen → Experiencia → Educación → Habilidades | IND, GOO, ENH; NOV pone Habilidades antes (C8) | ✔ aceptable, orden no obligatorio |
 | Cronológico inverso | RIO, ENH, GOO, ADO, NOV, WRK («no funcional») | ✔ |
-| `Cargo — Empresa, Ciudad | Mes Año – Mes Año` | GOO usa **exactamente** este formato; IND usa `Cargo | Empresa | Ciudad | Fechas`; TOP, `Empresa | Cargo | Fechas`; todas piden coherencia | ✔ |
-| Fechas «Mes Año» + «Presente» | 3 a favor, `MM/AAAA` en NOV y ENH (C6) | ⚠ **abierto**: sin unanimidad ni evidencia en español |
+| `Cargo — Empresa, Ciudad | MM/AAAA – MM/AAAA` | GOO usa **exactamente** este orden (con mes en texto, ver C6); IND usa `Cargo | Empresa | Ciudad | Fechas`; TOP, `Empresa | Cargo | Fechas`; todas piden coherencia | ✔ |
+| Fechas «Mes Año» + «Presente» | 3 a favor, `MM/AAAA` en NOV y ENH (C6) | ✔ **resuelto** (A5): `MM/AAAA`, con evidencia de un lector real (C6) |
 | Viñetas «•» | TOP (ejemplo «•»), ENH («• o –») | ✔ |
 | Habilidades separadas por comas, por grupo | ENH («comas, no barras»), GOO; IND y NOV usan viñetas | ✔ |
 | Arial 10,5 pt | Arial en RIO, IND, GOO, ADO; 10–12 pt en IND, ADO, ENH; GOO 10,5–12; NOV ≥ 10 | ✔ |

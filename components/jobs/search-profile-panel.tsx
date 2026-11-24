@@ -38,7 +38,7 @@ export function SearchProfilePanel({ shell, onBusyChange }: { shell: SheetShell;
     setError("")
     try {
       const r = await parseCvFileSafe(file, setStage)
-      setSearchProfile(r.cv, r.fileId)
+      setSearchProfile(r.cv, r.fileId, r.sourceText)
       toast.success("CV listo: ya ves el encaje de cada oferta")
     } catch (e) {
       setError((e as Error).message)
@@ -85,7 +85,7 @@ export function SearchProfilePanel({ shell, onBusyChange }: { shell: SheetShell;
             </div>
           </div>
           <Separator />
-          <AtsVersion key={profile.updatedAt} cv={profile.cv} onMotion={setAtsMotion} />
+          <AtsVersion key={profile.updatedAt} cv={profile.cv} sourceText={profile.sourceText} onMotion={setAtsMotion} />
         </>
       ) : (
         <Button className="self-start" onClick={() => input.current?.click()}>

@@ -1,13 +1,16 @@
 import type { CV } from "@/lib/schemas/cv"
+import type { AtsExtras } from "./enrich"
 import type { VerifyView } from "./verify"
 
 /** Cliente de `/api/ats`: genera la versión ATS (con el avance real por etapas), la verifica y guarda los archivos. */
-export const ATS_STAGES = ["Ordenando secciones y fechas", "Redactando el resumen", "Armando el PDF y el Word"] as const
+export const ATS_STAGES = ["Leyendo a fondo tu CV y ordenando fechas", "Redactando el resumen", "Armando el PDF y el Word"] as const
 
 export type AtsBundle = {
   pdf: { blob: Blob; name: string; base64: string }
   docx: { blob: Blob; name: string; base64: string }
   pages: number
+  /** lo que la lectura profunda recuperó del texto original (se reenvía a verificar) */
+  extras: AtsExtras | null
   /** resumen que escribió la IA local (null si el CV ya traía uno o no se generó) */
   summary: string | null
   summaryFromCv: boolean
@@ -28,10 +31,10 @@ const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.doc
 
 const friendly = (m: string) => (/fetch|network|failed/i.test(m) ? "No se pudo conectar con el servidor. ¿Está la app corriendo?" : m)
 
-export async function generateAtsClient(cv: CV, onStage: (i: number) => void, signal?: AbortSignal): Promise<AtsBundle> {
+export async function generateAtsClient(cv: CV, sourceText: string | undefined, onStage: (i: number) => void, signal?: AbortSignal, priorExtras?: AtsExtras | null): Promise<AtsBundle> {
   let res: Response
   try {
-    res = await fetch("/api/ats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "generate", cv }), signal })
+    res = await fetch("/api/ats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "generate", cv, sourceText, extras: priorExtras ?? undefined }), signal })
   } catch (e) {
     throw new Error(friendly((e as Error).message))
   }
@@ -68,6 +71,7 @@ export async function generateAtsClient(cv: CV, onStage: (i: number) => void, si
     pdf: file(r.pdf, r.pdfName, PDF),
     docx: file(r.docx, r.docxName, DOCX),
     pages: Number(r.pages) || 1,
+    extras: r.extras && typeof r.extras === "object" ? (r.extras as AtsExtras) : null,
     summary: typeof r.summary === "string" ? r.summary : null,
     summaryFromCv: r.summaryFromCv === true,
     summaryReason: typeof r.summaryReason === "string" ? r.summaryReason : null,
@@ -75,10 +79,10 @@ export async function generateAtsClient(cv: CV, onStage: (i: number) => void, si
   }
 }
 
-export async function verifyAtsClient(cv: CV, bundle: AtsBundle, signal?: AbortSignal): Promise<VerifyView> {
+export async function verifyAtsClient(cv: CV, sourceText: string | undefined, bundle: AtsBundle, signal?: AbortSignal): Promise<VerifyView> {
   let res: Response
   try {
-    res = await fetch("/api/ats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "verify", cv, summary: bundle.summary ?? undefined, pdf: bundle.pdf.base64, docx: bundle.docx.base64 }), signal })
+    res = await fetch("/api/ats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "verify", cv, summary: bundle.summary ?? undefined, sourceText, extras: bundle.extras ?? undefined, pdf: bundle.pdf.base64, docx: bundle.docx.base64 }), signal })
   } catch (e) {
     throw new Error(friendly((e as Error).message))
   }

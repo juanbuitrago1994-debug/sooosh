@@ -3,8 +3,9 @@ import { fold } from "@/lib/keywords/normalize"
 import { ATS_LABELS, type AtsLang } from "./headings"
 
 /**
- * Fechas del CV ATS (reglas ATS-E2 y ATS-E3): un solo formato, «Mes Año – Mes Año» o «Mes Año – Presente», con el mes en el idioma del
- * documento. Nunca se inventa un mes: si el original solo trae el año, se deja el año y se avisa.
+ * Fechas del CV ATS (reglas ATS-E2 y ATS-E3): un solo formato numérico, «MM/AAAA – MM/AAAA» o «MM/AAAA – Presente». Decisión de Juan del
+ * 23-nov-2026, basada en una prueba con el lector de Enhancv: leyó «03/2021» y no leyó «Marzo 2021» (docs/CONOCIMIENTO-ATS.md, C6). El
+ * formato numérico además no depende del idioma. Nunca se inventa un mes: si el original solo trae el año, se deja el año y se avisa.
  */
 export const MONTH_NAMES: Record<AtsLang, string[]> = {
   es: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
@@ -48,12 +49,12 @@ export function formatDate(raw: string, lang: AtsLang): FormattedDate {
   const p = parseParts(s)
   if (!p) return { text: s, issue: "unparsed" }
   if (p.month == null) return { text: String(p.year), issue: "year-only" }
-  return { text: `${MONTH_NAMES[lang][p.month - 1]} ${p.year}` }
+  return { text: `${String(p.month).padStart(2, "0")}/${p.year}` }
 }
 
 export type FormattedRange = { text: string; issues: { raw: string; issue: DateIssue }[] }
 
-/** «Mayo 2023 – Presente». Sin fecha de fin, solo la de inicio; sin ninguna, vacío. */
+/** «05/2023 – Presente». Sin fecha de fin, solo la de inicio; sin ninguna, vacío. */
 export function formatRange(start: string | undefined, end: string | undefined, lang: AtsLang): FormattedRange {
   const parts = [start, end].map((x) => x?.trim()).filter((x): x is string => !!x)
   const done = parts.map((p) => ({ raw: p, ...formatDate(p, lang) }))

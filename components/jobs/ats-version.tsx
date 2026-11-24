@@ -25,9 +25,11 @@ type Phase =
 
 const pagesText = (n: number) => `${n} ${n === 1 ? "página" : "páginas"}`
 
-export function AtsVersion({ cv, onMotion }: { cv: CV; onMotion?: (s: CvMotionState) => void }) {
+export function AtsVersion({ cv, sourceText, onMotion }: { cv: CV; /** texto original del CV, para releerlo a fondo */ sourceText?: string; onMotion?: (s: CvMotionState) => void }) {
   const [phase, setPhase] = useState<Phase>({ k: "idle" })
   const abort = useRef<AbortController | null>(null)
+  // La lectura a fondo es la parte lenta: se hace una vez por CV y «Generar de nuevo» la reutiliza.
+  const extras = useRef<AtsBundle["extras"]>(null)
   const hasSummary = !!cv.summary?.trim()
 
   useEffect(() => () => abort.current?.abort(), [])
@@ -41,8 +43,9 @@ export function AtsVersion({ cv, onMotion }: { cv: CV; onMotion?: (s: CvMotionSt
     abort.current = ctl
     setPhase({ k: "working", stage: 0 })
     try {
-      const bundle = await generateAtsClient(cv, (i) => setPhase({ k: "working", stage: i }), ctl.signal)
+      const bundle = await generateAtsClient(cv, sourceText, (i) => setPhase({ k: "working", stage: i }), ctl.signal, extras.current)
       if (ctl.signal.aborted) return
+      extras.current = bundle.extras
       setPhase({ k: "ready", bundle })
     } catch (e) {
       if (!ctl.signal.aborted) setPhase({ k: "error", message: (e as Error).message })
@@ -54,7 +57,7 @@ export function AtsVersion({ cv, onMotion }: { cv: CV; onMotion?: (s: CvMotionSt
     abort.current = ctl
     setPhase({ k: "verifying", bundle })
     try {
-      const view = await verifyAtsClient(cv, bundle, ctl.signal)
+      const view = await verifyAtsClient(cv, sourceText, bundle, ctl.signal)
       if (!ctl.signal.aborted) setPhase({ k: "verified", bundle, view })
     } catch (e) {
       if (ctl.signal.aborted) return

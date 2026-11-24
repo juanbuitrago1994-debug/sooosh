@@ -273,3 +273,15 @@ Pregunta: ¿agregar al prompt la guía de `docs/CONOCIMIENTO-UX-CONTENT.md` mejo
 \* 2 de 18 marcados por un falso positivo del verificador («me permiten» contado como relleno); corregido antes de la corrida 2.
 
 **Lectura honesta**: (1) sin guía el modelo ya escribe casi limpio (0 exclamaciones, 0 emojis, 0 aperturas de relleno en 36 muestras), así que no hay margen que mejorar por reglas; (2) la **guía completa** costó ≈ 1,8 s de mediana, acortó los textos (36 palabras frente a 51: dos cayeron por debajo del mínimo de «medio») y **subió los rechazos**; (3) la **guía mínima** no cuesta tiempo ni longitud, pero tampoco mejora: 1 frase larga y 1 palabra con mayúscula no respaldada («Proyectos») en 18 muestras; (4) con 18 muestras por variante y un solo caso, diferencias de 1 o 2 muestras son ruido; (5) un caso de la guía completa tardó 49 s (probable recarga del modelo). **Decisión**: la guía va **apagada** en el prompt (opción `guide` de `suggestBodies`); se conserva el **verificador de estilo** (sin costo de tiempo), que sí descarta exclamaciones, emojis, aperturas y frases de relleno y gerundios de posterioridad. Quedan sin medir: calidad percibida por personas, otros casos de oferta, inglés y el efecto de ejemplos escritos con el tono real de Juan.
+
+## Versión ATS · lectura profunda del CV original (A5, 23-nov-2026)
+Medición propia, qwen2.5:7b-instruct local (Ollama), un CV real de 11 500 caracteres de texto OCR, 12 puestos, equipo de desarrollo de Juan. **Pocas muestras: no es un benchmark estadístico.**
+
+| Intento | Diseño | Tiempo | Resultado |
+|---|---|---|---|
+| 1 | La IA copia todo (viñetas incluidas) | 219 s | Contenido bueno, pero viñetas con tareas mezcladas; 3 páginas, 89 % |
+| 2 | Igual, pidiendo todos los puestos | 665 s | **Respuesta cortada por el límite de salida; sin datos** |
+| 3 | La IA da números de línea de las viñetas | 175 s | Puestos bien; **viñetas mal** (el modelo no acierta números de línea) |
+| 4 | La IA solo identifica puestos; el código lee viñetas por bloques | **162 s** | Puestos, fechas y 14 viñetas correctos; 3 páginas; 91 % |
+
+Lecciones: pedirle a un modelo de 7 B que reproduzca texto largo es lento y se corta; que cuente líneas es poco fiable; que **solo identifique** y deje el copiado al código es lo que funciona. La lectura se hace una vez por CV; «Generar de nuevo» la reutiliza. Los tiempos incluyen la carga del modelo y varían con la máquina.

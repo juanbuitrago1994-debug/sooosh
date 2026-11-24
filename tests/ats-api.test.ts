@@ -35,7 +35,7 @@ describe("POST /api/ats · validación de la solicitud", () => {
 describe("generar la versión ATS (cliente + ruta)", () => {
   it("con resumen propio: etapas 0 → 2, PDF y Word reales, nombres Nombre-Apellido-Cargo", async () => {
     const stages: number[] = []
-    const b = await generateAtsClient(withSummary, (i) => stages.push(i))
+    const b = await generateAtsClient(withSummary, undefined, (i) => stages.push(i))
     expect(stages).toEqual([0, 2])
     expect(b.pdf.name).toBe("Ana-Zapata-Nunez-Analista-de-datos.pdf")
     expect(b.docx.name).toBe("Ana-Zapata-Nunez-Analista-de-datos.docx")
@@ -49,7 +49,7 @@ describe("generar la versión ATS (cliente + ruta)", () => {
 
   it("sin resumen y sin Ollama: pasa por la etapa del resumen, no inventa nada y lo avisa", async () => {
     const stages: number[] = []
-    const b = await generateAtsClient(noSummary, (i) => stages.push(i))
+    const b = await generateAtsClient(noSummary, undefined, (i) => stages.push(i))
     expect(stages).toEqual([0, 1, 2])
     expect(b.summary).toBeNull()
     expect(b.summaryFromCv).toBe(false)
@@ -58,15 +58,15 @@ describe("generar la versión ATS (cliente + ruta)", () => {
 
   it("avisa cuando un cargo se escribió sin abreviatura", async () => {
     const cv = cvSchema.parse({ ...base, summary: "Analista con experiencia en reportes.", header: { ...base.header, headline: "Ssr. Analista de datos" } })
-    const b = await generateAtsClient(cv, () => {})
+    const b = await generateAtsClient(cv, undefined, () => {})
     expect(b.warnings.join(" ")).toMatch(/Ssr\..*Semi Senior/)
   }, 60_000)
 })
 
 describe("verificar la versión ATS (cliente + ruta)", () => {
   it("un CV generado por nosotros queda «Validado» (100 %), con grupos por tema y sin el detalle de las reglas", async () => {
-    const b = await generateAtsClient(withSummary, () => {})
-    const view = await verifyAtsClient(withSummary, b)
+    const b = await generateAtsClient(withSummary, undefined, () => {})
+    const view = await verifyAtsClient(withSummary, undefined, b)
     expect(view).toMatchObject({ percent: 100, label: "listo", validated: true })
     expect(view.groups.map((g) => g.label)).toEqual(["Archivo y estructura", "Tipografía y márgenes", "Secciones y orden", "Datos de contacto", "Experiencia y educación", "Contenido fiel a tu CV"])
     expect(view.groups.every((g) => g.status === "ok")).toBe(true)
@@ -78,15 +78,15 @@ describe("verificar la versión ATS (cliente + ruta)", () => {
 
   it("archivos de otro CV: no se valida y el grupo de contenido queda «por revisar»", async () => {
     const other = cvSchema.parse({ ...base, header: { ...base.header, fullName: "Luis Gómez" }, summary: "Analista con experiencia en reportes de ventas y consultas SQL. Trabaja con equipos comerciales." })
-    const b = await generateAtsClient(other, () => {})
-    const view = await verifyAtsClient(withSummary, b)
+    const b = await generateAtsClient(other, undefined, () => {})
+    const view = await verifyAtsClient(withSummary, undefined, b)
     expect(view.validated).toBe(false)
     expect(view.percent).toBeLessThanOrEqual(69)
     expect(view.groups.find((g) => g.group === "contenido")?.status).toBe("revisar")
   }, 90_000)
 
   it("archivos dañados: error claro en español, sin romper", async () => {
-    const b = await generateAtsClient(withSummary, () => {})
-    await expect(verifyAtsClient(withSummary, { ...b, docx: { ...b.docx, base64: Buffer.from("no es un word").toString("base64") } })).rejects.toThrow(/No se pudo verificar/)
+    const b = await generateAtsClient(withSummary, undefined, () => {})
+    await expect(verifyAtsClient(withSummary, undefined, { ...b, docx: { ...b.docx, base64: Buffer.from("no es un word").toString("base64") } })).rejects.toThrow(/No se pudo verificar/)
   }, 90_000)
 })

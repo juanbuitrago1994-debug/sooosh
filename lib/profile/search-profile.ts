@@ -15,6 +15,8 @@ export type SearchProfile = {
   label: string
   /** de qué archivo salió, para refrescarlo si se corrige ese mismo CV */
   fileId?: string
+  /** texto original del CV (para que la versión ATS lo relea a fondo); solo en este navegador */
+  sourceText?: string
   updatedAt: string
 }
 
@@ -35,7 +37,7 @@ export function getSearchProfile(): SearchProfile | null {
   try {
     const d = JSON.parse(raw ?? "null") as Partial<SearchProfile> | null
     const cv = cvSchema.safeParse(d?.cv)
-    if (d && cv.success) value = { cv: cv.data, label: typeof d.label === "string" ? d.label : profileLabel(cv.data), fileId: typeof d.fileId === "string" ? d.fileId : undefined, updatedAt: typeof d.updatedAt === "string" ? d.updatedAt : "" }
+    if (d && cv.success) value = { cv: cv.data, label: typeof d.label === "string" ? d.label : profileLabel(cv.data), fileId: typeof d.fileId === "string" ? d.fileId : undefined, sourceText: typeof d.sourceText === "string" ? d.sourceText : undefined, updatedAt: typeof d.updatedAt === "string" ? d.updatedAt : "" }
   } catch {
     value = null
   }
@@ -43,9 +45,12 @@ export function getSearchProfile(): SearchProfile | null {
   return value
 }
 
-export function setSearchProfile(cv: CV, fileId?: string): boolean {
+/** Tope del texto original que se guarda (suficiente para un CV largo y lejos del límite de localStorage). */
+const MAX_SOURCE_TEXT = 40_000
+
+export function setSearchProfile(cv: CV, fileId?: string, sourceText?: string): boolean {
   try {
-    const p: SearchProfile = { cv, label: profileLabel(cv), fileId, updatedAt: new Date().toISOString() }
+    const p: SearchProfile = { cv, label: profileLabel(cv), fileId, sourceText: sourceText ? sourceText.slice(0, MAX_SOURCE_TEXT) : undefined, updatedAt: new Date().toISOString() }
     localStorage.setItem(SEARCH_PROFILE_KEY, JSON.stringify(p))
     window.dispatchEvent(new Event(EVENT))
     return true
@@ -66,7 +71,7 @@ export function clearSearchProfile() {
 /** Si la persona corrige el CV que ya es su perfil de búsqueda, el perfil se actualiza; los CV adaptados nunca lo tocan. */
 export function refreshSearchProfile(cv: CV, fileId?: string) {
   const cur = getSearchProfile()
-  if (cur && fileId && cur.fileId === fileId) setSearchProfile(cv, fileId)
+  if (cur && fileId && cur.fileId === fileId) setSearchProfile(cv, fileId, cur.sourceText)
 }
 
 function subscribe(cb: () => void) {

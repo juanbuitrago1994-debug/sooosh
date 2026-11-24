@@ -14,7 +14,6 @@ import { generateAts } from "@/lib/ats/generate"
 import { ATS_HEADINGS, ATS_LABELS } from "@/lib/ats/headings"
 import { renderAtsHtml } from "@/lib/ats/html"
 import { detectLang } from "@/lib/ats/lang"
-import { MONTH_NAMES } from "@/lib/ats/dates"
 import { buildAtsDoc, cleanBullet, spellTitle } from "@/lib/ats/model"
 import { renderAtsPdf } from "@/lib/ats/pdf"
 import { MAX_CHARS, summaryFacts } from "@/lib/ats/summary"
@@ -61,11 +60,11 @@ describe("fechas ATS", () => {
     expect(parseParts("2018")).toEqual({ year: 2018, month: null })
     expect(parseParts("sin fecha")).toBeNull()
   })
-  it("«Mes Año» en el idioma del documento; «Actual» pasa a Presente/Present", () => {
-    expect(formatDate("03/2021", "es").text).toBe("Marzo 2021")
-    expect(formatDate("03/2021", "en").text).toBe("March 2021")
-    expect(formatRange("May 2023", "Actual", "es").text).toBe("Mayo 2023 – Presente")
-    expect(formatRange("Jan 2022", "present", "en").text).toBe("January 2022 – Present")
+  it("«MM/AAAA» sin importar cómo venga escrito; «Actual» pasa a Presente/Present", () => {
+    expect(formatDate("Marzo 2021", "es").text).toBe("03/2021")
+    expect(formatDate("03/2021", "en").text).toBe("03/2021")
+    expect(formatRange("May 2023", "Actual", "es").text).toBe("05/2023 – Presente")
+    expect(formatRange("Jan 2022", "present", "en").text).toBe("01/2022 – Present")
   })
   it("no inventa un mes: con solo el año deja el año y lo señala", () => {
     const r = formatRange("2018", "2021", "es")
@@ -74,7 +73,7 @@ describe("fechas ATS", () => {
     expect(formatDate("verano", "es")).toEqual({ text: "verano", issue: "unparsed" })
   })
   it("sin fin, solo el inicio; sin ninguna, vacío", () => {
-    expect(formatRange("Mar 2020", undefined, "es").text).toBe("Marzo 2020")
+    expect(formatRange("Mar 2020", undefined, "es").text).toBe("03/2020")
     expect(formatRange(undefined, undefined, "es").text).toBe("")
   })
   it("claves de orden: lo abierto es lo más reciente", () => {
@@ -111,7 +110,7 @@ describe("buildAtsDoc · estructura", () => {
   })
   it("experiencia en orden cronológico inverso aunque el original venga al revés", () => {
     const heads = doc.sections.find((s) => s.key === "experience")!.blocks.map((b) => (b.kind === "entry" ? b.head : ""))
-    expect(heads).toEqual(["Analista de Datos Senior — Initech, Lima | Marzo 2021 – Presente", "Analista Junior — Globex | 2018 – 2021"])
+    expect(heads).toEqual(["Analista de Datos Senior — Initech, Lima | 03/2021 – Presente", "Analista Junior — Globex | 2018 – 2021"])
   })
   it("educación: «Título, campo — Institución | fechas»", () => {
     expect(lines).toContain("Licenciatura, Estadística — Universidad Nacional | 2013 – 2017")
@@ -133,10 +132,10 @@ describe("buildAtsDoc · estructura", () => {
   it("avisa de las fechas con solo el año (no inventa el mes)", () => {
     expect(doc.warnings.filter((w) => w.code === "date-year-only").length).toBeGreaterThan(0)
   })
-  it("en inglés usa encabezados y fechas en inglés", () => {
+  it("en inglés usa encabezados en inglés y fechas numéricas", () => {
     const en = atsToText(buildAtsDoc(cvEn)).split("\n")
     expect(en).toContain("Work Experience")
-    expect(en).toContain("Senior Designer — Acme | January 2022 – Present")
+    expect(en).toContain("Senior Designer — Acme | 01/2022 – Present")
     expect(en).not.toContain("Professional Summary") // sin resumen en el original, no se inventa
   })
   it("si una fecha no se entiende, respeta el orden del original y avisa", () => {
@@ -163,7 +162,7 @@ describe("cargos sin abreviaturas (ATS-E10)", () => {
     const d = buildAtsDoc(cvSchema.parse({ ...cv, header: { ...cv.header, headline: "Ssr. Product designer" }, experience: [{ company: "Acme", role: "Sr. Designer", startDate: "Ene 2020", endDate: "Actual", bullets: [] }] }))
     const text = atsToText(d)
     expect(text).toContain("Semi Senior Product designer")
-    expect(text).toContain("Senior Designer — Acme | Enero 2020 – Presente")
+    expect(text).toContain("Senior Designer — Acme | 01/2020 – Presente")
     expect(text).not.toMatch(/\bSsr\b|\bSr\./)
     expect(d.warnings.filter((w) => w.code === "title-abbrev")).toHaveLength(2)
     expect(atsFileName(d, "pdf")).toBe("Ana-Zapata-Nunez-Semi-Senior-Product-designer.pdf")
@@ -178,7 +177,7 @@ describe("buildAtsDoc · nunca inventa datos del CV", () => {
         ...words(cvCorpus({ ...c, sectionOrder: undefined })),
         ...Object.values(ATS_HEADINGS[lang]).flatMap(words),
         ...Object.values(ATS_LABELS[lang]).flatMap(words),
-        ...MONTH_NAMES[lang].flatMap(words),
+        ...Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")),
       ])
       const extra = [...new Set(words(text))].filter((w) => !allowed.has(w))
       expect(extra).toEqual([])

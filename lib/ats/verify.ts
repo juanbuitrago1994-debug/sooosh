@@ -58,17 +58,17 @@ const fail = (detail: string, evidence?: string[]): Outcome => ({ status: "fail"
 const na = (detail: string): Outcome => ({ status: "na", detail })
 
 // ---- títulos de sección aceptados (nombres que usan las fuentes; docs/CONOCIMIENTO-ATS.md §4) ----
-type Key = "summary" | "experience" | "education" | "skills" | "languages" | "projects" | "certifications"
+type Key = "summary" | "experience" | "education" | "skills" | "languages" | "projects" | "certifications" | "volunteering"
 const SYN: Record<AtsLang, Record<Key, string[]>> = {
-  es: { summary: ["resumen profesional", "resumen", "perfil profesional"], experience: ["experiencia laboral", "experiencia profesional", "experiencia"], education: ["educacion", "formacion academica", "formacion"], skills: ["habilidades", "competencias"], languages: ["idiomas"], projects: ["proyectos"], certifications: ["certificaciones"] },
-  en: { summary: ["professional summary", "summary"], experience: ["work experience", "professional experience", "experience"], education: ["education"], skills: ["skills", "core skills"], languages: ["languages"], projects: ["projects"], certifications: ["certifications"] },
+  es: { summary: ["resumen profesional", "resumen", "perfil profesional"], experience: ["experiencia laboral", "experiencia profesional", "experiencia"], education: ["educacion", "formacion academica", "formacion"], skills: ["habilidades", "competencias"], languages: ["idiomas"], projects: ["proyectos"], certifications: ["certificaciones"], volunteering: ["voluntariado"] },
+  en: { summary: ["professional summary", "summary"], experience: ["work experience", "professional experience", "experience"], education: ["education"], skills: ["skills", "core skills"], languages: ["languages"], projects: ["projects"], certifications: ["certifications"], volunteering: ["volunteering", "volunteer experience"] },
 }
 function headingInfo(title: string): { key: Key; lang: AtsLang } | null {
   const t = fold(title).trim()
   for (const lang of ["es", "en"] as const) for (const [key, names] of Object.entries(SYN[lang]) as [Key, string[]][]) if (names.includes(t)) return { key, lang }
   return null
 }
-const RANK: Record<Key, number> = { summary: 0, experience: 1, education: 2, skills: 2, languages: 3, projects: 3, certifications: 3 }
+const RANK: Record<Key, number> = { summary: 0, experience: 1, education: 2, skills: 2, languages: 3, projects: 3, certifications: 3, volunteering: 3 }
 
 const BULLET_START = /^[•·▪▫■□◦‣⁃●○◆◇➢➤►▶*\-–—]\s/
 const isBullet = (l: Line) => (l.bullet != null ? true : BULLET_START.test(l.text))
@@ -94,7 +94,7 @@ const STOP = new Set("para como con los las del por una unos unas que sus este e
 const SENSITIVE = /(fecha de nacimiento|date of birth|estado civil|marital status|nacionalidad|nationality|c[eé]dula|documento de identidad|pasaporte|passport)/i
 const ALLOWED_FONTS = ["arial", "calibri", "timesnewroman", "helvetica", "liberationsans", "liberationserif", "arimo", "tinos"]
 
-export type VerifyInput = { file: Buffer; fileName: string; cv: CV; /** texto canónico esperado (`atsToText`), para comprobar que no se perdió nada ni se desordenó */ expectedText?: string }
+export type VerifyInput = { file: Buffer; fileName: string; cv: CV; /** texto canónico esperado (`atsToText`), para comprobar que no se perdió nada ni se desordenó */ expectedText?: string; /** texto original del CV: el contenido recuperado por la lectura profunda se rastrea hasta él */ source?: string }
 
 export async function verifyAtsFile(input: VerifyInput): Promise<AtsReport> {
   const ex = await extractFile(input.file)
@@ -382,10 +382,11 @@ export function verifyExtraction(ex: Extraction, input: VerifyInput): AtsReport 
 
   // ---------- contenido ----------
   R["ATS-I1"] = () => {
-    const extras = [...MONTH_NAMES.es, ...MONTH_NAMES.en, ATS_LABELS.es.present, ATS_LABELS.en.present, ATS_LABELS.es.technologies, ATS_LABELS.en.technologies, "Senior", "Junior", "Semi"].join(" ")
+    const extras = [...MONTH_NAMES.es, ...MONTH_NAMES.en, ...Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")), ATS_LABELS.es.present, ATS_LABELS.en.present, ATS_LABELS.es.technologies, ATS_LABELS.en.technologies, "Senior", "Junior", "Semi"].join(" ")
     const years = totalYears(cv.experience.map((e) => ({ start: e.startDate, end: e.endDate })))
-    const guard = `${cvCorpus({ ...cv, sectionOrder: undefined })}\n${extras}\n${years != null ? Math.floor(years) : ""}`
-    const text = bodyLines.map((l) => stripBullet(l.text)).join("\n")
+    const guard = `${cvCorpus({ ...cv, sectionOrder: undefined })}\n${input.source ?? ""}\n${extras}\n${years != null ? Math.floor(years) : ""}`
+    // «03/2021» es un formato de fecha nuestro: se comprueba el año; el mes numérico lo genera la plantilla.
+    const text = bodyLines.map((l) => stripBullet(l.text).replace(/\b(?:0[1-9]|1[0-2])\/((?:19|20)\d{2})\b/g, "$1")).join("\n")
     const v = verifyNoInvention(guard, text)
     return v.ok ? pass("Todo el contenido se rastrea al CV original.") : fail("Contenido que no está en el CV original.", v.violations.slice(0, 5).map((x) => x.value))
   }
