@@ -21,6 +21,7 @@ import { freezeSource, guardCorpus } from "@/lib/cv/source"
 import { addEntry, parseHistory, readRaw, type HistoryEntry } from "@/lib/history"
 import type { TailoredAts } from "@/lib/ats/client"
 import { saveAtsEntry } from "@/lib/ats/save-entry"
+import { NEW_OFFER_FLAG } from "@/components/history/cv-repository"
 import { lexicalCoverage } from "@/lib/match/engine"
 import { rebuildCv } from "@/lib/rebuild/build"
 import { STEPS } from "@/lib/steps"
@@ -156,13 +157,37 @@ function Shell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al cargar
   }, [])
 
+  /** Otra oferta con el MISMO CV validado: se vacían la oferta, el análisis y la revisión y se vuelve al paso de la oferta. */
+  const newOffer = () => {
+    setOffer(emptyOffer)
+    setMatch(null)
+    setReview(null)
+    goTo(1)
+  }
+
+  // Desde otras páginas («Nueva oferta» del repositorio enlaza a `/?nueva-oferta=1`): en cuanto el CV guardado está listo, se parte de la oferta.
+  useEffect(() => {
+    if (!hydrated || !profile) return
+    let flag = false
+    try {
+      flag = sessionStorage.getItem(NEW_OFFER_FLAG) === "1"
+      sessionStorage.removeItem(NEW_OFFER_FLAG)
+    } catch {
+      /* sin almacenamiento de sesión */
+    }
+    if (!flag && !new URLSearchParams(window.location.search).has("nueva-oferta")) return
+    window.history.replaceState(null, "", window.location.pathname)
+    window.setTimeout(newOffer, 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- una sola vez por CV cargado
+  }, [hydrated, !!profile])
+
   const next = () => {
     if (isLast) toast.success("¡Listo! Si ya descargaste tu PDF, revísalo antes de enviarlo.")
     else goTo(step + 1)
   }
 
   // Entrada (UI v2): sin tarjeta; la pantalla completa es el degradado y la zona de soltar.
-  const headerActions = { onLearning: () => setLearningOpen(true), onReopen: reopen }
+  const headerActions = { onLearning: () => setLearningOpen(true), onReopen: reopen, onNewOffer: newOffer }
   const entry = isProfile && phase !== "review"
   const dialogs = (
     <>
@@ -217,7 +242,12 @@ function Shell() {
               <ArrowLeftIcon aria-hidden />
             </Button>
           )}
-          <Button className="flex-1" variant={primaryFooter ? "default" : "outline"} onClick={next} disabled={!ready && !isLast}>
+          {isLast && (
+            <Button className="flex-1" onClick={newOffer}>
+              Nueva oferta
+            </Button>
+          )}
+          <Button className="flex-1" variant={isLast ? "outline" : primaryFooter ? "default" : "outline"} onClick={next} disabled={!ready && !isLast}>
             {isLast ? "Finalizar" : `Continuar a ${STEPS[step + 1].label}`}
           </Button>
         </div>

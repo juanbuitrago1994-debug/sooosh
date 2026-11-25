@@ -15,7 +15,7 @@ describe("marca Sooosh", () => {
     expect(readFileSync("components/brand/logo.tsx", "utf8")).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
   it("la cabecera dice «Sooosh» y ya no «CV Tailor»", () => {
-    const html = renderToStaticMarkup(<AppHeader actions={{ onLearning: () => {}, onReopen: () => {} }} />)
+    const html = renderToStaticMarkup(<AppHeader actions={{ onLearning: () => {}, onReopen: () => {}, onNewOffer: () => {} }} />)
     expect(html).toContain("Sooosh")
     expect(html).not.toContain("CV Tailor")
   })

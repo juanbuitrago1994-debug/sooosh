@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { DownloadIcon, FileStackIcon, RotateCcwIcon, Trash2Icon } from "lucide-react"
+import { DownloadIcon, FileStackIcon, PlusIcon, RotateCcwIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 import { useHistory } from "@/components/history/use-history"
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +20,9 @@ const dateFmt = new Intl.DateTimeFormat("es", { day: "numeric", month: "short", 
 
 /** Cuántas entradas caben sin scroll; con más, la lista tiene altura fija y se desplaza dentro del popover. */
 const VISIBLE_WITHOUT_SCROLL = 4
+
+/** Marca de «quiero una oferta nueva»: el enlace la deja en sessionStorage y el asistente la recoge (más fiable que leer la dirección durante la navegación). */
+export const NEW_OFFER_FLAG = "sooosh:nueva-oferta"
 
 /** Dirección para reabrir una adaptación desde cualquier página: el asistente la lee al cargar (`?reabrir=<id>`). */
 export const reopenHref = (id: string) => `/?reabrir=${encodeURIComponent(id)}`
@@ -118,7 +121,7 @@ export function CvRepositoryList({ entries, onReopen }: { entries: HistoryEntry[
  * descargarlo, reabrirlo o quitarlo. Los datos son el historial de adaptaciones: viven SOLO en este navegador (`lib/history.ts`; el CV es un dato
  * personal y no sale del equipo). `onReopen` (el asistente) reabre en el sitio; desde otras páginas se enlaza a `/?reabrir=<id>`.
  */
-export function CvRepository({ onReopen }: { onReopen?: (e: HistoryEntry) => void }) {
+export function CvRepository({ onReopen, onNewOffer }: { onReopen?: (e: HistoryEntry) => void; /** empezar con otra oferta en el asistente (si no se da, se enlaza a `/?nueva-oferta=1`) */ onNewOffer?: () => void }) {
   const entries = useHistory()
   const [open, setOpen] = useState(false)
   return (
@@ -131,6 +134,32 @@ export function CvRepository({ onReopen }: { onReopen?: (e: HistoryEntry) => voi
           <PopoverTitle>Tus CV por oferta</PopoverTitle>
           <PopoverDescription className="text-xs">Uno por cada oferta. Se guardan solo en este navegador.</PopoverDescription>
         </PopoverHeader>
+        {onNewOffer ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="self-start"
+            onClick={() => {
+              setOpen(false)
+              onNewOffer()
+            }}
+          >
+            <PlusIcon data-icon="inline-start" /> Nueva oferta
+          </Button>
+        ) : (
+          <Link
+            href="/?nueva-oferta=1"
+            onClick={() => {
+              try {
+                sessionStorage.setItem(NEW_OFFER_FLAG, "1")
+              } catch {
+                /* la dirección ya lleva la marca */
+              }
+            }}
+            className={buttonVariants({ variant: "outline", size: "sm", className: "self-start" })}>
+            <PlusIcon data-icon="inline-start" /> Nueva oferta
+          </Link>
+        )}
         <CvRepositoryList
           entries={entries}
           onReopen={

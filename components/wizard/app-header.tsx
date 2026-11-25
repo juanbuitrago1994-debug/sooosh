@@ -8,7 +8,7 @@ import { CvRepository } from "@/components/history/cv-repository"
 import { Button, buttonVariants } from "@/components/ui/button"
 import type { HistoryEntry } from "@/lib/history"
 
-export type HeaderActions = { onLearning: () => void; /** reabrir una adaptación guardada (desde el repositorio de CV por oferta) */ onReopen: (e: HistoryEntry) => void }
+export type HeaderActions = { onLearning: () => void; /** reabrir una adaptación guardada (desde el repositorio de CV por oferta) */ onReopen: (e: HistoryEntry) => void; /** empezar con una oferta nueva (con el mismo CV validado) */ onNewOffer: () => void }
 
 /** Cabecera mínima de la UI v2: marca pequeña a la izquierda, íconos fantasma a la derecha. Sin caja ni borde. */
 export function AppHeader({ actions }: { actions: HeaderActions }) {
@@ -27,7 +27,7 @@ export function AppHeader({ actions }: { actions: HeaderActions }) {
         <Button variant="ghost" size="icon" aria-label="Lo que he aprendido" onClick={actions.onLearning}>
           <BrainIcon aria-hidden />
         </Button>
-        <CvRepository onReopen={actions.onReopen} />
+        <CvRepository onReopen={actions.onReopen} onNewOffer={actions.onNewOffer} />
       </div>
     </header>
   )

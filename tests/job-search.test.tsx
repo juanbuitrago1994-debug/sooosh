@@ -136,7 +136,7 @@ describe("vector de la oferta", () => {
 
 describe("cabecera", () => {
   it("tiene el acceso «Buscar ofertas» hacia /ofertas", () => {
-    const html = renderToStaticMarkup(<AppHeader actions={{ onLearning: () => {}, onReopen: () => {} }} />)
+    const html = renderToStaticMarkup(<AppHeader actions={{ onLearning: () => {}, onReopen: () => {}, onNewOffer: () => {} }} />)
     expect(html).toContain('aria-label="Buscar ofertas"')
     expect(html).toContain('href="/ofertas"')
   })
