@@ -1362,3 +1362,7 @@ Mismo CV y misma oferta (832 caracteres). Antes → después de `tidyOffer`:
 - **CV ATS** (11 s): 100 % de formato, 1 página, nombre de archivo sin la empresa falsa. En esta pasada la IA no propuso resumen que pasara la verificación y se conservó el validado (comportamiento esperado).
 - `LOGIC_VERSION` 5 → 6 (invalida la caché de ofertas).
 - **Pendiente, en código con cambios sin confirmar de Juan (`lib/analysis/*`, no se tocó)**: el requisito «3 o más años de experiencia diseñando productos digitales» sigue apareciendo en «No está en tu CV» aunque la dimensión de años salga «Fuerte»: la lista debería tratarlo como cubierto cuando los años del CV alcanzan el mínimo. Y el encaje no sube con los cambios de bajo riesgo (52 → 52): reformulan sin añadir nada medible; el valor está en lo que la persona confirma que sí tiene (comunicación, trabajo en equipo, metodologías ágiles).
+
+### «No está en tu CV» y los años de experiencia (25-nov-2026)
+- `computeFit` (`lib/analysis/fit.ts`): la lista `gaps` ya no incluye un requisito de «N años de experiencia» cuando los años del CV (calculados de las fechas) alcanzan el mínimo de la oferta. Solo cambia esa lista; la cobertura por término y la ficha no se tocaron. Con la oferta de prueba la lista pasó de «Comunicación, Trabajo en equipo, 3 o más años…, Metodologías ágiles» a «Comunicación, Trabajo en equipo, Metodologías ágiles». 943 pruebas en verde (2 nuevas).
+- El commit incluye SOLO este cambio: `fit.ts` tenía además cambios sin confirmar de Juan (puntajes monótonos); siguen en el árbol de trabajo sin commit.

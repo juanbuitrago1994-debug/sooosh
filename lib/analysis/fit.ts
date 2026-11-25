@@ -288,7 +288,11 @@ export function computeFit(cv: CV, offer: Offer, opts: { match?: MatchResult; ju
     if (f.verdict === "cumple" || f.verdict === "parcial") f.verdict = "no-aplica"
   }
 
-  return { scorecard, overall: overallScore(scorecard), coverage, gaps: coverage.filter((c) => c.status === "ausente").map((c) => c.term), offerProfile: op, cvProfile: cp, warnings }
+  // Un requisito de «N años de experiencia» no está «ausente» si los años del CV (calculados de las fechas) alcanzan el mínimo que pide la oferta.
+  const yearsMet = op.years.min !== null && cp.totalYears !== null && cp.totalYears >= op.years.min
+  const isYearsRequirement = (label: string) => /(?:^|\D)\d{1,2}\s*(?:\+|o m[aá]s)?\s*a[ñn]os?\b/i.test(label)
+
+  return { scorecard, overall: overallScore(scorecard), coverage, gaps: coverage.filter((c) => c.status === "ausente" && !(yearsMet && isYearsRequirement(c.term.label))).map((c) => c.term), offerProfile: op, cvProfile: cp, warnings }
 }
 
 /** Mejora entre dos fichas (mismo motor antes y después): puntos por dimensión y global. */
