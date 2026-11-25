@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { DownloadIcon } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { StepHeader } from "@/components/wizard/step-header"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -74,6 +75,10 @@ export function StepExport({ cv, offer, accepted, report, onExported, ats }: { c
 
       {ats && <TailoredAts cv={cv} offer={offer} sourceText={ats.sourceText} extras={ats.extras} onGenerated={ats.onGenerated} />}
 
+      {/* El CV ATS de arriba es la salida principal; el diseño propio (PDF), Word, texto y Markdown quedan en «Otros formatos». */}
+      <Collapsible className="flex flex-col gap-5">
+        <CollapsibleTrigger render={<Button variant="ghost" size="sm" className="self-start text-muted-foreground" />}>Otros formatos: PDF con diseño, texto y Markdown</CollapsibleTrigger>
+        <CollapsibleContent className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <Tabs value={format} onValueChange={(v) => { setFormat(v as ExportFormat); setPages(null) }}>
           <TabsList className="w-full" aria-label="Formato de descarga">
@@ -121,6 +126,8 @@ export function StepExport({ cv, offer, accepted, report, onExported, ats }: { c
         </Button>
         <p className="text-xs break-all text-muted-foreground">Se guardará como {fileName}</p>
       </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   )
 }

@@ -117,7 +117,6 @@ export function TailoredAts({ cv, offer, sourceText, extras, onGenerated }: { cv
               {done.meets90 && <CheckIcon data-icon="inline-start" />}
               Formato ATS · {done.percent} %
             </Badge>
-            <Badge variant="secondary">Cobertura de la oferta · {done.coverage} %</Badge>
           </div>
           <p className="text-xs text-muted-foreground">
             {done.meets90 ? "Cumple la meta de 90 % de formato ATS." : `No llega a la meta de 90 %: ${done.labelText.toLowerCase()}.`}{" "}
