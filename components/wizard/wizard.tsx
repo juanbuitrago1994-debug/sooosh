@@ -160,14 +160,14 @@ function Shell() {
       <SkipLink />
       <AppHeader actions={headerActions} />
 
-      <main id="contenido" ref={mainRef} tabIndex={-1} className="flex-1 outline-none">
-        <div className={`mx-auto w-full px-6 pt-4 pb-32 ${isProfile ? "max-w-4xl" : "max-w-xl"}`}>
-          <p className="pb-6 text-xs text-muted-foreground" aria-label={`Paso ${step + 1} de ${STEPS.length}: ${STEPS[step].label}`}>
+      <main id="contenido" ref={mainRef} tabIndex={-1} className="flex flex-1 flex-col outline-none">
+        <div className={`mx-auto w-full px-6 ${isProfile ? "my-auto max-w-5xl py-8" : "max-w-xl pt-4 pb-32"}`}>
+          {!isProfile && <p className="pb-6 text-xs text-muted-foreground" aria-label={`Paso ${step + 1} de ${STEPS.length}: ${STEPS[step].label}`}>
             {step + 1} de {STEPS.length} · {STEPS[step].label}
-          </p>
+          </p>}
           <AiStage working={!!work} messages={work?.messages ?? []} step={work?.step ?? 0} onCancel={work?.onCancel}>
             <StepTransition id={step}>
-              {step === 0 && <StepProfile initial={profile} onPhase={setPhase} onChange={setProfile} validated={validated} onValidated={setValidated} />}
+              {step === 0 && <StepProfile initial={profile} onPhase={setPhase} onChange={setProfile} validated={validated} onValidated={setValidated} onContinue={next} />}
               {step === 1 && <StepOffer value={offer} onChange={setOffer} />}
               {step === 2 && <StepAnalysis cv={profile?.cv ?? null} offer={offerValue} cvLanguage={profile?.diagnosis?.language} value={match} onChange={setMatch} />}
               {step === 3 && <StepReview cv={profile?.cv ?? null} guard={guard} offer={offerValue} match={matchReady(match, profile?.cv ?? null, offerValue) ? match!.result : null} style={profile?.diagnosis ? styleSentence(profile.diagnosis) : undefined} value={review} onChange={setReview} />}
@@ -177,7 +177,7 @@ function Shell() {
         </div>
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 z-10 bg-background/60 backdrop-blur-xl">
+      {!isProfile && <footer className="fixed inset-x-0 bottom-0 z-10 bg-background/60 backdrop-blur-xl">
         <div className={`mx-auto flex w-full gap-2 px-6 py-4 ${isProfile ? "max-w-4xl" : "max-w-xl"}`}>
           {step > 0 && (
             <Button variant="ghost" size="icon" onClick={() => goTo(step - 1)} aria-label="Paso anterior">
@@ -188,7 +188,7 @@ function Shell() {
             {isLast ? "Finalizar" : `Continuar a ${STEPS[step + 1].label}`}
           </Button>
         </div>
-      </footer>
+      </footer>}
 
       {dialogs}
     </div>

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { useAiWork } from "@/components/ai/ai-work"
-import { StepHeader } from "@/components/wizard/step-header"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { EntryScreen, type EntryActions } from "@/components/wizard/entry-screen"
@@ -44,7 +43,9 @@ export function StepProfile({
   entry,
   validated = false,
   onValidated,
+  onContinue,
 }: {
+  onContinue?: () => void
   validated?: boolean
   onValidated?: (all: boolean) => void
   entry?: EntryActions
@@ -158,13 +159,14 @@ export function StepProfile({
   const notes = [meta?.method.includes("ocr") && "Leído con OCR: el texto salió de una imagen y puede tener errores. Revisa bien los datos.", meta?.truncated && "CV muy largo: solo se leyó el inicio. Usa «Corregir» para agregar lo que falte."].filter((n): n is string => !!n)
   return (
     <div className="flex flex-col gap-8">
-      <StepHeader title="Validemos tu CV" description="Confirma cada dato que leímos. Con ellos armaremos tus CV para cada oferta." />
+      <h1 className="sr-only">Validemos tu CV</h1>
       {data && (
         <ValidationFlow
           cv={data.cv}
           file={{ name: file?.name ?? "CV", detail: `${file && file.size > 0 ? `${file.type} · ${formatBytes(file.size)}` : "Reabierto desde el historial"}${meta ? ` · leído en ${Math.max(1, Math.round(meta.totalMs / 1000))} s` : ""}`, notes }}
           onChange={(cv) => update({ ...data, cv })}
           onChangeFile={reset}
+          onContinue={onContinue}
           validated={validated}
           onValidated={onValidated}
         />

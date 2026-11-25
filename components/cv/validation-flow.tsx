@@ -1,16 +1,17 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CheckIcon, CircleIcon, InfoIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
+import { ArrowLeftIcon, CheckIcon, InfoIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Trace, TraceDescription, TraceIcon, TraceLine, TraceTitle } from "@/components/ui/trace"
 import { FileTextIcon } from "lucide-react"
 import { applyStage, contactParts, dropStage, entryLine, flatSkills, languagesText, removeEntry, roleSuggestions, stagesFor, type Stage, type StageKind } from "@/lib/cv/validate"
+import { MOTION } from "@/lib/motion"
 import type { CV } from "@/lib/schemas/cv"
 
 const TITLES: Record<StageKind, string> = { name: "Nombre", role: "Rol", contact: "Contacto", summary: "Resumen", experience: "Experiencia", education: "Educación", skills: "Habilidades", languages: "Idiomas" }
@@ -42,10 +43,12 @@ export type FileFacts = { name: string; detail: string; notes: string[] }
  * La persona confirma («Es correcto») o corrige. Se escribe a mano solo lo que la IA no puede generar o es sensible (nombre, contacto); el rol
  * se puede escoger entre los cargos que ya trae el CV. Nunca se inventa un dato.
  */
-export function ValidationFlow({ cv, file, onChange, onChangeFile, validated = false, onValidated }: { cv: CV; file: FileFacts; onChange: (cv: CV) => void; onChangeFile: () => void; /** ya se validó todo (al volver a este paso) */ validated?: boolean; /** avisa cuando se validan todas las etapas */ onValidated?: (all: boolean) => void }) {
+export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, validated = false, onValidated }: { cv: CV; file: FileFacts; onChange: (cv: CV) => void; onChangeFile: () => void; /** botón del último paso */ onContinue?: () => void; /** ya se validó todo (al volver a este paso) */ validated?: boolean; /** avisa cuando se validan todas las etapas */ onValidated?: (all: boolean) => void }) {
   // Las etapas se arman una vez con el CV leído (una por experiencia y por estudio); `step` es la actual y las anteriores ya se confirmaron.
   const [stages, setStages] = useState<Stage[]>(() => stagesFor(cv))
-  const [step, setStep] = useState(validated ? Infinity : 0)
+  const [step, setStep] = useState(validated ? stagesFor(cv).length : 0)
+  const [dir, setDir] = useState(1)
+  const reduce = useReducedMotion()
   const [editing, setEditing] = useState(false)
   const all = step >= stages.length
   const current = all ? null : stages[step]
@@ -53,7 +56,13 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, validated = f
 
   const confirm = () => {
     setEditing(false)
+    setDir(1)
     setStep((n) => n + 1)
+  }
+  const back = () => {
+    setEditing(false)
+    setDir(-1)
+    setStep((n) => Math.max(0, n - 1))
   }
   /** La persona dice que esa experiencia o estudio no va: se quita del CV y la etapa desaparece. */
   const remove = (at: number) => {
@@ -62,9 +71,12 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, validated = f
     setEditing(false)
   }
 
+  const enter = reduce ? { opacity: 0 } : { opacity: 0, x: dir * MOTION.offset * 2, filter: `blur(${MOTION.blur}px)` }
+  const leave = reduce ? { opacity: 0 } : { opacity: 0, x: dir * -MOTION.offset * 2, filter: `blur(${MOTION.blur}px)` }
+
   return (
-    <div className="grid gap-8 md:grid-cols-2">
-      <section aria-label="Tu archivo" className="flex flex-col gap-4 md:sticky md:top-4 md:self-start">
+    <div className="grid w-full gap-8 md:grid-cols-2 md:items-center md:gap-0">
+      <section aria-label="Tu archivo" className="flex flex-col gap-4 md:pr-12">
         <Attachment state="done" className="w-full">
           <AttachmentMedia>
             <FileTextIcon />
@@ -87,38 +99,46 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, validated = f
         ))}
       </section>
 
-      <section aria-label="Validación de tus datos" className="flex flex-col gap-6">
-        {stages.map((s, at) => {
-          const isDone = at < step
-          const isCurrent = at === step
-          return (
-            <div key={`${s.kind}-${s.idx ?? ""}-${at}`} className="flex flex-col gap-3">
-              <Trace>
-                <TraceLine status={isCurrent ? undefined : isDone ? undefined : "pending"} aria-current={isCurrent ? "step" : undefined}>
-                  <TraceIcon>{isDone ? <CheckIcon /> : <CircleIcon />}</TraceIcon>
-                  <TraceTitle>{s.kind === "experience" || s.kind === "education" ? `${TITLES[s.kind]} ${(s.idx ?? 0) + 1}` : TITLES[s.kind]}</TraceTitle>
-                  {isDone && <TraceDescription>{shown(cv, s) || "Sin dato"}</TraceDescription>}
-                </TraceLine>
-              </Trace>
-              {isCurrent && (
-                <div className="flex flex-col gap-3 pl-6">
-                  <p className="text-sm text-muted-foreground">{QUESTIONS[s.kind]}</p>
+      {/* La línea divisoria separa lo que subiste (izquierda) de lo que validas (derecha). */}
+      <section aria-label="Validación de tus datos" aria-live="polite" className="flex min-h-96 flex-col border-t pt-8 md:border-t-0 md:border-l md:pt-0 md:pl-12">
+        <div className="flex h-9 items-center gap-2 text-xs text-muted-foreground">
+          {step > 0 ? (
+            <Button variant="ghost" size="icon-sm" aria-label="Volver a la pregunta anterior" onClick={back}>
+              <ArrowLeftIcon aria-hidden />
+            </Button>
+          ) : null}
+          <span className="tabular-nums">{all ? "Listo" : `${step + 1} de ${stages.length}`}</span>
+        </div>
+        <div className="flex flex-1 flex-col justify-center">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={`${step}-${editing}`}
+              className="flex flex-col gap-4 py-6"
+              initial={enter}
+              animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+              exit={leave}
+              transition={{ duration: MOTION.enter / 2, ease: MOTION.ease }}
+            >
+              {current ? (
+                <>
+                  <p className="text-sm text-muted-foreground">{current.kind === "experience" || current.kind === "education" ? `${TITLES[current.kind]} ${(current.idx ?? 0) + 1}` : TITLES[current.kind]}</p>
+                  <h2 className="text-lg font-medium text-balance">{QUESTIONS[current.kind]}</h2>
                   {!editing ? (
                     <>
-                      <p className="text-base font-medium break-words">{shown(cv, s) || "No encontramos este dato"}</p>
-                      {s.kind === "experience" && s.idx != null && cv.experience[s.idx]?.bullets.length > 0 && (
+                      <p className="text-base break-words">{shown(cv, current) || "No encontramos este dato"}</p>
+                      {current.kind === "experience" && current.idx != null && cv.experience[current.idx]?.bullets.length > 0 && (
                         <ul className="flex list-disc flex-col gap-1 pl-4 text-sm text-muted-foreground" aria-label="Lo que dice tu CV de esta experiencia">
-                          {cv.experience[s.idx].bullets.map((b) => (
+                          {cv.experience[current.idx].bullets.map((b) => (
                             <li key={b}>{b}</li>
                           ))}
                         </ul>
                       )}
-                      <div className="flex flex-wrap gap-2">
-                        {shown(cv, s) && <Button onClick={confirm}>Es correcto</Button>}
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {shown(cv, current) && <Button onClick={confirm}>Es correcto</Button>}
                         <Button variant="outline" onClick={() => setEditing(true)}>
-                          {shown(cv, s) ? "No es correcto" : "Agregar"}
+                          {shown(cv, current) ? "No es correcto" : "Agregar"}
                         </Button>
-                        {!shown(cv, s) && (
+                        {!shown(cv, current) && (
                           <Button variant="ghost" className="text-muted-foreground" onClick={confirm}>
                             Omitir
                           </Button>
@@ -126,14 +146,24 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, validated = f
                       </div>
                     </>
                   ) : (
-                    <StageEditor stage={s} cv={cv} onSave={(next) => { onChange(next); confirm() }} onCancel={() => setEditing(false)} onRemove={s.idx != null ? () => remove(at) : undefined} />
+                    <StageEditor stage={current} cv={cv} onSave={(next) => { onChange(next); confirm() }} onCancel={() => setEditing(false)} onRemove={current.idx != null ? () => remove(step) : undefined} />
                   )}
-                </div>
+                </>
+              ) : (
+                <>
+                  <span className="grid size-9 place-items-center rounded-lg bg-muted">
+                    <CheckIcon aria-hidden />
+                  </span>
+                  <h2 className="text-lg font-medium text-balance">Todo validado</h2>
+                  <p className="text-sm text-muted-foreground">Estos datos son la base de los CV que armaremos para cada oferta.</p>
+                  <div className="pt-2">
+                    <Button onClick={onContinue}>Continuar a Oferta</Button>
+                  </div>
+                </>
               )}
-            </div>
-          )
-        })}
-        {!current && <p className="text-sm text-muted-foreground">Listo: validaste todo. Ya puedes continuar.</p>}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </section>
     </div>
   )

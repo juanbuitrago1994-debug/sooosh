@@ -1247,3 +1247,11 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - Sin botones de IA en estas etapas, a propósito: una experiencia o un estudio son hechos del usuario y cualquier propuesta generada sería invención (regla «nunca inventar datos del CV»). El único asistente es «Sugerir desde mi CV» del rol (cargos ya escritos en el CV).
 - Verificado: lint, `tsc`, `build`, `pnpm test` (95 archivos, 923 pruebas) y, subiendo un CV real con 3 experiencias y 1 estudio: 4 etapas de entradas, corregir un cargo, quitar una experiencia, «Continuar» bloqueado hasta el final.
 - **Para revisar por Juan**: paso 1 completo en 1280 y 375 px (oscuro): una experiencia con muchos logros, el editor de experiencia y el de estudio, y el bloqueo de «Continuar».
+
+### Validación del CV: una pregunta a la vez (24-nov-2026, ajuste de Juan tras F3)
+- **Una sola pregunta visible**; al confirmar, la anterior sale y entra la siguiente con `motion` (desplazamiento horizontal corto + desenfoque + opacidad, `AnimatePresence mode="wait"`; con «reducir movimiento», solo opacidad). La dirección cambia al ir atrás.
+- **Atrás** en cada pregunta (botón de ícono arriba a la izquierda) y contador discreto «3 de 10»; sin lista de etapas ni círculos de avance.
+- **Pantalla dividida con línea divisoria** (`border-l` en escritorio, `border-t` en móvil): izquierda el archivo, derecha la pregunta, todo centrado vertical y horizontalmente en el espacio (`max-w-5xl`).
+- **Sin barra inferior en este paso**: «Continuar a Oferta» aparece solo en la última pantalla («Todo validado»). El título de la pantalla es solo para lectores de pantalla.
+- Verificado por DOM en tu servidor: una pregunta a la vez, atrás funciona, sin `footer` ni botón «Continuar» hasta el final, sin scroll horizontal; lint, `tsc`, `pnpm test` (923).
+- **Para revisar por Juan**: el ritmo de la animación entre preguntas y el centrado en 1280 y 375 px.
