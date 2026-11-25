@@ -1,5 +1,6 @@
 import { fold } from "@/lib/keywords/normalize"
 import type { Offer } from "@/lib/schemas/offer"
+import { isSectorNotCompany } from "./tidy"
 
 /**
  * Identidad de una oferta (cargo y empresa) con honestidad: lo que el modelo devuelve solo se acepta si PARECE un cargo / una empresa.
@@ -77,7 +78,7 @@ export function plausibleCompany(company: string, offer: Pick<Offer, "requiremen
 export function refineIdentity(offer: Offer, text: string): { title: string; titleSource: TitleSource; company?: string } {
   // Si el título que devolvió el modelo es la frase de apertura, la «empresa» salió de partirla por «en»: solo vale si empieza con mayúscula.
   const fromHook = HOOK_START.test(symbols(offer.title))
-  const company = offer.company && plausibleCompany(offer.company, offer) && (!fromHook || /^[\p{Lu}\d]/u.test(offer.company.trim())) ? offer.company.trim() : undefined
+  const company = offer.company && plausibleCompany(offer.company, offer) && !isSectorNotCompany(offer.company, text) && (!fromHook || /^[\p{Lu}\d]/u.test(offer.company.trim())) ? offer.company.trim() : undefined
   if (plausibleTitle(offer.title)) return { title: offer.title.trim(), titleSource: "texto", company }
   const hook = titleFromHook(text)
   return hook ? { title: hook, titleSource: "inferido", company } : { title: "", titleSource: "falta", company }

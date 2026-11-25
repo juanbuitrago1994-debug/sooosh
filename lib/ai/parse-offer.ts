@@ -1,3 +1,4 @@
+import { tidyOffer } from "@/lib/offer/tidy"
 import { fold } from "@/lib/keywords/normalize"
 import { existsInSource, guardList } from "@/lib/offer/guard"
 import { reconcileOffer } from "@/lib/offer/segment"
@@ -84,7 +85,7 @@ export function guardOffer(offer: Offer, source: string): { offer: Offer; droppe
 }
 
 /** Concilia las listas del modelo con los bloques del texto (encabezados, contacto, hashtags). `reconcile: false` solo sirve para medir el antes y el después. */
-const finish = (offer: Offer, input: string, reconcile: boolean) => (reconcile ? reconcileOffer(offer, input).offer : offer)
+const finish = (offer: Offer, input: string, reconcile: boolean) => tidyOffer(reconcile ? reconcileOffer(offer, input).offer : offer, input)
 
 export async function parseOfferText(text: string, signal?: AbortSignal, opts: { reconcile?: boolean } = {}): Promise<OfferParseResult & { via: "lineas" | "json" }> {
   const reconcile = opts.reconcile ?? true
