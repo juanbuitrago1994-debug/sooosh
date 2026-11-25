@@ -110,16 +110,25 @@ export function proposeStructural(cv: CV, offer: Offer, fit: FitResult): Rewrite
   return out
 }
 
-/** Brechas: lo que la oferta pide como obligatorio y el CV no dice. NUNCA se rellenan solas: la persona decide si tiene esa experiencia. */
+/**
+ * Brechas: lo que la oferta pide y el CV no dice. NUNCA se rellenan solas: la persona decide si lo tiene y lo escribe como lo vivió.
+ * Entran las obligatorias técnicas, herramientas, certificaciones Y las habilidades transversales («Comunicación», «Trabajo en equipo»), y también
+ * las deseables: confirmar lo que de verdad tienes es la única forma honesta de subir el encaje (las reformulaciones sin contenido nuevo no lo mueven).
+ */
 export function proposeGaps(fit: FitResult): RewriteItem[] {
+  const KINDS = ["herramienta", "tecnica", "certificacion", "transversal"]
   return fit.coverage
-    .filter((c) => c.status === "ausente" && c.term.canonical && c.term.necessity === "obligatorio" && ["herramienta", "tecnica", "certificacion"].includes(c.term.category))
-    .slice(0, 5)
+    .filter((c) => c.status === "ausente" && c.term.canonical && (c.term.necessity === "obligatorio" || c.term.necessity === "deseable") && KINDS.includes(c.term.category))
+    .sort((a, b) => Number(b.term.necessity === "obligatorio") - Number(a.term.necessity === "obligatorio"))
+    .slice(0, 6)
     .map((c) => ({
       id: `gap.${c.term.id}`, label: `Falta: ${c.term.label}`, original: "", proposed: "", status: "changed" as const, kind: "añadir" as const, section: "Habilidades", type: "brecha" as const,
-      criterion: c.term.category === "herramienta" ? "herr-cobertura" : "tec-cobertura", risk: "bajo" as const, userProvided: true, evidence: [],
-      reason: `La oferta pide «${c.term.atsPhrase}» y tu CV no lo menciona.`,
-      question: `¿Tienes experiencia real con ${c.term.label}? Si es así, escríbelo como lo usaste; si no, déjalo fuera (no lo agregamos por ti).`,
+      criterion: c.term.category === "herramienta" ? "herr-cobertura" : c.term.category === "transversal" ? "soft-demostradas" : "tec-cobertura", risk: "bajo" as const, userProvided: true, evidence: [],
+      reason: c.term.necessity === "deseable" ? `La oferta valora «${c.term.atsPhrase}» y tu CV no lo menciona.` : `La oferta pide «${c.term.atsPhrase}» y tu CV no lo menciona.`,
+      question:
+        c.term.category === "transversal"
+          ? `¿Lo has demostrado en tu trabajo (${c.term.label.toLowerCase()})? Si es así, escríbelo como lo viviste, con un ejemplo corto; si no, déjalo fuera (no lo agregamos por ti).`
+          : `¿Tienes experiencia real con ${c.term.label}? Si es así, escríbelo como lo usaste; si no, déjalo fuera (no lo agregamos por ti).`,
     }))
 }
 
