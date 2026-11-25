@@ -1317,3 +1317,7 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - UI (`TailoredAts`): interruptor «Adaptar el resumen a la oferta» (activado por defecto); al terminar se muestra el resumen propuesto, lo que menciona de la oferta y el aviso de revisarlo.
 - Medición real (CV de ejemplo, gemma4:e4b local): 17 s en frío y 2 s con el modelo ya cargado; formato 100 %. Cobertura sin cambios (50 %), como se explicó: un resumen verificado no puede agregar términos que el CV no tenga.
 - Limitación vista: el verificador no detecta relaciones plausibles entre datos reales («Jira para la gestión de proyectos» salió sin que el CV lo diga); por eso se muestra el resumen para que la persona lo revise.
+
+### Revisión del resumen antes de guardar (24-nov-2026)
+- Si la IA propone un resumen para la oferta, `TailoredAts` muestra «Tu resumen» y «Resumen propuesto para esta oferta» y **no guarda nada hasta que la persona elige**: «Usar este resumen» (guarda el CV con ese resumen) o «Dejar el mío» (vuelve a armar el CV con el resumen validado, sin IA). Si el resumen no pasa la verificación, se guarda directo con el tuyo y se avisa.
+- Verificado: lint, `tsc`, `build`, `pnpm test`; en el navegador, con una oferta real, el camino «la IA no logra un resumen válido» (4 de 4 intentos → se conserva el tuyo, formato 100 %, guardado). **El camino de elegir entre los dos resúmenes no se pudo ver en el navegador**: con esa oferta la IA local no produjo un resumen que pasara la verificación; la ruta sí lo hizo con otra oferta (curl).
