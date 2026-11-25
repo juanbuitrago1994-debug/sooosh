@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react"
 import Link from "next/link"
-import { FileTextIcon } from "lucide-react"
 import { motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
 import { CvDropOverlay } from "@/components/cv/cv-drop-overlay"
@@ -11,11 +10,10 @@ import { ReadingStatus } from "@/components/cv/reading-status"
 import { AtsVersion } from "@/components/jobs/ats-version"
 import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
 import { parseCvFileSafe } from "@/components/jobs/parse-cv-file"
-import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from "@/components/ui/attachment"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { CHANGE_CV_COPY } from "@/components/cv/change-cv-dialog"
+import { Attachment, AttachmentTrigger } from "@/components/ui/attachment"
+import { CvFileCard, cvFileDetail } from "@/components/cv/cv-file-card"
 import { Badge } from "@/components/ui/badge"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { Drawer, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Separator } from "@/components/ui/separator"
 import { stageIndex } from "@/lib/cv/progress"
@@ -76,7 +74,7 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
     setPicked({ name: choice.file.name, size: choice.file.size, type: choice.file.type })
     try {
       const r = await parseCvFileSafe(choice.file, setStage)
-      setSearchProfile(r.cv, r.fileId, r.sourceText)
+      setSearchProfile(r.cv, r.fileId, r.sourceText, r.file)
       prefetchExtras(r.cv, r.sourceText, r.fileId)
       toast.success("CV listo: ya ves el encaje de cada oferta")
     } catch (e) {
@@ -171,30 +169,11 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
                     <Title>Mi CV</Title>
                     <Description>Con él comparamos las ofertas y armamos tu versión ATS.</Description>
                   </Header>
-                  <Attachment state="done" className="w-full">
-                    <AttachmentMedia>
-                      <FileTextIcon />
-                    </AttachmentMedia>
-                    <AttachmentContent>
-                      <AttachmentTitle>{profile.label}</AttachmentTitle>
-                      <AttachmentDescription>{profile.validatedAt ? "CV validado" : "Sin validar"}</AttachmentDescription>
-                    </AttachmentContent>
-                    <AttachmentActions>
-                      <AlertDialog>
-                        <AlertDialogTrigger render={<Button variant="ghost" size="sm" />}>Cambiar CV</AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>{CHANGE_CV_COPY.title}</AlertDialogTitle>
-                            <AlertDialogDescription>{CHANGE_CV_COPY.description}</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction render={<Link href="/" onClick={clearSearchProfile} />}>Cambiar CV</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </AttachmentActions>
-                  </Attachment>
+                  <CvFileCard
+                    file={{ name: profile.file?.name ?? profile.label, detail: cvFileDetail(profile.file, profile.file?.readMs), ats: null }}
+                    onChange={clearSearchProfile}
+                    changeHref="/"
+                  />
                   {!profile.validatedAt && (
                     <div className="flex flex-col gap-2">
                       <Badge variant="outline" className="self-start">

@@ -4,16 +4,13 @@ import { useEffect, useRef, useState } from "react"
 import { ArrowLeftIcon, CheckIcon, InfoIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { ProgressRing } from "@/components/cv/progress-ring"
-import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment"
-import { ChangeCvDialog } from "@/components/cv/change-cv-dialog"
+import { CvFileCard } from "@/components/cv/cv-file-card"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
-import { Field, FieldLabel } from "@/components/ui/field"
+import { Field } from "@/components/ui/field"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { FileTextIcon } from "lucide-react"
 import { applyStage, contactParts, dropStage, entryLine, flatSkills, languagesText, removeEntry, roleSuggestions, stagesFor, type Stage, type StageKind } from "@/lib/cv/validate"
 import { MOTION } from "@/lib/motion"
 import type { CV } from "@/lib/schemas/cv"
@@ -61,7 +58,6 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
   // Recargar a mitad de la validación: Cmd/Ctrl+R y F5 se interceptan y se muestra NUESTRO aviso (shadcn). El botón de recargar del navegador no se puede
   // interceptar con un modal propio: ahí queda, de respaldo, la pregunta nativa del navegador (su texto no se puede cambiar).
   const [reloadAsk, setReloadAsk] = useState(false)
-  const [changeAsk, setChangeAsk] = useState(false)
   const nativeWarn = useRef<((e: BeforeUnloadEvent) => void) | null>(null)
   useEffect(() => {
     if (all) return
@@ -110,29 +106,8 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
 
   return (
     <div className="grid w-full gap-2 rounded-3xl border bg-card p-2 md:grid-cols-2">
-      <section aria-label="Tu archivo" className="order-2 flex flex-col items-center justify-center gap-4 rounded-2xl bg-muted/50 p-6 md:order-1 md:p-8">
-        {file.ats !== null && (
-          <div className="w-full max-w-sm">
-            <Badge variant={file.ats?.good ? "default" : "outline"} title="Mide el formato de tu archivo original según guías públicas de ATS; no garantiza que un ATS concreto lo acepte.">
-              {!file.ats && <Spinner data-icon="inline-start" />}
-              {file.ats ? `Afinidad con ATS · ${file.ats.percent} %` : "Midiendo afinidad con ATS"}
-            </Badge>
-          </div>
-        )}
-        <Attachment state="done" className="w-full max-w-sm">
-          <AttachmentMedia>
-            <FileTextIcon />
-          </AttachmentMedia>
-          <AttachmentContent>
-            <AttachmentTitle>{file.name}</AttachmentTitle>
-            <AttachmentDescription>{file.detail}</AttachmentDescription>
-          </AttachmentContent>
-          <AttachmentActions>
-            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setChangeAsk(true)}>
-              Cambiar
-            </Button>
-          </AttachmentActions>
-        </Attachment>
+      <section aria-label="Tu archivo" className="order-2 flex flex-col items-center justify-center gap-4 rounded-2xl bg-muted/50 p-6 md:sticky md:top-4 md:order-1 md:h-112 md:self-start md:p-8">
+        <CvFileCard file={file} onChange={onChangeFile} atsAlign="start" className="max-w-sm" />
         {file.notes.map((n) => (
           <p key={n} className="flex max-w-sm items-start gap-2 text-xs text-muted-foreground">
             <InfoIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
@@ -145,8 +120,8 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
       <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-112 flex-col p-4 md:order-2 md:p-6">
         {/* Arriba, fijo: qué debe hacer la persona. En medio, la respuesta con su pregunta debajo (al editar, la pregunta va primero), a la misma distancia que título y subtítulo. Abajo: a la izquierda el avance y a la derecha la botonería. */}
         <header className="flex flex-col gap-1">
-          <h1 className="text-sm leading-snug font-medium text-balance">Revisa lo que leímos de tu CV</h1>
-          <p className="text-sm leading-snug text-muted-foreground">Confirma cada dato con el tick o corrígelo con la equis. Con ellos armaremos tus CV para cada oferta.</p>
+          <h1 className="text-sm leading-snug font-medium text-balance text-foreground/50">Revisa lo que leímos de tu CV</h1>
+          <p className="text-sm leading-snug text-muted-foreground/40">Confirma cada dato con el tick o corrígelo con la equis. Con ellos armaremos tus CV para cada oferta.</p>
         </header>
         <div className="flex flex-1 flex-col">
           <AnimatePresence mode="wait" initial={false}>
@@ -242,16 +217,15 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
         </div>
       </section>
 
-      <ChangeCvDialog open={changeAsk} onOpenChange={setChangeAsk} onConfirm={onChangeFile} />
       <AlertDialog open={reloadAsk} onOpenChange={setReloadAsk}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Recargar la página?</AlertDialogTitle>
-            <AlertDialogDescription>Tus correcciones ya están guardadas, pero las preguntas empezarán de nuevo desde la primera.</AlertDialogDescription>
+            <AlertDialogTitle>¿Seguro que quieres recargar?</AlertDialogTitle>
+            <AlertDialogDescription>Si recargas, perderás tu avance y la validación empezará de nuevo desde la primera pregunta. Quédate: te toma un par de minutos terminar.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Seguir validando</AlertDialogCancel>
-            <AlertDialogAction onClick={reloadNow}>Recargar</AlertDialogAction>
+            <AlertDialogAction onClick={() => setReloadAsk(false)}>Seguir validando</AlertDialogAction>
+            <AlertDialogCancel onClick={reloadNow}>Recargar y perder el avance</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -293,110 +267,91 @@ function StageEditor({ stage: st, cv, onSave }: { stage: Stage; cv: CV; onSave: 
     >
       {stage === "name" && (
         <Field>
-          <FieldLabel htmlFor="v-name">Tu nombre completo</FieldLabel>
-          <Input required id="v-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+          <Input required id="v-name" placeholder="Tu nombre completo" aria-label="Tu nombre completo" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
         </Field>
       )}
       {stage === "role" && (
-        <>
-          <Field>
-            <FieldLabel htmlFor="v-role">Tu rol</FieldLabel>
-            <Input id="v-role" value={role} onChange={(e) => setRole(e.target.value)} />
-          </Field>
-          {options.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <Button type="button" variant="ghost" size="sm" className="self-start text-muted-foreground" onClick={() => setSuggest((v) => !v)}>
-                <SparklesIcon data-icon="inline-start" /> Sugerir desde mi CV
+        <Field>
+          <div className="flex gap-2">
+            <Input id="v-role" placeholder="Tu rol" aria-label="Tu rol" value={role} onChange={(e) => setRole(e.target.value)} />
+            {options.length > 0 && (
+              <Button type="button" variant="outline" size="icon" aria-label="Sugerir desde mi CV" title="Sugerir desde mi CV" aria-pressed={suggest} onClick={() => setSuggest((v) => !v)}>
+                <SparklesIcon aria-hidden />
               </Button>
-              {suggest && (
-                <div className="flex flex-wrap gap-2" role="group" aria-label="Cargos que aparecen en tu CV">
-                  {options.map((o) => (
-                    <Button key={o} type="button" variant={role === o ? "default" : "outline"} size="sm" onClick={() => setRole(o)}>
-                      {o}
-                    </Button>
-                  ))}
-                </div>
-              )}
+            )}
+          </div>
+          {suggest && options.length > 0 && (
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Cargos que aparecen en tu CV">
+              {options.map((o) => (
+                <Button key={o} type="button" variant={role === o ? "default" : "outline"} size="sm" onClick={() => setRole(o)}>
+                  {o}
+                </Button>
+              ))}
             </div>
           )}
-        </>
+        </Field>
       )}
       {stage === "contact" && (
         <>
           <Field>
-            <FieldLabel htmlFor="v-email">Correo</FieldLabel>
-            <Input id="v-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+            <Input id="v-email" placeholder="Correo" aria-label="Correo" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
           </Field>
           <Field>
-            <FieldLabel htmlFor="v-phone">Teléfono</FieldLabel>
-            <Input id="v-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
+            <Input id="v-phone" placeholder="Teléfono" aria-label="Teléfono" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
           </Field>
           <Field>
-            <FieldLabel htmlFor="v-loc">Ciudad y país</FieldLabel>
-            <Input id="v-loc" value={location} onChange={(e) => setLocation(e.target.value)} autoComplete="address-level2" />
+            <Input id="v-loc" placeholder="Ciudad y país" aria-label="Ciudad y país" value={location} onChange={(e) => setLocation(e.target.value)} autoComplete="address-level2" />
           </Field>
         </>
       )}
       {stage === "experience" && (
         <>
           <Field>
-            <FieldLabel htmlFor="v-erole">Cargo</FieldLabel>
-            <Input required id="v-erole" value={e.role} onChange={(x) => setE({ ...e, role: x.target.value })} />
+            <Input required id="v-erole" placeholder="Cargo" aria-label="Cargo" value={e.role} onChange={(x) => setE({ ...e, role: x.target.value })} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="v-eco">Empresa</FieldLabel>
-            <Input required id="v-eco" value={e.company} onChange={(x) => setE({ ...e, company: x.target.value })} />
+            <Input required id="v-eco" placeholder="Empresa" aria-label="Empresa" value={e.company} onChange={(x) => setE({ ...e, company: x.target.value })} />
           </Field>
           <div className="grid grid-cols-2 gap-2">
             <Field>
-              <FieldLabel htmlFor="v-es">Desde</FieldLabel>
-              <Input id="v-es" value={e.startDate} onChange={(x) => setE({ ...e, startDate: x.target.value })} />
+              <Input id="v-es" placeholder="Desde" aria-label="Desde" value={e.startDate} onChange={(x) => setE({ ...e, startDate: x.target.value })} />
             </Field>
             <Field>
-              <FieldLabel htmlFor="v-ee">Hasta</FieldLabel>
-              <Input id="v-ee" value={e.endDate} onChange={(x) => setE({ ...e, endDate: x.target.value })} />
+              <Input id="v-ee" placeholder="Hasta" aria-label="Hasta" value={e.endDate} onChange={(x) => setE({ ...e, endDate: x.target.value })} />
             </Field>
           </div>
           <Field>
-            <FieldLabel htmlFor="v-el">Ciudad</FieldLabel>
-            <Input id="v-el" value={e.location} onChange={(x) => setE({ ...e, location: x.target.value })} />
+            <Input id="v-el" placeholder="Ciudad" aria-label="Ciudad" value={e.location} onChange={(x) => setE({ ...e, location: x.target.value })} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="v-eb">Logros (uno por línea)</FieldLabel>
-            <Textarea id="v-eb" rows={5} value={e.bullets} onChange={(x) => setE({ ...e, bullets: x.target.value })} />
+            <Textarea id="v-eb" placeholder="Logros (uno por línea)" aria-label="Logros (uno por línea)" rows={5} value={e.bullets} onChange={(x) => setE({ ...e, bullets: x.target.value })} />
           </Field>
         </>
       )}
       {stage === "education" && (
         <>
           <Field>
-            <FieldLabel htmlFor="v-di">Institución</FieldLabel>
-            <Input required id="v-di" value={d.institution} onChange={(x) => setD({ ...d, institution: x.target.value })} />
+            <Input required id="v-di" placeholder="Institución" aria-label="Institución" value={d.institution} onChange={(x) => setD({ ...d, institution: x.target.value })} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="v-dd">Título</FieldLabel>
-            <Input id="v-dd" value={d.degree} onChange={(x) => setD({ ...d, degree: x.target.value })} />
+            <Input id="v-dd" placeholder="Título" aria-label="Título" value={d.degree} onChange={(x) => setD({ ...d, degree: x.target.value })} />
           </Field>
           <Field>
-            <FieldLabel htmlFor="v-df">Área</FieldLabel>
-            <Input id="v-df" value={d.field} onChange={(x) => setD({ ...d, field: x.target.value })} />
+            <Input id="v-df" placeholder="Área" aria-label="Área" value={d.field} onChange={(x) => setD({ ...d, field: x.target.value })} />
           </Field>
           <div className="grid grid-cols-2 gap-2">
             <Field>
-              <FieldLabel htmlFor="v-ds">Desde</FieldLabel>
-              <Input id="v-ds" value={d.startDate} onChange={(x) => setD({ ...d, startDate: x.target.value })} />
+              <Input id="v-ds" placeholder="Desde" aria-label="Desde" value={d.startDate} onChange={(x) => setD({ ...d, startDate: x.target.value })} />
             </Field>
             <Field>
-              <FieldLabel htmlFor="v-de">Hasta</FieldLabel>
-              <Input id="v-de" value={d.endDate} onChange={(x) => setD({ ...d, endDate: x.target.value })} />
+              <Input id="v-de" placeholder="Hasta" aria-label="Hasta" value={d.endDate} onChange={(x) => setD({ ...d, endDate: x.target.value })} />
             </Field>
           </div>
         </>
       )}
       {stage === "summary" && (
         <Field>
-          <FieldLabel htmlFor="v-sum">Tu resumen</FieldLabel>
-          <Textarea id="v-sum" rows={5} value={summary} onChange={(e) => setSummary(e.target.value)} />
+          <Textarea id="v-sum" placeholder="Tu resumen" aria-label="Tu resumen" rows={5} value={summary} onChange={(e) => setSummary(e.target.value)} />
         </Field>
       )}
       {stage === "skills" && (
@@ -414,10 +369,11 @@ function StageEditor({ stage: st, cv, onSave }: { stage: Stage; cv: CV; onSave: 
             ))}
           </ul>
           <Field>
-            <FieldLabel htmlFor="v-skill">Agregar una habilidad</FieldLabel>
             <div className="flex gap-2">
               <Input
                 id="v-skill"
+                placeholder="Agregar una habilidad"
+                aria-label="Agregar una habilidad"
                 value={newSkill}
                 onChange={(e) => setNewSkill(e.target.value)}
                 onKeyDown={(e) => {

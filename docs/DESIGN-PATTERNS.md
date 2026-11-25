@@ -184,3 +184,21 @@ Leída una sola vez y sintetizada aquí. Es una pantalla de «resultado de anál
 **Prohibido en v2**: `Card` fuera de la lista de `GlassPanel`, `border-dashed`, `font-serif`/`font-heading` serif, tamaños sobre `text-xl`, pesos 600+, cajas alrededor de títulos, sombras.
 
 **Vista previa de documento (K7)**: la hoja del CV en el paso Exportar se muestra con un marco muy tenue (`border-border/40`, radio `rounded-xl`, sin sombra). No cuenta como contenedor de interfaz: es el propio documento. Decisión a revisar por Juan.
+
+## Tarjeta del CV (componente compartido, 25-nov-2026)
+
+Toda pantalla que muestre **el CV de la persona** usa `CvFileCard` (`components/cv/cv-file-card.tsx`). No se arma otra tarjeta con `Attachment` para el CV ni se cambia su contenido en una pantalla concreta: si hace falta un cambio, se hace en el componente y llega a todas.
+
+| Orden | Parte | Contenido | Regla |
+|---|---|---|---|
+| 1 | Línea sobre la tarjeta (8 px) | «Afinidad ATS · N %», `text-xs text-muted-foreground/80`, centrada | Solo con medida real. Mientras se mide: «Midiendo afinidad ATS». Sin medida: no aparece. **En el panel «Mi CV» no se muestra** (`ats: null`) |
+| 2 | Icono | `FileTextIcon` | Fijo |
+| 3 | Título | Nombre original del archivo, con extensión | Sin datos del archivo guardados: nombre y cargo del CV |
+| 4 | Descripción | «DOCX · 12 KB · leído en 1 s» (`cvFileDetail`) | Sin datos del archivo guardados: «Reabierto desde el historial» |
+| 5 | Acción | «Cambiar» (`ghost`, `sm`, atenuado) | Siempre confirma con `ChangeCvDialog` |
+
+- **Ancho**: el del contenedor (`w-full`); donde haga falta un tope, `max-w-sm`.
+- **Propiedades**: `file` (`name`, `detail`, `ats`), `onChange` (al confirmar) y `changeHref` (si al confirmar hay que salir de la pantalla).
+- **Estados extra** (p. ej. «Sin validar» en «Mi CV») van **debajo** de la tarjeta, nunca dentro.
+- **Usos**: validación del CV (`validation-flow.tsx`), CV ya validado (`validated-cv.tsx`) y panel «Mi CV» (`search-profile-panel.tsx`).
+- **No es esta tarjeta**: las filas de descarga de PDF y Word (`ats-version.tsx`, `tailored-ats.tsx`) son archivos generados, no el CV subido.

@@ -17,12 +17,13 @@ async function panel(profile: { cv: CV; label: string; updatedAt: string } | nul
 afterEach(() => vi.doUnmock("@/lib/profile/search-profile"))
 
 describe("panel «Mi CV» (panel lateral)", () => {
-  it("con CV: nombre en un Attachment, «Cambiar CV» (con confirmación; ya no hay «Quitar») y el bloque Versión ATS; sin hoja animada ni degradado", async () => {
+  it("con CV: la tarjeta del CV (`CvFileCard`) con «Cambiar» (con confirmación; ya no hay «Quitar») y el bloque Versión ATS; sin hoja animada ni degradado", async () => {
     const html = await panel({ cv, label: "Ana Pérez · Diseñadora", updatedAt: "x" })
     expect(html).toContain("Mi CV")
     expect(html).toContain("Ana Pérez · Diseñadora")
     expect(html).toContain('data-slot="attachment"')
-    expect(html).toContain("Cambiar CV")
+    expect(html).toContain("Cambiar")
+    expect(html).not.toContain("Afinidad ATS")
     expect(html).not.toContain("Quitar")
     expect(html).toContain("Sin validar")
     expect(html).toContain("Validar mi CV")
@@ -39,7 +40,7 @@ describe("panel «Mi CV» (panel lateral)", () => {
     expect(html).toContain("PDF, Word o imagen")
     expect(html).toContain("flex-1 flex-col")
     expect(html).not.toContain("Generar versión ATS")
-    expect(html).not.toContain("Cambiar CV")
+    expect(html).not.toContain("Cambiar")
     // la zona de soltar no se muestra hasta que se arrastra un archivo
     expect(html).not.toContain("data-drop-overlay")
   })

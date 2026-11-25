@@ -13,8 +13,9 @@ import { originalAtsClient, type OriginalAts } from "@/lib/ats/client"
 import { prefetchExtras } from "@/lib/ats/prefetch"
 import { clearSearchProfile, getSearchProfile, refreshSearchProfile, setOriginalAts, setProfileValidated, setSearchProfile, useSearchProfile } from "@/lib/profile/search-profile"
 import { ValidatedCv } from "@/components/cv/validated-cv"
+import { cvFileDetail } from "@/components/cv/cv-file-card"
 import { STAGES } from "@/lib/cv/stages"
-import { formatBytes, type UploadedFile } from "@/lib/uploads"
+import type { UploadedFile } from "@/lib/uploads"
 import type { CV } from "@/lib/schemas/cv"
 import type { Diagnosis } from "@/lib/schemas/diagnosis"
 
@@ -194,7 +195,7 @@ export function StepProfile({
   const readMs = meta?.totalMs ?? getSearchProfile()?.file?.readMs
   const fileFacts = {
     name: file?.name ?? "CV",
-    detail: `${file && file.size > 0 ? `${file.type} · ${formatBytes(file.size)}` : file?.type ? file.type : "Reabierto desde el historial"}${readMs ? ` · leído en ${Math.max(1, Math.round(readMs / 1000))} s` : ""}`,
+    detail: cvFileDetail(file ?? undefined, readMs),
     notes,
     ats: !atsKey ? null : ats === undefined ? undefined : ats ? { percent: ats.percent, labelText: ats.labelText, good: ats.label === "listo" || ats.label === "casi" } : null,
   }
