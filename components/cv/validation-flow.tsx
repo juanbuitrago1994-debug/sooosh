@@ -103,7 +103,7 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
 
       {/* Dos mitades en una tarjeta: lo que subiste (panel hundido, izquierda) y lo que validas (derecha). */}
       <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-112 flex-col p-4 md:order-2 md:p-6">
-        {/* Arriba, fijo: qué debe hacer la persona. En medio, la pregunta junto a su respuesta. Abajo: a la izquierda el avance y a la derecha la botonería. */}
+        {/* Arriba, fijo: qué debe hacer la persona. En medio, la respuesta con su pregunta debajo (al editar, la pregunta va primero), a la misma distancia que título y subtítulo. Abajo: a la izquierda el avance y a la derecha la botonería. */}
         <header className="flex flex-col gap-1">
           <h1 className="text-sm leading-snug font-medium text-balance">Revisa lo que leímos de tu CV</h1>
           <p className="text-sm leading-snug text-muted-foreground">Confirma cada dato con el tick o corrígelo con la equis. Con ellos armaremos tus CV para cada oferta.</p>
@@ -119,7 +119,6 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
               transition={{ duration: MOTION.enter / 2, ease: MOTION.ease }}
             >
               {current ? (
-                {/* Respuesta arriba y pregunta debajo (al editar, la pregunta va primero); misma distancia que entre el título y el subtítulo. */}
                 <div className={`flex gap-1 ${editing ? "flex-col" : "flex-col-reverse"}`}>
                   <p className="text-sm leading-snug text-muted-foreground">{QUESTIONS[current.kind]}</p>
                   <div className="flex flex-col gap-3">
