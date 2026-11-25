@@ -172,10 +172,12 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
               </>
             ) : shown(cv, current) ? (
               <>
-                <Button variant="secondary" onClick={() => setEditing(true)}>
-                  No es correcto
+                <Button variant="secondary" size="icon-lg" aria-label="No es correcto" title="No es correcto" onClick={() => setEditing(true)}>
+                  <XIcon aria-hidden />
                 </Button>
-                <Button onClick={confirm}>Es correcto</Button>
+                <Button size="icon-lg" aria-label="Es correcto" title="Es correcto" onClick={confirm}>
+                  <CheckIcon aria-hidden />
+                </Button>
               </>
             ) : (
               <>
