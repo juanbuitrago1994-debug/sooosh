@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState } from "react"
+import Link from "next/link"
 import { FileTextIcon } from "lucide-react"
 import { motion, useReducedMotion } from "motion/react"
 import { toast } from "sonner"
@@ -11,7 +12,9 @@ import { AtsVersion } from "@/components/jobs/ats-version"
 import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
 import { parseCvFileSafe } from "@/components/jobs/parse-cv-file"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from "@/components/ui/attachment"
-import { Button } from "@/components/ui/button"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Drawer, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Separator } from "@/components/ui/separator"
 import { stageIndex } from "@/lib/cv/progress"
@@ -84,7 +87,20 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
     }
   }
 
-  const dnd = {
+  // Solo hay UN CV: con uno ya cargado no se reemplaza arrastrando otro archivo (se evita que el navegador lo abra y se avisa al soltar).
+  const locked = !!profile
+  const dnd = locked
+    ? {
+        onDragEnter: (e: React.DragEvent) => dragHasFiles(e.dataTransfer?.types) && e.preventDefault(),
+        onDragOver: (e: React.DragEvent) => dragHasFiles(e.dataTransfer?.types) && e.preventDefault(),
+        onDragLeave: () => {},
+        onDrop: (e: React.DragEvent) => {
+          if (!dragHasFiles(e.dataTransfer?.types)) return
+          e.preventDefault()
+          toast.info("Ya tienes un CV. Para usar otro, pulsa «Cambiar CV»: lo validarás desde el inicio.")
+        },
+      }
+    : {
     onDragEnter: (e: React.DragEvent) => {
       if (!dragHasFiles(e.dataTransfer?.types)) return
       e.preventDefault()
@@ -160,17 +176,35 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
                     </AttachmentMedia>
                     <AttachmentContent>
                       <AttachmentTitle>{profile.label}</AttachmentTitle>
-                      <AttachmentDescription>Arrastra otro archivo aquí para cambiarlo</AttachmentDescription>
+                      <AttachmentDescription>{profile.validatedAt ? "CV validado" : "Sin validar"}</AttachmentDescription>
                     </AttachmentContent>
                     <AttachmentActions>
-                      <Button variant="ghost" size="sm" onClick={() => input.current?.click()}>
-                        Cambiar CV
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={clearSearchProfile}>
-                        Quitar
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger render={<Button variant="ghost" size="sm" />}>Cambiar CV</AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Cambiar tu CV?</AlertDialogTitle>
+                            <AlertDialogDescription>Subirás otro CV y lo validarás desde el inicio. Las ofertas se compararán con ese nuevo CV.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction render={<Link href="/" onClick={clearSearchProfile} />}>Cambiar CV</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </AttachmentActions>
                   </Attachment>
+                  {!profile.validatedAt && (
+                    <div className="flex flex-col gap-2">
+                      <Badge variant="outline" className="self-start">
+                        Sin validar
+                      </Badge>
+                      <p className="text-xs text-muted-foreground">Valida tu CV para que las ofertas se comparen con los datos que confirmaste.</p>
+                      <Link href="/" className={buttonVariants({ variant: "outline", size: "sm", className: "self-start" })}>
+                        Validar mi CV
+                      </Link>
+                    </div>
+                  )}
                   <Separator />
                   </motion.div>
                 </motion.div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { ArrowLeftIcon } from "lucide-react"
 import { toast } from "sonner"
 import { AiStage } from "@/components/ai/ai-stage"
@@ -22,6 +22,7 @@ import { addEntry, parseHistory, readRaw, type HistoryEntry } from "@/lib/histor
 import { lexicalCoverage } from "@/lib/match/engine"
 import { rebuildCv } from "@/lib/rebuild/build"
 import { STEPS } from "@/lib/steps"
+import { useSearchProfile, type SearchProfile } from "@/lib/profile/search-profile"
 
 export function Wizard() {
   return (
@@ -32,10 +33,22 @@ export function Wizard() {
 }
 
 /** Stage centrada con una sola tarjeta (docs/DESIGN-PATTERNS.md): un paso, una decisión, una acción primaria. */
+/** El CV guardado (perfil de búsqueda) como datos del asistente: la fuente de verdad pasa a ser el CV ya corregido por la persona. */
+function fromSearchProfile(p: SearchProfile): ProfileData {
+  const text = p.sourceText ?? ""
+  return { file: { id: p.fileId ?? "perfil", name: p.file?.name ?? p.label, type: p.file?.type ?? "", size: p.file?.size ?? 0 }, cv: p.cv, sourceText: text, source: freezeSource(text, p.cv) }
+}
+const noop = () => () => {}
+
 function Shell() {
   const [step, setStep] = useState(0)
   const [learningOpen, setLearningOpen] = useState(false)
-  const [profile, setProfile] = useState<ProfileData | null>(null)
+  const [profileState, setProfile] = useState<ProfileData | null>(null)
+  // Solo hay UN CV: si ya hay uno guardado (se recargó la página o se volvió), el asistente parte de él en vez de pedir otro.
+  const stored = useSearchProfile()
+  const hydrated = useSyncExternalStore(noop, () => true, () => false)
+  const fromStored = useMemo(() => (stored ? fromSearchProfile(stored) : null), [stored])
+  const profile = profileState ?? fromStored
   // Si la persona llega desde el buscador con «Adaptar mi CV a esta oferta», la oferta ya viene cargada (se borra en el efecto de abajo).
   const [offer, setOffer] = useState<OfferState>(() => {
     const p = readPrefill()
@@ -43,9 +56,11 @@ function Shell() {
   })
   const [match, setMatch] = useState<MatchState | null>(null)
   const [review, setReview] = useState<ReviewState | null>(null)
-  const [phase, setPhase] = useState<ProfilePhase>("upload")
+  const [phaseState, setPhase] = useState<ProfilePhase>("upload")
+  const phase: ProfilePhase = profile && phaseState === "upload" ? "review" : phaseState
   // Se validaron todos los datos del CV leído (paso 1): hasta entonces «Continuar» está bloqueado.
-  const [validated, setValidated] = useState(false)
+  const [validatedState, setValidated] = useState(false)
+  const validated = validatedState || !!stored?.validatedAt
   const { work } = useAiWork()
   const mainRef = useRef<HTMLDivElement>(null)
 
@@ -146,6 +161,8 @@ function Shell() {
       <LearningDialog open={learningOpen} onOpenChange={setLearningOpen} />
     </>
   )
+  // Hasta leer el CV guardado del navegador no se pinta nada (evita mostrar un instante la pantalla de subir).
+  if (!hydrated) return <div className="min-h-dvh" />
   if (entry) {
     return (
       <>
@@ -175,6 +192,14 @@ function Shell() {
             </StepTransition>
           </AiStage>
         </div>
+        {/* Casi imperceptible, abajo de todo: seguir sin validar el CV (se queda «sin validar» y el CV se puede validar luego). */}
+        {isProfile && profile && !validated && (
+          <div className="pb-6 text-center">
+            <Button variant="ghost" size="sm" className="text-muted-foreground/50 hover:text-muted-foreground" onClick={next}>
+              Omitir
+            </Button>
+          </div>
+        )}
       </main>
 
       {!isProfile && <footer className="fixed inset-x-0 bottom-0 z-10 bg-background/60 backdrop-blur-xl">

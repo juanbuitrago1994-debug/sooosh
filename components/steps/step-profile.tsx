@@ -11,7 +11,8 @@ import { ValidationFlow } from "@/components/cv/validation-flow"
 import { freezeSource, type Source } from "@/lib/cv/source"
 import { originalAtsClient, type OriginalAts } from "@/lib/ats/client"
 import { prefetchExtras } from "@/lib/ats/prefetch"
-import { getSearchProfile, refreshSearchProfile, setSearchProfile } from "@/lib/profile/search-profile"
+import { clearSearchProfile, getSearchProfile, refreshSearchProfile, setOriginalAts, setProfileValidated, setSearchProfile, useSearchProfile } from "@/lib/profile/search-profile"
+import { ValidatedCv } from "@/components/cv/validated-cv"
 import { STAGES } from "@/lib/cv/stages"
 import { formatBytes, type UploadedFile } from "@/lib/uploads"
 import type { CV } from "@/lib/schemas/cv"
@@ -65,17 +66,36 @@ export function StepProfile({
   // Afinidad del archivo original con el formato ATS: se mide una vez por archivo (no si es una adaptación reabierta, que no trae archivo).
   const [atsState, setAtsState] = useState<{ id: string; v: OriginalAts | null } | null>(null)
   const atsKey = data && data.file.size > 0 ? data.file.id : ""
-  const ats = atsState?.id === atsKey ? atsState.v : undefined
+  const saved = useSearchProfile()
+  const ats = atsState?.id === atsKey ? atsState.v : saved?.fileId === atsKey ? saved.originalAts : undefined
   useEffect(() => {
     if (!atsKey || !data) return
+    const stored = getSearchProfile()
+    if (stored?.fileId === atsKey && stored.originalAts !== undefined) return // ya medida: se lee del perfil
     const ctl = new AbortController()
     originalAtsClient(data.cv, data.file.id, data.file.name, data.sourceText, ctl.signal).then(
-      (v) => setAtsState({ id: atsKey, v }),
+      (v) => {
+        setAtsState({ id: atsKey, v })
+        setOriginalAts(v, atsKey)
+      },
       () => !ctl.signal.aborted && setAtsState({ id: atsKey, v: null }),
     )
     return () => ctl.abort()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo cuando cambia el archivo
   }, [atsKey])
+  // ¿Este CV ya estaba validado al llegar a este paso? (se mide una vez: al terminar de validar no se salta la pantalla «Todo validado»)
+  const [resumed] = useState(() => {
+    const p = getSearchProfile()
+    return !!p?.validatedAt && !!initial && p.fileId === initial.file.id
+  })
+  /** Al terminar la validación se marca el CV como validado en el perfil guardado; si la persona vuelve atrás, se quita la marca. */
+  const onValid = useCallback(
+    (all: boolean) => {
+      setProfileValidated(all)
+      onValidated?.(all)
+    },
+    [onValidated],
+  )
   useEffect(() => onPhase(phase), [phase, onPhase])
   useEffect(() => () => abortRef.current?.abort(), [])
 
@@ -127,11 +147,9 @@ export function StepProfile({
         setData(next)
         onChange(next)
         onValidated?.(false)
-        // El primer CV que se lee pasa a ser el perfil de búsqueda; los siguientes (adaptaciones) no lo cambian salvo que la persona lo pida.
-        if (!getSearchProfile()) {
-          setSearchProfile(r.cv, f.id, r.sourceText)
-          prefetchExtras(r.cv, r.sourceText, f.id)
-        }
+        // Solo hay UN CV: el que se sube pasa a ser el perfil de búsqueda (sin validar hasta que la persona termine de validarlo).
+        setSearchProfile(r.cv, f.id, r.sourceText, { name: f.name, type: f.type, size: f.size, readMs: r.meta.totalMs })
+        prefetchExtras(r.cv, r.sourceText, f.id)
         setPhase("review")
       } catch (e) {
         if ((e as Error).name === "AbortError") {
@@ -150,6 +168,7 @@ export function StepProfile({
   const reset = () => {
     abortRef.current?.abort()
     if (file && file.size > 0) fetch(`/api/upload?id=${encodeURIComponent(file.id)}`, { method: "DELETE" }).catch(() => {})
+    clearSearchProfile()
     setData(null)
     setFile(null)
     onValidated?.(false)
@@ -172,19 +191,22 @@ export function StepProfile({
 
   const meta = data?.meta
   const notes = [meta?.method.includes("ocr") && "Leído con OCR: el texto salió de una imagen y puede tener errores. Revisa bien los datos.", meta?.truncated && "CV muy largo: solo se leyó el inicio. Usa «Corregir» para agregar lo que falte."].filter((n): n is string => !!n)
+  const readMs = meta?.totalMs ?? getSearchProfile()?.file?.readMs
+  const fileFacts = {
+    name: file?.name ?? "CV",
+    detail: `${file && file.size > 0 ? `${file.type} · ${formatBytes(file.size)}` : file?.type ? file.type : "Reabierto desde el historial"}${readMs ? ` · leído en ${Math.max(1, Math.round(readMs / 1000))} s` : ""}`,
+    notes,
+    ats: !atsKey ? null : ats === undefined ? undefined : ats ? { percent: ats.percent, labelText: ats.labelText, good: ats.label === "listo" || ats.label === "casi" } : null,
+  }
   return (
     <div className="flex flex-col gap-8">
-      {data && (
-        <ValidationFlow
-          cv={data.cv}
-          file={{ name: file?.name ?? "CV", detail: `${file && file.size > 0 ? `${file.type} · ${formatBytes(file.size)}` : "Reabierto desde el historial"}${meta ? ` · leído en ${Math.max(1, Math.round(meta.totalMs / 1000))} s` : ""}`, notes, ats: !atsKey ? null : ats === undefined ? undefined : ats ? { percent: ats.percent, labelText: ats.labelText, good: ats.label === "listo" || ats.label === "casi" } : null }}
-          onChange={(cv) => update({ ...data, cv })}
-          onChangeFile={reset}
-          onContinue={onContinue}
-          validated={validated}
-          onValidated={onValidated}
-        />
-      )}
+      {data &&
+        (resumed ? (
+          // CV ya validado (se volvió o se recargó la página): su tarjeta y el botón para seguir.
+          <ValidatedCv file={fileFacts} onChangeFile={reset} onContinue={() => onContinue?.()} />
+        ) : (
+          <ValidationFlow cv={data.cv} file={fileFacts} onChange={(cv) => update({ ...data, cv })} onChangeFile={reset} onContinue={onContinue} validated={validated} onValidated={onValid} />
+        ))}
 
       <Dialog open={correcting} onOpenChange={setCorrecting}>
         <DialogContent>

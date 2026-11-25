@@ -56,6 +56,16 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
   const all = step >= stages.length
   const current = all ? null : stages[step]
   useEffect(() => onValidated?.(all), [all, onValidated])
+  // Recargar la página a mitad de la validación pierde el avance: el navegador pregunta antes (no deja personalizar el texto).
+  useEffect(() => {
+    if (all) return
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ""
+    }
+    window.addEventListener("beforeunload", warn)
+    return () => window.removeEventListener("beforeunload", warn)
+  }, [all])
 
   const confirm = () => {
     setEditing(false)

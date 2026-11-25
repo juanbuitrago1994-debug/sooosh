@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { atsBadgeLabel } from "@/components/jobs/job-search"
-import { clearSearchProfile, getSearchProfile, setAtsStatus, profileLabel, refreshSearchProfile, SEARCH_PROFILE_KEY, setSearchProfile } from "@/lib/profile/search-profile"
+import { clearSearchProfile, getSearchProfile, setAtsStatus, profileLabel, refreshSearchProfile, SEARCH_PROFILE_KEY, setSearchProfile, setProfileValidated, setOriginalAts } from "@/lib/profile/search-profile"
 import { cvSchema } from "@/lib/schemas/cv"
 
 const mk = (name: string, headline?: string) => cvSchema.parse({ header: { fullName: name, headline }, experience: [], skills: [{ items: ["Figma"] }] })
@@ -30,6 +30,28 @@ describe("perfil de búsqueda (el CV con el que se compara cada oferta)", () => 
     expect(getSearchProfile()!.cv.header.headline).toBe("Senior Designer")
     refreshSearchProfile(mk("Ana Pérez", "CV adaptado a la oferta X"), "archivo-2")
     expect(getSearchProfile()!.cv.header.headline).toBe("Senior Designer")
+  })
+  it("un solo CV: al subir otro se reemplaza todo y queda «sin validar»; validar y corregir se recuerdan", () => {
+    const file = { name: "cv.pdf", type: "PDF", size: 1234, readMs: 2000 }
+    setSearchProfile(mk("Ana"), "archivo-1", "texto", file)
+    expect(getSearchProfile()!.file).toEqual(file)
+    expect(getSearchProfile()!.validatedAt).toBeUndefined()
+    setOriginalAts({ percent: 85, label: "casi", labelText: "Casi" }, "archivo-1")
+    setProfileValidated(true)
+    expect(getSearchProfile()!.validatedAt).toBeTruthy()
+    expect(getSearchProfile()!.originalAts?.percent).toBe(85)
+    // la afinidad de otro archivo no se guarda
+    expect(setOriginalAts({ percent: 10, label: "esencial", labelText: "x" }, "archivo-2")).toBe(false)
+    // corregir el CV conserva el archivo y la afinidad, pero quita la marca de validado
+    refreshSearchProfile(mk("Ana", "Lead"), "archivo-1")
+    expect(getSearchProfile()!.file).toEqual(file)
+    expect(getSearchProfile()!.originalAts?.percent).toBe(85)
+    expect(getSearchProfile()!.validatedAt).toBeUndefined()
+    // subir otro archivo reemplaza el perfil
+    setSearchProfile(mk("Beto"), "archivo-3", "otro", { name: "b.docx", type: "DOCX", size: 9 })
+    expect(getSearchProfile()!.cv.header.fullName).toBe("Beto")
+    expect(getSearchProfile()!.originalAts).toBeUndefined()
+    expect(setProfileValidated(false)).toBe(true)
   })
   it("quitar lo borra; un valor corrupto en el almacenamiento se ignora", () => {
     setSearchProfile(mk("Ana"), "a")
