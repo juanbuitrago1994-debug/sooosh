@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowLeftIcon, CheckIcon, InfoIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
+import { ArrowLeftIcon, CheckIcon, CircleAlertIcon, InfoIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { ProgressRing } from "@/components/cv/progress-ring"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment"
@@ -81,10 +81,12 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
     <div className="grid w-full gap-2 rounded-3xl border bg-card p-2 md:grid-cols-2">
       <section aria-label="Tu archivo" className="order-2 flex flex-col items-center justify-center gap-4 rounded-2xl bg-muted/50 p-6 md:order-1 md:p-8">
         {file.ats !== null && (
-          <Badge variant={file.ats?.good ? "default" : "outline"} className="self-start md:self-center" title="Mide el formato de tu archivo original según guías públicas de ATS; no garantiza que un ATS concreto lo acepte.">
-            {file.ats ? <CheckIcon data-icon="inline-start" /> : <Spinner data-icon="inline-start" />}
-            {file.ats ? `Afinidad con ATS · ${file.ats.percent} %` : "Midiendo afinidad con ATS"}
-          </Badge>
+          <div className="w-full max-w-sm">
+            <Badge variant={file.ats?.good ? "default" : "outline"} title="Mide el formato de tu archivo original según guías públicas de ATS; no garantiza que un ATS concreto lo acepte.">
+              {file.ats ? file.ats.good ? <CheckIcon data-icon="inline-start" /> : <CircleAlertIcon data-icon="inline-start" /> : <Spinner data-icon="inline-start" />}
+              {file.ats ? `Afinidad con ATS · ${file.ats.percent} %` : "Midiendo afinidad con ATS"}
+            </Badge>
+          </div>
         )}
         <Attachment state="done" className="w-full max-w-sm">
           <AttachmentMedia>
