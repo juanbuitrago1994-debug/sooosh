@@ -1,6 +1,6 @@
 "use client"
 
-import { FileTextIcon } from "lucide-react"
+import { BadgeCheckIcon, FileTextIcon } from "lucide-react"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,14 @@ import type { FileFacts } from "@/components/cv/validation-flow"
 export function ValidatedCv({ file, onChangeFile, onContinue }: { file: FileFacts; onChangeFile: () => void; onContinue: () => void }) {
   return (
     <section aria-label="Tu CV validado" className="mx-auto flex w-full max-w-sm flex-col items-stretch gap-6">
+      {/* Sello sólido de «hecho», con lo que pasó: se subió, se analizó y la persona lo validó. */}
+      <div className="flex flex-col items-center gap-3 text-center">
+        <BadgeCheckIcon aria-hidden className="size-12 fill-foreground stroke-background" />
+        <div className="flex flex-col gap-1">
+          <h1 className="text-base leading-snug font-medium">Tu CV se subió y se analizó sin problemas</h1>
+          <p className="text-sm leading-snug text-muted-foreground">Ya validaste tus datos. Con este CV comparamos las ofertas y armamos tus CV para cada una.</p>
+        </div>
+      </div>
       <div className="flex flex-col gap-3">
         {file.ats && (
           <div>
