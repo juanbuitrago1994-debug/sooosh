@@ -3,7 +3,7 @@ import path from "node:path"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { DiagnosisCard, styleSentence } from "@/components/cv/diagnosis-card"
-import { splitBlocks } from "@/lib/cv/blocks"
+import { bulletItems, splitBlocks, splitExperienceBlocks } from "@/lib/cv/blocks"
 import { extractContact } from "@/lib/cv/contact"
 import { parseDate, RANGE_RE, totalYears } from "@/lib/cv/dates"
 import { detectLanguage, pickQuestion } from "@/lib/cv/diagnosis"
@@ -169,5 +169,14 @@ describe("lector del stream de Ollama", () => {
   it("el rango abierto «Actualidad» se toma completo (sin dejar «idad» pegado a la empresa)", () => {
     expect(RANGE_RE.exec("Product Designer | Monchis\tAgo 2025 – Actualidad")?.[2]).toBe("Actualidad")
     expect(RANGE_RE.exec("2020 - Actual")?.[2]).toBe("Actual")
+  })
+  it("PDF con viñetas: la frase bajo la cabecera del puesto se conserva como logro", () => {
+    const b = splitExperienceBlocks("Product Designer | Ueno Bank 09/2026 – 11/2026\nUsers team, Profitability and Accounts project.\n• Discovery with the PM and stakeholders.\nDesigner | Monchis 2025 – 2026\nEnd-to-end design ownership, from discovery to delivery.\n• Roadmaps with PMs.")
+    expect(b).toHaveLength(2)
+    expect(b[0].bullets).toEqual(["Users team, Profitability and Accounts project.", "Discovery with the PM and stakeholders."])
+    expect(b[1].bullets[0]).toBe("End-to-end design ownership, from discovery to delivery.")
+  })
+  it("viñetas sin cabecera: cada una es un proyecto (nombre antes de «:»)", () => {
+    expect(bulletItems("• OKR's Platform (2025): align and track objectives;\nmobile first.\n• Vasava (2025): pricing redesign.")).toEqual(["OKR's Platform (2025): align and track objectives; mobile first.", "Vasava (2025): pricing redesign."])
   })
 })

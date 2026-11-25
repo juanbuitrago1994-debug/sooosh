@@ -392,3 +392,13 @@ Sube cada CV al servidor local (`/api/upload` y `/api/cv/parse`), de a uno, y mi
 2. **«Actualidad» dejaba «idad» pegado a la empresa** («Monchis idad»): en `dates.ts` la alternativa «actual» ganaba a «actualidad». Ahora va primero la palabra más larga, y la fecha final queda «Actualidad» completa.
 
 **Pendiente / no verificado de punta a punta**: las dos correcciones se verificaron con pruebas unitarias; no se repitió el banco porque la caché de la app (clave = hash del archivo + versión de modelo/prompts) no se invalida con cambios del parser. Los logros por experiencia también difieren entre Word y PDF (p. ej. 14 frente a 11 en las versiones de 2 páginas) y no se investigó la causa. Límites: un solo CV por archivo, plantillas casi iguales, 7 ejemplos sintéticos.
+
+**Seguimiento (25-nov-2026): logros y proyectos entre Word y PDF.** Causa de la diferencia de logros: con viñetas en el CV, la frase que va justo bajo la cabecera del puesto («Users team, Profitability and Accounts project.») se quedaba en la cabecera y se perdía; con el Word (sin viñetas) sí contaba como logro. Y los proyectos escritos como viñetas sin cabecera («• Proyecto (2025): descripción») no producían ningún proyecto. Corregido en `lib/cv/blocks.ts` (`splitExperienceBlocks`, `bulletItems`) y `lib/cv/pipeline.ts` (`parseProjects`), con pruebas. Verificado con el pipeline real (sin caché, vía `runCvPipeline` sobre el texto) en 3 versiones:
+
+| Versión | Word: exp / logros / estudios / proyectos | PDF: exp / logros / estudios / proyectos |
+|---|---|---|
+| Nubank Product Designer | 6 / 15 / 4 / 1 | 6 / 15 / 4 / 3 |
+| BICE Vida Beliv | 6 / 14 / 4 / 1 | 6 / 14 / 4 / 3 |
+| Contra Labs (EN) | 6 / 9 / 4 / 1 | 6 / 9 / 4 / 3 |
+
+Antes (PDF): logros 12, 11 y 8; estudios 1; proyectos 0. **Queda un defecto al revés**: en el Word, los proyectos escritos como párrafos sin viñetas («Nombre (2025): descripción», una línea por proyecto) se funden en un solo proyecto (1 en vez de 3). Sin corregir.

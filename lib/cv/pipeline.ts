@@ -5,7 +5,7 @@ import { existsInSource } from "@/lib/offer/guard"
 import { cvSchema, type CV } from "@/lib/schemas/cv"
 import { diagnosisSchema, type Diagnosis } from "@/lib/schemas/diagnosis"
 import { parseEduHead, parseJobHead, splitEducation } from "./heads"
-import { splitBlocks, splitExperienceBlocks, type Block } from "./blocks"
+import { bulletItems, splitBlocks, splitExperienceBlocks, type Block } from "./blocks"
 import { extractContact } from "./contact"
 import { RANGE_RE } from "./dates"
 import { computeConfidence, computeSeniority, computeStyle, detectLanguage, findAtsRisks, findProblems, pickQuestion } from "./diagnosis"
@@ -114,7 +114,22 @@ function jobFromBlock(block: Block, llm: z.infer<typeof jobSchema> | null, det: 
 }
 
 function parseProjects(text: string): CV["projects"] {
-  return splitBlocks(text)
+  const blocks = splitBlocks(text)
+  // Un PDF conserva las viñetas que el Word no tiene: «• Proyecto (2025): descripción» sin cabecera aparte. Cada viñeta es un proyecto (nombre antes de «:», lo demás es la descripción).
+  if (blocks.length === 0) {
+    return bulletItems(text).map((item) => {
+      const i = item.indexOf(":")
+      const split = i > 0 && i <= 80
+      return {
+        name: clip(oneLine(split ? item.slice(0, i) : item), 120),
+        description: split && item.slice(i + 1).trim() ? clip(oneLine(item.slice(i + 1)), 600) : undefined,
+        url: extractContact(item).links[0]?.url,
+        technologies: [] as string[],
+        bullets: [] as string[],
+      }
+    })
+  }
+  return blocks
     .map((b) => {
       const tech = b.head.find((l) => /^(tecnolog[ií]as|stack|tech|herramientas)\s*:/i.test(l))
       const head = b.head.filter((l) => l !== tech)

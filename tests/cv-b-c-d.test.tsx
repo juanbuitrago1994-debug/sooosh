@@ -34,8 +34,10 @@ describe("puestos sin viñetas y anidados", () => {
   it("cada línea con rango abre un puesto, también sin viñetas y con el signo + del OCR", () => {
     const blocks = splitExperienceBlocks(fx("cv-diseno-ocr.txt").split("Experiencia\n")[1].split("Educación")[0])
     expect(blocks).toHaveLength(7 - 1) // Nubela, Banco Sur, Rappel, Movix, Alumnex, Aseguradora (freelance sin fechas no abre)
-    expect(blocks[1].bullets).toHaveLength(2)
-    expect(blocks[1].bullets[1]).toBe("Rediseño de secciones de cuentas: jerarquía de información y estados vacíos, de carga y de error.")
+    // «Dos meses en el equipo de Usuarios de Banco Sur.» va justo bajo la cabecera: antes se perdía (quedaba en la cabecera); ahora se conserva como primer logro.
+    expect(blocks[1].bullets).toHaveLength(3)
+    expect(blocks[1].bullets[0]).toBe("Dos meses en el equipo de Usuarios de Banco Sur.")
+    expect(blocks[1].bullets[2]).toBe("Rediseño de secciones de cuentas: jerarquía de información y estados vacíos, de carga y de error.")
   })
   it("el rango en su propia línea o junto a la ubicación se une al puesto de arriba", () => {
     const b = splitExperienceBlocks("Analista — Acme\n2018 - 2020\n- Hice cosas\nGerente — Beta\nLima, Perú | Ene 2021 - Actual\n- Más cosas")

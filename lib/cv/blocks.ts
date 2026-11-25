@@ -87,7 +87,8 @@ export function splitExperienceBlocks(text: string): Block[] {
     }
     const hasRange = RANGE_RE.test(line)
     // Word «en párrafos» (si el CV no usa viñetas en ningún lado): tras la cabecera del puesto, una frase completa (≥ 5 palabras que termina en punto) es un logro.
-    if (!explicitBullets && cur && !hasRange && cur.head.some((l) => RANGE_RE.test(l)) && /[.;]$/.test(line) && line.split(/\s+/).length >= 5) {
+    // Con viñetas en otras partes, solo la frase que va JUSTO bajo la cabecera (antes de la primera viñeta) se conserva: es la descripción del puesto, no parte del título.
+    if ((!explicitBullets || cur?.bullets.length === 0) && cur && !hasRange && cur.head.some((l) => RANGE_RE.test(l)) && /[.;]$/.test(line) && line.split(/\s+/).length >= 5) {
       cur.bullets.push(line)
       prevWasBullet = true
       continue
@@ -101,4 +102,16 @@ export function splitExperienceBlocks(text: string): Block[] {
     prevWasBullet = false
   }
   return blocks.filter((g) => g.bullets.length > 0 || g.head.some((l) => RANGE_RE.test(l)) || g.head.length >= 2)
+}
+
+/** Viñetas de una sección como elementos completos (une las líneas partidas que continúan una viñeta). Para secciones donde cada viñeta es una entrada, p. ej. proyectos en un PDF. */
+export function bulletItems(text: string): string[] {
+  const items: string[] = []
+  for (const raw of text.split("\n")) {
+    const line = raw.trim()
+    if (!line) continue
+    if (isBullet(line)) items.push(stripBullet(line))
+    else if (items.length && /^[a-záéíóúñ(]/.test(line)) items[items.length - 1] += " " + line
+  }
+  return items.filter(Boolean)
 }
