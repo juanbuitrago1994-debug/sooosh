@@ -344,3 +344,34 @@ Mismo CV (1 página sin texto), mismo flujo de la app (página → franjas → O
 **Error sistemático hallado**: «UI» sale como «Ul» («Senior Ul Designer», «Ul kit»). Se corrige en `ocr-clean.ts` solo ese token exacto (con prueba). El dato «diseñador ux» sigue sin aparecer porque el CV impreso pudo decir «Diseñador UI» (no se puede saber sin una transcripción real).
 
 **Límites**: sin transcripción exacta de referencia; un solo CV. En CV de dos columnas las viñetas de una y otra columna se mezclan al unir las franjas (orden de lectura), y eso Tesseract + franjas no lo resuelve.
+
+### Banco de lectura sobre la carpeta de CV de prueba (25-nov-2026, `scripts/cv-bench.mjs`)
+
+49 archivos, una corrida por CV (2 lectores de Tesseract en paralelo). El informe completo se guarda en `data/bench-cv/informe.md` (local, fuera del repositorio: tiene datos personales). 22 PDF con capa de texto (15 versiones de un mismo diseñador de producto, 2 páginas, una en inglés; 7 ejemplos de otros oficios, 1 página) y 3 casos difíciles.
+
+**1. OCR contra la capa de texto real** (PDF dibujado como imagen y leído con el flujo de la app):
+
+| Medida | Resultado |
+|---|---|
+| Palabras de la referencia recuperadas (recall) | **96,8 %** de media (mín. 94,7 %, máx. 100 %) |
+| Palabras devueltas que sí están en la referencia (precisión) | **99,5 %** de media |
+| Confianza media de Tesseract | 94,4 |
+| Tiempo | ~10 s por CV de 1–2 páginas (de 6 a 12 s) |
+
+**Errores repetidos** (lo que el OCR no devuelve bien):
+- **Enlaces y dominios** (nombres de redes y portafolios, «com», «net»): son lo que más falta (~45 % de las palabras perdidas). Con capa de texto no importa, pero en un CV escaneado se perdería el contacto en línea.
+- **«AI» leído como «Al»** (31 veces en 7 CV): no se corrige por regla porque «al» es una palabra válida en español.
+- **Tildes perdidas en nombres y títulos en mayúsculas** («ANDRÉS GÓMEZ» → «ANDRES GOMEZ», «FORMACIÓN ACADÉMICA» → «formacion academica»): afecta al nombre de la persona.
+- **«FigJam» → «FigLam»** (j leída como l), y letras sueltas en siglas.
+
+**2. Word ↔ PDF de la misma versión**: 21 de 21 pares con el 100 % de coincidencia de palabras en ambos sentidos: los PDF de esta carpeta se generaron a partir del Word y no pierden ni reordenan contenido.
+
+**3. Casos difíciles sin referencia**:
+
+| Archivo | Tiempo | Franjas | Líneas | Confianza |
+|---|---|---|---|---|
+| captura alta 1 (JPG, 1440×7999) | 45 s | 11 | 136 | 91,0 |
+| captura alta 2 (PNG, 1440×6989) | 40 s | 10 | 195 | 92,6 |
+| PDF de diseño sin texto (1 página) | 28 s | 16 | 239 | 89,3 |
+
+**Límites**: los CV son de una columna, con capa de texto y plantilla casi igual (15 de 22 son de la misma persona); los 7 ejemplos parecen sintéticos. No hay dos columnas, fotos, escaneados multipágina ni otros idiomas salvo un CV en inglés. Las cifras valen para este tipo de documento; no se pueden extender a «la mayoría de CV».
