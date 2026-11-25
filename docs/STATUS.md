@@ -1280,3 +1280,9 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 ### Validación del CV: anillo de avance que se llena (24-nov-2026)
 - El indicador de abajo a la izquierda ya no es el spinner que gira solo: es el **anillo de avance** `components/cv/progress-ring.tsx` (mismo tamaño y trazo que el spinner) que **se llena a medida que la persona valida cada etapa**, con el nombre de la etapa (cambia con blur + desplazamiento) y el porcentaje. `role="progressbar"`; con «reducir movimiento» el arco salta sin animar.
 - Verificado por DOM: 0 % → 30 % tras tres confirmaciones, arco en 0,3 de 1, sin animación de giro. lint, `tsc`, `pnpm test` (923).
+
+### Afinidad ATS del CV subido, en la validación (24-nov-2026)
+- Un **badge arriba de la tarjeta del archivo** (panel izquierdo) muestra «Afinidad con ATS · N %»: el formato del archivo ORIGINAL que subió la persona, medido con el mismo verificador de la versión ATS (`verifyAtsFile`, 42 reglas de formato; los consejos de contenido no restan). Mientras se mide, «Midiendo afinidad con ATS» con spinner. Es destacado (relleno) cuando la etiqueta es «listo» o «casi»; si no, es de contorno.
+- Nueva acción `original` de `POST /api/ats` (`fileId`, `fileName`, `cv`, `sourceText`): lee el archivo de `data/uploads` (solo `.pdf` y `.docx`; el id se valida con `STORED_ID_RE`) y devuelve `{ percent, label, labelText }`. Para otros formatos (txt, imágenes, doc, odt, rtf) devuelve `percent: null` y **no se muestra el badge**; tampoco en adaptaciones reabiertas (no traen archivo). Cliente: `originalAtsClient` (`lib/ats/client.ts`).
+- Verificado: lint, `tsc`, `build`, `pnpm test`; en tu servidor con un PDF de prueba → «Afinidad con ATS · 85 %».
+- Aclaración honesta: el porcentaje mide **formato** (texto seleccionable, columnas, secciones, contacto…) según guías públicas; no garantiza que un ATS concreto lo acepte (así lo dice el tooltip del badge).

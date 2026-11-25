@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { ProgressRing } from "@/components/cv/progress-ring"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -38,7 +39,7 @@ const shown = (cv: CV, s: Stage) => {
   return contactParts(cv).filter(Boolean).join(" · ")
 }
 
-export type FileFacts = { name: string; detail: string; notes: string[] }
+export type FileFacts = { name: string; detail: string; notes: string[]; /** afinidad del archivo original con el formato ATS: `undefined` = calculando, `null` = no se puede medir */ ats?: { percent: number; labelText: string; good: boolean } | null }
 
 /**
  * Validación del CV leído, en pantalla dividida (UI minimalista): a la izquierda los datos del archivo; a la derecha las etapas, una por una.
@@ -79,6 +80,12 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
   return (
     <div className="grid w-full gap-2 rounded-3xl border bg-card p-2 md:grid-cols-2">
       <section aria-label="Tu archivo" className="order-2 flex flex-col items-center justify-center gap-4 rounded-2xl bg-muted/50 p-6 md:order-1 md:p-8">
+        {file.ats !== null && (
+          <Badge variant={file.ats?.good ? "default" : "outline"} className="self-start md:self-center" title="Mide el formato de tu archivo original según guías públicas de ATS; no garantiza que un ATS concreto lo acepte.">
+            {file.ats ? <CheckIcon data-icon="inline-start" /> : <Spinner data-icon="inline-start" />}
+            {file.ats ? `Afinidad con ATS · ${file.ats.percent} %` : "Midiendo afinidad con ATS"}
+          </Badge>
+        )}
         <Attachment state="done" className="w-full max-w-sm">
           <AttachmentMedia>
             <FileTextIcon />

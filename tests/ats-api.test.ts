@@ -32,6 +32,15 @@ describe("POST /api/ats · validación de la solicitud", () => {
   })
 })
 
+describe("POST /api/ats · afinidad del archivo original", () => {
+  it("rechaza un identificador inválido; otros formatos no se miden; un archivo que no existe da 404", async () => {
+    expect((await POST(req({ action: "original", cv: withSummary, fileId: "../etc/passwd" }))).status).toBe(400)
+    const txt = await POST(req({ action: "original", cv: withSummary, fileId: "11111111-1111-4111-8111-111111111111.txt" }))
+    expect(await txt.json()).toEqual({ percent: null, reason: "format" })
+    expect((await POST(req({ action: "original", cv: withSummary, fileId: "11111111-1111-4111-8111-111111111111.pdf" }))).status).toBe(404)
+  })
+})
+
 describe("generar la versión ATS (cliente + ruta)", () => {
   it("con resumen propio: etapas 0 → 2, PDF y Word reales, nombres Nombre-Apellido-Cargo", async () => {
     const stages: number[] = []

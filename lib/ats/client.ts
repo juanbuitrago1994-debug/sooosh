@@ -124,3 +124,12 @@ export function saveBlob(blob: Blob, name: string) {
   a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
+
+/** Afinidad del archivo ORIGINAL con el formato ATS (para la etapa de validación). `null` = no se puede medir (otro formato o sin texto). */
+export type OriginalAts = { percent: number; label: "listo" | "casi" | "cambios" | "esencial"; labelText: string }
+export async function originalAtsClient(cv: CV, fileId: string, fileName: string, sourceText: string | undefined, signal?: AbortSignal): Promise<OriginalAts | null> {
+  const res = await fetch("/api/ats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "original", cv, fileId, fileName, sourceText }), signal })
+  const j = await res.json().catch(() => ({}))
+  if (!res.ok || typeof j.percent !== "number") return null
+  return j as OriginalAts
+}

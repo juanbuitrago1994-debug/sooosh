@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises"
+import path from "node:path"
 import { NextResponse } from "next/server"
 import { renderAtsDocx } from "@/lib/ats/docx"
 import { atsFileName } from "@/lib/ats/filename"
@@ -9,6 +11,7 @@ import { atsToText } from "@/lib/ats/text"
 import { combineReports, verifyAtsFile } from "@/lib/ats/verify"
 import { PdfError } from "@/lib/pdf/render"
 import { cvSchema } from "@/lib/schemas/cv"
+import { STORED_ID_RE } from "@/lib/uploads"
 
 const MAX_B64 = 8_000_000
 const MAX_SOURCE = 60_000
@@ -29,6 +32,25 @@ export async function POST(request: Request) {
     const sourceText = typeof body.sourceText === "string" ? body.sourceText.slice(0, MAX_SOURCE) : undefined
     const r = await extractExtras(cv.data, sourceText, { signal: request.signal })
     return NextResponse.json({ extras: r.reason ? null : r.extras }, { headers: { "Cache-Control": "no-store" } })
+  }
+
+  // Afinidad del archivo ORIGINAL que subió la persona con el formato ATS (mismo verificador que la versión generada; solo PDF y Word con texto).
+  if (body?.action === "original") {
+    const fileId = typeof (body as { fileId?: unknown }).fileId === "string" ? ((body as { fileId?: string }).fileId as string) : ""
+    if (!STORED_ID_RE.test(fileId)) return NextResponse.json({ error: "Identificador de archivo inválido." }, { status: 400 })
+    const ext = path.extname(fileId).toLowerCase()
+    if (ext !== ".pdf" && ext !== ".docx") return NextResponse.json({ percent: null, reason: "format" }, { headers: { "Cache-Control": "no-store" } })
+    const file = await readFile(path.join(process.cwd(), "data", "uploads", fileId)).catch(() => null)
+    if (!file) return NextResponse.json({ error: "No encontramos el archivo subido." }, { status: 404 })
+    const name = typeof (body as { fileName?: unknown }).fileName === "string" ? ((body as { fileName?: string }).fileName as string).slice(0, 200) : fileId
+    const source = typeof body.sourceText === "string" ? body.sourceText.slice(0, MAX_SOURCE) : undefined
+    try {
+      const report = await verifyAtsFile({ file, fileName: name, cv: cv.data, source })
+      return NextResponse.json({ percent: report.percent, label: report.label, labelText: report.labelText }, { headers: { "Cache-Control": "no-store" } })
+    } catch (e) {
+      console.error("[ats/original]", e)
+      return NextResponse.json({ percent: null, reason: "unreadable" }, { headers: { "Cache-Control": "no-store" } })
+    }
   }
 
   if (body?.action === "verify") {

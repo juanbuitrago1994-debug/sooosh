@@ -9,6 +9,7 @@ import { EntryScreen, type EntryActions } from "@/components/wizard/entry-screen
 import { CV_FORM_ID, CvForm } from "@/components/cv/cv-form"
 import { ValidationFlow } from "@/components/cv/validation-flow"
 import { freezeSource, type Source } from "@/lib/cv/source"
+import { originalAtsClient, type OriginalAts } from "@/lib/ats/client"
 import { prefetchExtras } from "@/lib/ats/prefetch"
 import { getSearchProfile, refreshSearchProfile, setSearchProfile } from "@/lib/profile/search-profile"
 import { STAGES } from "@/lib/cv/stages"
@@ -61,6 +62,20 @@ export function StepProfile({
   const abortRef = useRef<AbortController | null>(null)
   const ai = useAiWork()
 
+  // Afinidad del archivo original con el formato ATS: se mide una vez por archivo (no si es una adaptación reabierta, que no trae archivo).
+  const [atsState, setAtsState] = useState<{ id: string; v: OriginalAts | null } | null>(null)
+  const atsKey = data && data.file.size > 0 ? data.file.id : ""
+  const ats = atsState?.id === atsKey ? atsState.v : undefined
+  useEffect(() => {
+    if (!atsKey || !data) return
+    const ctl = new AbortController()
+    originalAtsClient(data.cv, data.file.id, data.file.name, data.sourceText, ctl.signal).then(
+      (v) => setAtsState({ id: atsKey, v }),
+      () => !ctl.signal.aborted && setAtsState({ id: atsKey, v: null }),
+    )
+    return () => ctl.abort()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo cuando cambia el archivo
+  }, [atsKey])
   useEffect(() => onPhase(phase), [phase, onPhase])
   useEffect(() => () => abortRef.current?.abort(), [])
 
@@ -162,7 +177,7 @@ export function StepProfile({
       {data && (
         <ValidationFlow
           cv={data.cv}
-          file={{ name: file?.name ?? "CV", detail: `${file && file.size > 0 ? `${file.type} · ${formatBytes(file.size)}` : "Reabierto desde el historial"}${meta ? ` · leído en ${Math.max(1, Math.round(meta.totalMs / 1000))} s` : ""}`, notes }}
+          file={{ name: file?.name ?? "CV", detail: `${file && file.size > 0 ? `${file.type} · ${formatBytes(file.size)}` : "Reabierto desde el historial"}${meta ? ` · leído en ${Math.max(1, Math.round(meta.totalMs / 1000))} s` : ""}`, notes, ats: !atsKey ? null : ats === undefined ? undefined : ats ? { percent: ats.percent, labelText: ats.labelText, good: ats.label === "listo" || ats.label === "casi" } : null }}
           onChange={(cv) => update({ ...data, cv })}
           onChangeFile={reset}
           onContinue={onContinue}
