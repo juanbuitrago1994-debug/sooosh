@@ -1255,3 +1255,7 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - **Sin barra inferior en este paso**: «Continuar a Oferta» aparece solo en la última pantalla («Todo validado»). El título de la pantalla es solo para lectores de pantalla.
 - Verificado por DOM en tu servidor: una pregunta a la vez, atrás funciona, sin `footer` ni botón «Continuar» hasta el final, sin scroll horizontal; lint, `tsc`, `pnpm test` (923).
 - **Para revisar por Juan**: el ritmo de la animación entre preguntas y el centrado en 1280 y 375 px.
+
+### Validación del CV: tarjeta de dos mitades (24-nov-2026, a partir de la referencia de Juan)
+- La validación va dentro de **una tarjeta redondeada** (`rounded-3xl border bg-card`, solo tokens) con dos mitades: **izquierda un panel hundido** (`rounded-2xl bg-muted/50`) con el archivo (nombre, tipo, peso, lectura y avisos) y **derecha la pregunta actual con su botonería** (atrás, contador, «Es correcto» / «No es correcto»). Sin línea divisoria. En móvil la pregunta va primero y el archivo debajo.
+- Verificado por DOM: archivo a la izquierda, ambas mitades de igual altura, sin scroll horizontal en 1280 y 375 px.

@@ -75,9 +75,9 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
   const leave = reduce ? { opacity: 0 } : { opacity: 0, x: dir * -MOTION.offset * 2, filter: `blur(${MOTION.blur}px)` }
 
   return (
-    <div className="grid w-full gap-8 md:grid-cols-2 md:items-center md:gap-0">
-      <section aria-label="Tu archivo" className="flex flex-col gap-4 md:pr-12">
-        <Attachment state="done" className="w-full">
+    <div className="grid w-full gap-2 rounded-3xl border bg-card p-2 md:grid-cols-2">
+      <section aria-label="Tu archivo" className="order-2 flex flex-col items-center justify-center gap-4 rounded-2xl bg-muted/50 p-6 md:order-1 md:p-8">
+        <Attachment state="done" className="w-full max-w-sm">
           <AttachmentMedia>
             <FileTextIcon />
           </AttachmentMedia>
@@ -92,15 +92,15 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
           </AttachmentActions>
         </Attachment>
         {file.notes.map((n) => (
-          <p key={n} className="flex items-start gap-2 text-xs text-muted-foreground">
+          <p key={n} className="flex max-w-sm items-start gap-2 text-xs text-muted-foreground">
             <InfoIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             <span>{n}</span>
           </p>
         ))}
       </section>
 
-      {/* La línea divisoria separa lo que subiste (izquierda) de lo que validas (derecha). */}
-      <section aria-label="Validación de tus datos" aria-live="polite" className="flex min-h-96 flex-col border-t pt-8 md:border-t-0 md:border-l md:pt-0 md:pl-12">
+      {/* Dos mitades en una tarjeta: lo que subiste (panel hundido, izquierda) y lo que validas (derecha). */}
+      <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-96 flex-col p-4 md:order-2 md:p-8">
         <div className="flex h-9 items-center gap-2 text-xs text-muted-foreground">
           {step > 0 ? (
             <Button variant="ghost" size="icon-sm" aria-label="Volver a la pregunta anterior" onClick={back}>
