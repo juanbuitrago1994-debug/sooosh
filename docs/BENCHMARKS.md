@@ -375,3 +375,20 @@ Mismo CV (1 página sin texto), mismo flujo de la app (página → franjas → O
 | PDF de diseño sin texto (1 página) | 28 s | 16 | 239 | 89,3 |
 
 **Límites**: los CV son de una columna, con capa de texto y plantilla casi igual (15 de 22 son de la misma persona); los 7 ejemplos parecen sintéticos. No hay dos columnas, fotos, escaneados multipágina ni otros idiomas salvo un CV en inglés. Las cifras valen para este tipo de documento; no se pueden extender a «la mayoría de CV».
+
+### Banco de extracción con el pipeline real (25-nov-2026, `scripts/parse-bench.mjs`)
+
+Sube cada CV al servidor local (`/api/upload` y `/api/cv/parse`), de a uno, y mide trazabilidad de lo extraído y coherencia entre el Word y el PDF de la misma versión. 46 de 47 archivos leídos (`CV type 2.pdf` pesa 11,7 MB y el límite de subida es 10 MB: no se probó). Una corrida por archivo; algunos salieron de la caché de la app (lectura de 0 s), así que los tiempos de esos no cuentan. Informe local en `data/bench-cv/informe-extraccion.md`.
+
+| Medida | Resultado |
+|---|---|
+| Datos extraídos | 3789 |
+| No rastreables al texto fuente | **8 (0,2 %)**: 5 son el marcador «(empresa no detectada)» que pone la propia app; 2 son «Monchis idad» y «Gopass idad» (error, ver abajo); 1 más del mismo marcador |
+| Nombre, correo y teléfono encontrados | 46 de 46 |
+| Coincidencia de datos Word ↔ PDF (Jaccard) | 74 %–94 % por versión (media ~80 %) |
+
+**Defectos hallados (y corregidos, con pruebas):**
+1. **Estudios con viñetas en el PDF se pegaban al primero.** El Word de las 14 versiones da 4 estudios; el PDF daba 1 (los otros 3, certificaciones con «• Título | Entidad, 2022», quedaban como «detalles» del primero). Ahora `splitEducation` abre un estudio propio cuando la viñeta tiene la forma «título | entidad» más un año.
+2. **«Actualidad» dejaba «idad» pegado a la empresa** («Monchis idad»): en `dates.ts` la alternativa «actual» ganaba a «actualidad». Ahora va primero la palabra más larga, y la fecha final queda «Actualidad» completa.
+
+**Pendiente / no verificado de punta a punta**: las dos correcciones se verificaron con pruebas unitarias; no se repitió el banco porque la caché de la app (clave = hash del archivo + versión de modelo/prompts) no se invalida con cambios del parser. Los logros por experiencia también difieren entre Word y PDF (p. ej. 14 frente a 11 en las versiones de 2 páginas) y no se investigó la causa. Límites: un solo CV por archivo, plantillas casi iguales, 7 ejemplos sintéticos.

@@ -97,7 +97,10 @@ export function splitEducation(text: string): { head: string[]; bullets: string[
     const line = raw.trim()
     if (!line) continue
     if (/^\s*(?:[-–—•·*▪◦►➢✓●○■□>]|\d{1,2}[.)])\s+/.test(raw)) {
-      out[out.length - 1]?.bullets.push(line.replace(/^\s*(?:[-–—•·*▪◦►➢✓●○■□>]|\d{1,2}[.)])\s+/, ""))
+      const text = line.replace(/^\s*(?:[-–—•·*▪◦►➢✓●○■□>]|\d{1,2}[.)])\s+/, "")
+      // Un PDF conserva las viñetas que el Word no tiene: «• Certificación | Entidad, 2022» es un estudio propio (título | entidad + año), no un detalle del anterior.
+      if (out.length > 0 && /\s\|\s/.test(text) && /\b(?:19|20)\d{2}\b/.test(text)) out.push({ head: [text], bullets: [] })
+      else out[out.length - 1]?.bullets.push(text)
       continue
     }
     const opens = ORG_WORDS.test(line) || /\b(?:19|20)\d{2}\b/.test(line) || out.length === 0

@@ -4,6 +4,7 @@
 //   2) Coherencia Word ↔ PDF de la misma versión (texto del DOCX contra capa de texto del PDF).
 //   3) Casos difíciles sin referencia (imágenes sueltas y PDF sin texto): tiempo, líneas y confianza.
 // Uso: node scripts/cv-bench.mjs [carpeta-cv] [carpeta-salida] [filtro]
+// OCR_LANG_PATH=<carpeta con spa.traineddata y eng.traineddata sin comprimir> prueba otros datos de idioma (p. ej. tessdata_best).
 import { readFile, readdir, writeFile, mkdir } from "node:fs/promises"
 import path from "node:path"
 import { sliceIntoStrips } from "../lib/extract/strips.ts"
@@ -39,7 +40,7 @@ function compare(got, truth) {
 const top = (m, n = 8) => [...m].sort((a, b) => b[1] - a[1]).slice(0, n).map(([w, c]) => `${w}×${c}`).join(", ")
 
 // ---------- OCR con la misma cadena de la app ----------
-const workers = await Promise.all([0, 1].map(() => createWorker(["spa", "eng"], 1, { cachePath: path.join(process.cwd(), "data", "tessdata") })))
+const workers = await Promise.all([0, 1].map(() => createWorker(["spa", "eng"], 1, process.env.OCR_LANG_PATH ? { langPath: process.env.OCR_LANG_PATH, gzip: false, cachePath: process.env.OCR_LANG_PATH } : { cachePath: path.join(process.cwd(), "data", "tessdata") })))
 const free = [...workers]
 const acquire = async () => { while (!free.length) await new Promise((r) => setTimeout(r, 50)); return free.pop() }
 

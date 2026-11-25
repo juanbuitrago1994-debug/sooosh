@@ -4,7 +4,7 @@ const MONTH = "(?:ene|feb|mar|abr|may|jun|jul|ago|sep|set|oct|nov|dic|jan|apr|au
 const YEAR = "(?:19|20)\\d{2}"
 const DAY = "(?:\\d{1,2}\\s*(?:de\\s+)?)?" // «06 nov 2026», «11ago 2025» (el OCR pega el día al mes)
 const DATE = `(?:${DAY}${MONTH}\\s*(?:de\\s+)?${YEAR}|\\d{1,2}[/-]${YEAR}|${YEAR})`
-const OPEN = "(?:actual|actualidad|presente|present|current|hoy|la fecha|now|a la fecha|en curso)"
+const OPEN = "(?:actualidad|actual|presente|present|current|hoy|a la fecha|la fecha|now|en curso)" // la palabra más larga primero: con «actual» antes, «Actualidad» dejaba «idad» pegado a la empresa
 export const RANGE_RE = new RegExp(`(${DATE})\\s*(?:-|–|—|a|al|to|hasta)\\s*(${DATE}|${OPEN})`, "i")
 
 const MONTHS: Record<string, number> = { ene: 1, jan: 1, feb: 2, mar: 3, abr: 4, apr: 4, may: 5, jun: 6, jul: 7, ago: 8, aug: 8, sep: 9, set: 9, oct: 10, nov: 11, dic: 12, dec: 12 }

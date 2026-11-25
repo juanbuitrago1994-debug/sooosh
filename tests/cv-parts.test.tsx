@@ -90,6 +90,10 @@ describe("bloques, cabeceras, habilidades e idiomas", () => {
     expect(parseEduHead(["Universidad Nacional de Ingeniería — Ingeniería Estadística (2012 - 2017)"])).toMatchObject({ institution: "Universidad Nacional de Ingeniería", degree: "Ingeniería Estadística", startDate: "2012", endDate: "2017" })
     expect(parseEduHead(["Diplomado en Ciencia de Datos, Pontificia Universidad Católica del Perú (2019)"])).toMatchObject({ institution: "Pontificia Universidad Católica del Perú", degree: "Diplomado en Ciencia de Datos", endDate: "2019" })
     expect(splitEducation("Universidad A — Ingeniería (2012 - 2017)\nDiplomado, Instituto B (2019)\n- Beca de excelencia")).toHaveLength(2)
+    // PDF con viñetas: cada «título | entidad, año» es un estudio; una viñeta sin esa forma sigue siendo detalle.
+    const pdf = splitEducation("Systems Engineering | Universidad Tadeo 2018 – 2021\n• Figma Advanced Certification | LinkedIn Learning, 2022\n• Product Design Program | Coderhouse, 2022 – 2023\n• Promedio destacado")
+    expect(pdf).toHaveLength(3)
+    expect(pdf[2].bullets).toEqual(["Promedio destacado"])
   })
   it("habilidades con y sin categoría, idiomas con nivel", () => {
     expect(parseSkills("Lenguajes: SQL, Python\nGit • Docker | Linux")).toEqual([{ items: ["Git", "Docker", "Linux"] }, { category: "Lenguajes", items: ["SQL", "Python"] }])
@@ -161,5 +165,9 @@ describe("lector del stream de Ollama", () => {
   })
   it("un error dentro del stream se informa", async () => {
     await expect(readNdjson(streamOf(['{"error":"modelo no cargado"}\n']))).rejects.toThrow(/modelo no cargado/)
+  })
+  it("el rango abierto «Actualidad» se toma completo (sin dejar «idad» pegado a la empresa)", () => {
+    expect(RANGE_RE.exec("Product Designer | Monchis\tAgo 2025 – Actualidad")?.[2]).toBe("Actualidad")
+    expect(RANGE_RE.exec("2020 - Actual")?.[2]).toBe("Actual")
   })
 })
