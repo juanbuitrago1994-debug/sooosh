@@ -159,7 +159,6 @@ export function StepProfile({
   const notes = [meta?.method.includes("ocr") && "Leído con OCR: el texto salió de una imagen y puede tener errores. Revisa bien los datos.", meta?.truncated && "CV muy largo: solo se leyó el inicio. Usa «Corregir» para agregar lo que falte."].filter((n): n is string => !!n)
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="sr-only">Validemos tu CV</h1>
       {data && (
         <ValidationFlow
           cv={data.cv}

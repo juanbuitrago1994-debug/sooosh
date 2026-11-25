@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { ArrowLeftIcon, CheckIcon, InfoIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
+import { ProgressLine } from "@/components/ai/progress-line"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -14,6 +15,8 @@ import { applyStage, contactParts, dropStage, entryLine, flatSkills, languagesTe
 import { MOTION } from "@/lib/motion"
 import type { CV } from "@/lib/schemas/cv"
 
+/** Nombre corto de la etapa para el indicador de avance. */
+const STAGE_NAME: Record<StageKind, string> = { name: "Nombre", role: "Rol", contact: "Contacto", summary: "Resumen", experience: "Experiencia", education: "Educación", skills: "Habilidades", languages: "Idiomas" }
 const QUESTIONS: Record<StageKind, string> = {
   experience: "Esta es una experiencia que leímos. ¿Es correcta?",
   education: "Este es un estudio que leímos. ¿Es correcto?",
@@ -100,21 +103,25 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
 
       {/* Dos mitades en una tarjeta: lo que subiste (panel hundido, izquierda) y lo que validas (derecha). */}
       <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-112 flex-col px-2 md:order-2 md:pr-0 md:pl-6">
-        {/* Arriba la pregunta, en medio la respuesta; abajo, a la izquierda el avance (3 puntos) y a la derecha la botonería. */}
+        {/* Arriba, fijo: qué debe hacer la persona. En medio, la pregunta junto a su respuesta. Abajo: a la izquierda el avance y a la derecha la botonería. */}
+        <header className="flex flex-col gap-1">
+          <h1 className="text-xl font-medium text-balance">Revisa lo que leímos de tu CV</h1>
+          <p className="text-sm text-muted-foreground">Confirma cada dato con el tick o corrígelo con la equis. Con ellos armaremos tus CV para cada oferta.</p>
+        </header>
         <div className="flex flex-1 flex-col">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={`${step}-${editing}`}
-              className="flex flex-1 flex-col gap-8 pb-8"
+              className="flex flex-1 flex-col justify-center py-8"
               initial={enter}
               animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
               exit={leave}
               transition={{ duration: MOTION.enter / 2, ease: MOTION.ease }}
             >
               {current ? (
-                <>
+                <div className="flex flex-col gap-2">
                   <p className="text-sm text-muted-foreground">{QUESTIONS[current.kind]}</p>
-                  <div className="my-auto flex flex-col gap-3">
+                  <div className="flex flex-col gap-3">
                     {!editing ? (
                       <>
                         <h2 className={`font-medium break-words ${shown(cv, current).length > 90 ? "text-base" : "text-xl"}`}>{shown(cv, current) || "No encontramos este dato"}</h2>
@@ -130,9 +137,9 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
                       <StageEditor stage={current} cv={cv} onSave={(next) => { onChange(next); confirm() }} />
                     )}
                   </div>
-                </>
+                </div>
               ) : (
-                <div className="my-auto flex flex-col gap-3">
+                <div className="flex flex-col gap-3">
                   <span className="grid size-9 place-items-center rounded-lg bg-muted">
                     <CheckIcon aria-hidden />
                   </span>
@@ -151,7 +158,11 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
                 <ArrowLeftIcon aria-hidden />
               </Button>
             )}
-            <Dots step={step} total={stages.length} />
+            {current ? (
+              <ProgressLine className="justify-start" messages={[STAGE_NAME[current.kind]]} percent={Math.floor((step / stages.length) * 100)} label="Avance de la validación" />
+            ) : (
+              <span className="text-sm text-muted-foreground">Listo</span>
+            )}
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             {!current ? (
@@ -195,19 +206,6 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
 }
 
 const FORM_ID = "validar-etapa"
-
-/** Avance en SIEMPRE tres puntos: el activo se mueve entre los tres (primero al inicio, último al final, en medio el resto). */
-function Dots({ step, total }: { step: number; total: number }) {
-  const n = Math.min(3, Math.max(1, total))
-  const active = step <= 0 ? 0 : step >= total ? n - 1 : Math.min(n - 1, 1)
-  return (
-    <span role="progressbar" aria-label={`Pregunta ${Math.min(step + 1, total)} de ${total}`} aria-valuemin={0} aria-valuemax={total} aria-valuenow={Math.min(step, total)} className="flex items-center gap-1.5 px-1">
-      {Array.from({ length: n }, (_, i) => (
-        <span key={i} aria-hidden className={`size-2 rounded-full transition-colors duration-300 ${i === active ? "bg-foreground" : "bg-muted-foreground/40"}`} />
-      ))}
-    </span>
-  )
-}
 
 function StageEditor({ stage: st, cv, onSave }: { stage: Stage; cv: CV; onSave: (cv: CV) => void }) {
   const stage = st.kind
