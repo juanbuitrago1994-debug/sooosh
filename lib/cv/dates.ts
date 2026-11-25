@@ -1,6 +1,7 @@
 import { fold } from "@/lib/keywords/normalize"
 
-const MONTH = "(?:ene|feb|mar|abr|may|jun|jul|ago|sep|set|oct|nov|dic|jan|apr|aug|dec)[a-z]*\\.?"
+const MONTH = "(?<![A-Za-zÁÉÍÓÚÑáéíóúñ])(?:ene|feb|mar|abr|may|jun|jul|ago|sep|set|oct|nov|dic|jan|apr|aug|dec)[a-z]*\\.?"
+// El mes no puede ir pegado a una letra anterior: sin esto «Nexora Pagos 2021» leía «agos 2021» como fecha y partía la empresa («Nexora P»).
 const YEAR = "(?:19|20)\\d{2}"
 const DAY = "(?:\\d{1,2}\\s*(?:de\\s+)?)?" // «06 nov 2026», «11ago 2025» (el OCR pega el día al mes)
 const DATE = `(?:${DAY}${MONTH}\\s*(?:de\\s+)?${YEAR}|\\d{1,2}[/-]${YEAR}|${YEAR})`

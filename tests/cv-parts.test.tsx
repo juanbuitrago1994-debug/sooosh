@@ -3,7 +3,7 @@ import path from "node:path"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { DiagnosisCard, styleSentence } from "@/components/cv/diagnosis-card"
-import { bulletItems, splitBlocks, splitExperienceBlocks } from "@/lib/cv/blocks"
+import { bulletItems, paragraphProjectItems, splitBlocks, splitExperienceBlocks } from "@/lib/cv/blocks"
 import { extractContact } from "@/lib/cv/contact"
 import { parseDate, RANGE_RE, totalYears } from "@/lib/cv/dates"
 import { detectLanguage, pickQuestion } from "@/lib/cv/diagnosis"
@@ -178,5 +178,29 @@ describe("lector del stream de Ollama", () => {
   })
   it("viñetas sin cabecera: cada una es un proyecto (nombre antes de «:»)", () => {
     expect(bulletItems("• OKR's Platform (2025): align and track objectives;\nmobile first.\n• Vasava (2025): pricing redesign.")).toEqual(["OKR's Platform (2025): align and track objectives; mobile first.", "Vasava (2025): pricing redesign."])
+    expect(bulletItems("• Ticketly (2025): events platform; full\nA/B redesign.")).toEqual(["Ticketly (2025): events platform; full A/B redesign."])
+  })
+  it("Word sin viñetas: cada línea «Nombre (año): …» es un proyecto; una línea sin esa forma no se toca", () => {
+    expect(paragraphProjectItems("OKR's Platform (2025): align objectives.\n\nVasava (2025): pricing redesign,\nwith clearer plans.\n\nTicketly (2025): events platform.")).toEqual(["OKR's Platform (2025): align objectives.", "Vasava (2025): pricing redesign, with clearer plans.", "Ticketly (2025): events platform."])
+    expect(paragraphProjectItems("Guía de investigación (2023): marco interno.")).toEqual(["Guía de investigación (2023): marco interno."])
+    expect(paragraphProjectItems("Un texto cualquiera sin forma de proyecto.")).toEqual([])
+    expect(paragraphProjectItems("• OKR's Platform (2025): a.\n• Vasava (2025): b.")).toEqual([])
+  })
+  it("un mes pegado a una letra no es fecha («Pagos 2021»); y una viñeta partida en «%.» o «60 % al 95 %.» no abre puestos", () => {
+    const r = RANGE_RE.exec("Scrum Master | Nexora Pagos 2021 – Presente")
+    expect(r?.[1]).toBe("2021")
+    expect(RANGE_RE.exec("11ago 2025 - 06 nov 2026")?.[1]).toBe("11ago 2025")
+    const b = splitExperienceBlocks("Scrum Master | Nexora Pagos 2021 – Presente\n• Implementé métricas: la predictibilidad subió al 85\n%.\n• Rediseñé las retrospectivas; la participación pasó del\n60 % al 95 %.\nAnalista | Pacífico 2016 – 2018\n• Seguimiento de cronogramas.")
+    expect(b).toHaveLength(2)
+    expect(b[0].bullets).toEqual(["Implementé métricas: la predictibilidad subió al 85 %.", "Rediseñé las retrospectivas; la participación pasó del 60 % al 95 %."])
+  })
+  it("una viñeta larga partida con la continuación en mayúscula («KPIs/OKRs…») no abre un puesto", () => {
+    const b = splitExperienceBlocks("Product Designer | Monchis 2025 – 2026\n• Decisiones de producto con PMs: roadmaps, priorización por impacto y esfuerzo, y alineación de\nKPIs/OKRs con stakeholders.\n• Otra viñeta corta.\nDesigner | Gopass 2024 – 2025\n• Hice cosas.")
+    expect(b).toHaveLength(2)
+    expect(b[0].bullets).toHaveLength(2)
+    expect(b[0].bullets[0]).toContain("KPIs/OKRs con stakeholders.")
+  })
+  it("Word: «Nombre (2022 – Actualidad): …» también abre proyecto", () => {
+    expect(paragraphProjectItems("A (2025): uno.\nGridstudio UI Kit (2022 – Actualidad): dos.")).toHaveLength(2)
   })
 })

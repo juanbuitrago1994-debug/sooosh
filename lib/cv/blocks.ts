@@ -26,7 +26,7 @@ export function splitBlocks(text: string): Block[] {
       continue
     }
     // línea que continúa una viñeta partida en dos
-    if (prevWasBullet && cur && /^[a-záéíóúñ(]/.test(line) && !RANGE_RE.test(line)) {
+    if (prevWasBullet && cur && /^[a-záéíóúñ(%\d]/.test(line) && !RANGE_RE.test(line)) {
       cur.bullets[cur.bullets.length - 1] += " " + line
       continue
     }
@@ -64,6 +64,7 @@ export function splitExperienceBlocks(text: string): Block[] {
   const blocks: Block[] = []
   let cur: Block | undefined
   let prevWasBullet = false
+  let lastLine = "" // última línea física de la viñeta en curso (para detectar un salto de línea del PDF)
   const open = (): Block => {
     const b: Block = { head: [], bullets: [] }
     blocks.push(b)
@@ -79,10 +80,15 @@ export function splitExperienceBlocks(text: string): Block[] {
     if (isBullet(line)) {
       ;(cur ?? open()).bullets.push(stripBullet(line))
       prevWasBullet = true
+      lastLine = line
       continue
     }
-    if (prevWasBullet && cur && /^[a-záéíóúñ(]/.test(line) && !RANGE_RE.test(line)) {
+    // Continuación de una viñeta partida: la línea empieza en minúscula, cifra o «%», o la anterior era larga (≈ el ancho del PDF) y no cerró la frase
+    // («… alinear \n KPIs/OKRs con stakeholders»), siempre que no sea un título seguido de su rango.
+    const wrapped = lastLine.length >= 80 && !/[.!?]$/.test(lastLine) && !(nextLine && isPureRange(nextLine)) && !isBullet(line)
+    if (prevWasBullet && cur && (/^[a-záéíóúñ(%\d]/.test(line) || wrapped) && !RANGE_RE.test(line)) {
       cur.bullets[cur.bullets.length - 1] += " " + line
+      lastLine = line
       continue
     }
     const hasRange = RANGE_RE.test(line)
@@ -111,7 +117,25 @@ export function bulletItems(text: string): string[] {
     const line = raw.trim()
     if (!line) continue
     if (isBullet(line)) items.push(stripBullet(line))
-    else if (items.length && /^[a-záéíóúñ(]/.test(line)) items[items.length - 1] += " " + line
+    else if (items.length) items[items.length - 1] += " " + line // en un PDF toda línea que sigue a una viñeta continúa esa viñeta
   }
   return items.filter(Boolean)
+}
+
+/** «Nombre (2025): descripción»: una línea de proyecto escrita como párrafo (Word sin viñetas). */
+const PROJECT_LINE = /^[^:]{2,80}\((?:19|20)\d{2}[^)]*\)\s*:/
+
+/**
+ * Proyectos escritos como párrafos, una línea cada uno, sin viñetas. Solo se activa con al menos dos líneas con la forma «Nombre (año): …»
+ * (si no, no se arriesga a partir texto libre). Una línea que no abre proyecto continúa la descripción del anterior.
+ */
+export function paragraphProjectItems(text: string): string[] {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean)
+  if (lines.some(isBullet) || !lines.some((l) => PROJECT_LINE.test(l))) return []
+  const items: string[] = []
+  for (const line of lines) {
+    if (PROJECT_LINE.test(line) || items.length === 0) items.push(line)
+    else items[items.length - 1] += " " + line
+  }
+  return items
 }

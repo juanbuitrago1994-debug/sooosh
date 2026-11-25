@@ -402,3 +402,10 @@ Sube cada CV al servidor local (`/api/upload` y `/api/cv/parse`), de a uno, y mi
 | Contra Labs (EN) | 6 / 9 / 4 / 1 | 6 / 9 / 4 / 3 |
 
 Antes (PDF): logros 12, 11 y 8; estudios 1; proyectos 0. **Queda un defecto al revés**: en el Word, los proyectos escritos como párrafos sin viñetas («Nombre (2025): descripción», una línea por proyecto) se funden en un solo proyecto (1 en vez de 3). Sin corregir.
+
+**Segundo seguimiento (25-nov-2026): Word ↔ PDF iguales en las 21 versiones.** Verificado con `runCvPipeline` sobre el texto de cada archivo (sin caché; sin pasar por la subida de la app): mismos puestos, logros, estudios y proyectos entre el Word y el PDF de cada versión (antes coincidían en 6 de 21) y 0 empresas «(empresa no detectada)» (antes 4 entradas). Se corrigió, con pruebas:
+- **Mes pegado a una letra** (`dates.ts`): «Nexora Pagos 2021» leía «agos 2021» como fecha y dejaba la empresa en «Nexora P». El mes ya no puede ir pegado a una letra anterior (el día pegado al mes del OCR, «11ago», se sigue leyendo).
+- **Viñeta partida que abría puestos falsos** (`blocks.ts`): las continuaciones que empiezan por «%», una cifra o una mayúscula tras una línea larga sin cierre («… alinear de / KPIs/OKRs con stakeholders») se unen a su viñeta; antes aparecían como puestos sin empresa.
+- **Proyectos como párrafos en el Word** (`paragraphProjectItems`): «Nombre (año): …» una línea por proyecto, incluido «(2022 – Actualidad)» y el caso de un solo proyecto; y en el PDF, cada viñeta es un proyecto aunque una línea partida empiece en mayúscula.
+
+**Límites**: solo plantillas casi iguales (un diseñador, 7 ejemplos sintéticos); no se repitió la subida completa a la app ni los CV escaneados. La regla de la viñeta partida («≥ 80 caracteres sin punto final») es una heurística y puede unir de más en CV con viñetas largas sin puntuación seguidas de un título sin fecha en la misma línea; el caso «título + rango en la línea siguiente» está protegido.

@@ -5,7 +5,7 @@ import { existsInSource } from "@/lib/offer/guard"
 import { cvSchema, type CV } from "@/lib/schemas/cv"
 import { diagnosisSchema, type Diagnosis } from "@/lib/schemas/diagnosis"
 import { parseEduHead, parseJobHead, splitEducation } from "./heads"
-import { bulletItems, splitBlocks, splitExperienceBlocks, type Block } from "./blocks"
+import { bulletItems, isBullet, paragraphProjectItems, splitBlocks, splitExperienceBlocks, type Block } from "./blocks"
 import { extractContact } from "./contact"
 import { RANGE_RE } from "./dates"
 import { computeConfidence, computeSeniority, computeStyle, detectLanguage, findAtsRisks, findProblems, pickQuestion } from "./diagnosis"
@@ -113,22 +113,27 @@ function jobFromBlock(block: Block, llm: z.infer<typeof jobSchema> | null, det: 
   }
 }
 
-function parseProjects(text: string): CV["projects"] {
-  const blocks = splitBlocks(text)
-  // Un PDF conserva las viñetas que el Word no tiene: «• Proyecto (2025): descripción» sin cabecera aparte. Cada viñeta es un proyecto (nombre antes de «:», lo demás es la descripción).
-  if (blocks.length === 0) {
-    return bulletItems(text).map((item) => {
-      const i = item.indexOf(":")
-      const split = i > 0 && i <= 80
-      return {
-        name: clip(oneLine(split ? item.slice(0, i) : item), 120),
-        description: split && item.slice(i + 1).trim() ? clip(oneLine(item.slice(i + 1)), 600) : undefined,
-        url: extractContact(item).links[0]?.url,
-        technologies: [] as string[],
-        bullets: [] as string[],
-      }
-    })
+function projectFromItem(item: string): CV["projects"][number] {
+  const i = item.indexOf(":")
+  const split = i > 0 && i <= 80
+  return {
+    name: clip(oneLine(split ? item.slice(0, i) : item), 120),
+    description: split && item.slice(i + 1).trim() ? clip(oneLine(item.slice(i + 1)), 600) : undefined,
+    url: extractContact(item).links[0]?.url,
+    technologies: [] as string[],
+    bullets: [] as string[],
   }
+}
+
+function parseProjects(text: string): CV["projects"] {
+  // Proyectos como párrafos sin viñetas («Nombre (2025): descripción», uno por línea): sin esto se fundían en uno solo.
+  const paragraphs = paragraphProjectItems(text)
+  if (paragraphs.length) return paragraphs.map(projectFromItem)
+  // Un PDF conserva las viñetas que el Word no tiene: «• Proyecto (2025): descripción» sin cabecera aparte. Si la sección EMPIEZA con una viñeta, cada viñeta es un proyecto (nombre antes de «:», lo demás es la descripción).
+  const first = text.split("\n").map((l) => l.trim()).find(Boolean)
+  if (first && isBullet(first)) return bulletItems(text).map(projectFromItem)
+  const blocks = splitBlocks(text)
+  if (blocks.length === 0) return []
   return blocks
     .map((b) => {
       const tech = b.head.find((l) => /^(tecnolog[ií]as|stack|tech|herramientas)\s*:/i.test(l))
