@@ -99,7 +99,7 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
       </section>
 
       {/* Dos mitades en una tarjeta: lo que subiste (panel hundido, izquierda) y lo que validas (derecha). */}
-      <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-112 flex-col p-4 md:order-2">
+      <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-112 flex-col px-2 md:order-2 md:pr-0 md:pl-6">
         {/* Arriba la pregunta, en medio la respuesta; abajo, a la izquierda el avance (3 puntos) y a la derecha la botonería. */}
         <div className="flex flex-1 flex-col">
           <AnimatePresence mode="wait" initial={false}>
