@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
  */
 export function ValidatedCv({ file, onChangeFile, onContinue }: { file: FileFacts; onChangeFile: () => void; onContinue: () => void }) {
   return (
-    <section aria-label="Tu CV validado" className="mx-auto flex w-full max-w-sm flex-col items-stretch gap-6">
+    <section aria-label="Tu CV validado" className="mx-auto my-auto flex w-full max-w-sm flex-col items-stretch gap-6">
       {/* Sello sólido de «hecho», con lo que pasó: se subió, se analizó y la persona lo validó. */}
       <div className="flex flex-col items-center gap-3 text-center">
         <VerifyIcon aria-hidden className="size-11 fill-foreground" />

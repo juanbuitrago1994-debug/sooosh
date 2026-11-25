@@ -200,7 +200,7 @@ export function StepProfile({
     ats: !atsKey ? null : ats === undefined ? undefined : ats ? { percent: ats.percent, labelText: ats.labelText, good: ats.label === "listo" || ats.label === "casi" } : null,
   }
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-1 flex-col gap-8">
       {data &&
         (resumed ? (
           // CV ya validado (se volvió o se recargó la página): su tarjeta y el botón para seguir.

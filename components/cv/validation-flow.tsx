@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeftIcon, CheckIcon, InfoIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
+import { ArrowLeftIcon, CheckIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { ProgressRing } from "@/components/cv/progress-ring"
+import { ColdGlow } from "@/components/magic/cold-glow"
+import { VerifyIcon } from "@/components/cv/verify-icon"
 import { CvFileCard } from "@/components/cv/cv-file-card"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
@@ -105,25 +107,47 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
   const leave = reduce ? { opacity: 0 } : { opacity: 0, x: dir * -MOTION.offset * 2, filter: `blur(${MOTION.blur}px)` }
 
   return (
-    <div className="grid w-full gap-2 rounded-3xl border bg-card p-2 md:grid-cols-2">
-      <section aria-label="Tu archivo" className="order-2 flex flex-col items-center justify-center gap-4 rounded-2xl bg-muted/50 p-6 md:sticky md:top-4 md:order-1 md:h-112 md:self-start md:p-8">
-        <CvFileCard file={file} onChange={onChangeFile} atsAlign="start" className="max-w-sm" />
-        {file.notes.map((n) => (
-          <p key={n} className="flex max-w-sm items-start gap-2 text-xs text-muted-foreground">
-            <InfoIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-            <span>{n}</span>
-          </p>
-        ))}
+    <div className="grid w-full flex-1 gap-2 md:grid-cols-2 md:gap-4">
+
+      {/* Dos mitades sin contenedor común. Izquierda (fija al hacer scroll): «Volver» arriba, a la izquierda, y, en el medio y centrado, el sello, qué hacer, la tarjeta del CV y sus notas. Derecha (panel enmarcado con resplandor frío): las preguntas, el formulario y la botonería. */}
+      <section aria-label="Tu archivo" className="flex min-h-112 flex-col px-4 pt-4 pb-2 md:px-6 md:pt-6">
+        <div className="flex min-h-9 items-center">
+          {step > 0 ? (
+            <Button variant="ghost" size="sm" className="-ml-2 text-muted-foreground" onClick={back}>
+              <ArrowLeftIcon data-icon="inline-start" aria-hidden /> Volver
+            </Button>
+          ) : (
+            <span />
+          )}
+        </div>
+        <div className="flex flex-1 flex-col items-center justify-center py-6">
+          <div className="flex w-full flex-col items-center gap-6 md:sticky md:top-1/2 md:-translate-y-1/2">
+          <header className="flex max-w-sm flex-col items-center gap-1 text-center">
+            <VerifyIcon aria-hidden className="mb-3 size-11 fill-foreground" />
+            <h1 className="text-sm leading-snug font-medium text-balance text-foreground/50">Revisa lo que leímos de tu CV</h1>
+            <p className="text-sm leading-snug text-muted-foreground/40">Confirma cada dato con el tick o corrígelo con la equis. Con ellos armaremos tus CV para cada oferta.</p>
+          </header>
+          <div className="flex w-full max-w-sm flex-col items-center gap-4">
+            <CvFileCard file={file} onChange={onChangeFile} />
+            {file.notes.map((n) => (
+              <p key={n} className="text-center text-xs text-muted-foreground">
+                {n}
+              </p>
+            ))}
+          </div>
+          </div>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          {!all && onContinue && (
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onContinue}>
+              Omitir
+            </Button>
+          )}
+        </div>
       </section>
 
-      {/* Dos mitades en una tarjeta: lo que subiste (panel hundido, izquierda) y lo que validas (derecha). */}
-      <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-112 flex-col p-4 md:order-2 md:p-6">
-        {/* Arriba, fijo: qué debe hacer la persona. En medio, la respuesta con su pregunta debajo (al editar, la pregunta va primero), a la misma distancia que título y subtítulo. Abajo: a la izquierda el avance y a la derecha la botonería. */}
-        <header className="flex flex-col gap-1">
-          <h1 className="text-sm leading-snug font-medium text-balance text-foreground/50">Revisa lo que leímos de tu CV</h1>
-          <p className="text-sm leading-snug text-muted-foreground/40">Confirma cada dato con el tick o corrígelo con la equis. Con ellos armaremos tus CV para cada oferta.</p>
-        </header>
-        <div className="flex flex-1 flex-col">
+      <ColdGlow className="rounded-2xl">
+        <section aria-label="Validación de tus datos" aria-live="polite" className="flex h-full min-h-112 flex-col rounded-2xl border bg-background p-4 md:p-6">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={`${step}-${editing}`}
@@ -155,30 +179,19 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
-                  <span className="grid size-9 place-items-center rounded-lg bg-muted">
-                    <CheckIcon aria-hidden />
-                  </span>
                   <h2 className="text-xl font-medium text-balance">Todo validado</h2>
                   <p className="text-sm text-muted-foreground">Estos datos son la base de los CV que armaremos para cada oferta.</p>
                 </div>
               )}
             </motion.div>
           </AnimatePresence>
-        </div>
 
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            {step > 0 && (
-              <Button variant="ghost" size="icon-sm" aria-label="Volver a la pregunta anterior" onClick={back}>
-                <ArrowLeftIcon aria-hidden />
-              </Button>
-            )}
+          <div className="flex items-center justify-between gap-4">
             {current ? (
               <ProgressRing label={STAGE_NAME[current.kind]} percent={Math.floor((step / stages.length) * 100)} />
             ) : (
               <span className="text-sm text-muted-foreground">Listo</span>
             )}
-          </div>
           <div className="flex flex-wrap justify-end gap-2">
             {!current ? (
               <Button onClick={onContinue}>Continuar a Oferta</Button>
@@ -214,8 +227,9 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
               </>
             )}
           </div>
-        </div>
-      </section>
+          </div>
+        </section>
+      </ColdGlow>
 
       <AlertDialog open={reloadAsk} onOpenChange={setReloadAsk}>
         <AlertDialogContent>

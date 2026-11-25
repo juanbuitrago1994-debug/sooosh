@@ -211,12 +211,12 @@ function Shell() {
       <AppHeader actions={headerActions} />
 
       <main id="contenido" ref={mainRef} tabIndex={-1} className="flex flex-1 flex-col outline-none">
-        <div className={`mx-auto w-full px-6 ${isProfile ? "my-auto max-w-5xl py-8" : "max-w-xl pt-4 pb-32"}`}>
+        <div className={`mx-auto w-full px-6 ${isProfile ? "flex flex-1 flex-col py-4" : "max-w-xl pt-4 pb-32"}`}>
           {!isProfile && <p className="pb-6 text-xs text-muted-foreground" aria-label={`Paso ${step + 1} de ${STEPS.length}: ${STEPS[step].label}`}>
             {step + 1} de {STEPS.length} · {STEPS[step].label}
           </p>}
-          <AiStage working={!!work} messages={work?.messages ?? []} step={work?.step ?? 0} onCancel={work?.onCancel}>
-            <StepTransition id={step}>
+          <AiStage className={isProfile ? "flex flex-1 flex-col" : undefined} innerClassName={isProfile ? "flex flex-1 flex-col" : undefined} working={!!work} messages={work?.messages ?? []} step={work?.step ?? 0} onCancel={work?.onCancel}>
+            <StepTransition id={step} className={isProfile ? "flex flex-1 flex-col" : undefined}>
               {step === 0 && <StepProfile initial={profile} onPhase={setPhase} onChange={setProfile} validated={validated} onValidated={setValidated} onContinue={next} />}
               {step === 1 && <StepOffer value={offer} onChange={setOffer} />}
               {step === 2 && <StepAnalysis cv={profile?.cv ?? null} offer={offerValue} cvLanguage={profile?.diagnosis?.language} value={match} onChange={setMatch} />}
@@ -225,14 +225,6 @@ function Shell() {
             </StepTransition>
           </AiStage>
         </div>
-        {/* Casi imperceptible, abajo de todo: seguir sin validar el CV (se queda «sin validar» y el CV se puede validar luego). */}
-        {isProfile && profile && !validated && (
-          <div className="pb-6 text-center">
-            <Button variant="ghost" size="sm" className="text-muted-foreground/50 hover:text-muted-foreground" onClick={next}>
-              Omitir
-            </Button>
-          </div>
-        )}
       </main>
 
       {!isProfile && <footer className="fixed inset-x-0 bottom-0 z-10 bg-background/60 backdrop-blur-xl">

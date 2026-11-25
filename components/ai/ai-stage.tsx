@@ -19,6 +19,7 @@ export function AiStage({
   step,
   onCancel,
   className,
+  innerClassName,
   children,
 }: {
   working: boolean
@@ -26,6 +27,8 @@ export function AiStage({
   step: number
   onCancel?: () => void
   className?: string
+  /** clases del contenedor que se desenfoca mientras la IA trabaja (p. ej. para que ocupe todo el alto) */
+  innerClassName?: string
   children: ReactNode
 }) {
   return (
@@ -37,6 +40,7 @@ export function AiStage({
           transition: working ? TRANSITION_IN : TRANSITION_OUT,
         }}
         inert={working}
+        className={innerClassName}
         style={{ borderRadius: "inherit" }}
       >
         {children}
