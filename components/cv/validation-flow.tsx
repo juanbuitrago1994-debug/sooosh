@@ -119,12 +119,13 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
               transition={{ duration: MOTION.enter / 2, ease: MOTION.ease }}
             >
               {current ? (
-                <div className="flex flex-col gap-2">
+                {/* Respuesta arriba y pregunta debajo (al editar, la pregunta va primero); misma distancia que entre el título y el subtítulo. */}
+                <div className={`flex gap-1 ${editing ? "flex-col" : "flex-col-reverse"}`}>
                   <p className="text-sm leading-snug text-muted-foreground">{QUESTIONS[current.kind]}</p>
                   <div className="flex flex-col gap-3">
                     {!editing ? (
                       <>
-                        <h2 className={`font-medium break-words ${shown(cv, current).length > 90 ? "text-base" : "text-xl"}`}>{shown(cv, current) || "No encontramos este dato"}</h2>
+                        <h2 className={`leading-snug font-medium break-words ${shown(cv, current).length > 90 ? "text-base" : "text-xl"}`}>{shown(cv, current) || "No encontramos este dato"}</h2>
                         {current.kind === "experience" && current.idx != null && cv.experience[current.idx]?.bullets.length > 0 && (
                           <ul className="flex list-disc flex-col gap-1 pl-4 text-sm text-muted-foreground" aria-label="Lo que dice tu CV de esta experiencia">
                             {cv.experience[current.idx].bullets.map((b) => (
