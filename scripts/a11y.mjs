@@ -88,20 +88,26 @@ await Promise.all(combos.map(async ({ theme, w }) => {
     await axe(page, `subir CV ${tag}`)
     await keyboard(page, `subir CV ${tag}`)
 
+    await page.getByRole("button", { name: "Lo que he aprendido" }).click()
+    await page.getByRole("dialog").getByLabel("Texto de la regla").waitFor()
+    await page.waitForTimeout(450)
+    await axe(page, `memoria de preferencias (diálogo) ${tag}`)
+    await closeDialog(page)
+
     await openHistory(page)
     await axe(page, `historial vacío (diálogo) ${tag}`)
     await closeDialog(page)
 
     state.delay = 4000
     await page.locator('input[type="file"]').first().setInputFiles("tests/fixtures/sample.txt")
-    await page.getByText("Leyendo tu CV con el modelo local").waitFor()
+    await page.getByText("Leyendo el archivo").waitFor()
     await axe(page, `leyendo el CV (IA trabajando) ${tag}`)
     state.delay = 0
-    await page.getByText("Revisa tus datos").waitFor({ timeout: 15000 })
+    await page.getByRole("heading", { level: 1, name: "Así leímos tu CV" }).waitFor({ timeout: 15000 })
     await noToast(page)
-    await axe(page, `perfil (formulario) ${tag}`)
-    await keyboard(page, `perfil (formulario) ${tag}`)
-    await page.getByRole("button", { name: "Guardar y continuar" }).click()
+    await axe(page, `perfil (diagnóstico) ${tag}`)
+    await keyboard(page, `perfil (diagnóstico) ${tag}`)
+    await page.getByRole("button", { name: /^Continuar a Oferta/ }).click()
 
     // Oferta: corta, error de URL y analizada.
     await page.getByLabel("Texto de la oferta").fill("Oferta muy corta")
@@ -125,30 +131,31 @@ await Promise.all(combos.map(async ({ theme, w }) => {
       if (await page.evaluate(() => document.activeElement?.textContent?.trim().startsWith("Continuar a"))) break
     }
     await page.keyboard.press("Enter")
-    await page.getByRole("heading", { level: 1, name: "Qué tanto encaja" }).waitFor()
+    await page.getByText(/puntos de la oferta ya tienen respaldo/).waitFor({ timeout: 15000 })
     if (await page.evaluate(() => document.activeElement?.id) !== "contenido") fail(tag, "al cambiar de paso con el teclado el foco no pasó al contenido")
     await axe(page, `análisis ${tag}`)
     await keyboard(page, `análisis ${tag}`)
     await page.getByRole("button", { name: /^Continuar a Revisión/ }).click()
 
     // Revisión: error de Ollama, IA trabajando, propuestas, edición rechazada.
-    await page.getByRole("button", { name: "Reescribir para esta oferta" }).click()
+    await page.getByRole("button", { name: "Proponer cambios para esta oferta" }).click()
     await page.getByText("No pudimos usar el modelo local").waitFor()
     await axe(page, `revisión · error de Ollama ${tag}`)
     state.rewriteMode = "slow"
     await page.getByRole("button", { name: "Reintentar" }).click()
     await page.getByText("Reescribiendo: Resumen").waitFor()
     await axe(page, `revisión · IA trabajando ${tag}`)
-    await page.getByText("cambios propuestos").waitFor({ timeout: 15000 })
+    await page.getByText(/^Cambio 1 de/).waitFor({ timeout: 15000 })
     await axe(page, `revisión · propuestas ${tag}`)
     await keyboard(page, `revisión · propuestas ${tag}`)
-    await page.getByRole("button", { name: "Aceptar", exact: true }).first().click()
-    await page.getByRole("button", { name: "Editar", exact: true }).nth(1).click()
+    await page.getByRole("button", { name: /^Aceptar/ }).click()
+    await page.getByRole("button", { name: /^Editar/ }).click()
     await page.getByLabel(/^Editar:/).fill("Construí tableros con Kubernetes y 60% más rápido.")
     await page.getByRole("button", { name: "Guardar edición" }).click()
     await axe(page, `revisión · edición rechazada ${tag}`)
     await page.getByRole("button", { name: "Cancelar" }).click()
-    await page.getByRole("button", { name: "Rechazar", exact: true }).nth(1).click()
+    await page.getByRole("button", { name: /^Rechazar/ }).click()
+    await axe(page, `revisión · rechazo con motivo ${tag}`)
     await page.getByRole("button", { name: /^Continuar a Exportar/ }).click()
 
     // Exportar (descarga real) e historial.

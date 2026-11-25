@@ -43,3 +43,6 @@ docs/referencias/
 
 # CV de prueba con datos personales (solo locales)
 /Pruebas VC/
+
+# Registros de Playwright MCP
+/.playwright-mcp/

@@ -1,7 +1,9 @@
 import type { ChangeType } from "@/lib/rewrite/groups"
 
 /** Tipo de cambio a partir de la `ref` guardada en la memoria de preferencias (el prefijo del id del cambio). */
-export function typeOfRef(ref: string): ChangeType {
+export function typeOfRef(rawRef: string): ChangeType {
+  // La interfaz guarda la ref como «<huella>:<id del cambio>».
+  const ref = rawRef.includes(":") ? rawRef.slice(rawRef.indexOf(":") + 1) : rawRef
   if (ref === "summary") return "resumen"
   if (ref.startsWith("rm.")) return "quitar-relleno"
   if (ref.startsWith("add.skill")) return "habilidad"

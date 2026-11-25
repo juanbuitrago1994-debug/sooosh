@@ -117,9 +117,10 @@ export function computeFit(cv: CV, offer: Offer, opts: { match?: MatchResult; ju
   const ubicacion = (): Crit => {
     const parts = [cv.header.headline ?? "", cv.summary ?? "", ...cv.experience.slice(0, 2).flatMap((e) => [e.role, ...e.bullets.slice(0, 2)]), ...cv.skills.flatMap((g) => g.items.slice(0, 3))].filter(Boolean)
     const partSkills = parts.map((t) => new Set(skillsIn(t).map((s) => s.id)))
-    const top = coverage.filter((c) => c.status === "cubierto" && c.term.canonical && c.term.necessity !== "contexto").slice(0, 5)
-    if (top.length === 0) return crit("tec-ubicacion", null, { note: "" })
-    const seen = top.filter((c) => partSkills.some((set) => set.has(c.term.canonical!)))
+    // Las 5 de mayor peso (estén o no en el CV): así cubrir una habilidad nueva nunca baja este criterio.
+    const top = coverage.filter((c) => c.term.canonical && c.term.necessity !== "contexto").slice(0, 5)
+    if (top.length === 0 || !top.some((c) => c.status === "cubierto")) return crit("tec-ubicacion", null, { note: "" })
+    const seen = top.filter((c) => c.status === "cubierto" && partSkills.some((set) => set.has(c.term.canonical!)))
     const firstIdx = partSkills.findIndex((set) => seen.some((c) => set.has(c.term.canonical!)))
     return crit("tec-ubicacion", seen.length / top.length, { evidence: firstIdx >= 0 ? parts[firstIdx] : null, note: `${seen.length} de las ${top.length} habilidades de mayor peso se ven al inicio (${top.map((c) => c.term.label).join(", ")}).` })
   }
@@ -130,14 +131,17 @@ export function computeFit(cv: CV, offer: Offer, opts: { match?: MatchResult; ju
     const ob = tech.filter((c) => c.term.necessity === "obligatorio")
     const de = tech.filter((c) => c.term.necessity === "deseable")
     const covered = tech.filter((c) => c.status === "cubierto" && c.term.canonical)
-    const ctx = covered.length ? covered.filter((c) => c.inProse).length / covered.length : null
+    // Sobre TODAS las habilidades técnicas (por peso), no solo las cubiertas: así añadir lo que sí tienes nunca baja el resultado.
+    const canon = tech.filter((c) => c.term.canonical)
+    const wsum = canon.reduce((a, c) => a + c.term.weight, 0)
+    const ctx = wsum > 0 && covered.length ? canon.reduce((a, c) => a + (c.status === "cubierto" && c.inProse ? c.term.weight : 0), 0) / wsum : null
     const first = (l: TermCoverage[]) => l.find((c) => c.status !== "ausente")?.evidence[0]?.text ?? null
     dims.push(
       dimension("habilidades-tecnicas", [
         crit("tec-cobertura", ratio(ob), { evidence: first(ob), offerRef: ob[0]?.term.atsPhrase, note: `Cubiertos: ${names(ob, "cubierto") || "ninguno"}. Relacionados: ${names(ob, "relacionado") || "ninguno"}. Faltan: ${names(ob, "ausente") || "ninguno"}.` }),
         crit("tec-deseables", ratio(de), { evidence: first(de), offerRef: de[0]?.term.atsPhrase, note: `Deseables cubiertos: ${names(de, "cubierto") || "ninguno"}.` }),
         ubicacion(),
-        crit("tec-contexto", ctx, { evidence: covered.find((c) => c.inProse)?.evidence.find((u) => PROSE.has(u.section))?.text ?? null, note: ctx === null ? "" : `${pct(ctx)} de las habilidades técnicas que pide la oferta aparecen dentro de un logro, no solo en la lista.` }),
+        crit("tec-contexto", ctx, { evidence: covered.find((c) => c.inProse)?.evidence.find((u) => PROSE.has(u.section))?.text ?? null, note: ctx === null ? "" : `${pct(ctx)} del peso de las habilidades técnicas de la oferta aparece demostrado dentro de un logro, no solo en la lista.` }),
       ]),
     )
   }
@@ -146,11 +150,12 @@ export function computeFit(cv: CV, offer: Offer, opts: { match?: MatchResult; ju
   {
     const tools = of("herramienta")
     const have = tools.filter((c) => c.status === "cubierto")
-    const ctx = have.length ? have.filter((c) => c.inProse).length / have.length : null
+    const toolW = tools.reduce((a, c) => a + c.term.weight, 0)
+    const ctx = toolW > 0 && have.length ? tools.reduce((a, c) => a + (c.status === "cubierto" && c.inProse ? c.term.weight : 0), 0) / toolW : null
     dims.push(
       dimension("herramientas", [
         crit("herr-cobertura", ratio(tools), { evidence: have[0]?.evidence[0]?.text ?? null, offerRef: tools[0]?.term.atsPhrase, note: `Presentes: ${names(tools, "cubierto") || "ninguna"}. Faltan: ${names(tools, "ausente") || "ninguna"}.` }),
-        crit("herr-version", tools.length ? ctx : null, { evidence: have.find((c) => c.inProse)?.evidence.find((u) => PROSE.has(u.section))?.text ?? null, note: ctx === null ? "" : `${pct(ctx)} de las herramientas pedidas se muestran en uso (dentro de un logro).` }),
+        crit("herr-version", tools.length ? ctx : null, { evidence: have.find((c) => c.inProse)?.evidence.find((u) => PROSE.has(u.section))?.text ?? null, note: ctx === null ? "" : `${pct(ctx)} del peso de las herramientas pedidas se muestra en uso (dentro de un logro).` }),
         crit("herr-agrupadas", tools.length && cp.skills.items.length ? (cp.skills.categorized ? 1 : cp.skills.groups > 0 ? 0.5 : 0) : null, { basis: "medicion", note: cp.skills.categorized ? "Las habilidades están agrupadas por categoría." : "Las habilidades no están agrupadas por categoría." }),
       ]),
     )

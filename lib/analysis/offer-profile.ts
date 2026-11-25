@@ -50,6 +50,13 @@ export const offerProfileSchema = z.object({
 })
 export type OfferProfile = z.infer<typeof offerProfileSchema>
 
+/** Encabezados de sección que el modelo a veces etiqueta como requisito («Se valora:», «Requisitos:»): no son términos de la oferta. */
+const HEADER_WORDS = /^(requisitos?|requirements?|se valora|valorable|deseable|nice to have|responsabilidades|funciones|tareas|responsibilities|what you.ll do|qualifications|beneficios|benefits)\b[\s:：-]*$/i
+export const isHeaderLine = (text: string): boolean => {
+  const t = text.trim()
+  return t.length === 0 || HEADER_WORDS.test(t) || (t.endsWith(":") && t.split(/\s+/).length <= 4)
+}
+
 const BASE: Record<Necessity, number> = { obligatorio: 3, deseable: 2, contexto: 1 }
 const CAT: Record<SkillCategory, TermCategory> = { tool: "herramienta", tech: "tecnica", soft: "transversal", cert: "certificacion", domain: "dominio" }
 /** Énfasis explícito en la propia línea. */
@@ -138,7 +145,7 @@ export function buildOfferProfile(offer: Offer, rawText?: string): OfferProfile 
     ...offer.requirements.map((text) => ({ text, necessity: "obligatorio" as const })),
     ...offer.niceToHave.map((text) => ({ text, necessity: "deseable" as const })),
     ...offer.responsibilities.map((text) => ({ text, necessity: "contexto" as const })),
-  ]
+  ].filter((l) => !isHeaderLine(l.text))
   const byId = new Map<string, ProfileTerm>()
   const addLine = (line: string, base: Necessity, forced?: Skill[]) => {
     // El énfasis de la propia línea puede subir o bajar la necesidad.
@@ -164,7 +171,7 @@ export function buildOfferProfile(offer: Offer, rawText?: string): OfferProfile 
   const unknown = (items: string[], necessity: Necessity, category: TermCategory) =>
     items.forEach((text, i) => {
       // El nivel educativo se evalúa aparte (perfil.education), no como un término técnico.
-      if (known.has(fold(text)) || educationLevelOf(text) !== "ninguno") return
+      if (known.has(fold(text)) || isHeaderLine(text) || skillsIn(text).length > 0 || educationLevelOf(text) !== "ninguno") return
       terms.push({ id: `${category}-${necessity}-${i}`, label: text.trim(), canonical: null, category, necessity, weight: BASE[necessity] * (MUST.test(text) ? 1.25 : 1), atsPhrase: text.trim(), aliases: [], years: yearsForLine(text), mentions: 1 })
     })
   unknown(offer.requirements, "obligatorio", "tecnica")

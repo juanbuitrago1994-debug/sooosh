@@ -42,7 +42,7 @@ async function run(theme, w, reducedMotion = false) {
     // Con movimiento reducido el aura NO deriva: su transformación es idéntica en dos instantes.
     state.delay = 6000
     await page.locator('input[type="file"]').first().setInputFiles("tests/fixtures/sample.txt")
-    await page.getByText("Leyendo tu CV con el modelo local").waitFor()
+    await page.getByText("Leyendo el archivo").waitFor()
     const g1 = await auraDrift(page)
     await page.waitForTimeout(700)
     const g2 = await auraDrift(page)
@@ -53,6 +53,13 @@ async function run(theme, w, reducedMotion = false) {
     return
   }
 
+  // Memoria de preferencias (diálogo)
+  await page.getByRole("button", { name: "Lo que he aprendido" }).click()
+  await page.getByRole("dialog").getByText("memoria de preferencias, no entrenamiento del modelo").waitFor()
+  await page.getByLabel("Texto de la regla").waitFor()
+  await shot("0a-aprendido")
+  await closeDialog(page)
+
   // Historial vacío (diálogo)
   await openHistory(page)
   await page.getByText("Aún no hay adaptaciones guardadas").waitFor()
@@ -62,7 +69,7 @@ async function run(theme, w, reducedMotion = false) {
   // ── Leer el CV: IA trabajando (aura + ticker) ──
   state.delay = 6000
   await page.locator('input[type="file"]').first().setInputFiles("tests/fixtures/sample.txt")
-  await page.getByText("Leyendo tu CV con el modelo local").waitFor()
+  await page.getByText("Leyendo el archivo").waitFor()
   await page.waitForTimeout(500)
   await shot("2a-leyendo-ia")
   const g1 = await auraDrift(page)
@@ -71,14 +78,14 @@ async function run(theme, w, reducedMotion = false) {
   if (!g1) problem("IA trabajando: no hay aura (AiAura)")
   else if (g1 === g2) problem("IA trabajando: el aura no deriva")
   state.delay = 0
-  await page.getByText("Revisa tus datos").waitFor({ timeout: 15000 })
+  await page.getByRole("heading", { level: 1, name: "Así leímos tu CV" }).waitFor({ timeout: 15000 })
   await noToast(page)
   await page.waitForTimeout(600)
   await shot("2-revisar")
   // al terminar, el aura desaparece (la IA ya no trabaja)
   await page.waitForTimeout(700)
   if (await hasAura(page)) problem("el aura sigue visible con la IA en reposo")
-  await page.getByRole("button", { name: "Guardar y continuar" }).click()
+  await page.getByRole("button", { name: /^Continuar a Oferta/ }).click()
 
   // ── Oferta ──
   await page.getByRole("heading", { level: 1, name: "Pega la oferta" }).waitFor()
@@ -101,17 +108,23 @@ async function run(theme, w, reducedMotion = false) {
   await noToast(page)
   await page.waitForTimeout(600)
   await shot("3e-analizada")
+  state.delay = 6000
   await page.getByRole("button", { name: /^Continuar a Análisis/ }).click()
 
-  // ── Análisis ──
-  await page.getByRole("heading", { level: 1, name: "Qué tanto encaja" }).waitFor()
+  // ── Análisis (arranca solo al llegar) ──
+  await page.getByText("Comparando tu CV con la oferta").waitFor()
+  await page.waitForTimeout(500)
+  await shot("4a-comparando-ia")
+  state.delay = 0
+  await page.getByText(/puntos de la oferta ya tienen respaldo/).waitFor({ timeout: 15000 })
+  await page.waitForTimeout(600)
   await shot("4-analisis")
   await page.getByRole("button", { name: /^Continuar a Revisión/ }).click()
 
   // ── Revisión ──
   await page.getByRole("heading", { level: 1, name: "Revisa los cambios" }).waitFor()
   await shot("5-revision")
-  await page.getByRole("button", { name: "Reescribir para esta oferta" }).click()
+  await page.getByRole("button", { name: "Proponer cambios para esta oferta" }).click()
   await page.getByText("No pudimos usar el modelo local").waitFor()
   await shot("5b-error-ollama")
   state.rewriteMode = "slow"
@@ -121,15 +134,15 @@ async function run(theme, w, reducedMotion = false) {
   // El ticker avanza con el pipeline real: el segundo grupo cambia el mensaje.
   await page.getByText(/Reescribiendo: Desarrolladora/).waitFor({ timeout: 8000 })
   await shot("5c-reescribiendo-paso-2")
-  await page.getByText("cambios propuestos").waitFor({ timeout: 15000 })
+  await page.getByText(/^Cambio 1 de/).waitFor({ timeout: 15000 })
   await shot("5d-propuestas")
-  await page.getByRole("button", { name: "Aceptar", exact: true }).first().click()
-  await page.getByRole("button", { name: "Editar", exact: true }).nth(1).click()
+  await page.getByRole("button", { name: /^Aceptar/ }).click()
+  await page.getByRole("button", { name: /^Editar/ }).click()
   await page.getByLabel(/^Editar:/).fill("Construí tableros de ventas con Kubernetes y un 60% más de rapidez.")
   await page.getByRole("button", { name: "Guardar edición" }).click()
   await shot("5e-edicion-rechazada")
   await page.getByRole("button", { name: "Cancelar" }).click()
-  await page.getByRole("button", { name: "Rechazar", exact: true }).nth(1).click()
+  await page.getByRole("button", { name: /^Rechazar/ }).click()
   await shot("5f-decididas")
   await page.getByRole("button", { name: /^Continuar a Exportar/ }).click()
 
@@ -160,9 +173,9 @@ async function run(theme, w, reducedMotion = false) {
   await shot("7b-confirmar-borrado")
   await page.getByRole("button", { name: "Cancelar" }).click()
   await dialog.getByRole("button", { name: "Reabrir" }).click()
-  await page.getByText("cambios propuestos").waitFor()
+  await page.getByText(/^Cambio 1 de/).waitFor()
   await noToast(page)
-  const restored = await page.getByRole("button", { name: "Aceptar", exact: true }).first().getAttribute("aria-pressed")
+  const restored = await page.getByRole("button", { name: /^Aceptar/ }).getAttribute("aria-pressed")
   if (restored !== "true") problem(`REABRIR no restauró las decisiones (aria-pressed=${restored})`)
   await shot("7c-reabierta")
   await openHistory(page)
