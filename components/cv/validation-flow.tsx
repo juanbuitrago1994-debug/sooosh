@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { ArrowLeftIcon, CheckIcon, InfoIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
-import { ProgressLine } from "@/components/ai/progress-line"
+import { ProgressRing } from "@/components/cv/progress-ring"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -159,7 +159,7 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
               </Button>
             )}
             {current ? (
-              <ProgressLine className="justify-start" messages={[STAGE_NAME[current.kind]]} percent={Math.floor((step / stages.length) * 100)} label="Avance de la validación" />
+              <ProgressRing label={STAGE_NAME[current.kind]} percent={Math.floor((step / stages.length) * 100)} />
             ) : (
               <span className="text-sm text-muted-foreground">Listo</span>
             )}

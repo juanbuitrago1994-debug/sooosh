@@ -1276,3 +1276,7 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 ### Validación del CV: título fijo, pregunta junto a la respuesta, spinner con avance (24-nov-2026)
 - **Arriba, fijo** (no se anima): título «Revisa lo que leímos de tu CV» + subtítulo que explica qué hacer (confirmar con el tick o corregir con la equis). **En medio**, la pregunta pequeña pegada a su respuesta grande. **Abajo a la izquierda**, el `ProgressLine` (spinner + nombre de la etapa + porcentaje que sube al validar; «Listo» al final) en lugar de los 3 puntos; a la derecha, la botonería.
 - Verificado por DOM (0 % → 10 % al confirmar), lint, `tsc`, `pnpm test`.
+
+### Validación del CV: anillo de avance que se llena (24-nov-2026)
+- El indicador de abajo a la izquierda ya no es el spinner que gira solo: es el **anillo de avance** `components/cv/progress-ring.tsx` (mismo tamaño y trazo que el spinner) que **se llena a medida que la persona valida cada etapa**, con el nombre de la etapa (cambia con blur + desplazamiento) y el porcentaje. `role="progressbar"`; con «reducir movimiento» el arco salta sin animar.
+- Verificado por DOM: 0 % → 30 % tras tres confirmaciones, arco en 0,3 de 1, sin animación de giro. lint, `tsc`, `pnpm test` (923).
