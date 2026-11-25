@@ -60,11 +60,22 @@ function tidyList(list: string[], split: boolean): string[] {
   return out
 }
 
+/** Años pedidos, si el modelo no los sacó: «3 o más años de experiencia…» en un requisito. Solo con una cifra explícita (nunca se estima). */
+function yearsFrom(list: string[]): Offer["yearsExperience"] {
+  for (const l of list) {
+    const m = fold(l).match(/(?:^|[^\d])(\d{1,2})\s*(\+|o mas|ou mais)?\s*anos?\b/)
+    if (m) return { min: Number(m[1]) }
+  }
+  return undefined
+}
+
 export function tidyOffer(offer: Offer, source: string): Offer {
+  const requirements = tidyList(offer.requirements, false)
   return {
     ...offer,
+    yearsExperience: offer.yearsExperience ?? yearsFrom(requirements),
     company: offer.company && !isSectorNotCompany(offer.company, source) ? offer.company : undefined,
-    requirements: tidyList(offer.requirements, false),
+    requirements,
     niceToHave: tidyList(offer.niceToHave, true),
     responsibilities: tidyList(offer.responsibilities, false),
   }

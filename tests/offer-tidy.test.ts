@@ -32,4 +32,10 @@ describe("limpieza final de la oferta", () => {
     const o = offerSchema.parse({ title: "Analista", company: "Globex", language: "es", requirements: ["SQL avanzado"], niceToHave: ["Power BI"], responsibilities: ["Automatizar reportes"] })
     expect(tidyOffer(o, "Globex busca analista")).toEqual(o)
   })
+  it("saca los años pedidos del requisito si el modelo no los sacó (solo con cifra explícita)", () => {
+    const base = { title: "Diseñador", language: "es" as const, niceToHave: [], responsibilities: [] }
+    expect(tidyOffer(offerSchema.parse({ ...base, requirements: ["3 o más años de experiencia diseñando productos digitales."] }), "x").yearsExperience).toEqual({ min: 3 })
+    expect(tidyOffer(offerSchema.parse({ ...base, requirements: ["Amplia experiencia en diseño"] }), "x").yearsExperience).toBeUndefined()
+    expect(tidyOffer(offerSchema.parse({ ...base, yearsExperience: { min: 5 }, requirements: ["3 años de Figma"] }), "x").yearsExperience).toEqual({ min: 5 })
+  })
 })
