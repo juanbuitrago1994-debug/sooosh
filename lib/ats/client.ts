@@ -133,3 +133,31 @@ export async function originalAtsClient(cv: CV, fileId: string, fileName: string
   if (!res.ok || typeof j.percent !== "number") return null
   return j as OriginalAts
 }
+
+/** CV ATS adaptado a UNA oferta (orden pensado para ella, sin inventar), ya verificado. */
+export type TailoredAts = {
+  cv: CV
+  percent: number
+  label: "listo" | "casi" | "cambios" | "esencial"
+  labelText: string
+  /** cumple el 90 % de formato ATS */
+  meets90: boolean
+  /** cobertura léxica de la oferta (0–100) */
+  coverage: number
+  moved: { skillsMoved: number; bulletsMoved: number }
+  pages: number
+  pdf: { blob: Blob; name: string; base64: string }
+  docx: { blob: Blob; name: string; base64: string }
+}
+export async function tailorAtsClient(cv: CV, offer: unknown, sourceText: string | undefined, extras: AtsExtras | null | undefined, signal?: AbortSignal): Promise<TailoredAts> {
+  let res: Response
+  try {
+    res = await fetch("/api/ats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "tailor", cv, offer, sourceText, extras: extras ?? undefined }), signal })
+  } catch (e) {
+    throw new Error(friendly((e as Error).message))
+  }
+  const j = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(j.error ?? "No se pudo crear el CV para esta oferta.")
+  const file = (b64: unknown, name: unknown, type: string) => ({ blob: toBlob(String(b64), type), name: String(name), base64: String(b64) })
+  return { cv: j.cv, percent: j.percent, label: j.label, labelText: j.labelText, meets90: !!j.meets90, coverage: j.coverage, moved: j.moved, pages: Number(j.pages) || 1, pdf: file(j.pdf, j.pdfName, PDF), docx: file(j.docx, j.docxName, DOCX) }
+}

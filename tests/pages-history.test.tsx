@@ -71,6 +71,11 @@ describe("Repositorio de CV por oferta (popover del historial)", () => {
     expect(renderToStaticMarkup(<CvRepositoryList entries={many} onReopen={() => {}} />)).toContain('data-slot="scroll-area"')
     expect(renderToStaticMarkup(<CvRepositoryList entries={[entry]} onReopen={() => {}} />)).not.toContain('data-slot="scroll-area"')
   })
+  it("un CV ATS por oferta muestra su porcentaje de formato (meta 90 %) en lugar de la cobertura", () => {
+    const html = renderToStaticMarkup(<CvRepositoryList entries={[{ ...entry, ats: { percent: 94 } }]} onReopen={() => {}} />)
+    expect(html).toContain("ATS 94 %")
+    expect(html).toContain("Formato ATS 94 %")
+  })
   it("desde otras páginas, «Reabrir» enlaza al asistente con el id de la adaptación", () => {
     expect(reopenHref("abc 1")).toBe("/?reabrir=abc%201")
     const html = renderToStaticMarkup(<CvRepositoryList entries={[entry]} />)

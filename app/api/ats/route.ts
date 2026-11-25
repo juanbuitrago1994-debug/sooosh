@@ -10,7 +10,10 @@ import { renderAtsPdf } from "@/lib/ats/pdf"
 import { atsToText } from "@/lib/ats/text"
 import { combineReports, verifyAtsFile } from "@/lib/ats/verify"
 import { PdfError } from "@/lib/pdf/render"
+import { tailorCv } from "@/lib/ats/tailor"
+import { lexicalCoverage } from "@/lib/match/engine"
 import { cvSchema } from "@/lib/schemas/cv"
+import { offerSchema } from "@/lib/schemas/offer"
 import { STORED_ID_RE } from "@/lib/uploads"
 
 const MAX_B64 = 8_000_000
@@ -75,6 +78,49 @@ export async function POST(request: Request) {
     } catch (e) {
       console.error("[ats/verify]", e)
       return NextResponse.json({ error: "No se pudo verificar el archivo. Genera la versión ATS de nuevo." }, { status: 500 })
+    }
+  }
+
+  // CV ATS para UNA oferta: adapta el orden al pedido de la oferta (sin inventar), arma el PDF y el Word, los verifica y devuelve el porcentaje.
+  if (body?.action === "tailor") {
+    const offer = offerSchema.safeParse((body as { offer?: unknown }).offer)
+    if (!offer.success) return NextResponse.json({ error: "La oferta no es válida." }, { status: 400 })
+    const sourceText = typeof body.sourceText === "string" ? body.sourceText.slice(0, MAX_SOURCE) : undefined
+    const known = atsExtrasSchema.safeParse(body.extras)
+    const prior = known.success && sourceText ? regroundExtras(known.data, sourceText) : undefined
+    try {
+      const { cv: tailored, report } = tailorCv(cv.data, offer.data)
+      // Sin lectura profunda ya hecha no se repite aquí (es lenta): se arma con lo validado, que ya es la base correcta.
+      const g = await generateAts(tailored, { sourceText, extras: prior, ai: !!prior, signal: request.signal })
+      const effective = withExtras(tailored, g.extras)
+      const expectedText = atsToText(g.doc)
+      const [{ pdf, pages }, docx] = await Promise.all([renderAtsPdf(g.doc), renderAtsDocx(g.doc)])
+      const reports = await Promise.all([
+        verifyAtsFile({ file: Buffer.from(pdf), fileName: atsFileName(g.doc, "pdf"), cv: effective, expectedText, source: sourceText }),
+        verifyAtsFile({ file: Buffer.from(docx), fileName: atsFileName(g.doc, "docx"), cv: effective, expectedText, source: sourceText }),
+      ])
+      const view = combineReports(reports)
+      return NextResponse.json(
+        {
+          cv: effective,
+          percent: view.percent,
+          label: view.label,
+          labelText: view.labelText,
+          meets90: view.percent >= 90,
+          groups: view.groups,
+          coverage: lexicalCoverage(effective, offer.data),
+          moved: report,
+          pages,
+          pdf: Buffer.from(pdf).toString("base64"),
+          docx: Buffer.from(docx).toString("base64"),
+          pdfName: atsFileName(g.doc, "pdf"),
+          docxName: atsFileName(g.doc, "docx"),
+        },
+        { headers: { "Cache-Control": "no-store" } },
+      )
+    } catch (e) {
+      if (!(e instanceof PdfError)) console.error("[ats/tailor]", e)
+      return NextResponse.json({ error: e instanceof PdfError ? e.message : "No se pudo crear el CV para esta oferta. Inténtalo de nuevo." }, { status: 500 })
     }
   }
 

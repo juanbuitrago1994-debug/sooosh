@@ -41,6 +41,8 @@ export const historyEntrySchema = z.object({
   coverageBefore: z.number().min(0).max(100),
   coverageAfter: z.number().min(0).max(100),
   acceptedChanges: z.number().int().min(0),
+  /** Si es un CV en formato ATS para esa oferta: su porcentaje de formato (meta 90). */
+  ats: z.object({ percent: z.number().min(0).max(100) }).optional(),
 })
 export type HistoryEntry = z.infer<typeof historyEntrySchema>
 export type NewHistoryEntry = Omit<HistoryEntry, "id" | "createdAt">

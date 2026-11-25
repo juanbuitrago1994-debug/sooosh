@@ -14,6 +14,9 @@ import { renderCvHtml, type PdfLang } from "@/lib/pdf/template"
 import type { RebuildReport } from "@/lib/rebuild/build"
 import type { CV } from "@/lib/schemas/cv"
 import type { Offer } from "@/lib/schemas/offer"
+import { TailoredAts } from "@/components/steps/tailored-ats"
+import type { AtsExtras } from "@/lib/ats/enrich"
+import type { TailoredAts as TailoredResult } from "@/lib/ats/client"
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 
@@ -31,7 +34,7 @@ function summaryLines(report: RebuildReport | null | undefined, accepted: number
 }
 
 /** Vista previa del CV final (con todos los ajustes) y descarga en el formato que elija la persona. */
-export function StepExport({ cv, offer, accepted, report, onExported }: { cv: CV | null; offer: Offer | null; accepted: number; report?: RebuildReport | null; onExported: (lang: PdfLang) => boolean }) {
+export function StepExport({ cv, offer, accepted, report, onExported, ats }: { cv: CV | null; offer: Offer | null; accepted: number; report?: RebuildReport | null; onExported: (lang: PdfLang) => boolean; /** CV ATS para esta oferta: texto original y lectura profunda del CV, y qué hacer al generarlo (guardarlo en el repositorio) */ ats?: { sourceText?: string; extras?: AtsExtras | null; onGenerated: (r: TailoredResult) => void } }) {
   const [lang, setLang] = useState<PdfLang>(offer?.language === "en" ? "en" : "es")
   const [format, setFormat] = useState<ExportFormat>("pdf")
   const [busy, setBusy] = useState(false)
@@ -68,6 +71,8 @@ export function StepExport({ cv, offer, accepted, report, onExported }: { cv: CV
   return (
     <div className="flex flex-col gap-5">
       <StepHeader title="Tu CV adaptado" description={summaryLines(report, accepted).join(" ")} />
+
+      {ats && <TailoredAts cv={cv} offer={offer} sourceText={ats.sourceText} extras={ats.extras} onGenerated={ats.onGenerated} />}
 
       <div className="flex flex-col gap-2">
         <Tabs value={format} onValueChange={(v) => { setFormat(v as ExportFormat); setPages(null) }}>

@@ -18,7 +18,8 @@ import { pendingCount, reviewKey, reviewReady, StepReview, type ReviewState } fr
 import { matchReady, StepAnalysis, type MatchState } from "@/components/steps/step-analysis"
 import { emptyOffer, offerReady, StepOffer, type OfferState } from "@/components/steps/step-offer"
 import { freezeSource, guardCorpus } from "@/lib/cv/source"
-import { addEntry, parseHistory, readRaw, type HistoryEntry } from "@/lib/history"
+import { addEntry, parseHistory, readRaw, removeEntry, type HistoryEntry } from "@/lib/history"
+import type { TailoredAts } from "@/lib/ats/client"
 import { lexicalCoverage } from "@/lib/match/engine"
 import { rebuildCv } from "@/lib/rebuild/build"
 import { STEPS } from "@/lib/steps"
@@ -126,6 +127,24 @@ function Shell() {
     })
   }
 
+  /** Tras generar el CV ATS de esta oferta: queda en el repositorio (uno por oferta; generarlo de nuevo reemplaza el anterior). */
+  const onAtsGenerated = (r: TailoredAts) => {
+    if (!profile || !offerValue || !review) return
+    for (const e of parseHistory(readRaw())) if (e.ats && e.offer.title === offerValue.title && (e.offer.company ?? "") === (offerValue.company ?? "")) removeEntry(e.id)
+    addEntry({
+      offerText: offer.text,
+      offer: offerValue,
+      originalCv: profile.cv,
+      cv: r.cv,
+      review: { items: review.items, decisions: review.decisions },
+      lang: offerValue.language === "en" ? "en" : "es",
+      coverageBefore: lexicalCoverage(profile.cv, offerValue),
+      coverageAfter: r.coverage,
+      acceptedChanges: acceptedCount,
+      ats: { percent: r.percent },
+    })
+  }
+
   /** Reabre una adaptación guardada en el paso de revisión, con sus decisiones. */
   const reopen = (e: HistoryEntry) => {
     setProfile({ file: { id: "historial", name: "CV guardado en el historial", type: "", size: 0 }, cv: e.originalCv, sourceText: "", source: freezeSource("", e.originalCv) })
@@ -188,7 +207,7 @@ function Shell() {
               {step === 1 && <StepOffer value={offer} onChange={setOffer} />}
               {step === 2 && <StepAnalysis cv={profile?.cv ?? null} offer={offerValue} cvLanguage={profile?.diagnosis?.language} value={match} onChange={setMatch} />}
               {step === 3 && <StepReview cv={profile?.cv ?? null} guard={guard} offer={offerValue} match={matchReady(match, profile?.cv ?? null, offerValue) ? match!.result : null} style={profile?.diagnosis ? styleSentence(profile.diagnosis) : undefined} value={review} onChange={setReview} />}
-              {step === 4 && <StepExport cv={finalCv} offer={offerValue} accepted={acceptedCount} report={rebuilt?.report} onExported={onExported} />}
+              {step === 4 && <StepExport cv={finalCv} offer={offerValue} accepted={acceptedCount} report={rebuilt?.report} onExported={onExported} ats={{ sourceText: profile?.sourceText, extras: stored?.extras ?? null, onGenerated: onAtsGenerated }} />}
             </StepTransition>
           </AiStage>
         </div>

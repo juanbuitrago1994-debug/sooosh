@@ -14,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/components/ui/spinner"
 import { removeEntry, type HistoryEntry } from "@/lib/history"
 import { downloadPdf } from "@/lib/pdf/download"
+import { saveBlob, tailorAtsClient } from "@/lib/ats/client"
 
 const dateFmt = new Intl.DateTimeFormat("es", { day: "numeric", month: "short", year: "numeric" })
 
@@ -28,7 +29,11 @@ function Row({ entry, onReopen }: { entry: HistoryEntry; onReopen?: (e: HistoryE
   const download = async () => {
     setBusy(true)
     try {
-      await downloadPdf(entry.cv, entry.offer.company, entry.lang)
+      if (entry.ats) {
+        // CV ATS de esa oferta: se vuelve a armar el PDF en formato ATS (sin IA ni lecturas lentas) a partir del CV guardado.
+        const r = await tailorAtsClient(entry.cv, entry.offer, undefined, null)
+        saveBlob(r.pdf.blob, r.pdf.name)
+      } else await downloadPdf(entry.cv, entry.offer.company, entry.lang)
       toast.success("PDF descargado")
     } catch (e) {
       toast.error((e as Error).message)
@@ -45,9 +50,15 @@ function Row({ entry, onReopen }: { entry: HistoryEntry; onReopen?: (e: HistoryE
           <time dateTime={entry.createdAt}>{dateFmt.format(new Date(entry.createdAt))}</time>
         </ItemDescription>
       </ItemContent>
-      <Badge variant="secondary" title={`Cobertura de la oferta: de ${entry.coverageBefore} % a ${entry.coverageAfter} %`}>
-        {entry.coverageAfter} %
-      </Badge>
+      {entry.ats ? (
+        <Badge variant={entry.ats.percent >= 90 ? "default" : "outline"} title={`Formato ATS ${entry.ats.percent} %; cobertura de la oferta ${entry.coverageAfter} %`}>
+          ATS {entry.ats.percent} %
+        </Badge>
+      ) : (
+        <Badge variant="secondary" title={`Cobertura de la oferta: de ${entry.coverageBefore} % a ${entry.coverageAfter} %`}>
+          {entry.coverageAfter} %
+        </Badge>
+      )}
       <ItemActions>
         <Button variant="ghost" size="icon-xs" aria-label={`Descargar el PDF para ${entry.offer.title}`} disabled={busy} onClick={download}>
           {busy ? <Spinner aria-label="Cargando" /> : <DownloadIcon aria-hidden />}

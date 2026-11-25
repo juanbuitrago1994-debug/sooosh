@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { POST } from "@/app/api/ats/route"
-import { generateAtsClient, verifyAtsClient } from "@/lib/ats/client"
+import { generateAtsClient, tailorAtsClient, verifyAtsClient } from "@/lib/ats/client"
 import { cvSchema, type CV } from "@/lib/schemas/cv"
 
 const base = {
@@ -30,6 +30,23 @@ describe("POST /api/ats · validación de la solicitud", () => {
     expect((await POST(req({ action: "verify", cv: withSummary }))).status).toBe(400)
     expect((await POST(new Request("http://x/api/ats", { method: "POST", body: "no es json" }))).status).toBe(400)
   })
+})
+
+describe("CV ATS adaptado a una oferta (tailor)", () => {
+  const offer = { title: "Analista de Datos", company: "Globex", language: "es", requirements: ["Excel y SQL avanzado"], niceToHave: [], responsibilities: ["Automatizar reportes"], tools: ["SQL", "Excel"] }
+  it("rechaza una oferta inválida", async () => {
+    expect((await POST(req({ action: "tailor", cv: withSummary, offer: { nada: 1 } }))).status).toBe(400)
+  })
+  it("devuelve PDF y Word reales, verificados, con el porcentaje de formato ATS y la cobertura de la oferta", async () => {
+    const r = await tailorAtsClient(withSummary, offer, undefined, null)
+    expect(r.pdf.blob.size).toBeGreaterThan(1000)
+    expect(r.docx.blob.size).toBeGreaterThan(1000)
+    expect(r.percent).toBeGreaterThanOrEqual(90)
+    expect(r.meets90).toBe(true)
+    expect(r.coverage).toBeGreaterThan(0)
+    expect(r.cv.header.fullName).toBe("Ana Zapata Núñez")
+    expect(r.pdf.name).toMatch(/\.pdf$/)
+  }, 60_000)
 })
 
 describe("POST /api/ats · afinidad del archivo original", () => {
