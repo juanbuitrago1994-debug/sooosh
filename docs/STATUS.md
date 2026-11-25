@@ -1259,3 +1259,8 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 ### Validación del CV: tarjeta de dos mitades (24-nov-2026, a partir de la referencia de Juan)
 - La validación va dentro de **una tarjeta redondeada** (`rounded-3xl border bg-card`, solo tokens) con dos mitades: **izquierda un panel hundido** (`rounded-2xl bg-muted/50`) con el archivo (nombre, tipo, peso, lectura y avisos) y **derecha la pregunta actual con su botonería** (atrás, contador, «Es correcto» / «No es correcto»). Sin línea divisoria. En móvil la pregunta va primero y el archivo debajo.
 - Verificado por DOM: archivo a la izquierda, ambas mitades de igual altura, sin scroll horizontal en 1280 y 375 px.
+
+### Validación del CV: lado derecho (24-nov-2026)
+- **Título de la pregunta** a `text-xl font-medium` (20 px, peso 500): es el tope de la escala de CLAUDE.md (nada sobre `text-xl`, pesos 400/500). Más «bold» (600+) exigiría cambiar esa regla.
+- El contador «1 de 20» se reemplazó por el **`ProgressLine` de la app** (spinner + nombre de la etapa + porcentaje, alineado a la izquierda; el porcentaje es etapas validadas / total). Cada pregunta entra y sale de lado a lado con blur + movimiento horizontal, y el nombre de la etapa cambia con el blur + desplazamiento propio de `ProgressLine`.
+- Verificado por DOM: título 20 px / 500, spinner y porcentaje presentes (0 % → 10 % al confirmar); lint, `tsc`, `pnpm test` (923).

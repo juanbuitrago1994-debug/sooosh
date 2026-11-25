@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { ArrowLeftIcon, CheckIcon, InfoIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
+import { ProgressLine } from "@/components/ai/progress-line"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -35,6 +36,9 @@ const shown = (cv: CV, s: Stage) => {
   if (s.kind === "experience" || s.kind === "education") return entryLine(cv, s)
   return contactParts(cv).filter(Boolean).join(" · ")
 }
+
+/** Nombre corto de la etapa (para el indicador de avance). */
+const label = (s: Stage) => (s.kind === "experience" || s.kind === "education" ? `${TITLES[s.kind]} ${(s.idx ?? 0) + 1}` : TITLES[s.kind])
 
 export type FileFacts = { name: string; detail: string; notes: string[] }
 
@@ -107,7 +111,11 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
               <ArrowLeftIcon aria-hidden />
             </Button>
           ) : null}
-          <span className="tabular-nums">{all ? "Listo" : `${step + 1} de ${stages.length}`}</span>
+          {current ? (
+            <ProgressLine className="justify-start" messages={[label(current)]} percent={Math.floor((step / stages.length) * 100)} label="Avance de la validación" />
+          ) : (
+            <span>Listo</span>
+          )}
         </div>
         <div className="flex flex-1 flex-col justify-center">
           <AnimatePresence mode="wait" initial={false}>
@@ -121,8 +129,7 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
             >
               {current ? (
                 <>
-                  <p className="text-sm text-muted-foreground">{current.kind === "experience" || current.kind === "education" ? `${TITLES[current.kind]} ${(current.idx ?? 0) + 1}` : TITLES[current.kind]}</p>
-                  <h2 className="text-lg font-medium text-balance">{QUESTIONS[current.kind]}</h2>
+                  <h2 className="text-xl font-medium text-balance">{QUESTIONS[current.kind]}</h2>
                   {!editing ? (
                     <>
                       <p className="text-base break-words">{shown(cv, current) || "No encontramos este dato"}</p>
@@ -154,7 +161,7 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
                   <span className="grid size-9 place-items-center rounded-lg bg-muted">
                     <CheckIcon aria-hidden />
                   </span>
-                  <h2 className="text-lg font-medium text-balance">Todo validado</h2>
+                  <h2 className="text-xl font-medium text-balance">Todo validado</h2>
                   <p className="text-sm text-muted-foreground">Estos datos son la base de los CV que armaremos para cada oferta.</p>
                   <div className="pt-2">
                     <Button onClick={onContinue}>Continuar a Oferta</Button>
