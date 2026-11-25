@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { ArrowLeftIcon, CheckIcon, InfoIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
-import { ProgressLine } from "@/components/ai/progress-line"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -15,7 +14,6 @@ import { applyStage, contactParts, dropStage, entryLine, flatSkills, languagesTe
 import { MOTION } from "@/lib/motion"
 import type { CV } from "@/lib/schemas/cv"
 
-const TITLES: Record<StageKind, string> = { name: "Nombre", role: "Rol", contact: "Contacto", summary: "Resumen", experience: "Experiencia", education: "Educación", skills: "Habilidades", languages: "Idiomas" }
 const QUESTIONS: Record<StageKind, string> = {
   experience: "Esta es una experiencia que leímos. ¿Es correcta?",
   education: "Este es un estudio que leímos. ¿Es correcto?",
@@ -36,9 +34,6 @@ const shown = (cv: CV, s: Stage) => {
   if (s.kind === "experience" || s.kind === "education") return entryLine(cv, s)
   return contactParts(cv).filter(Boolean).join(" · ")
 }
-
-/** Nombre corto de la etapa (para el indicador de avance). */
-const label = (s: Stage) => (s.kind === "experience" || s.kind === "education" ? `${TITLES[s.kind]} ${(s.idx ?? 0) + 1}` : TITLES[s.kind])
 
 export type FileFacts = { name: string; detail: string; notes: string[] }
 
@@ -105,23 +100,12 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
 
       {/* Dos mitades en una tarjeta: lo que subiste (panel hundido, izquierda) y lo que validas (derecha). */}
       <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-112 flex-col p-4 md:order-2 md:p-10">
-        <div className="flex h-9 items-center gap-2 text-xs text-muted-foreground">
-          {step > 0 ? (
-            <Button variant="ghost" size="icon-sm" aria-label="Volver a la pregunta anterior" onClick={back}>
-              <ArrowLeftIcon aria-hidden />
-            </Button>
-          ) : null}
-          {current ? (
-            <ProgressLine className="justify-start" messages={[label(current)]} percent={Math.floor((step / stages.length) * 100)} label="Avance de la validación" />
-          ) : (
-            <span>Listo</span>
-          )}
-        </div>
-        <div className="flex flex-1 flex-col justify-center">
+        {/* Arriba la pregunta, en medio la respuesta; abajo, a la izquierda el avance (3 puntos) y a la derecha la botonería. */}
+        <div className="flex flex-1 flex-col">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={`${step}-${editing}`}
-              className="flex flex-col gap-3 py-6"
+              className="flex flex-1 flex-col gap-8 pb-8"
               initial={enter}
               animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
               exit={leave}
@@ -130,53 +114,100 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
               {current ? (
                 <>
                   <p className="text-sm text-muted-foreground">{QUESTIONS[current.kind]}</p>
-                  {!editing ? (
-                    <>
-                      <h2 className={`font-medium break-words ${shown(cv, current).length > 90 ? "text-base" : "text-xl"}`}>{shown(cv, current) || "No encontramos este dato"}</h2>
-                      {current.kind === "experience" && current.idx != null && cv.experience[current.idx]?.bullets.length > 0 && (
-                        <ul className="flex list-disc flex-col gap-1 pl-4 text-sm text-muted-foreground" aria-label="Lo que dice tu CV de esta experiencia">
-                          {cv.experience[current.idx].bullets.map((b) => (
-                            <li key={b}>{b}</li>
-                          ))}
-                        </ul>
-                      )}
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {shown(cv, current) && <Button onClick={confirm}>Es correcto</Button>}
-                        <Button variant="outline" onClick={() => setEditing(true)}>
-                          {shown(cv, current) ? "No es correcto" : "Agregar"}
-                        </Button>
-                        {!shown(cv, current) && (
-                          <Button variant="ghost" className="text-muted-foreground" onClick={confirm}>
-                            Omitir
-                          </Button>
+                  <div className="my-auto flex flex-col gap-3">
+                    {!editing ? (
+                      <>
+                        <h2 className={`font-medium break-words ${shown(cv, current).length > 90 ? "text-base" : "text-xl"}`}>{shown(cv, current) || "No encontramos este dato"}</h2>
+                        {current.kind === "experience" && current.idx != null && cv.experience[current.idx]?.bullets.length > 0 && (
+                          <ul className="flex list-disc flex-col gap-1 pl-4 text-sm text-muted-foreground" aria-label="Lo que dice tu CV de esta experiencia">
+                            {cv.experience[current.idx].bullets.map((b) => (
+                              <li key={b}>{b}</li>
+                            ))}
+                          </ul>
                         )}
-                      </div>
-                    </>
-                  ) : (
-                    <StageEditor stage={current} cv={cv} onSave={(next) => { onChange(next); confirm() }} onCancel={() => setEditing(false)} onRemove={current.idx != null ? () => remove(step) : undefined} />
-                  )}
+                      </>
+                    ) : (
+                      <StageEditor stage={current} cv={cv} onSave={(next) => { onChange(next); confirm() }} />
+                    )}
+                  </div>
                 </>
               ) : (
-                <>
+                <div className="my-auto flex flex-col gap-3">
                   <span className="grid size-9 place-items-center rounded-lg bg-muted">
                     <CheckIcon aria-hidden />
                   </span>
                   <h2 className="text-xl font-medium text-balance">Todo validado</h2>
                   <p className="text-sm text-muted-foreground">Estos datos son la base de los CV que armaremos para cada oferta.</p>
-                  <div className="pt-2">
-                    <Button onClick={onContinue}>Continuar a Oferta</Button>
-                  </div>
-                </>
+                </div>
               )}
             </motion.div>
           </AnimatePresence>
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            {step > 0 && (
+              <Button variant="ghost" size="icon-sm" aria-label="Volver a la pregunta anterior" onClick={back}>
+                <ArrowLeftIcon aria-hidden />
+              </Button>
+            )}
+            <Dots step={step} total={stages.length} />
+          </div>
+          <div className="flex flex-wrap justify-end gap-2">
+            {!current ? (
+              <Button onClick={onContinue}>Continuar a Oferta</Button>
+            ) : editing ? (
+              <>
+                {current.idx != null && (
+                  <Button variant="ghost" className="text-muted-foreground" onClick={() => remove(step)}>
+                    Quitar del CV
+                  </Button>
+                )}
+                <Button variant="secondary" onClick={() => setEditing(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" form={FORM_ID}>
+                  Guardar y seguir
+                </Button>
+              </>
+            ) : shown(cv, current) ? (
+              <>
+                <Button variant="secondary" onClick={() => setEditing(true)}>
+                  No es correcto
+                </Button>
+                <Button onClick={confirm}>Es correcto</Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" className="text-muted-foreground" onClick={confirm}>
+                  Omitir
+                </Button>
+                <Button onClick={() => setEditing(true)}>Agregar</Button>
+              </>
+            )}
+          </div>
         </div>
       </section>
     </div>
   )
 }
 
-function StageEditor({ stage: st, cv, onSave, onCancel, onRemove }: { stage: Stage; cv: CV; onSave: (cv: CV) => void; onCancel: () => void; onRemove?: () => void }) {
+const FORM_ID = "validar-etapa"
+
+/** Avance en SIEMPRE tres puntos: el activo se mueve entre los tres (primero al inicio, último al final, en medio el resto). */
+function Dots({ step, total }: { step: number; total: number }) {
+  const n = Math.min(3, Math.max(1, total))
+  const active = step <= 0 ? 0 : step >= total ? n - 1 : Math.min(n - 1, 1)
+  return (
+    <span role="progressbar" aria-label={`Pregunta ${Math.min(step + 1, total)} de ${total}`} aria-valuemin={0} aria-valuemax={total} aria-valuenow={Math.min(step, total)} className="flex items-center gap-1.5 px-1">
+      {Array.from({ length: n }, (_, i) => (
+        <span key={i} aria-hidden className={`size-2 rounded-full transition-colors duration-300 ${i === active ? "bg-foreground" : "bg-muted-foreground/40"}`} />
+      ))}
+    </span>
+  )
+}
+
+function StageEditor({ stage: st, cv, onSave }: { stage: Stage; cv: CV; onSave: (cv: CV) => void }) {
   const stage = st.kind
   const exp = stage === "experience" && st.idx != null ? cv.experience[st.idx] : undefined
   const edu = stage === "education" && st.idx != null ? cv.education[st.idx] : undefined
@@ -199,6 +230,7 @@ function StageEditor({ stage: st, cv, onSave, onCancel, onRemove }: { stage: Sta
 
   return (
     <form
+      id={FORM_ID}
       className="flex flex-col gap-3"
       onSubmit={(ev) => {
         ev.preventDefault()
@@ -208,7 +240,7 @@ function StageEditor({ stage: st, cv, onSave, onCancel, onRemove }: { stage: Sta
       {stage === "name" && (
         <Field>
           <FieldLabel htmlFor="v-name">Tu nombre completo</FieldLabel>
-          <Input id="v-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+          <Input required id="v-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
         </Field>
       )}
       {stage === "role" && (
@@ -255,11 +287,11 @@ function StageEditor({ stage: st, cv, onSave, onCancel, onRemove }: { stage: Sta
         <>
           <Field>
             <FieldLabel htmlFor="v-erole">Cargo</FieldLabel>
-            <Input id="v-erole" value={e.role} onChange={(x) => setE({ ...e, role: x.target.value })} />
+            <Input required id="v-erole" value={e.role} onChange={(x) => setE({ ...e, role: x.target.value })} />
           </Field>
           <Field>
             <FieldLabel htmlFor="v-eco">Empresa</FieldLabel>
-            <Input id="v-eco" value={e.company} onChange={(x) => setE({ ...e, company: x.target.value })} />
+            <Input required id="v-eco" value={e.company} onChange={(x) => setE({ ...e, company: x.target.value })} />
           </Field>
           <div className="grid grid-cols-2 gap-2">
             <Field>
@@ -285,7 +317,7 @@ function StageEditor({ stage: st, cv, onSave, onCancel, onRemove }: { stage: Sta
         <>
           <Field>
             <FieldLabel htmlFor="v-di">Institución</FieldLabel>
-            <Input id="v-di" value={d.institution} onChange={(x) => setD({ ...d, institution: x.target.value })} />
+            <Input required id="v-di" value={d.institution} onChange={(x) => setD({ ...d, institution: x.target.value })} />
           </Field>
           <Field>
             <FieldLabel htmlFor="v-dd">Título</FieldLabel>
@@ -365,19 +397,6 @@ function StageEditor({ stage: st, cv, onSave, onCancel, onRemove }: { stage: Sta
           </Button>
         </div>
       )}
-      <div className="flex gap-2">
-        <Button type="submit" disabled={!valid}>
-          Guardar y seguir
-        </Button>
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          Cancelar
-        </Button>
-        {onRemove && (
-          <Button type="button" variant="ghost" className="ml-auto text-muted-foreground" onClick={onRemove}>
-            Quitar del CV
-          </Button>
-        )}
-      </div>
     </form>
   )
 }

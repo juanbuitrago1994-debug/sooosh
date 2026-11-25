@@ -1267,3 +1267,8 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 
 ### Validación del CV: respuesta grande, pregunta pequeña (24-nov-2026)
 - Se invirtió la jerarquía: el **dato leído** va grande (`text-xl font-medium`; `text-base` si es muy largo, como un resumen) y la **pregunta** pequeña y atenuada (`text-sm text-muted-foreground`) encima. La mitad derecha usa más espacio: más alta (`min-h-112`) y con más relleno (`md:p-10`). lint, `tsc` y pruebas del paso en verde.
+
+### Validación del CV: estructura en los extremos (24-nov-2026, referencia de Juan)
+- La mitad derecha se estructura en **tres zonas**: arriba la **pregunta** (pequeña), en medio la **respuesta** (grande) o el editor, y abajo una barra con **a la izquierda «atrás» y el avance en SIEMPRE 3 puntos** (primero al inicio, último al final, en medio el resto; `role="progressbar"` con «Pregunta N de M») y **a la derecha la botonería**: «No es correcto» (secundario) + «Es correcto» (principal); si falta el dato, «Omitir» + «Agregar»; al editar, «Quitar del CV» (solo experiencias/estudios) + «Cancelar» + «Guardar y seguir» (enviado con `form=`); en la última pantalla, «Continuar a Oferta».
+- Se quitó el spinner/porcentaje. La barra de abajo no se anima; solo entra y sale el contenido de arriba (blur + desplazamiento lateral). Los campos obligatorios usan `required` del navegador.
+- Verificado por DOM: puntos ●○○ → ○●○, editar el rol desde el pie, «atrás» conserva el cambio; lint, `tsc`, `pnpm test` (923).
