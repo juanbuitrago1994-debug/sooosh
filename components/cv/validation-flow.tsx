@@ -102,7 +102,7 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
       </section>
 
       {/* Dos mitades en una tarjeta: lo que subiste (panel hundido, izquierda) y lo que validas (derecha). */}
-      <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-112 flex-col px-2 md:order-2 md:pr-0 md:pl-6">
+      <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-112 flex-col p-4 md:order-2 md:p-6">
         {/* Arriba, fijo: qué debe hacer la persona. En medio, la pregunta junto a su respuesta. Abajo: a la izquierda el avance y a la derecha la botonería. */}
         <header className="flex flex-col">
           <h1 className="text-sm leading-tight font-medium text-balance">Revisa lo que leímos de tu CV</h1>
