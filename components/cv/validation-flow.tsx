@@ -104,7 +104,7 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
       </section>
 
       {/* Dos mitades en una tarjeta: lo que subiste (panel hundido, izquierda) y lo que validas (derecha). */}
-      <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-96 flex-col p-4 md:order-2 md:p-8">
+      <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-112 flex-col p-4 md:order-2 md:p-10">
         <div className="flex h-9 items-center gap-2 text-xs text-muted-foreground">
           {step > 0 ? (
             <Button variant="ghost" size="icon-sm" aria-label="Volver a la pregunta anterior" onClick={back}>
@@ -121,7 +121,7 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={`${step}-${editing}`}
-              className="flex flex-col gap-4 py-6"
+              className="flex flex-col gap-3 py-6"
               initial={enter}
               animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
               exit={leave}
@@ -129,10 +129,10 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
             >
               {current ? (
                 <>
-                  <h2 className="text-xl font-medium text-balance">{QUESTIONS[current.kind]}</h2>
+                  <p className="text-sm text-muted-foreground">{QUESTIONS[current.kind]}</p>
                   {!editing ? (
                     <>
-                      <p className="text-base break-words">{shown(cv, current) || "No encontramos este dato"}</p>
+                      <h2 className={`font-medium break-words ${shown(cv, current).length > 90 ? "text-base" : "text-xl"}`}>{shown(cv, current) || "No encontramos este dato"}</h2>
                       {current.kind === "experience" && current.idx != null && cv.experience[current.idx]?.bullets.length > 0 && (
                         <ul className="flex list-disc flex-col gap-1 pl-4 text-sm text-muted-foreground" aria-label="Lo que dice tu CV de esta experiencia">
                           {cv.experience[current.idx].bullets.map((b) => (
