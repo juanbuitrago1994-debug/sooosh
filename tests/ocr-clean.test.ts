@@ -25,4 +25,7 @@ describe("cleanOcrText", () => {
   it("no cambia el texto que conserva", () => {
     expect(cleanOcrText("Mario Quintero\nTT LIT TT TIAS SJ YJ\n\nExperiencia")).toBe("Mario Quintero\n\nExperiencia")
   })
+  it("corrige «Ul» (la «I» de «UI» leída como «l») sin tocar otras palabras", () => {
+    expect(cleanOcrText("Senior Ul Designer, Gopass\nUl kit y mobile first\nUlises y Ulloa")).toBe("Senior UI Designer, Gopass\nUI kit y mobile first\nUlises y Ulloa")
+  })
 })

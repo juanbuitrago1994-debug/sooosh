@@ -308,3 +308,39 @@ Medición propia: un CV real de 11 500 caracteres de texto OCR (12 puestos; 6 so
 - **La medición de la primera tanda salió contaminada**: con 16 GB, dejar cargados modelos de 9 GB uno tras otro (Ollama los conserva 60 min) hizo que el equipo usara el disco, y hasta `gemma4` falló en una repetición. Se corrigió descargando cada modelo antes de medir el siguiente; los números de la tabla son de la tanda corregida.
 - Los modelos de 14 B no se descartan por calidad sino por tiempo: en este equipo no terminan en 5 min. En una máquina con más memoria podrían servir.
 - Un solo CV, una sola máquina. El modelo y el tiempo pueden variar con otro CV (p. ej. un PDF sin texto, que pasa por OCR).
+
+## Lectura de un PDF sin texto: Tesseract vs. modelo de visión (25-nov-2026)
+
+Script: `scripts/ocr-bench.mjs`. Un solo CV (`juan-buitrago-cv.pdf`, 1 página, imagen sin capa de texto), un solo equipo, una corrida por motor.
+
+| Motor | Tiempo | Resultado |
+|---|---|---|
+| Tesseract (como hoy: página a 2200 px, español + inglés) | 30 s | Texto real y reconocible (nombre, rol, perfil, experiencias con fechas y viñetas). Basura al inicio (decoración de fondo leída como letras) y erratas puntuales («Diseñador Ul» por «UX») |
+| `gemma4:e4b` con visión (página completa a 1600 px, `temperature` 0) | 41 s | **Inventó contenido**: marcadores como «[Empresa 1]», «[Cargo 1]», «[Descripción de Figma]», un cargo («UX/UI Designer») que el CV no dice y un texto de perfil distinto del real |
+
+**Límites**: las cifras de «recall/precision» que imprime el script **no son precisión de lectura**: el DOCX usado como referencia es otra versión del CV (la ATS) y no coincide palabra por palabra con el PDF; no se citan. `qwen3.5:9b` no se corrió. Solo se probó la página entera en una imagen; falta probar franjas más pequeñas.
+
+**Conclusión provisoria**: un modelo de visión leyendo la página completa **no es seguro** para este producto (regla «nunca inventar datos del CV»). Si se usa, solo como apoyo para líneas dudosas y con cada dato verificado contra el texto de Tesseract.
+
+### Afinación de Tesseract (25-nov-2026, `scripts/ocr-tune.mjs`)
+
+Mismo CV (1 página sin texto), mismo flujo de la app (página → franjas → OCR → limpieza), una corrida por variante. «Confianza» = media de la confianza que reporta Tesseract en palabras con letras; «dudosas» = palabras con confianza < 60; «hechos» = cuántos de 12 datos conocidos del CV aparecen tras la limpieza.
+
+| Variante | Tiempo | Confianza | Dudosas | Hechos |
+|---|---|---|---|---|
+| **actual** (2200 px, PSM 3, franjas de 800) | 25,1 s | 93,8 | 23 | 11/12 |
+| 1600 px | 16,6 s | 92,6 | 39 | 11/12 |
+| 3000 px | 26,8 s | 94,1 | 21 | 11/12 |
+| PSM 6 (bloque único) | 27,7 s | 89,3 | 120 | 11/12 |
+| PSM 4 (una columna) | 21,4 s | 93,5 | 30 | 11/12 |
+| PSM 11 (texto disperso) | 20,5 s | 94,1 | 23 | 11/12 |
+| gris con contraste | 23,4 s | 93,8 | 24 | 11/12 |
+| blanco y negro (Otsu) | 22,7 s | 93,5 | 24 | 11/12 |
+| franjas de 500 | 21,1 s | 93,6 | 30 | 11/12 |
+| franjas de 1200 | 21,2 s | 94,0 | 20 | 11/12 |
+
+**Lectura**: ninguna variante mejora de forma apreciable a la actual (diferencias ≤ 0,3 puntos de confianza, dentro del ruido de una sola corrida); PSM 6 y 1600 px empeoran. La configuración actual ya está cerca del techo de Tesseract para este CV. Los tiempos varían ~±5 s entre corridas (sin repetir).
+
+**Error sistemático hallado**: «UI» sale como «Ul» («Senior Ul Designer», «Ul kit»). Se corrige en `ocr-clean.ts` solo ese token exacto (con prueba). El dato «diseñador ux» sigue sin aparecer porque el CV impreso pudo decir «Diseñador UI» (no se puede saber sin una transcripción real).
+
+**Límites**: sin transcripción exacta de referencia; un solo CV. En CV de dos columnas las viñetas de una y otra columna se mezclan al unir las franjas (orden de lectura), y eso Tesseract + franjas no lo resuelve.

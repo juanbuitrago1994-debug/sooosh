@@ -32,7 +32,9 @@ const N_TILDE: [RegExp, string][] = [
   [/\b(peque|Peque)fi(?=o|a|os|as)/g, "$1ñ"],
   [/\b([Ss]e)fi(?=or|ora|al|ales|alizaci)/g, "$1ñ"],
 ]
-const fixEnye = (t: string) => N_TILDE.reduce((acc, [re, to]) => acc.replace(re, to), t)
+/** Tesseract lee la «I» mayúscula de «UI» como «l» minúscula: «Ul». «Ul» solo no es una palabra en español ni en inglés; se corrige únicamente ese token exacto. */
+const fixUi = (t: string) => t.replace(/\bUl\b/g, "UI")
+const fixEnye = (t: string) => fixUi(N_TILDE.reduce((acc, [re, to]) => acc.replace(re, to), t))
 
 export function cleanOcrText(text: string): string {
   return fixEnye(text)
