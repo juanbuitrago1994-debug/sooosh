@@ -105,7 +105,7 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
       <section aria-label="Validación de tus datos" aria-live="polite" className="order-1 flex min-h-112 flex-col px-2 md:order-2 md:pr-0 md:pl-6">
         {/* Arriba, fijo: qué debe hacer la persona. En medio, la pregunta junto a su respuesta. Abajo: a la izquierda el avance y a la derecha la botonería. */}
         <header className="flex flex-col gap-1">
-          <h1 className="text-xl font-medium text-balance">Revisa lo que leímos de tu CV</h1>
+          <h1 className="text-sm font-medium text-balance">Revisa lo que leímos de tu CV</h1>
           <p className="text-sm text-muted-foreground">Confirma cada dato con el tick o corrígelo con la equis. Con ellos armaremos tus CV para cada oferta.</p>
         </header>
         <div className="flex flex-1 flex-col">
