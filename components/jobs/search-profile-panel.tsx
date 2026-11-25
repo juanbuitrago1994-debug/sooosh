@@ -13,6 +13,7 @@ import { FloatingDrawerContent } from "@/components/jobs/floating-drawer"
 import { parseCvFileSafe } from "@/components/jobs/parse-cv-file"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle, AttachmentTrigger } from "@/components/ui/attachment"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { CHANGE_CV_COPY } from "@/components/cv/change-cv-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Drawer, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
@@ -183,8 +184,8 @@ export function SearchProfilePanel({ shell }: { shell: PanelShell }) {
                         <AlertDialogTrigger render={<Button variant="ghost" size="sm" />}>Cambiar CV</AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>¿Cambiar tu CV?</AlertDialogTitle>
-                            <AlertDialogDescription>Subirás otro CV y lo validarás desde el inicio. Las ofertas se compararán con ese nuevo CV.</AlertDialogDescription>
+                            <AlertDialogTitle>{CHANGE_CV_COPY.title}</AlertDialogTitle>
+                            <AlertDialogDescription>{CHANGE_CV_COPY.description}</AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>

@@ -1,9 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import { BadgeCheckIcon, FileTextIcon } from "lucide-react"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ChangeCvDialog } from "@/components/cv/change-cv-dialog"
 import type { FileFacts } from "@/components/cv/validation-flow"
 
 /**
@@ -11,6 +13,7 @@ import type { FileFacts } from "@/components/cv/validation-flow"
  * seguir con las ofertas. «Cambiar» empieza de nuevo (subir y validar otro CV).
  */
 export function ValidatedCv({ file, onChangeFile, onContinue }: { file: FileFacts; onChangeFile: () => void; onContinue: () => void }) {
+  const [confirming, setConfirming] = useState(false)
   return (
     <section aria-label="Tu CV validado" className="mx-auto flex w-full max-w-sm flex-col items-stretch gap-6">
       {/* Sello sólido de «hecho», con lo que pasó: se subió, se analizó y la persona lo validó. */}
@@ -38,7 +41,7 @@ export function ValidatedCv({ file, onChangeFile, onContinue }: { file: FileFact
             <AttachmentDescription>{file.detail}</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
-            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onChangeFile}>
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setConfirming(true)}>
               Cambiar
             </Button>
           </AttachmentActions>
@@ -47,6 +50,7 @@ export function ValidatedCv({ file, onChangeFile, onContinue }: { file: FileFact
       <Button className="w-full" onClick={onContinue}>
         Continuar a Oferta
       </Button>
+      <ChangeCvDialog open={confirming} onOpenChange={setConfirming} onConfirm={onChangeFile} />
     </section>
   )
 }

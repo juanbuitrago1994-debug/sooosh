@@ -65,3 +65,11 @@ describe("validación del CV (F1)", () => {
     expect(dropStage(st, 4).filter((s) => s.kind === "experience")).toEqual([{ kind: "experience", idx: 0 }])
   })
 })
+
+describe("avisos con modales de shadcn (no del navegador)", () => {
+  it("el texto de «Cambiar CV» avisa de las afinidades y de que los CV generados se conservan", async () => {
+    const { CHANGE_CV_COPY } = await import("@/components/cv/change-cv-dialog")
+    expect(CHANGE_CV_COPY.description).toContain("afinidades")
+    expect(CHANGE_CV_COPY.description).toContain("Tus CV por oferta")
+  })
+})

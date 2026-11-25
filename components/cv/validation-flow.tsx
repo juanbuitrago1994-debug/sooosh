@@ -1,10 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ArrowLeftIcon, CheckIcon, InfoIcon, PlusIcon, SparklesIcon, XIcon } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { ProgressRing } from "@/components/cv/progress-ring"
 import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from "@/components/ui/attachment"
+import { ChangeCvDialog } from "@/components/cv/change-cv-dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -56,16 +58,35 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
   const all = step >= stages.length
   const current = all ? null : stages[step]
   useEffect(() => onValidated?.(all), [all, onValidated])
-  // Recargar la página a mitad de la validación pierde el avance: el navegador pregunta antes (no deja personalizar el texto).
+  // Recargar a mitad de la validación: Cmd/Ctrl+R y F5 se interceptan y se muestra NUESTRO aviso (shadcn). El botón de recargar del navegador no se puede
+  // interceptar con un modal propio: ahí queda, de respaldo, la pregunta nativa del navegador (su texto no se puede cambiar).
+  const [reloadAsk, setReloadAsk] = useState(false)
+  const [changeAsk, setChangeAsk] = useState(false)
+  const nativeWarn = useRef<((e: BeforeUnloadEvent) => void) | null>(null)
   useEffect(() => {
     if (all) return
     const warn = (e: BeforeUnloadEvent) => {
       e.preventDefault()
       e.returnValue = ""
     }
+    nativeWarn.current = warn
+    const keys = (e: KeyboardEvent) => {
+      if (e.key === "F5" || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "r")) {
+        e.preventDefault()
+        setReloadAsk(true)
+      }
+    }
     window.addEventListener("beforeunload", warn)
-    return () => window.removeEventListener("beforeunload", warn)
+    window.addEventListener("keydown", keys)
+    return () => {
+      window.removeEventListener("beforeunload", warn)
+      window.removeEventListener("keydown", keys)
+    }
   }, [all])
+  const reloadNow = () => {
+    if (nativeWarn.current) window.removeEventListener("beforeunload", nativeWarn.current)
+    window.location.reload()
+  }
 
   const confirm = () => {
     setEditing(false)
@@ -107,7 +128,7 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
             <AttachmentDescription>{file.detail}</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
-            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={onChangeFile}>
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setChangeAsk(true)}>
               Cambiar
             </Button>
           </AttachmentActions>
@@ -220,6 +241,20 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
           </div>
         </div>
       </section>
+
+      <ChangeCvDialog open={changeAsk} onOpenChange={setChangeAsk} onConfirm={onChangeFile} />
+      <AlertDialog open={reloadAsk} onOpenChange={setReloadAsk}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Recargar la página?</AlertDialogTitle>
+            <AlertDialogDescription>Tus correcciones ya están guardadas, pero las preguntas empezarán de nuevo desde la primera.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Seguir validando</AlertDialogCancel>
+            <AlertDialogAction onClick={reloadNow}>Recargar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
