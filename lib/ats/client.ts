@@ -145,19 +145,21 @@ export type TailoredAts = {
   /** cobertura léxica de la oferta (0–100) */
   coverage: number
   moved: { skillsMoved: number; bulletsMoved: number }
+  /** el resumen: `adapted` si lo reescribió la IA local para esta oferta; `hits` = lo que pide la oferta y ya dice el resumen; `reason` si se pidió y no se pudo */
+  summary: { adapted: boolean; text: string | null; reason: string | null; hits: string[] }
   pages: number
   pdf: { blob: Blob; name: string; base64: string }
   docx: { blob: Blob; name: string; base64: string }
 }
-export async function tailorAtsClient(cv: CV, offer: unknown, sourceText: string | undefined, extras: AtsExtras | null | undefined, signal?: AbortSignal): Promise<TailoredAts> {
+export async function tailorAtsClient(cv: CV, offer: unknown, sourceText: string | undefined, extras: AtsExtras | null | undefined, signal?: AbortSignal, opts: { adaptSummary?: boolean } = {}): Promise<TailoredAts> {
   let res: Response
   try {
-    res = await fetch("/api/ats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "tailor", cv, offer, sourceText, extras: extras ?? undefined }), signal })
+    res = await fetch("/api/ats", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "tailor", cv, offer, sourceText, extras: extras ?? undefined, adaptSummary: opts.adaptSummary }), signal })
   } catch (e) {
     throw new Error(friendly((e as Error).message))
   }
   const j = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(j.error ?? "No se pudo crear el CV para esta oferta.")
   const file = (b64: unknown, name: unknown, type: string) => ({ blob: toBlob(String(b64), type), name: String(name), base64: String(b64) })
-  return { cv: j.cv, percent: j.percent, label: j.label, labelText: j.labelText, meets90: !!j.meets90, coverage: j.coverage, moved: j.moved, pages: Number(j.pages) || 1, pdf: file(j.pdf, j.pdfName, PDF), docx: file(j.docx, j.docxName, DOCX) }
+  return { cv: j.cv, percent: j.percent, label: j.label, labelText: j.labelText, meets90: !!j.meets90, coverage: j.coverage, moved: j.moved, summary: j.summary ?? { adapted: false, text: null, reason: null, hits: [] }, pages: Number(j.pages) || 1, pdf: file(j.pdf, j.pdfName, PDF), docx: file(j.docx, j.docxName, DOCX) }
 }

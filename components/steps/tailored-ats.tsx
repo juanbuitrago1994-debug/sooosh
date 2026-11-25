@@ -6,6 +6,7 @@ import { Attachment, AttachmentActions, AttachmentContent, AttachmentDescription
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
+import { Switch } from "@/components/ui/switch"
 import { saveBlob, tailorAtsClient, type TailoredAts } from "@/lib/ats/client"
 import type { AtsExtras } from "@/lib/ats/enrich"
 import type { CV } from "@/lib/schemas/cv"
@@ -21,6 +22,8 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 export function TailoredAts({ cv, offer, sourceText, extras, onGenerated }: { cv: CV; offer: Offer; sourceText?: string; extras?: AtsExtras | null; onGenerated: (r: TailoredAts) => void }) {
   const [state, setState] = useState<{ k: "idle" } | { k: "working" } | { k: "done"; r: TailoredAts } | { k: "error"; message: string }>({ k: "idle" })
   const abort = useRef<AbortController | null>(null)
+  // Reescribir el resumen pensando en la oferta (IA local, verificado contra el CV): activado por defecto; si no pasa la verificación, se queda el tuyo.
+  const [adapt, setAdapt] = useState(true)
 
   const run = async () => {
     abort.current?.abort()
@@ -28,7 +31,7 @@ export function TailoredAts({ cv, offer, sourceText, extras, onGenerated }: { cv
     abort.current = ctl
     setState({ k: "working" })
     try {
-      const r = await tailorAtsClient(cv, offer, sourceText, extras, ctl.signal)
+      const r = await tailorAtsClient(cv, offer, sourceText, extras, ctl.signal, { adaptSummary: adapt })
       if (ctl.signal.aborted) return
       setState({ k: "done", r })
       onGenerated(r)
@@ -48,9 +51,18 @@ export function TailoredAts({ cv, offer, sourceText, extras, onGenerated }: { cv
       </div>
 
       {state.k === "idle" && (
-        <Button className="self-start" onClick={() => void run()}>
-          Generar CV ATS para {offer.company || "esta oferta"}
-        </Button>
+        <div className="flex flex-col gap-3">
+          <label className="flex items-start gap-3 text-sm leading-snug">
+            <Switch checked={adapt} onCheckedChange={setAdapt} aria-label="Adaptar el resumen a la oferta" />
+            <span className="flex flex-col">
+              <span className="font-medium">Adaptar el resumen a la oferta</span>
+              <span className="text-muted-foreground">La IA local lo reescribe con tus datos y se verifica contra tu CV; si no pasa, se queda el tuyo.</span>
+            </span>
+          </label>
+          <Button className="self-start" onClick={() => void run()}>
+            Generar CV ATS para {offer.company || "esta oferta"}
+          </Button>
+        </div>
       )}
       {state.k === "working" && (
         <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -84,6 +96,16 @@ export function TailoredAts({ cv, offer, sourceText, extras, onGenerated }: { cv
               : "Tu CV ya presentaba primero lo que pide la oferta."}{" "}
             Se guardó en tus CV por oferta.
           </p>
+          {done.summary.adapted && done.summary.text && (
+            <div className="flex flex-col gap-1">
+              <p className="text-xs font-medium">Resumen para esta oferta</p>
+              <p className="text-sm leading-snug text-muted-foreground">{done.summary.text}</p>
+              <p className="text-xs text-muted-foreground">
+                {done.summary.hits.length ? `Menciona lo que pide la oferta: ${done.summary.hits.join(", ")}. ` : ""}Lo escribió la IA local solo con datos de tu CV: revísalo antes de enviarlo.
+              </p>
+            </div>
+          )}
+          {!done.summary.adapted && done.summary.reason && <p className="text-xs text-muted-foreground">No se pudo adaptar el resumen sin inventar datos: se dejó el tuyo.</p>}
           <div className="flex flex-col gap-2">
             {([["PDF", done.pdf, plural(done.pages, "página", "páginas")], ["Word", done.docx, "Documento .docx"]] as const).map(([kind, f, note]) => (
               <Attachment key={kind} state="done" className="w-full">

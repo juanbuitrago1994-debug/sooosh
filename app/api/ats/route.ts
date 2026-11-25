@@ -5,6 +5,9 @@ import { renderAtsDocx } from "@/lib/ats/docx"
 import { atsFileName } from "@/lib/ats/filename"
 import { extractExtras, atsExtrasSchema, regroundExtras, EMPTY_EXTRAS, type AtsExtras } from "@/lib/ats/enrich"
 import { generateAts } from "@/lib/ats/generate"
+import { generateSummary } from "@/lib/ats/summary"
+import { termsIn, contentKeys } from "@/lib/keywords"
+import { buildTerms } from "@/lib/match/terms"
 import { buildAtsDoc, withExtras } from "@/lib/ats/model"
 import { renderAtsPdf } from "@/lib/ats/pdf"
 import { atsToText } from "@/lib/ats/text"
@@ -89,7 +92,17 @@ export async function POST(request: Request) {
     const known = atsExtrasSchema.safeParse(body.extras)
     const prior = known.success && sourceText ? regroundExtras(known.data, sourceText) : undefined
     try {
-      const { cv: tailored, report } = tailorCv(cv.data, offer.data)
+      const { cv: ordered, report } = tailorCv(cv.data, offer.data)
+      // Resumen orientado a la oferta (IA local, verificado contra el CV: si no pasa o no hay IA, se conserva el resumen validado).
+      let tailored = ordered
+      let summaryReason: string | null = null
+      if ((body as { adaptSummary?: unknown }).adaptSummary === true) {
+        const s = await generateSummary(ordered, offer.data.language === "en" ? "en" : "es", { focus: offer.data.title, signal: request.signal })
+        if (s.summary) tailored = { ...ordered, summary: s.summary }
+        else summaryReason = s.reason ?? "no-disponible"
+      }
+      const terms = buildTerms(offer.data).map((t) => ({ key: contentKeys(t.text).join(" "), text: t.text })).filter((t) => t.key)
+      const summaryHits = tailored.summary ? termsIn(tailored.summary, terms).map((t) => t.text).slice(0, 6) : []
       // Sin lectura profunda ya hecha no se repite aquí (es lenta): se arma con lo validado, que ya es la base correcta.
       const g = await generateAts(tailored, { sourceText, extras: prior, ai: !!prior, signal: request.signal })
       const effective = withExtras(tailored, g.extras)
@@ -110,6 +123,7 @@ export async function POST(request: Request) {
           groups: view.groups,
           coverage: lexicalCoverage(effective, offer.data),
           moved: report,
+          summary: { adapted: tailored.summary !== cv.data.summary, text: tailored.summary ?? null, reason: summaryReason, hits: summaryHits },
           pages,
           pdf: Buffer.from(pdf).toString("base64"),
           docx: Buffer.from(docx).toString("base64"),

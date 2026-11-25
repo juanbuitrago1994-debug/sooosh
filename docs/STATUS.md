@@ -1310,3 +1310,10 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - Verificado en tu servidor con una oferta real del buscador: «Formato ATS · 100 %», PDF de 1 página, entrada guardada en el historial con `ats: { percent: 100 }`. lint, `tsc`, `build`, `pnpm test`.
 - Nota: la cobertura de la oferta salió 0 % porque el CV de prueba (diseño de producto) no coincide con esa oferta; reordenar no la sube (ver la fase anterior).
 - Siguiente natural: reescrituras del resumen con la oferta delante, verificadas contra el CV, para subir la cobertura sin inventar.
+
+### Resumen orientado a la oferta (24-nov-2026)
+- `generateSummary` acepta `focus` (el cargo de la oferta): el modelo recibe las habilidades YA ordenadas por relevancia y se le pide priorizar lo que respalda ese cargo, sin nombrarlo ni la empresa. Sigue el mismo verificador anti-invención (cifras, empresas, herramientas, siglas); solo se acepta como dato nuevo los años calculados de las fechas.
+- `POST /api/ats` `tailor` con `adaptSummary: true`: si el resumen nuevo pasa, reemplaza al del CV en ESE CV ATS; si no hay IA o no pasa, se conserva el validado y se avisa. La respuesta trae `summary { adapted, text, reason, hits }` (`hits` = lo que pide la oferta y el resumen ya dice).
+- UI (`TailoredAts`): interruptor «Adaptar el resumen a la oferta» (activado por defecto); al terminar se muestra el resumen propuesto, lo que menciona de la oferta y el aviso de revisarlo.
+- Medición real (CV de ejemplo, gemma4:e4b local): 17 s en frío y 2 s con el modelo ya cargado; formato 100 %. Cobertura sin cambios (50 %), como se explicó: un resumen verificado no puede agregar términos que el CV no tenga.
+- Limitación vista: el verificador no detecta relaciones plausibles entre datos reales («Jira para la gestión de proyectos» salió sin que el CV lo diga); por eso se muestra el resumen para que la persona lo revise.

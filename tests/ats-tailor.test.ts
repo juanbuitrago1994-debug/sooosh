@@ -41,3 +41,23 @@ describe("adaptar el CV a la oferta (solo ordena, nunca inventa)", () => {
     expect(none.report).toEqual({ skillsMoved: 0, bulletsMoved: 0 })
   })
 })
+
+describe("resumen orientado a la oferta", () => {
+  const stub = (text: string) => ({ generateStructured: async () => ({ data: { summary: text } }) }) as never
+  it("acepta un resumen hecho solo con datos del CV, y se le pasa el cargo objetivo", async () => {
+    const { generateSummary } = await import("@/lib/ats/summary")
+    let seen = ""
+    const provider = { generateStructured: async (a: { user: string }) => ((seen = a.user), { data: { summary: "Diseñadora con experiencia en prototipado y Figma. Participa en pruebas de usabilidad de apps móviles." } }) } as never
+    const cv2 = cvSchema.parse({ header: { fullName: "Ana", headline: "Diseñadora" }, skills: [{ items: ["Figma", "Prototipado"] }], experience: [{ company: "A", role: "Diseñadora", startDate: "2020", bullets: ["Pruebas de usabilidad de apps móviles"] }] })
+    const r = await generateSummary(cv2, "es", { provider, focus: "Product Designer" })
+    expect(r.summary).toContain("Figma")
+    expect(JSON.parse(seen).targetRole).toBe("Product Designer")
+  })
+  it("descarta un resumen que inventa herramientas o cifras", async () => {
+    const { generateSummary } = await import("@/lib/ats/summary")
+    const cv2 = cvSchema.parse({ header: { fullName: "Ana", headline: "Diseñadora" }, skills: [{ items: ["Figma"] }], experience: [{ company: "A", role: "Diseñadora", startDate: "2020", bullets: [] }] })
+    const r = await generateSummary(cv2, "es", { provider: stub("Diseñadora con 12 años de experiencia en Sketch y Photoshop. Lideró equipos de 40 personas."), focus: "Product Designer" })
+    expect(r.summary).toBeNull()
+    expect(["no-paso-verificacion", "forma"]).toContain(r.reason)
+  })
+})

@@ -36,13 +36,19 @@ export const MAX_CHARS = 400
 const FIRST_PERSON = /^(yo|mi|mis|me|i|my)\b|\b(yo|mis|my)\b/i
 const sentenceCount = (s: string) => (s.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g) ?? []).filter((x) => x.trim()).length
 
-export async function generateSummary(cv: CV, lang: AtsLang, opts: { provider?: AIProvider; now?: Date; signal?: AbortSignal } = {}): Promise<SummaryResult> {
-  const facts = summaryFacts(cv, opts.now)
+/** Sube la orientación a una oferta: se le pide al modelo priorizar, entre los datos dados, los que respaldan el cargo objetivo (sin nombrarlo ni inventar nada). */
+const FOCUS: Record<AtsLang, string> = {
+  es: " El resumen debe estar orientado al cargo objetivo (targetRole): prioriza, entre los datos dados, los que lo respaldan (las habilidades vienen ordenadas por relevancia). No menciones el cargo objetivo ni la empresa; no afirmes nada que los datos no digan.",
+  en: " Orient the summary to the target role (targetRole): prioritize, among the given data, what supports it (skills are sorted by relevance). Do not name the target role or the company; do not claim anything the data does not say.",
+}
+
+export async function generateSummary(cv: CV, lang: AtsLang, opts: { provider?: AIProvider; now?: Date; signal?: AbortSignal; /** cargo de la oferta a la que se orienta el resumen */ focus?: string } = {}): Promise<SummaryResult> {
+  const facts = { ...summaryFacts(cv, opts.now), ...(opts.focus ? { targetRole: opts.focus } : {}) }
   if (!facts.headline && !facts.roles.length) return { summary: null, reason: "sin-datos" }
   let provider = opts.provider
   try {
     provider ??= atsProvider(0.2)
-    const res = await provider.generateStructured({ system: SYSTEM[lang], user: JSON.stringify(facts), schema, signal: opts.signal, options: { numPredict: 300 } })
+    const res = await provider.generateStructured({ system: SYSTEM[lang] + (opts.focus ? FOCUS[lang] : ""), user: JSON.stringify(facts), schema, signal: opts.signal, options: { numPredict: 300 } })
     const text = res.data.summary.replace(/\s+/g, " ").trim()
     const n = sentenceCount(text)
     // ≈ 4 líneas impresas a 10,5 pt (ATS-S3: GOO 2–4 líneas, NOV 2–3).
