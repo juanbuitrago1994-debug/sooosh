@@ -60,4 +60,15 @@ describe("resumen orientado a la oferta", () => {
     expect(r.summary).toBeNull()
     expect(["no-paso-verificacion", "forma"]).toContain(r.reason)
   })
+  it("si el primer intento se rechaza por una palabra que el CV no tiene, el segundo recibe esa palabra como prohibida y puede pasar", async () => {
+    const { generateSummary } = await import("@/lib/ats/summary")
+    const users: string[] = []
+    const answers = ["Diseñadora con experiencia en Testing y Figma. Participa en proyectos de producto digital.", "Diseñadora con experiencia en pruebas de software y Figma. Participa en proyectos de producto digital."]
+    const provider = { generateStructured: async (a: { user: string }) => (users.push(a.user), { data: { summary: answers[users.length - 1] } }) } as never
+    const cv2 = cvSchema.parse({ header: { fullName: "Ana", headline: "Diseñadora" }, skills: [{ items: ["Figma", "Pruebas de software"] }], experience: [{ company: "A", role: "Diseñadora", startDate: "2020", bullets: ["Proyectos de producto digital"] }] })
+    const r = await generateSummary(cv2, "es", { provider, focus: "Product Designer" })
+    expect(users).toHaveLength(2)
+    expect(JSON.parse(users[1]).doNotUseTheseWords.map((w: string) => w.toLowerCase())).toContain("testing")
+    expect(r.summary).toContain("pruebas de software")
+  })
 })

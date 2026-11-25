@@ -6,6 +6,7 @@ import { atsFileName } from "@/lib/ats/filename"
 import { extractExtras, atsExtrasSchema, regroundExtras, EMPTY_EXTRAS, type AtsExtras } from "@/lib/ats/enrich"
 import { generateAts } from "@/lib/ats/generate"
 import { generateSummary } from "@/lib/ats/summary"
+import { detectLang } from "@/lib/ats/lang"
 import { termsIn, contentKeys } from "@/lib/keywords"
 import { buildTerms } from "@/lib/match/terms"
 import { buildAtsDoc, withExtras } from "@/lib/ats/model"
@@ -93,13 +94,17 @@ export async function POST(request: Request) {
     const prior = known.success && sourceText ? regroundExtras(known.data, sourceText) : undefined
     try {
       const { cv: ordered, report } = tailorCv(cv.data, offer.data)
-      // Resumen orientado a la oferta (IA local, verificado contra el CV: si no pasa o no hay IA, se conserva el resumen validado).
+      // Resumen orientado a la oferta, en el idioma del CV (no el de la oferta: el resto del CV no se traduce) (IA local, verificado contra el CV: si no pasa o no hay IA, se conserva el resumen validado).
       let tailored = ordered
       let summaryReason: string | null = null
+      let summaryViolations: string[] = []
       if ((body as { adaptSummary?: unknown }).adaptSummary === true) {
-        const s = await generateSummary(ordered, offer.data.language === "en" ? "en" : "es", { focus: offer.data.title, signal: request.signal })
+        const s = await generateSummary(ordered, detectLang(ordered).lang, { focus: offer.data.title, signal: request.signal })
         if (s.summary) tailored = { ...ordered, summary: s.summary }
-        else summaryReason = s.reason ?? "no-disponible"
+        else {
+          summaryReason = s.reason ?? "no-disponible"
+          summaryViolations = s.violations ?? []
+        }
       }
       const terms = buildTerms(offer.data).map((t) => ({ key: contentKeys(t.text).join(" "), text: t.text })).filter((t) => t.key)
       const summaryHits = tailored.summary ? termsIn(tailored.summary, terms).map((t) => t.text).slice(0, 6) : []
@@ -123,7 +128,7 @@ export async function POST(request: Request) {
           groups: view.groups,
           coverage: lexicalCoverage(effective, offer.data),
           moved: report,
-          summary: { adapted: tailored.summary !== cv.data.summary, text: tailored.summary ?? null, reason: summaryReason, hits: summaryHits },
+          summary: { adapted: tailored.summary !== cv.data.summary, text: tailored.summary ?? null, reason: summaryReason, violations: summaryViolations, hits: summaryHits },
           pages,
           pdf: Buffer.from(pdf).toString("base64"),
           docx: Buffer.from(docx).toString("base64"),

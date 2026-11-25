@@ -37,6 +37,12 @@ const FIRST_PERSON = /^(yo|mi|mis|me|i|my)\b|\b(yo|mis|my)\b/i
 const sentenceCount = (s: string) => (s.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g) ?? []).filter((x) => x.trim()).length
 
 /** Sube la orientación a una oferta: se le pide al modelo priorizar, entre los datos dados, los que respaldan el cargo objetivo (sin nombrarlo ni inventar nada). */
+/** Los rechazos reales venían de traducir o renombrar habilidades («Pruebas de software» → «Testing»): se pide copiarlas tal cual. */
+const COPY: Record<AtsLang, string> = {
+  es: " Copia los nombres de habilidades y herramientas EXACTAMENTE como aparecen en los datos: no los traduzcas ni los reemplaces por sinónimos.",
+  en: " Copy skill and tool names EXACTLY as they appear in the data: do not translate them or swap them for synonyms.",
+}
+
 const FOCUS: Record<AtsLang, string> = {
   es: " El resumen debe estar orientado al cargo objetivo (targetRole): prioriza, entre los datos dados, los que lo respaldan (las habilidades vienen ordenadas por relevancia). No menciones el cargo objetivo ni la empresa; no afirmes nada que los datos no digan.",
   en: " Orient the summary to the target role (targetRole): prioritize, among the given data, what supports it (skills are sorted by relevance). Do not name the target role or the company; do not claim anything the data does not say.",
@@ -48,16 +54,28 @@ export async function generateSummary(cv: CV, lang: AtsLang, opts: { provider?: 
   let provider = opts.provider
   try {
     provider ??= atsProvider(0.2)
-    const res = await provider.generateStructured({ system: SYSTEM[lang] + (opts.focus ? FOCUS[lang] : ""), user: JSON.stringify(facts), schema, signal: opts.signal, options: { numPredict: 300 } })
-    const text = res.data.summary.replace(/\s+/g, " ").trim()
-    const n = sentenceCount(text)
-    // ≈ 4 líneas impresas a 10,5 pt (ATS-S3: GOO 2–4 líneas, NOV 2–3).
-    if (n < 2 || n > 4 || text.length > MAX_CHARS || /!/.test(text) || FIRST_PERSON.test(text)) return { summary: null, reason: "forma" }
+    const system = SYSTEM[lang] + COPY[lang] + (opts.focus ? FOCUS[lang] : "")
     // El único dato nuevo permitido son los años de experiencia calculados.
     const guard = `${cvCorpus({ ...cv, sectionOrder: undefined })}\n${facts.yearsOfExperience ?? ""}`
-    const v = verifyNoInvention(guard, text)
-    if (!v.ok) return { summary: null, reason: "no-paso-verificacion", violations: v.violations.map((x) => x.value) }
-    return { summary: text }
+    let result: SummaryResult = { summary: null, reason: "forma" }
+    // Hasta 2 intentos: si el primero se rechaza por palabras que el CV no tiene, el segundo recibe esas palabras como «prohibidas».
+    let avoid: string[] = []
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const user = JSON.stringify(avoid.length ? { ...facts, doNotUseTheseWords: avoid } : facts)
+      const res = await provider.generateStructured({ system, user, schema, signal: opts.signal, options: { numPredict: 300 } })
+      const text = res.data.summary.replace(/\s+/g, " ").trim()
+      const n = sentenceCount(text)
+      // ≈ 4 líneas impresas a 10,5 pt (ATS-S3: GOO 2–4 líneas, NOV 2–3).
+      if (n < 2 || n > 4 || text.length > MAX_CHARS || /!/.test(text) || FIRST_PERSON.test(text)) {
+        result = { summary: null, reason: "forma" }
+        continue
+      }
+      const v = verifyNoInvention(guard, text)
+      if (v.ok) return { summary: text }
+      avoid = v.violations.map((x) => x.value)
+      result = { summary: null, reason: "no-paso-verificacion", violations: avoid }
+    }
+    return result
   } catch {
     return { summary: null, reason: "ia-no-disponible" }
   }
