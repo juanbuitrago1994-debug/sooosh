@@ -1304,3 +1304,9 @@ Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: 
 - Medición real: CV de ejemplo + oferta → 100 % de formato ATS (1 página), cobertura 50 %, 2 habilidades y 2 logros reordenados. Pruebas: 933 (motor, ruta real, repositorio, componente).
 - **Límite honesto**: reordenar sube la prominencia de lo que la oferta pide, pero **no sube la cobertura** (no agrega palabras que el CV no tenga); la cobertura la mejoran los cambios aceptados en la revisión. No se verificó aún en el navegador el paso final completo (requiere analizar una oferta con la IA local y revisar cambios): se probó la ruta real con el servidor y el componente por separado.
 - Falta (siguientes pasos posibles): generarlo automáticamente al terminar el análisis de cada oferta (sin pasar por la revisión) y desde el buscador de ofertas.
+
+### CV ATS desde el detalle de cada oferta (24-nov-2026)
+- En el **detalle de una oferta** del buscador (si hay CV cargado) aparece el mismo bloque «CV ATS para esta oferta» (`TailoredAts`): un clic genera, verifica y guarda en «Tus CV por oferta» el CV en formato ATS adaptado a esa oferta, **sin pasar por el asistente ni la revisión**. Si el CV no está validado, una nota lo avisa. El guardado se comparte con el asistente en `lib/ats/save-entry.ts` (`saveAtsEntry`, uno por oferta).
+- Verificado en tu servidor con una oferta real del buscador: «Formato ATS · 100 %», PDF de 1 página, entrada guardada en el historial con `ats: { percent: 100 }`. lint, `tsc`, `build`, `pnpm test`.
+- Nota: la cobertura de la oferta salió 0 % porque el CV de prueba (diseño de producto) no coincide con esa oferta; reordenar no la sube (ver la fase anterior).
+- Siguiente natural: reescrituras del resumen con la oferta delante, verificadas contra el CV, para subir la cobertura sin inventar.

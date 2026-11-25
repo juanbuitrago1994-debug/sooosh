@@ -17,7 +17,9 @@ import { CvRepository } from "@/components/history/cv-repository"
 import { ApplyEmailPanel } from "@/components/jobs/apply-email-panel"
 import { applyChannels, applyCta, applyHint, applyLabel, channelHref, emailsOf } from "@/lib/jobs/apply"
 import { buildFacts, companyLine, curatedDates } from "@/lib/jobs/facts"
-import { savePrefill } from "@/lib/jobs/prefill"
+import { offerToText, savePrefill } from "@/lib/jobs/prefill"
+import { TailoredAts } from "@/components/steps/tailored-ats"
+import { saveAtsEntry } from "@/lib/ats/save-entry"
 import { track } from "@/lib/events/consent"
 import { dismissJob, toggleSaved, useMarks } from "@/lib/profile/job-marks"
 import type { JobCard } from "@/lib/jobs/search"
@@ -54,7 +56,8 @@ export function JobDetail({ job }: { job: JobCard }) {
   const subtitle = [companyLine(job), job.locationText].filter(Boolean).join(" · ")
 
   // Con el perfil de búsqueda de la persona se calcula el encaje de esta oferta (reglas, sin IA).
-  const profileCv = useSearchProfile()?.cv ?? null
+  const profile = useSearchProfile()
+  const profileCv = profile?.cv ?? null
   useEffect(() => {
     if (!profileCv) return
     let alive = true
@@ -255,6 +258,20 @@ export function JobDetail({ job }: { job: JobCard }) {
             <PrivacyLink className="ml-auto text-muted-foreground" />
           </div>
         </Rise>
+
+        {/* CV en formato ATS para ESTA oferta, a partir del CV validado; queda guardado en «Tus CV por oferta». */}
+        {profile ? (
+          <>
+            <TailoredAts
+              cv={profile.cv}
+              offer={job.offer}
+              sourceText={profile.sourceText}
+              extras={profile.extras ?? null}
+              onGenerated={(r) => saveAtsEntry({ offer: job.offer, offerText: offerToText(job.offer, { location: job.locationText, remoteScope: job.remoteScope }), originalCv: profile.cv, tailored: r })}
+            />
+            {!profile.validatedAt && <p className="text-xs text-muted-foreground">Tu CV aún no está validado: valídalo desde el inicio para que este CV use los datos que confirmaste.</p>}
+          </>
+        ) : null}
 
         <div className="sticky bottom-0 -mx-4 mt-auto flex flex-col gap-2 border-t border-border/40 bg-background px-4 py-3 sm:mx-0 sm:flex-row-reverse sm:px-0">
           {isMail && mailTo.length > 0 ? (

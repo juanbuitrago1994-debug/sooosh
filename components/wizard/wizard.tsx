@@ -18,8 +18,9 @@ import { pendingCount, reviewKey, reviewReady, StepReview, type ReviewState } fr
 import { matchReady, StepAnalysis, type MatchState } from "@/components/steps/step-analysis"
 import { emptyOffer, offerReady, StepOffer, type OfferState } from "@/components/steps/step-offer"
 import { freezeSource, guardCorpus } from "@/lib/cv/source"
-import { addEntry, parseHistory, readRaw, removeEntry, type HistoryEntry } from "@/lib/history"
+import { addEntry, parseHistory, readRaw, type HistoryEntry } from "@/lib/history"
 import type { TailoredAts } from "@/lib/ats/client"
+import { saveAtsEntry } from "@/lib/ats/save-entry"
 import { lexicalCoverage } from "@/lib/match/engine"
 import { rebuildCv } from "@/lib/rebuild/build"
 import { STEPS } from "@/lib/steps"
@@ -130,19 +131,7 @@ function Shell() {
   /** Tras generar el CV ATS de esta oferta: queda en el repositorio (uno por oferta; generarlo de nuevo reemplaza el anterior). */
   const onAtsGenerated = (r: TailoredAts) => {
     if (!profile || !offerValue || !review) return
-    for (const e of parseHistory(readRaw())) if (e.ats && e.offer.title === offerValue.title && (e.offer.company ?? "") === (offerValue.company ?? "")) removeEntry(e.id)
-    addEntry({
-      offerText: offer.text,
-      offer: offerValue,
-      originalCv: profile.cv,
-      cv: r.cv,
-      review: { items: review.items, decisions: review.decisions },
-      lang: offerValue.language === "en" ? "en" : "es",
-      coverageBefore: lexicalCoverage(profile.cv, offerValue),
-      coverageAfter: r.coverage,
-      acceptedChanges: acceptedCount,
-      ats: { percent: r.percent },
-    })
+    saveAtsEntry({ offer: offerValue, offerText: offer.text, originalCv: profile.cv, tailored: r, review: { items: review.items, decisions: review.decisions }, acceptedChanges: acceptedCount })
   }
 
   /** Reabre una adaptación guardada en el paso de revisión, con sus decisiones. */
