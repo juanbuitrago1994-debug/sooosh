@@ -248,3 +248,22 @@ export const trustedDevices = pgTable(
   },
   (t) => [index("trusted_devices_user_idx").on(t.userId, t.lastSeenAt)],
 )
+
+/** CV validados de cada persona (migración 0017). Solo el JSON del CV ya validado; nunca el archivo original. */
+export const cvs = pgTable(
+  "cvs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    cv: jsonb("cv").notNull(),
+    label: text("label").notNull().default(""),
+    file: jsonb("file"),
+    originalAts: jsonb("original_ats"),
+    fileId: text("file_id"),
+    isActive: boolean("is_active").notNull().default(true),
+    validatedAt: ts("validated_at").notNull(),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("cvs_user_idx").on(t.userId, t.updatedAt)],
+)

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { atsBadgeLabel } from "@/components/jobs/job-search"
-import { clearSearchProfile, getSearchProfile, setAtsStatus, profileLabel, refreshSearchProfile, SEARCH_PROFILE_KEY, setSearchProfile, setProfileValidated, setOriginalAts } from "@/lib/profile/search-profile"
+import { clearSearchProfile, getSearchProfile, hydrateSearchProfile, setAtsStatus, profileLabel, refreshSearchProfile, SEARCH_PROFILE_KEY, setSearchProfile, setProfileValidated, setOriginalAts } from "@/lib/profile/search-profile"
 import { cvSchema } from "@/lib/schemas/cv"
 
 const mk = (name: string, headline?: string) => cvSchema.parse({ header: { fullName: name, headline }, experience: [], skills: [{ items: ["Figma"] }] })
@@ -90,5 +90,14 @@ describe("perfil de búsqueda (el CV con el que se compara cada oferta)", () => 
     const { join } = await import("node:path")
     const src = readFileSync(join(__dirname, "..", "components/jobs/job-search.tsx"), "utf8")
     expect(src).toMatch(/\{profile \? \(\s*<AtsBadge status=\{profile\.ats\} \/>\s*\) : \(\s*<Badge variant="outline" className="mr-1">\s*Sube tu CV/)
+  })
+  it("el CV que viene de la cuenta queda validado, con su archivo y sin texto original", () => {
+    expect(hydrateSearchProfile({ cv: mk("Ana Pérez", "Diseñadora"), label: "", file: { name: "ana.pdf", type: "PDF", size: 10 }, fileId: "f1", validatedAt: "2026-11-26T10:00:00.000Z" })).toBe(true)
+    const p = getSearchProfile()!
+    expect(p.validatedAt).toBe("2026-11-26T10:00:00.000Z")
+    expect(p.label).toBe("Ana Pérez · Diseñadora")
+    expect(p.file?.name).toBe("ana.pdf")
+    expect(p.fileId).toBe("f1")
+    expect(p.sourceText).toBeUndefined()
   })
 })

@@ -57,6 +57,15 @@ consent_log(anon_id, version, level, at)
 ```
 La captura es una función `track(evento)` que **no hace nada** si no hay consentimiento vigente; el servidor lo vuelve a comprobar.
 
+## Cuentas y CV guardado (26-nov-2026)
+Esto es **aparte** de la medición de uso. Lo anterior («Qué NO se guarda nunca») habla de los eventos de medición; el CV que la persona valida y guarda en SU cuenta no pasa por ahí.
+- **Qué se guarda en la cuenta**: solo el CV ya leído y validado por la persona (su contenido en formato estructurado, el nombre del archivo, tipo y peso, y la afinidad ATS medida). **Nunca** el archivo original ni su texto.
+- **Quién lo ve**: solo ella. Tabla `cvs` con RLS (la clave pública solo lee las filas propias; escribe el servidor filtrando por la sesión verificada).
+- **Cuándo se guarda**: al terminar de validar el CV (o al corregirlo y validarlo de nuevo), estando con sesión. Se avisa en la pantalla de entrada.
+- **Historial**: el CV activo y hasta 9 anteriores; al cambiar de CV, el anterior pasa al historial.
+- **Pendiente (fase 4, Ajustes)**: ver y borrar CV guardados, exportar y eliminar la cuenta con todos sus datos.
+- Los eventos de medición siguen sin unirse a la cuenta (siguen con su identificador aleatorio).
+
 ## Aviso legal
 En Colombia (Ley 1581 de 2012), Argentina (Ley 25.326) y Chile (Ley 19.628 y su actualización) el tratamiento de datos personales exige autorización previa, informada y revocable. Un identificador aleatorio ligado a hábitos de búsqueda puede considerarse dato personal. **Este texto no es asesoría legal: conviene que un abogado lo revise** antes de producción (política de tratamiento de datos, responsable, canal para ejercer derechos).
 

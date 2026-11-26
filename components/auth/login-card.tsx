@@ -35,6 +35,7 @@ export function LoginCard({ error }: { error?: string }) {
       <Button type="submit" size="lg" className="w-full">
         Continuar con Google
       </Button>
+      <p className="text-center text-xs text-muted-foreground">Tu CV validado se guarda en tu cuenta y solo tú puedes verlo. El archivo original no se guarda.</p>
     </form>
   )
 }

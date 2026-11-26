@@ -86,6 +86,18 @@ export function setSearchProfile(cv: CV, fileId?: string, sourceText?: string, f
   }
 }
 
+/** Carga en este navegador el CV validado que viene de la cuenta (no trae el archivo ni su texto: nunca se guardan en la cuenta). */
+export function hydrateSearchProfile(r: { cv: CV; label: string; file?: FileMeta; originalAts?: OriginalAtsSummary | null; fileId?: string; validatedAt: string }): boolean {
+  try {
+    const p: SearchProfile = { cv: r.cv, label: r.label || profileLabel(r.cv), file: r.file, originalAts: r.originalAts, fileId: r.fileId, validatedAt: r.validatedAt, updatedAt: r.validatedAt }
+    localStorage.setItem(SEARCH_PROFILE_KEY, JSON.stringify(p))
+    window.dispatchEvent(new Event(EVENT))
+    return true
+  } catch {
+    return false
+  }
+}
+
 /** Anota el estado de la versión ATS en el perfil guardado. No toca `updatedAt`: el panel no debe reiniciarse al marcar «generada» o «validada». */
 export function setAtsStatus(status: AtsStatus): boolean {
   const cur = getSearchProfile()
