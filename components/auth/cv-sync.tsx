@@ -11,6 +11,27 @@ import { getSearchProfile, hydrateSearchProfile, useSearchProfile, type SearchPr
 const keyOf = (p: SearchProfile) => `${p.validatedAt}|${p.fileId ?? ""}|${JSON.stringify(p.cv)}`
 const time = (iso?: string) => (iso ? new Date(iso).getTime() : 0)
 
+/** Marca (en esta pestaña) de la última vez que el CV local y el de la cuenta quedaron iguales: evita repetir la consulta en cada pantalla. */
+const MARK_KEY = "sooosh:sync-cv"
+const FRESH_MS = 10 * 60_000
+const markOf = (p: SearchProfile) => `${p.validatedAt ?? ""}|${p.fileId ?? ""}`
+const writeMark = (p: SearchProfile | null) => {
+  try {
+    if (p) sessionStorage.setItem(MARK_KEY, JSON.stringify({ at: Date.now(), mark: markOf(p) }))
+  } catch {
+    /* sin almacenamiento */
+  }
+}
+/** ¿Se sincronizó hace poco y el CV local no cambió desde entonces? Entonces no hace falta preguntar a la cuenta otra vez. */
+function recentlySynced(local: SearchProfile | null): boolean {
+  try {
+    const m = JSON.parse(sessionStorage.getItem(MARK_KEY) ?? "null") as { at?: number; mark?: string } | null
+    return !!local?.validatedAt && !!m && Date.now() - (m.at ?? 0) < FRESH_MS && m.mark === markOf(local)
+  } catch {
+    return false
+  }
+}
+
 /**
  * Mantiene el CV validado de este navegador y el de la cuenta iguales (no pinta nada):
  * - al entrar: si este dispositivo no tiene CV, carga el de la cuenta; si tiene uno validado más reciente, lo sube; si el de la cuenta es más reciente, lo carga.
@@ -21,12 +42,19 @@ const time = (iso?: string) => (iso ? new Date(iso).getTime() : 0)
  */
 export function CvSync() {
   const profile = useSearchProfile()
-  const [ready, setReady] = useState(false)
+  // Si ya se sincronizó hace poco no hay nada que preguntar: se parte «listo» (el componente no pinta nada, así que no hay diferencia con el servidor).
+  const [ready, setReady] = useState(() => typeof window !== "undefined" && recentlySynced(getSearchProfile()))
   const synced = useRef("")
   const hadValidated = useRef(false)
 
   useEffect(() => {
     let alive = true
+    const start = getSearchProfile()
+    if (recentlySynced(start)) {
+      synced.current = keyOf(start!)
+      hadValidated.current = true
+      return
+    }
     void (async () => {
       const me = await pullCv().catch(() => null)
       if (!alive || !me) return
@@ -48,6 +76,7 @@ export function CvSync() {
         synced.current = keyOf(local)
       }
       hadValidated.current = !!getSearchProfile()?.validatedAt
+      if (synced.current) writeMark(getSearchProfile())
       setReady(true)
     })()
     return () => {
@@ -63,7 +92,10 @@ export function CvSync() {
       if (key === synced.current) return
       const t = setTimeout(() => {
         void pushCv({ cv: profile.cv, label: profile.label, file: profile.file, originalAts: profile.originalAts, fileId: profile.fileId, validatedAt: profile.validatedAt }).then((ok) => {
-          if (ok) synced.current = key
+          if (ok) {
+            synced.current = key
+            writeMark(profile)
+          }
         })
       }, 1500)
       return () => clearTimeout(t)

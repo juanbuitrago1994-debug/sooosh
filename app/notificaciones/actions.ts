@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { createAlert, deleteAlert, ensureDefaultAlert, setAlertEnabled, touchAlerts, updateAlert } from "@/lib/alerts/engine"
 import { alertInputSchema } from "@/lib/alerts/filters"
-import { listNotifications, markAllRead, markRead, unreadCount, type Notification } from "@/lib/alerts/notifications"
-import { getCurrentUser } from "@/lib/auth/session"
+import { bellData, markAllRead, markRead, type Notification } from "@/lib/alerts/notifications"
+import { getCurrentUser, getSession } from "@/lib/auth/session"
 import { getDb } from "@/lib/db"
 import { withDb } from "@/lib/db/resilient"
 
@@ -13,15 +13,14 @@ import { withDb } from "@/lib/db/resilient"
 const uuid = z.string().uuid()
 const refresh = () => revalidatePath("/notificaciones")
 
-/** Lo que pinta la campana: no leídas y las últimas 5. Aquí se crea (una sola vez) la alerta inicial de la persona. */
+/** Lo que pinta la campana: no leídas y las últimas 5 (una sola consulta). Aquí se crea (una sola vez) la alerta inicial de la persona. */
 export async function getBell(): Promise<{ unread: number; items: Notification[] } | null> {
-  const user = await getCurrentUser()
-  if (!user) return null
+  const session = await getSession()
+  if (!session) return null
   try {
-    const db = getDb()
-    await ensureDefaultAlert(db, user.id).catch((e) => console.error("[alertas] alerta inicial", e))
-    const [unread, items] = await Promise.all([withDb((d) => unreadCount(d, user.id)), withDb((d) => listNotifications(d, user.id, 5))])
-    return { unread, items }
+    // La alerta inicial se crea una sola vez: la sesión ya trae si se hizo, así que casi nunca cuesta un viaje a la base.
+    if (session.profile && !session.alertsSeeded) await ensureDefaultAlert(getDb(), session.user.id).catch((e) => console.error("[alertas] alerta inicial", e))
+    return await withDb((db) => bellData(db, session.user.id))
   } catch (e) {
     console.error("[notificaciones] campana", e)
     return null

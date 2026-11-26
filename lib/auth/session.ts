@@ -1,7 +1,8 @@
 import "server-only"
+import { cache } from "react"
 import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { and, eq, isNull } from "drizzle-orm"
+import { and, eq, isNull, sql } from "drizzle-orm"
 import { getDb } from "@/lib/db"
 import { profiles, trustedDevices } from "@/lib/db/schema"
 import { DEVICE_COOKIE, deviceCookieOptions, deviceExpiry, signDevice, verifyDevice } from "./device"
@@ -34,11 +35,15 @@ export function deviceLabel(ua: string | null): string {
   return `${browser} en ${os}`
 }
 
+export type Session = { user: AuthUser; /** `null` = aún no completó el registro */ profile: Profile | null; /** la alerta inicial ya se creó */ alertsSeeded: boolean }
+
 /**
- * Persona con sesión válida EN ESTE dispositivo, o `null`. Exige las tres cosas a la vez: cookie de dispositivo firmada y vigente, sesión de Supabase
- * verificada que pertenezca a la misma persona, y dispositivo no revocado en la base. Si falta una, es como no tener sesión.
+ * Sesión válida EN ESTE dispositivo, o `null`. Exige las tres cosas a la vez: cookie de dispositivo firmada y vigente, sesión de Supabase verificada
+ * (con las claves públicas de Auth: sin viaje de red) que pertenezca a la misma persona, y dispositivo no revocado en la base. Si falta una, es como no
+ * tener sesión. UNA sola consulta trae el dispositivo y el perfil (cada viaje a la base cuesta ~150 ms desde casa), y `cache` de React la comparte
+ * entre todo lo que se renderice o ejecute en la misma petición (página, puerta de acceso, campana…).
  */
-export async function getCurrentUser(): Promise<AuthUser | null> {
+export const getSession = cache(async (): Promise<Session | null> => {
   const store = await cookies()
   const device = await verifyDevice(store.get(DEVICE_COOKIE)?.value)
   if (!device) return null
@@ -46,15 +51,20 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   const { data } = await supabase.auth.getClaims()
   const claims = data?.claims
   if (!claims || claims.sub !== device.userId) return null
-  const db = getDb()
-  const [row] = await db
-    .select({ id: trustedDevices.id, lastSeenAt: trustedDevices.lastSeenAt })
+  const [row] = await getDb()
+    .select({ id: trustedDevices.id, name: profiles.name, country: profiles.country, roleInterests: profiles.roleInterests, alertsSeeded: profiles.alertsSeeded, hasProfile: sql<boolean>`${profiles.id} is not null` })
     .from(trustedDevices)
+    .leftJoin(profiles, eq(profiles.id, trustedDevices.userId))
     .where(and(eq(trustedDevices.id, device.id), eq(trustedDevices.userId, device.userId), isNull(trustedDevices.revokedAt)))
     .limit(1)
   if (!row) return null
   const meta = (claims.user_metadata ?? {}) as { full_name?: string; name?: string }
-  return { id: device.userId, email: String(claims.email ?? ""), googleName: meta.full_name ?? meta.name ?? "", deviceId: device.id, remember: device.remember }
+  const user: AuthUser = { id: device.userId, email: String(claims.email ?? ""), googleName: meta.full_name ?? meta.name ?? "", deviceId: device.id, remember: device.remember }
+  return { user, profile: row.hasProfile ? { name: row.name!, country: row.country!, roleInterests: row.roleInterests ?? [] } : null, alertsSeeded: !!row.alertsSeeded }
+})
+
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  return (await getSession())?.user ?? null
 }
 
 export async function getProfile(userId: string): Promise<Profile | null> {
@@ -71,10 +81,10 @@ export async function requireUser(): Promise<AuthUser> {
 
 /** Sesión y registro completo (nombre, país, intereses). Sin registro, al paso de registro. */
 export async function requireProfile(): Promise<{ user: AuthUser; profile: Profile }> {
-  const user = await requireUser()
-  const profile = await getProfile(user.id)
-  if (!profile) redirect("/registro")
-  return { user, profile }
+  const session = await getSession()
+  if (!session) redirect("/login")
+  if (!session.profile) redirect("/registro")
+  return { user: session.user, profile: session.profile }
 }
 
 /** Crea el dispositivo de esta sesión y deja su cookie firmada. Solo desde rutas o acciones (escribe cookies). */

@@ -409,3 +409,12 @@ Antes (PDF): logros 12, 11 y 8; estudios 1; proyectos 0. **Queda un defecto al r
 - **Proyectos como párrafos en el Word** (`paragraphProjectItems`): «Nombre (año): …» una línea por proyecto, incluido «(2022 – Actualidad)» y el caso de un solo proyecto; y en el PDF, cada viñeta es un proyecto aunque una línea partida empiece en mayúscula.
 
 **Límites**: solo plantillas casi iguales (un diseñador, 7 ejemplos sintéticos); no se repitió la subida completa a la app ni los CV escaneados. La regla de la viñeta partida («≥ 80 caracteres sin punto final») es una heurística y puede unir de más en CV con viñetas largas sin puntuación seguidas de un título sin fecha en la misma línea; el caso «título + rango en la línea siguiente» está protegido.
+
+## Rendimiento de las vistas y la base (26-nov-2026)
+Medido desde el Mac de Juan (Colombia) contra Supabase (`sa-east-1`, São Paulo) por el «Transaction pooler». Medianas de 5–9 repeticiones; `scripts` temporales, no se conservan.
+- **Un viaje a la base** (`select 1`): mediana **207 ms** (mín 133, máx 350). Perfil por id: 265 ms; dispositivo por id: 173 ms; conteo de ofertas activas: 207 ms. **Lo que manda el tiempo de cada vista es cuántos viajes SEGUIDOS hace**, no lo que tarda cada consulta.
+- **Dentro de la base**: `explain analyze` de «100 tarjetas más recientes» = **10,8 ms** (recorrido secuencial de 4.822 filas + orden top-N). Las consultas son baratas; el tiempo es red.
+- **Peso de las tarjetas**: 100 tarjetas con el JSON de la oferta: **313 ms** (mediana); sin él: 168 ms; 1 fila: 177 ms. Hay picos aislados de ~2,5 s (red/pooler), ya conocidos (ver `reference-supabase-pooler-pipeline`). La oferta pesa de media 1,2 KB; 4.822 activas = 5,6 MB de JSON.
+- **Autenticación**: el proyecto firma con ES256 (`/.well-known/jwks.json` trae 1 clave EC): `getClaims()` se verifica **sin red**. Lo que costaba era la consulta del dispositivo y luego la del perfil, una detrás de otra (≈ 2 viajes ≈ 0,35 s) en CADA página.
+- **Consultas de alertas con palabras clave** (títulos de hasta 5.000 ofertas + tarjetas de las que coinciden): 0,9–1,9 s en total (2 viajes + trabajo en el servidor).
+- **`/api/search`** (servidor de desarrollo, CO, 3 repeticiones): sin texto **0,41–0,49 s** → **0,008 s** con memoria de 2 min; con texto «diseñador» **0,80–0,91 s** → **0,006–0,008 s** (incluye el vector de Ollama, ahora también en memoria 30 min). La primera petición tras arrancar paga la compilación del modo desarrollo (1,3–1,6 s).

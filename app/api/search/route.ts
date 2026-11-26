@@ -10,6 +10,7 @@ import { isRegion } from "@/lib/jobs/region"
 import { withDb } from "@/lib/db/resilient"
 import { getJobCards, searchJobs } from "@/lib/jobs/search"
 import { cvSchema } from "@/lib/schemas/cv"
+import { createMemo } from "@/lib/util/memo"
 
 const bodySchema = z.object({
   region: z.string().refine(isRegion, "Región desconocida"),
@@ -33,6 +34,8 @@ const bodySchema = z.object({
 })
 
 const PAGE = 30
+/** Las mismas búsquedas (sin el CV de por medio) se repiten mucho —cada vez que se abre el buscador, se cambia de pestaña o se vuelve atrás—: 2 minutos de memoria. */
+const searchMemo = createMemo<Awaited<ReturnType<typeof searchJobs>>>({ ttlMs: 120_000, max: 300 })
 /** Cuántas candidatas se puntúan cuando hay que ordenar o filtrar por encaje (≈ 8 ms cada una la primera vez; luego, de caché). */
 const POOL = 80
 
@@ -56,7 +59,10 @@ export async function POST(request: Request) {
     const wide = !!profile && (sort === "encaje" || onlyMatches)
     // Sin texto de búsqueda, las candidatas son las más cercanas al CV (vectores); con texto, las del texto y el significado.
     const profileEmbedding = wide && !q && profile ? await embedProfile(profile, AbortSignal.timeout(8000)).catch(() => null) : null
-    const { jobs, semantic, total } = await withDb((db) => searchJobs(db, { region, q, mode, area, curated, limit: wide ? POOL : PAGE, embedding: embedding ?? undefined, profileEmbedding: profileEmbedding ?? undefined }))
+    const params = { region, q, mode, area, curated, limit: wide ? POOL : PAGE, embedding: embedding ?? undefined, profileEmbedding: profileEmbedding ?? undefined }
+    // Lo que depende del CV (el vector del perfil) no se guarda en memoria; lo demás sí.
+    const run = () => withDb((db) => searchJobs(db, params))
+    const { jobs, semantic, total } = profileEmbedding ? await run() : await searchMemo(JSON.stringify([region, q ?? "", mode ?? "", area, curated, params.limit, !!embedding]), run)
     let ranked = rankByFit(jobs, profile, sort)
     // «Para mí»: con consentimiento personal y suficientes señales, la lista por relevancia se reordena suavemente según su gusto.
     let personalized = false

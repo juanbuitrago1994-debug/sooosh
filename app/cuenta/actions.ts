@@ -5,7 +5,7 @@ import { and, eq, isNull } from "drizzle-orm"
 import { z } from "zod"
 import { DELETE_PHRASE } from "@/lib/account/constants"
 import { deleteAuthUser } from "@/lib/auth/admin"
-import { clearSessionCookies, getCurrentUser, getProfile } from "@/lib/auth/session"
+import { clearSessionCookies, getCurrentUser, getSession } from "@/lib/auth/session"
 import type { ProfileFormState } from "@/lib/auth/profile-store"
 import { persistProfile } from "@/lib/auth/profile-store"
 import { trustedDevices } from "@/lib/db/schema"
@@ -60,12 +60,11 @@ export async function clearCv(): Promise<boolean> {
   }
 }
 
-/** Quién es la persona (para el menú de cuenta). `null` sin sesión. */
+/** Quién es la persona (para el menú de cuenta). `null` sin sesión. El nombre ya viene con la sesión: no cuesta otro viaje a la base. */
 export async function whoAmI(): Promise<{ name: string; email: string } | null> {
-  const user = await getCurrentUser()
-  if (!user) return null
-  const profile = await withDb((db) => getProfile(user.id)).catch(() => null)
-  return { name: profile?.name ?? user.googleName, email: user.email }
+  const session = await getSession()
+  if (!session) return null
+  return { name: session.profile?.name ?? session.user.googleName, email: session.user.email }
 }
 
 /** Ajustes: edita nombre, país y cargos (los mismos datos del registro). */

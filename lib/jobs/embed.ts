@@ -3,6 +3,7 @@ import { eq, isNull } from "drizzle-orm"
 import { embed, resolveEmbedModel } from "@/lib/ai/embeddings"
 import type { Db } from "@/lib/db"
 import { jobs } from "@/lib/db/schema"
+import { createMemo } from "@/lib/util/memo"
 import type { CV } from "@/lib/schemas/cv"
 import type { Offer } from "@/lib/schemas/offer"
 
@@ -54,11 +55,16 @@ export async function embedProfile(cv: CV, signal?: AbortSignal): Promise<number
 /** bge-m3 da vectores de 1024 dimensiones, que es lo que guarda `jobs.embedding`. Con otro modelo no se guarda nada. */
 const DIMENSIONS = 1024
 
+/** Los textos de búsqueda se repiten (la misma persona, otra vez, o varias personas): su vector se guarda 30 minutos en lugar de pedírselo a Ollama de nuevo. */
+const queryVectors = createMemo<number[] | null>({ ttlMs: 30 * 60_000, max: 300 })
+
 export async function embedQuery(text: string, signal?: AbortSignal): Promise<number[] | null> {
-  const m = await resolveEmbedModel()
-  if (!m || m.model.split(":")[0] !== "bge-m3") return null
-  const [v] = await embed([text], m.model, signal)
-  return v?.length === DIMENSIONS ? v : null
+  return queryVectors(text.trim().toLowerCase(), async () => {
+    const m = await resolveEmbedModel()
+    if (!m || m.model.split(":")[0] !== "bge-m3") return null
+    const [v] = await embed([text], m.model, signal)
+    return v?.length === DIMENSIONS ? v : null
+  }, (v) => v !== null)
 }
 
 /** Calcula y guarda el vector de una oferta. Devuelve false si Ollama o bge-m3 no están disponibles (la búsqueda por texto sigue funcionando). */

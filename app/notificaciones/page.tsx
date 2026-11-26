@@ -1,12 +1,13 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Suspense } from "react"
+import { ListSkeleton } from "@/components/common/list-skeleton"
 import { ArrowLeftIcon } from "lucide-react"
 import { NotificationsCenter } from "@/components/notifications/notifications-center"
 import { buttonVariants } from "@/components/ui/button"
 import { ensureDefaultAlert, listAlerts, touchAlerts } from "@/lib/alerts/engine"
 import { listNotifications } from "@/lib/alerts/notifications"
-import { requireProfile } from "@/lib/auth/session"
+import { getSession, requireProfile } from "@/lib/auth/session"
 import { getDb } from "@/lib/db"
 
 export const metadata: Metadata = { title: "Notificaciones · Sooosh", robots: { index: false, follow: false } }
@@ -15,9 +16,10 @@ async function Center({ searchParams }: { searchParams: PageProps<"/notificacion
   const { user } = await requireProfile()
   const { tab } = await searchParams
   const db = getDb()
-  await ensureDefaultAlert(db, user.id).catch(() => false)
-  await touchAlerts(db, user.id).catch(() => {}) // abrir el centro de notificaciones cuenta como actividad: las alertas no se pausan
-  const [notifications, alerts] = await Promise.all([listNotifications(db, user.id, 50), listAlerts(db, user.id)])
+  // La sesión ya dice si la alerta inicial existe (casi nunca hace falta crearla); lo demás es independiente y se pide a la vez.
+  if (!(await getSession())?.alertsSeeded) await ensureDefaultAlert(db, user.id).catch(() => false)
+  // Abrir el centro de notificaciones cuenta como actividad: las alertas no se pausan por inactividad.
+  const [notifications, alerts] = await Promise.all([listNotifications(db, user.id, 50), listAlerts(db, user.id), touchAlerts(db, user.id).catch(() => {})])
   return <NotificationsCenter notifications={notifications} alerts={alerts} initialTab={tab === "alertas" ? "alertas" : "notificaciones"} />
 }
 
@@ -31,7 +33,7 @@ export default function NotificacionesPage(props: PageProps<"/notificaciones">) 
         <h1 className="px-1 text-sm font-medium">Notificaciones</h1>
       </header>
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 pt-4 pb-12 sm:px-6">
-        <Suspense fallback={null}>
+        <Suspense fallback={<ListSkeleton />}>
           <Center searchParams={props.searchParams} />
         </Suspense>
       </main>

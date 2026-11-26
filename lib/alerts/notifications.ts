@@ -18,6 +18,17 @@ export async function unreadCount(db: Db, userId: string): Promise<number> {
   return r?.n ?? 0
 }
 
+/** Lo que pinta la campana en UNA sola consulta: las últimas 5 y cuántas hay sin leer en total (función de ventana: se calcula antes del límite). */
+export async function bellData(db: Db, userId: string): Promise<{ unread: number; items: Notification[] }> {
+  const rows = await db
+    .select({ id: notifications.id, kind: notifications.kind, title: notifications.title, body: notifications.body, href: notifications.href, createdAt: notifications.createdAt, readAt: notifications.readAt, unread: sql<number>`(count(*) filter (where ${notifications.readAt} is null) over ())::int` })
+    .from(notifications)
+    .where(eq(notifications.userId, userId))
+    .orderBy(desc(notifications.createdAt))
+    .limit(5)
+  return { unread: rows[0]?.unread ?? 0, items: rows.map((r) => ({ id: r.id, kind: r.kind as Notification["kind"], title: r.title, body: r.body, href: r.href, createdAt: iso(r.createdAt), read: !!r.readAt })) }
+}
+
 export async function markRead(db: Db, userId: string, id: string): Promise<boolean> {
   const rows = await db.update(notifications).set({ readAt: sql`now()` }).where(and(eq(notifications.id, id), eq(notifications.userId, userId), isNull(notifications.readAt))).returning({ id: notifications.id })
   return rows.length > 0

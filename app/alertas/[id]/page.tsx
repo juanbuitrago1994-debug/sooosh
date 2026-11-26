@@ -4,11 +4,13 @@ import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { z } from "zod"
 import { ArrowLeftIcon } from "lucide-react"
+import { ListSkeleton } from "@/components/common/list-skeleton"
 import { JobCard } from "@/components/jobs/job-card"
 import { Badge } from "@/components/ui/badge"
 import { buttonVariants } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
-import { findMatchingJobs, getAlert, takeUnseen, touchAlerts } from "@/lib/alerts/engine"
+import { cachedMatchingJobs } from "@/lib/alerts/cached"
+import { getAlert, takeUnseen, touchAlerts } from "@/lib/alerts/engine"
 import { describeFilters } from "@/lib/alerts/filters"
 import { markAlertNotificationsRead } from "@/lib/alerts/notifications"
 import { requireProfile } from "@/lib/auth/session"
@@ -24,10 +26,15 @@ async function Results({ params }: { params: Promise<{ id: string }> }) {
   const db = getDb()
   const alert = await getAlert(db, user.id, id)
   if (!alert) notFound()
-  // Abrir los resultados: cuenta como actividad, deja leídos sus avisos y marca como vistas las ofertas nuevas (que se muestran con su distintivo esta vez).
-  await Promise.all([touchAlerts(db, user.id, id), markAlertNotificationsRead(db, user.id, id)]).catch(() => {})
-  const unseen = await takeUnseen(db, id).catch(() => new Set<string>())
-  const [jobs, saved] = await Promise.all([findMatchingJobs(db, alert.filters, { limit: 100 }), savedJobIds(db, user.id).catch(() => [] as string[])])
+  // Todo lo demás es independiente: se pide a la vez (cada viaje a la base cuesta ~150 ms). Abrir los resultados cuenta como actividad, deja leídos sus
+  // avisos y marca como vistas las ofertas nuevas (que se muestran con su distintivo esta vez); la lista sale de la memoria compartida si está fresca.
+  const [unseen, jobs, saved] = await Promise.all([
+    takeUnseen(db, id).catch(() => new Set<string>()),
+    cachedMatchingJobs(alert.filters, 100),
+    savedJobIds(db, user.id).catch(() => [] as string[]),
+    touchAlerts(db, user.id, id).catch(() => {}),
+    markAlertNotificationsRead(db, user.id, id).catch(() => {}),
+  ])
   const savedSet = new Set(saved)
   const chips = describeFilters(alert.filters)
   return (
@@ -77,7 +84,7 @@ export default function AlertaPage({ params }: { params: Promise<{ id: string }>
         <h1 className="px-1 text-sm font-medium">Ofertas de tu alerta</h1>
       </header>
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 pt-4 pb-12 sm:px-6">
-        <Suspense fallback={null}>
+        <Suspense fallback={<ListSkeleton label="Buscando las ofertas de tu alerta" />}>
           <Results params={params} />
         </Suspense>
       </main>

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemSeparator, ItemTitle } from "@/components/ui/item"
+import { NAV_POPOVER_OFFSET } from "@/lib/nav"
 import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Spinner } from "@/components/ui/spinner"
@@ -129,7 +130,7 @@ export function CvRepository({ onReopen, onNewOffer }: { onReopen?: (e: HistoryE
       <PopoverTrigger render={<Button variant="ghost" size="icon" aria-label={entries.length ? `Mis CV por oferta (${entries.length})` : "Mis CV por oferta"} />}>
         <FileStackIcon aria-hidden />
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-96 max-w-[calc(100vw-2rem)] gap-3">
+      <PopoverContent align="end" sideOffset={NAV_POPOVER_OFFSET} className="w-96 max-w-[calc(100vw-2rem)] gap-3">
         <PopoverHeader>
           <PopoverTitle>Tus CV por oferta</PopoverTitle>
           <PopoverDescription className="text-xs">Uno por cada oferta. Se guardan solo en este navegador.</PopoverDescription>

@@ -4,13 +4,15 @@ import { redirect } from "next/navigation"
 import { saveProfile } from "./actions"
 import { OnboardingForm } from "@/components/auth/onboarding-form"
 import { COUNTRY_CODES, countryName } from "@/lib/auth/profile-schema"
-import { getProfile, requireUser } from "@/lib/auth/session"
+import { getSession } from "@/lib/auth/session"
 
 export const metadata: Metadata = { title: "Crea tu perfil · Sooosh" }
 
 async function Onboarding() {
-  const user = await requireUser()
-  if (await getProfile(user.id)) redirect("/")
+  const session = await getSession()
+  if (!session) redirect("/login")
+  if (session.profile) redirect("/")
+  const user = session.user
   const [first, ...rest] = COUNTRY_CODES
   const countries = [first, ...rest.toSorted((a, b) => countryName(a).localeCompare(countryName(b), "es"))].map((code) => ({ code, name: countryName(code) }))
   return <OnboardingForm action={saveProfile} defaultName={user.googleName} countries={countries} />

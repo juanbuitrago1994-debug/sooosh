@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Suspense } from "react"
+import { ListSkeleton } from "@/components/common/list-skeleton"
 import { ArrowLeftIcon } from "lucide-react"
 import { TrackedOffers } from "@/components/tracking/tracked-offers"
 import { buttonVariants } from "@/components/ui/button"
@@ -29,7 +30,7 @@ export default function MisOfertasPage() {
       </header>
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 pt-4 pb-12 sm:px-6">
         <p className="text-xs text-muted-foreground">Guardamos cada oferta completa y revisamos su enlace varias veces al día. Si cierra, te lo marcamos para que no pierdas tiempo.</p>
-        <Suspense fallback={null}>
+        <Suspense fallback={<ListSkeleton />}>
           <Offers />
         </Suspense>
       </main>

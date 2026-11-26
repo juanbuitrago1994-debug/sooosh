@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Suspense } from "react"
+import { ListSkeleton } from "@/components/common/list-skeleton"
 import { and, desc, gt, isNull, eq } from "drizzle-orm"
 import { ArrowLeftIcon } from "lucide-react"
 import { updateProfile } from "@/app/cuenta/actions"
@@ -75,7 +76,7 @@ export default function AjustesPage() {
         <h1 className="px-1 text-sm font-medium">Ajustes</h1>
       </header>
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pt-4 pb-12 sm:px-6">
-        <Suspense fallback={null}>
+        <Suspense fallback={<ListSkeleton />}>
           <Settings />
         </Suspense>
       </main>

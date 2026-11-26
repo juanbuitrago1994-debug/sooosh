@@ -5,7 +5,7 @@ import type { Db } from "@/lib/db"
 import { createTestDb } from "@/lib/db/testing"
 import { createAlert, deleteAlert, ensureDefaultAlert, findMatchingJobs, INACTIVE_DAYS, isDue, listAlerts, MAX_PER_PASS, runAlerts, setAlertEnabled, takeUnseen, touchAlerts, updateAlert } from "@/lib/alerts/engine"
 import { describeFilters, filtersSchema, keywordMatches, MAX_ALERTS, type AlertFilters, type AlertInput, type Frequency } from "@/lib/alerts/filters"
-import { createNotification, listNotifications, markAllRead, markRead, notifyOfferClosed, purgeNotifications, unreadCount } from "@/lib/alerts/notifications"
+import { bellData, createNotification, listNotifications, markAllRead, markRead, notifyOfferClosed, purgeNotifications, unreadCount } from "@/lib/alerts/notifications"
 
 const ana = "11111111-1111-4111-8111-111111111111"
 const luis = "22222222-2222-4222-8222-222222222222"
@@ -185,6 +185,17 @@ describe("alertas", () => {
     expect(await ensureDefaultAlert(db, ana)).toBe(false)
     expect(await listAlerts(db, ana)).toHaveLength(0)
     expect(describeFilters(a.filters)).toEqual(["Colombia", "«Analista de datos»", "«Científico de datos»"])
+  })
+
+  it("la campana trae las últimas 5 y el total sin leer en UNA consulta", async () => {
+    for (let i = 0; i < 8; i++) await createNotification(db, { userId: ana, kind: "alerta", title: `n${i}`, href: "/notificaciones" })
+    await createNotification(db, { userId: luis, kind: "alerta", title: "de luis", href: "/notificaciones" })
+    await client.exec(`update public.notifications set read_at = now() where title in ('n0','n1') and user_id = '${ana}'`)
+    const b = await bellData(db, ana)
+    expect(b.items).toHaveLength(5)
+    expect(b.unread).toBe(6) // las 8 menos 2 leídas, aunque solo se devuelvan 5
+    expect(b.items.every((x) => x.title.startsWith("n"))).toBe(true)
+    expect(await bellData(db, "33333333-3333-4333-8333-333333333333")).toEqual({ unread: 0, items: [] })
   })
 
   it("notificaciones: leer una o todas, una sola «oferta cerrada» por oferta y limpieza de las viejas", async () => {

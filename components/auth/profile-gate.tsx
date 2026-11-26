@@ -1,14 +1,15 @@
 import { Suspense, type ReactNode } from "react"
+import { AccountProvider } from "@/components/auth/account-context"
 import { CvSync } from "@/components/auth/cv-sync"
 import { requireProfile } from "@/lib/auth/session"
 
 async function Gate({ children }: { children: ReactNode }) {
-  await requireProfile()
+  const { profile } = await requireProfile()
   return (
-    <>
+    <AccountProvider name={profile.name}>
       <CvSync />
       {children}
-    </>
+    </AccountProvider>
   )
 }
 

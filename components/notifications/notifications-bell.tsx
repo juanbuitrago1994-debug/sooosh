@@ -4,9 +4,11 @@ import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { BellIcon } from "lucide-react"
 import { getBell, readAllNotifications, readNotification } from "@/app/notificaciones/actions"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover"
 import type { Notification } from "@/lib/alerts/notifications"
+import { NAV_POPOVER_OFFSET } from "@/lib/nav"
 import { ago } from "@/lib/tracking/relative"
 
 const REFRESH_MS = 5 * 60_000
@@ -37,11 +39,15 @@ export function NotificationsBell() {
         if (o) refresh()
       }}
     >
-      <PopoverTrigger render={<Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground aria-expanded:text-foreground" aria-label={unread > 0 ? `Notificaciones (${unread} sin leer)` : "Notificaciones"} />}>
+      <PopoverTrigger render={<Button variant="ghost" size="icon" className="relative" aria-label={unread > 0 ? `Notificaciones (${unread} sin leer)` : "Notificaciones"} />}>
         <BellIcon aria-hidden />
-        {unread > 0 && <span aria-hidden className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />}
+        {unread > 0 && (
+          <Badge aria-hidden className="absolute -top-0.5 -right-0.5 h-4 min-w-5 justify-center rounded-full border-2 border-background px-1 text-xs tabular-nums">
+            {unread > 99 ? "99+" : unread}
+          </Badge>
+        )}
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 gap-3">
+      <PopoverContent align="end" sideOffset={NAV_POPOVER_OFFSET} className="w-80 gap-3">
         <PopoverHeader className="flex-row items-center justify-between">
           <PopoverTitle>Notificaciones</PopoverTitle>
           {unread > 0 && (
@@ -74,8 +80,8 @@ export function NotificationsBell() {
             </li>
           ))}
         </ul>
-        <Link href="/notificaciones" onClick={() => setOpen(false)} className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-          Ver todas y gestionar mis alertas
+        <Link href="/notificaciones" onClick={() => setOpen(false)} className={buttonVariants({ className: "w-full" })}>
+          Ver todas
         </Link>
       </PopoverContent>
     </Popover>
