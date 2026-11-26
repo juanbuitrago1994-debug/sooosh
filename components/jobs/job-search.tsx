@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ArrowUpIcon, CheckIcon, SearchIcon, SlidersHorizontalIcon } from "lucide-react"
 import { useAutoAnimate } from "@formkit/auto-animate/react"
+import { AccountMenu } from "@/components/auth/account-menu"
 import { Logo } from "@/components/brand/logo"
 import { BeamBadge } from "@/components/magic/beam-badge"
 import { useAnyOverlayOpen } from "@/lib/use-overlay-open"
@@ -252,6 +253,7 @@ export function JobSearch() {
           </Button>
           <SourcesStatus />
           <CvRepository />
+          <AccountMenu />
         </div>
       </header>
 

@@ -1,7 +1,12 @@
 "use server"
 
+import { revalidatePath } from "next/cache"
+import { and, eq, isNull } from "drizzle-orm"
 import { z } from "zod"
-import { getCurrentUser } from "@/lib/auth/session"
+import { getCurrentUser, getProfile } from "@/lib/auth/session"
+import type { ProfileFormState } from "@/lib/auth/profile-store"
+import { persistProfile } from "@/lib/auth/profile-store"
+import { trustedDevices } from "@/lib/db/schema"
 import { getDb } from "@/lib/db"
 import { withDb } from "@/lib/db/resilient"
 import { deactivateActiveCv, getActiveCv, saveValidatedCv, type StoredCv } from "@/lib/cv-store/store"
@@ -18,11 +23,11 @@ const storedSchema = z.object({
   validatedAt: z.string().datetime(),
 })
 
-/** El CV activo de la cuenta (para cargarlo en un dispositivo que no lo tiene). */
-export async function pullCv(): Promise<StoredCv | null> {
+/** La persona de la sesión y el CV activo de su cuenta (para cargarlo en un dispositivo que no lo tiene). */
+export async function pullCv(): Promise<{ userId: string; cv: StoredCv | null } | null> {
   const user = await getCurrentUser()
   if (!user) return null
-  return withDb((db) => getActiveCv(db, user.id))
+  return { userId: user.id, cv: await withDb((db) => getActiveCv(db, user.id)) }
 }
 
 /** Guarda el CV validado. Devuelve si se guardó. */
@@ -51,4 +56,30 @@ export async function clearCv(): Promise<boolean> {
     console.error("[cv-store] no se pudo desactivar", e)
     return false
   }
+}
+
+/** Quién es la persona (para el menú de cuenta). `null` sin sesión. */
+export async function whoAmI(): Promise<{ name: string; email: string } | null> {
+  const user = await getCurrentUser()
+  if (!user) return null
+  const profile = await withDb((db) => getProfile(user.id)).catch(() => null)
+  return { name: profile?.name ?? user.googleName, email: user.email }
+}
+
+/** Ajustes: edita nombre, país y cargos (los mismos datos del registro). */
+export async function updateProfile(_prev: ProfileFormState, form: FormData): Promise<ProfileFormState> {
+  const user = await getCurrentUser()
+  if (!user) return { error: "Tu sesión terminó. Vuelve a entrar." }
+  const r = await persistProfile(user.id, form)
+  if (r.saved) revalidatePath("/ajustes")
+  return r
+}
+
+/** Cierra la sesión de otro dispositivo de la misma persona (o de este: entonces la persona vuelve al login). */
+export async function revokeDevice(deviceId: string): Promise<{ ok: boolean; self?: boolean }> {
+  const user = await getCurrentUser()
+  if (!user || !z.string().uuid().safeParse(deviceId).success) return { ok: false }
+  const rows = await getDb().update(trustedDevices).set({ revokedAt: new Date().toISOString() }).where(and(eq(trustedDevices.id, deviceId), eq(trustedDevices.userId, user.id), isNull(trustedDevices.revokedAt))).returning({ id: trustedDevices.id })
+  if (rows.length > 0) revalidatePath("/ajustes")
+  return { ok: rows.length > 0, self: deviceId === user.deviceId }
 }

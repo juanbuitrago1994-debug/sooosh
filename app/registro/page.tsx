@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
 import { redirect } from "next/navigation"
+import { saveProfile } from "./actions"
 import { OnboardingForm } from "@/components/auth/onboarding-form"
 import { COUNTRY_CODES, countryName } from "@/lib/auth/profile-schema"
 import { getProfile, requireUser } from "@/lib/auth/session"
@@ -12,7 +13,7 @@ async function Onboarding() {
   if (await getProfile(user.id)) redirect("/")
   const [first, ...rest] = COUNTRY_CODES
   const countries = [first, ...rest.toSorted((a, b) => countryName(a).localeCompare(countryName(b), "es"))].map((code) => ({ code, name: countryName(code) }))
-  return <OnboardingForm defaultName={user.googleName} countries={countries} />
+  return <OnboardingForm action={saveProfile} defaultName={user.googleName} countries={countries} />
 }
 
 export default function RegistroPage() {

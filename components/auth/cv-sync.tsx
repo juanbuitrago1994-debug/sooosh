@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { clearCv, pullCv, pushCv } from "@/app/cuenta/actions"
+import { claimLocalData } from "@/lib/auth/local-data"
 import { getSearchProfile, hydrateSearchProfile, useSearchProfile, type SearchProfile } from "@/lib/profile/search-profile"
 
 /** Huella del CV validado: si cambia el contenido o la validación, hay algo nuevo que guardar. */
@@ -25,8 +26,10 @@ export function CvSync() {
   useEffect(() => {
     let alive = true
     void (async () => {
-      const remote = await pullCv().catch(() => null)
-      if (!alive) return
+      const me = await pullCv().catch(() => null)
+      if (!alive || !me) return
+      claimLocalData(me.userId)
+      const remote = me.cv
       const local = getSearchProfile()
       if (remote && (!local || (local.validatedAt && time(remote.validatedAt) > time(local.validatedAt)))) {
         if (hydrateSearchProfile(remote)) synced.current = keyOf({ ...remote, updatedAt: remote.validatedAt })

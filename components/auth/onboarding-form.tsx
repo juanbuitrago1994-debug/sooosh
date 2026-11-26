@@ -1,8 +1,9 @@
 "use client"
 
-import { useActionState, useState } from "react"
+import { useActionState, useEffect, useState } from "react"
 import { PlusIcon, XIcon } from "lucide-react"
-import { saveProfile, type ProfileFormState } from "@/app/registro/actions"
+import { toast } from "sonner"
+import type { ProfileFormState } from "@/lib/auth/profile-store"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,10 +15,13 @@ import { MAX_ROLES, dedupeRoles } from "@/lib/auth/profile-schema"
 
 export type CountryOption = { code: string; name: string }
 
-/** Registro de una cuenta nueva: nombre, país de residencia y cargos que le interesan. Los mismos datos se editarán en Ajustes. */
-export function OnboardingForm({ defaultName, countries }: { defaultName: string; countries: CountryOption[] }) {
-  const [state, action, pending] = useActionState<ProfileFormState, FormData>(saveProfile, {})
-  const [roles, setRoles] = useState<string[]>([])
+/** Registro de una cuenta nueva: nombre, país de residencia y cargos que le interesan. Los mismos datos se editan en Ajustes (mismo formulario). */
+export function OnboardingForm({ action: submit, defaultName, defaultCountry = "", defaultRoles = [], countries, submitLabel = "Continuar" }: { action: (prev: ProfileFormState, form: FormData) => Promise<ProfileFormState>; defaultName: string; defaultCountry?: string; defaultRoles?: string[]; countries: CountryOption[]; submitLabel?: string }) {
+  const [state, action, pending] = useActionState<ProfileFormState, FormData>(submit, {})
+  const [roles, setRoles] = useState<string[]>(defaultRoles)
+  useEffect(() => {
+    if (state.saved) toast.success("Cambios guardados")
+  }, [state])
   const [draft, setDraft] = useState("")
   const fe = state.fieldErrors ?? {}
 
@@ -38,7 +42,7 @@ export function OnboardingForm({ defaultName, countries }: { defaultName: string
 
         <Field data-invalid={!!fe.country}>
           <FieldLabel htmlFor="country">País de residencia</FieldLabel>
-          <NativeSelect id="country" name="country" defaultValue="" className="w-full" aria-invalid={!!fe.country} required>
+          <NativeSelect id="country" name="country" defaultValue={defaultCountry} className="w-full" aria-invalid={!!fe.country} required>
             <NativeSelectOption value="" disabled>
               Elige tu país
             </NativeSelectOption>
@@ -99,7 +103,7 @@ export function OnboardingForm({ defaultName, countries }: { defaultName: string
       )}
       <Button type="submit" disabled={pending}>
         {pending && <Spinner />}
-        Continuar
+        {submitLabel}
       </Button>
     </form>
   )
