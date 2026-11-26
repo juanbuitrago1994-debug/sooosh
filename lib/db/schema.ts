@@ -220,3 +220,31 @@ export const sourceDailyStats = pgTable(
   },
   (t) => [unique("source_daily_stats_pk").on(t.day, t.sourceKey)],
 )
+
+/** Perfil de la persona (migración 0016). `id` es el usuario de Supabase Auth. */
+export const profiles = pgTable("profiles", {
+  id: uuid("id").primaryKey(),
+  name: text("name").notNull(),
+  /** ISO 3166-1 de dos letras */
+  country: text("country").notNull(),
+  roleInterests: text("role_interests").array().notNull().default([]),
+  createdAt: ts("created_at").notNull().defaultNow(),
+  updatedAt: ts("updated_at").notNull().defaultNow(),
+})
+
+/** Dispositivos con sesión (migración 0016): una fila por sesión de navegador. */
+export const trustedDevices = pgTable(
+  "trusted_devices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    /** «Mantener sesión iniciada» marcado */
+    remember: boolean("remember").notNull().default(false),
+    label: text("label").notNull().default(""),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    lastSeenAt: ts("last_seen_at").notNull().defaultNow(),
+    expiresAt: ts("expires_at").notNull(),
+    revokedAt: ts("revoked_at"),
+  },
+  (t) => [index("trusted_devices_user_idx").on(t.userId, t.lastSeenAt)],
+)

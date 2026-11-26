@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { z } from "zod"
+import { requireProfile } from "@/lib/auth/session"
 import { JobDetail } from "@/components/jobs/job-detail"
 import { LoadingState } from "@/components/ai/loading-state"
 import { withDb } from "@/lib/db/resilient"
@@ -11,6 +12,7 @@ export const metadata: Metadata = { title: "Oferta · Sooosh" }
 
 /** Lo que depende de la petición (el id y la base de datos) va dentro de Suspense; el esqueleto sale de inmediato. */
 async function Oferta({ params }: { params: Promise<{ id: string }> }) {
+  await requireProfile()
   const { id } = await params
   const job = z.string().uuid().safeParse(id).success ? await withDb((db) => getJobCard(db, id)).catch(() => null) : null
   if (!job) notFound()
