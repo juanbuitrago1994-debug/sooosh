@@ -89,6 +89,14 @@ export async function registerDevice(userId: string, remember: boolean): Promise
   ;(await cookies()).set(DEVICE_COOKIE, value, deviceCookieOptions(remember, expiresAt))
 }
 
+/** Tras borrar la cuenta: solo quedan por limpiar las cookies de este navegador (la fila del dispositivo ya se fue con la persona). */
+export async function clearSessionCookies(): Promise<void> {
+  const store = await cookies()
+  const supabase = await authClientFor(false)
+  await supabase.auth.signOut({ scope: "local" }).catch(() => {})
+  store.delete(DEVICE_COOKIE)
+}
+
 /** Cierra la sesión de este dispositivo: revoca su fila, borra las cookies y cierra la sesión en Supabase. */
 export async function signOutThisDevice(): Promise<void> {
   const store = await cookies()

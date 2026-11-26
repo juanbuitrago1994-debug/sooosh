@@ -4,6 +4,7 @@ import { Suspense } from "react"
 import { and, desc, gt, isNull, eq } from "drizzle-orm"
 import { ArrowLeftIcon } from "lucide-react"
 import { updateProfile } from "@/app/cuenta/actions"
+import { DataControls } from "@/components/auth/data-controls"
 import { DevicesList } from "@/components/auth/devices-list"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { OnboardingForm } from "@/components/auth/onboarding-form"
@@ -51,6 +52,14 @@ async function Settings() {
           <p className="text-xs text-muted-foreground">En un dispositivo nuevo siempre se pide entrar. Cierra aquí los que ya no uses.</p>
         </div>
         <DevicesList devices={devices} />
+      </section>
+      <Separator />
+      <section className="flex flex-col gap-6" aria-labelledby="datos">
+        <div className="flex flex-col gap-1">
+          <h2 id="datos" className="text-sm font-medium">Tus datos</h2>
+          <p className="text-xs text-muted-foreground">Llévate todo lo que guardamos de ti en un archivo, o elimina tu cuenta con todos sus datos.</p>
+        </div>
+        <DataControls />
       </section>
     </>
   )

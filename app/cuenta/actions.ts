@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache"
 import { and, eq, isNull } from "drizzle-orm"
 import { z } from "zod"
-import { getCurrentUser, getProfile } from "@/lib/auth/session"
+import { DELETE_PHRASE } from "@/lib/account/constants"
+import { deleteAuthUser } from "@/lib/auth/admin"
+import { clearSessionCookies, getCurrentUser, getProfile } from "@/lib/auth/session"
 import type { ProfileFormState } from "@/lib/auth/profile-store"
 import { persistProfile } from "@/lib/auth/profile-store"
 import { trustedDevices } from "@/lib/db/schema"
@@ -82,4 +84,18 @@ export async function revokeDevice(deviceId: string): Promise<{ ok: boolean; sel
   const rows = await getDb().update(trustedDevices).set({ revokedAt: new Date().toISOString() }).where(and(eq(trustedDevices.id, deviceId), eq(trustedDevices.userId, user.id), isNull(trustedDevices.revokedAt))).returning({ id: trustedDevices.id })
   if (rows.length > 0) revalidatePath("/ajustes")
   return { ok: rows.length > 0, self: deviceId === user.deviceId }
+}
+
+/** Borra la cuenta y TODOS sus datos (perfil, CV, ofertas, dispositivos). Exige escribir la palabra de confirmación. Irreversible. */
+export async function deleteMyAccount(confirmation: string): Promise<{ ok: boolean }> {
+  const user = await getCurrentUser()
+  if (!user || confirmation.trim().toUpperCase() !== DELETE_PHRASE) return { ok: false }
+  try {
+    if (!(await deleteAuthUser(user.id))) return { ok: false }
+  } catch (e) {
+    console.error("[cuenta] borrado", e)
+    return { ok: false }
+  }
+  await clearSessionCookies()
+  return { ok: true }
 }
