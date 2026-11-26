@@ -6,13 +6,16 @@ import { TrackedOffers } from "@/components/tracking/tracked-offers"
 import { buttonVariants } from "@/components/ui/button"
 import { requireProfile } from "@/lib/auth/session"
 import { getDb } from "@/lib/db"
+import { listCollections } from "@/lib/tracking/collections"
 import { listTrackedOffers } from "@/lib/tracking/store"
 
 export const metadata: Metadata = { title: "Mis ofertas · Sooosh", robots: { index: false, follow: false } }
 
 async function Offers() {
   const { user } = await requireProfile()
-  return <TrackedOffers offers={await listTrackedOffers(getDb(), user.id)} />
+  const db = getDb()
+  const [offers, collections] = await Promise.all([listTrackedOffers(db, user.id), listCollections(db, user.id)])
+  return <TrackedOffers offers={offers} collections={collections} />
 }
 
 export default function MisOfertasPage() {

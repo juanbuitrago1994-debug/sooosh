@@ -1,10 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { BookmarkIcon, LogOutIcon, SettingsIcon } from "lucide-react"
 import { whoAmI } from "@/app/cuenta/actions"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { clearLocalAccountData } from "@/lib/auth/local-data"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -15,6 +14,10 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2)
 export function AccountMenu() {
   const [me, setMe] = useState<{ name: string; email: string } | null>(null)
   const [leaving, setLeaving] = useState(false)
+  // Las iniciales se ven desde el principio, no solo al abrir el menú.
+  useEffect(() => {
+    void whoAmI().then(setMe).catch(() => {})
+  }, [])
 
   async function logout() {
     setLeaving(true)
@@ -25,10 +28,8 @@ export function AccountMenu() {
 
   return (
     <DropdownMenu onOpenChange={(open) => open && void whoAmI().then(setMe).catch(() => {})}>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Mi cuenta" />}>
-        <Avatar size="sm">
-          <AvatarFallback>{me ? initials(me.name) : <SettingsIcon aria-hidden className="size-3.5" />}</AvatarFallback>
-        </Avatar>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Mi cuenta" className="text-xs font-medium text-muted-foreground hover:text-foreground aria-expanded:text-foreground" />}>
+        {me ? initials(me.name) : <SettingsIcon aria-hidden className="size-4" />}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuGroup>

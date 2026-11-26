@@ -22,6 +22,7 @@ import { offerToText, savePrefill } from "@/lib/jobs/prefill"
 import { TailoredAts } from "@/components/steps/tailored-ats"
 import { saveAtsEntry } from "@/lib/ats/save-entry"
 import { track } from "@/lib/events/consent"
+import { saveJobOffer, unsaveJobOffer } from "@/app/mis-ofertas/actions"
 import { dismissJob, toggleSaved, useMarks } from "@/lib/profile/job-marks"
 import type { JobCard } from "@/lib/jobs/search"
 import { useSearchProfile } from "@/lib/profile/search-profile"
@@ -88,11 +89,16 @@ export function JobDetail({ job }: { job: JobCard }) {
   const save = () => {
     const now = toggleSaved(job.id)
     track("save", { jobId: job.id, saved: now })
-    toast.success(now ? "Guardada: la verás con «Solo mis guardadas»" : "Quitada de tus guardadas")
+    toast.success(now ? "Guardada en «Mis ofertas»: vigilamos si sigue abierta" : "Quitada de tus guardadas")
+    // También en la cuenta: copia completa de la oferta, con seguimiento. Si falla, la marca local queda y se reintenta al volver a entrar.
+    void (now ? saveJobOffer(job.id) : unsaveJobOffer(job.id)).then((r) => {
+      if (typeof r === "object" && !r.ok && r.reason === "limit") toast.error("Llegaste al máximo de ofertas guardadas. Quita alguna en «Mis ofertas».")
+    })
   }
 
   const notInterested = () => {
     dismissJob(job.id)
+    void unsaveJobOffer(job.id)
     track("dismiss", { jobId: job.id })
     toast.success("Listo: no te la mostraremos más")
     router.push("/ofertas")

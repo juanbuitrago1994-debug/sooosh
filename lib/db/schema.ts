@@ -291,8 +291,22 @@ export const trackedOffers = pgTable(
     lastAliveAt: ts("last_alive_at"),
     closedDetectedAt: ts("closed_detected_at"),
     checkNote: text("check_note"),
+    /** categoría propia de la persona (migración 0019); null = «sin categoría» */
+    collectionId: uuid("collection_id"),
+    note: text("note"),
+    /** enlace | buscador | texto */
+    origin: text("origin").notNull().default("enlace"),
+    jobId: uuid("job_id"),
     createdAt: ts("created_at").notNull().defaultNow(),
     updatedAt: ts("updated_at").notNull().defaultNow(),
   },
   (t) => [unique("tracked_offers_user_url").on(t.userId, t.sourceUrl), index("tracked_offers_user_idx").on(t.userId, t.createdAt)],
 )
+
+/** Categorías que crea cada persona para agrupar sus ofertas guardadas (migración 0019). */
+export const collections = pgTable("collections", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull(),
+  name: text("name").notNull(),
+  createdAt: ts("created_at").notNull().defaultNow(),
+})

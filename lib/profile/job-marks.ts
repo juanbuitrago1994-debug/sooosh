@@ -49,6 +49,13 @@ export function toggleSaved(id: string): boolean {
   return !has
 }
 
+/** Suma a las guardadas de este navegador las que vienen de la cuenta (sin quitar ninguna ni tocar las descartadas). */
+export function mergeSaved(ids: string[]) {
+  const m = getMarks()
+  const add = ids.filter((id) => !m.saved.includes(id) && !m.dismissed.includes(id))
+  if (add.length) write({ saved: [...m.saved, ...add], dismissed: m.dismissed })
+}
+
 export function dismissJob(id: string) {
   const m = getMarks()
   write({ saved: m.saved.filter((x) => x !== id), dismissed: m.dismissed.includes(id) ? m.dismissed : [...m.dismissed, id] })

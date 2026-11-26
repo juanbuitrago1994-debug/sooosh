@@ -29,6 +29,10 @@ export type TrackedOffer = {
   lastCheckedAt: string | null
   closedDetectedAt: string | null
   checkNote: string | null
+  collectionId: string | null
+  note: string | null
+  origin: "enlace" | "buscador" | "texto"
+  jobId: string | null
   savedAt: string
   offer: Offer
   text: string
@@ -88,6 +92,10 @@ export async function listTrackedOffers(db: Db, userId: string): Promise<Tracked
     lastCheckedAt: iso(r.lastCheckedAt),
     closedDetectedAt: iso(r.closedDetectedAt),
     checkNote: r.checkNote,
+    collectionId: r.collectionId,
+    note: r.note,
+    origin: r.origin as TrackedOffer["origin"],
+    jobId: r.jobId,
     savedAt: iso(r.createdAt)!,
     offer: r.offer as Offer,
     text: r.text,

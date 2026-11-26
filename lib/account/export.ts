@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm"
 import type { Db } from "@/lib/db"
-import { cvs, profiles, trackedOffers, trustedDevices } from "@/lib/db/schema"
+import { collections, cvs, profiles, trackedOffers, trustedDevices } from "@/lib/db/schema"
 
 export const EXPORT_VERSION = 1
 
@@ -12,12 +12,15 @@ export async function buildExport(db: Db, userId: string, account: { email: stri
   const [profile] = await db.select().from(profiles).where(eq(profiles.id, userId)).limit(1)
   const cvRows = await db.select().from(cvs).where(eq(cvs.userId, userId)).orderBy(desc(cvs.isActive), desc(cvs.updatedAt))
   const offers = await db.select().from(trackedOffers).where(eq(trackedOffers.userId, userId)).orderBy(desc(trackedOffers.createdAt))
+  const cats = await db.select().from(collections).where(eq(collections.userId, userId))
+  const catName = new Map(cats.map((c) => [c.id, c.name]))
   const devices = await db.select().from(trustedDevices).where(eq(trustedDevices.userId, userId)).orderBy(desc(trustedDevices.lastSeenAt))
   return {
     sooosh: { version: EXPORT_VERSION, exportedAt: now.toISOString(), note: "Todos tus datos en Sooosh. Los CV y las ofertas están completos." },
     cuenta: { correo: account.email, id: userId },
     perfil: profile ? { nombre: profile.name, pais: profile.country, cargosDeInteres: profile.roleInterests, creadoEn: profile.createdAt } : null,
     cvs: cvRows.map((r) => ({ activo: r.isActive, etiqueta: r.label, validadoEn: r.validatedAt, archivo: r.file, afinidadAts: r.originalAts, cv: r.cv })),
+    categorias: cats.map((c) => ({ nombre: c.name, creadaEn: c.createdAt })),
     ofertasGuardadas: offers.map((o) => ({
       titulo: o.title,
       empresa: o.company,
@@ -25,6 +28,9 @@ export async function buildExport(db: Db, userId: string, account: { email: stri
       fuente: o.sourceName,
       publicadaEn: o.postedAt,
       guardadaEn: o.createdAt,
+      categoria: o.collectionId ? (catName.get(o.collectionId) ?? null) : null,
+      nota: o.note,
+      origen: o.origin,
       estado: o.status,
       ultimaRevision: o.lastCheckedAt,
       cerradaDetectadaEn: o.closedDetectedAt,

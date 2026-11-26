@@ -19,19 +19,19 @@ Propuesta del 26-nov-2026 a partir de lo pedido por Juan. Todo es **interno a la
 
 ### Qué se configura en una alerta (todo opcional salvo el nombre)
 País · región/ciudad · modalidad (remoto, híbrido, presencial) · tipo de contrato (indefinido, término fijo, prestación de servicios, prácticas…) · nivel (practicante…lead) · familia de cargo / etiquetas (diseño, datos, ingeniería…; salen de `roleFamily` y `skills` de cada oferta) · palabras clave en el título · salario mínimo (solo si la oferta lo trae).
-Regla de combinación: **todas las condiciones se cumplen a la vez; dentro de una condición, cualquiera de sus valores** (país = CO *y* modalidad = remoto *o* híbrido). Por defecto, la primera alerta se propone con los cargos de interés y el país del registro.
+Regla de combinación: **todas las condiciones se cumplen a la vez; dentro de una condición, cualquiera de sus valores** (país = CO *y* modalidad = remoto *o* híbrido). **Decidido por Juan**: al registrarse (o la primera vez que entre a «Alertas») se **crea sola una alerta** con los cargos de interés del registro y el país de residencia (Colombia en su caso); la persona la puede editar, pausar o borrar.
 Límite: 10 alertas por persona.
 
 ### Cuándo se busca y cuándo se avisa
 - **Búsqueda**: justo después de cada lectura de fuentes (la sincronización corre cada 3 h). Solo se miran las ofertas **nuevas desde la última revisión de esa alerta**; cada oferta se avisa una sola vez por alerta (tabla `alert_matches`).
-- **Frecuencia de aviso** (por alerta, **por defecto «Diaria»**):
-  - *Cada vez que haya algo* (agrupado por la pasada de 3 h),
+- **Frecuencia de aviso** (por alerta). **Decidido por Juan (26-nov-2026): frecuencia corta por defecto** (él propuso «cada 4 horas»). Como la lectura de fuentes corre cada 3 h, un aviso «cada 4 h» en la práctica llegaría cada 6 h (la pasada de las 3 h se salta por no cumplir las 4 h); por eso la opción por defecto será **«Cada pasada (≈ cada 3 h)»**, la más corta posible. Opciones:
+  - *Cada pasada (≈ 3 h)* — **por defecto**,
   - *Diaria* (una notificación por día como máximo, con todo lo nuevo),
   - *Semanal* (una vez por semana, el lunes).
   Nunca más de **una notificación por alerta y por ciclo**: «5 ofertas nuevas para “Diseño en Colombia”», no cinco notificaciones.
 - **Tope**: máx. 50 ofertas por alerta y por ciclo (las más recientes) para no inundar.
 - **Si no hay nada nuevo no se notifica nada** (no hay avisos vacíos).
-- **Pausa**: una alerta se puede pausar; si la persona no abre sus notificaciones en 30 días, la alerta se pausa sola y se le dice al volver.
+- **Pausa**: una alerta se puede pausar; si la persona no abre sus notificaciones en 30 días, la alerta se pausa sola y se le dice al volver (**aprobado por Juan**).
 
 ### Qué notificaciones existen
 1. **Ofertas nuevas de una alerta** → lleva a la vista de esa alerta.

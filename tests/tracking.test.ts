@@ -91,7 +91,7 @@ describe("ofertas guardadas en la cuenta", () => {
     const client = (db as unknown as { $client: { exec: (q: string) => Promise<unknown> } }).$client
     await client.exec("create schema auth; create table auth.users (id uuid primary key); create function auth.uid() returns uuid language sql as 'select null::uuid';")
     await client.exec(`insert into auth.users (id) values ('${ana}'), ('${luis}')`)
-    await client.exec(readFileSync(path.join(process.cwd(), "db/migrations/0018_tracked_offers.sql"), "utf8"))
+    for (const f of ["0018_tracked_offers.sql", "0019_collections_notes.sql"]) await client.exec(readFileSync(path.join(process.cwd(), "db/migrations", f), "utf8"))
   })
 
   it("guarda la oferta completa y no la duplica aunque el enlace traiga rastreadores", async () => {

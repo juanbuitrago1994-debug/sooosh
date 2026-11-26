@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react"
 import { clearCv, pullCv, pushCv } from "@/app/cuenta/actions"
+import { syncSavedJobs } from "@/app/mis-ofertas/actions"
+import { getMarks, mergeSaved } from "@/lib/profile/job-marks"
 import { claimLocalData } from "@/lib/auth/local-data"
 import { getSearchProfile, hydrateSearchProfile, useSearchProfile, type SearchProfile } from "@/lib/profile/search-profile"
 
@@ -29,6 +31,15 @@ export function CvSync() {
       const me = await pullCv().catch(() => null)
       if (!alive || !me) return
       claimLocalData(me.userId)
+      // Las ofertas guardadas de este navegador suben a la cuenta y las de la cuenta se marcan aquí (una vez por pestaña).
+      try {
+        if (!sessionStorage.getItem("sooosh:guardadas-sync")) {
+          sessionStorage.setItem("sooosh:guardadas-sync", "1")
+          void syncSavedJobs(getMarks().saved).then((ids) => ids && mergeSaved(ids))
+        }
+      } catch {
+        /* sin almacenamiento */
+      }
       const remote = me.cv
       const local = getSearchProfile()
       if (remote && (!local || (local.validatedAt && time(remote.validatedAt) > time(local.validatedAt)))) {
