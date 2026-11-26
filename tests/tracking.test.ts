@@ -3,6 +3,7 @@ import path from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import type { Db } from "@/lib/db"
 import { createTestDb } from "@/lib/db/testing"
+import { listNotifications } from "@/lib/alerts/notifications"
 import { companyKey } from "@/lib/tracking/company"
 import { judgeResponse, probeOfferLink, type Verdict } from "@/lib/tracking/liveness"
 import { ago, groupByCompany } from "@/lib/tracking/relative"
@@ -91,7 +92,7 @@ describe("ofertas guardadas en la cuenta", () => {
     const client = (db as unknown as { $client: { exec: (q: string) => Promise<unknown> } }).$client
     await client.exec("create schema auth; create table auth.users (id uuid primary key); create function auth.uid() returns uuid language sql as 'select null::uuid';")
     await client.exec(`insert into auth.users (id) values ('${ana}'), ('${luis}')`)
-    for (const f of ["0018_tracked_offers.sql", "0019_collections_notes.sql"]) await client.exec(readFileSync(path.join(process.cwd(), "db/migrations", f), "utf8"))
+    for (const f of ["0016_accounts.sql", "0018_tracked_offers.sql", "0019_collections_notes.sql", "0020_alerts_notifications.sql"]) await client.exec(readFileSync(path.join(process.cwd(), "db/migrations", f), "utf8"))
   })
 
   it("guarda la oferta completa y no la duplica aunque el enlace traiga rastreadores", async () => {
@@ -151,10 +152,16 @@ describe("ofertas guardadas en la cuenta", () => {
     const closed = (await listTrackedOffers(db, ana))[0]
     expect(closed.status).toBe("finalizada")
     expect(closed.closedDetectedAt).toBe(hours(17).toISOString())
+    // al cerrar, cada persona recibe UN aviso interno que la lleva a «Mis ofertas»
+    const avisos = await listNotifications(db, ana)
+    expect(avisos).toHaveLength(1)
+    expect(avisos[0]).toMatchObject({ kind: "oferta_cerrada", href: "/mis-ofertas", title: "Una oferta guardada ya cerró", body: "A — Acme" })
+    expect(await listNotifications(db, luis)).toHaveLength(1)
 
     verdict = { state: "alive", reason: "abierta otra vez" }
     await checkDueOffers(db, { probe, now: hours(17 + 73) }) // las finalizadas se miran cada 72 h por si la reabren
     expect((await listTrackedOffers(db, ana))[0].status).toBe("vigente")
+    expect(await listNotifications(db, ana)).toHaveLength(1) // reabrir no avisa de nuevo
   })
 
   it("«no se sabe» deja la oferta sin verificar", async () => {

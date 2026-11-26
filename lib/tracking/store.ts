@@ -2,6 +2,7 @@ import { and, desc, eq, isNull, lt, ne, or, sql } from "drizzle-orm"
 import type { Db } from "@/lib/db"
 import { trackedOffers } from "@/lib/db/schema"
 import { normalizeSourceUrl } from "@/lib/jobs/url"
+import { notifyOfferClosed } from "@/lib/alerts/notifications"
 import { companyKey } from "./company"
 import type { Offer } from "@/lib/schemas/offer"
 import type { Verdict } from "./liveness"
@@ -150,8 +151,10 @@ export async function checkDueOffers(db: Db, opts: { probe: (url: string) => Pro
         s[v.state]++
         for (const r of rows) {
           const next = nextState({ status: r.status as TrackedStatus, deadStreak: r.deadStreak, closedDetectedAt: r.closedDetectedAt, lastAliveAt: r.lastAliveAt }, v, now)
-          if (next.status === "finalizada" && r.status !== "finalizada") s.newlyClosed++
+          const justClosed = next.status === "finalizada" && r.status !== "finalizada"
+          if (justClosed) s.newlyClosed++
           await db.update(trackedOffers).set({ ...next, updatedAt: sql`now()` }).where(eq(trackedOffers.id, r.id))
+          if (justClosed) await notifyOfferClosed(db, r.userId, { id: r.id, title: r.title, company: r.company })
         }
         opts.log?.(`  ${v.state === "alive" ? "✓" : v.state === "dead" ? "✗" : "?"} ${url} — ${v.reason}`)
       }),
@@ -167,5 +170,6 @@ export async function checkOne(db: Db, id: string, probe: (url: string) => Promi
   const v = await probe(r.originalUrl)
   const next = nextState({ status: r.status as TrackedStatus, deadStreak: r.deadStreak, closedDetectedAt: r.closedDetectedAt, lastAliveAt: r.lastAliveAt }, v, now)
   await db.update(trackedOffers).set({ ...next, updatedAt: sql`now()` }).where(eq(trackedOffers.id, id))
+  if (next.status === "finalizada" && r.status !== "finalizada") await notifyOfferClosed(db, r.userId, { id: r.id, title: r.title, company: r.company })
 }
 

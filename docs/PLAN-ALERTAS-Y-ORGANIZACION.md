@@ -53,3 +53,9 @@ Coincidencias por cada condición (AND entre condiciones, OR dentro de cada una)
 
 ## Orden propuesto
 Fase 5 (categorías + notas + guardar desde el buscador) → Fase 6 (alertas + notificaciones). La 6 necesita la 5 para que «Guardar» desde una alerta caiga en una categoría.
+
+## Implementación de la fase 6 (26-nov-2026) y cambios respecto a este plan
+- **Hecho**: alertas (hasta 10), frecuencias «Cada pasada (≈ 3 h)» (por defecto) / «Una vez al día» / «Una vez a la semana», primera pasada con los últimos 7 días, un solo aviso por alerta y pasada, tope de 50 ofertas por pasada, pausa automática a los 30 días sin abrir, alerta inicial (cargos de interés + país del registro, una sola vez), campana con no leídas y últimas 5 (se refresca al abrir, al volver a la pestaña y cada 5 min), `/notificaciones` (Notificaciones | Mis alertas), `/alertas/[id]` (ofertas abiertas que cumplen las condiciones, con distintivo «Nueva» en las no vistas), aviso «Una oferta guardada ya cerró» (una por oferta), retención de 60 días (avisos) y 30 días (coincidencias).
+- **Cambio 1 – sin salario mínimo**: las monedas y períodos de las ofertas no son comparables (COP/USD, mes/año); un filtro por salario daría resultados engañosos. Queda fuera hasta normalizar salarios.
+- **Cambio 2 – palabras clave solo en el título**: al medirlo con las ofertas reales, buscar también en las habilidades llenaba la alerta de falsos positivos (un ingeniero Node salía para «analista de datos»). Además, como casi todos los títulos están en inglés, se añadió un diccionario corto español↔inglés de cargos (ingeniero/engineer, datos/data, diseñador/designer…); lo que no esté en él no cruza de idioma.
+- **Cambio 3 – «Guardar/Descartar» en la lista de resultados**: la lista reutiliza la tarjeta de oferta del buscador (entera es un enlace al detalle); Guardar y «No me interesa» se hacen en el detalle, donde ya existen. Pendiente si Juan quiere botones en la propia lista.

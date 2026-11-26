@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm"
 import type { Db } from "@/lib/db"
-import { collections, cvs, profiles, trackedOffers, trustedDevices } from "@/lib/db/schema"
+import { alerts, collections, cvs, notifications, profiles, trackedOffers, trustedDevices } from "@/lib/db/schema"
 
 export const EXPORT_VERSION = 1
 
@@ -14,6 +14,8 @@ export async function buildExport(db: Db, userId: string, account: { email: stri
   const offers = await db.select().from(trackedOffers).where(eq(trackedOffers.userId, userId)).orderBy(desc(trackedOffers.createdAt))
   const cats = await db.select().from(collections).where(eq(collections.userId, userId))
   const catName = new Map(cats.map((c) => [c.id, c.name]))
+  const myAlerts = await db.select().from(alerts).where(eq(alerts.userId, userId)).orderBy(desc(alerts.createdAt))
+  const notes = await db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt))
   const devices = await db.select().from(trustedDevices).where(eq(trustedDevices.userId, userId)).orderBy(desc(trustedDevices.lastSeenAt))
   return {
     sooosh: { version: EXPORT_VERSION, exportedAt: now.toISOString(), note: "Todos tus datos en Sooosh. Los CV y las ofertas están completos." },
@@ -37,6 +39,8 @@ export async function buildExport(db: Db, userId: string, account: { email: stri
       oferta: o.offer,
       texto: o.text,
     })),
+    alertas: myAlerts.map((a) => ({ nombre: a.name, condiciones: a.filters, frecuencia: a.frequency, activa: a.enabled, creadaEn: a.createdAt })),
+    notificaciones: notes.map((n) => ({ tipo: n.kind, titulo: n.title, texto: n.body, enlace: n.href, creadaEn: n.createdAt, leida: !!n.readAt })),
     dispositivos: devices.map((d) => ({ nombre: d.label, sesionMantenida: d.remember, creadoEn: d.createdAt, ultimoUso: d.lastSeenAt, revocado: !!d.revokedAt })),
   }
 }

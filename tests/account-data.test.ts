@@ -14,7 +14,7 @@ const luis = "22222222-2222-4222-8222-222222222222"
 type Client = { exec: (q: string) => Promise<unknown>; query: <T>(q: string) => Promise<{ rows: T[] }> }
 
 /** Las tablas que guardan datos de la persona y ya están en el archivo de exportación. Si se agrega una tabla nueva con datos de personas, esta prueba falla hasta que se exporte. */
-const EXPORTED_TABLES = ["collections", "cvs", "profiles", "tracked_offers", "trusted_devices"]
+const EXPORTED_TABLES = ["alerts", "collections", "cvs", "notifications", "profiles", "tracked_offers", "trusted_devices"]
 
 describe("exportar y borrar la cuenta", () => {
   let db: Db
@@ -24,7 +24,7 @@ describe("exportar y borrar la cuenta", () => {
     client = (db as unknown as { $client: Client }).$client
     await client.exec("create schema auth; create table auth.users (id uuid primary key); create function auth.uid() returns uuid language sql as 'select null::uuid';")
     await client.exec(`insert into auth.users (id) values ('${ana}'), ('${luis}')`)
-    for (const f of ["0016_accounts.sql", "0017_cvs.sql", "0018_tracked_offers.sql", "0019_collections_notes.sql"]) await client.exec(readFileSync(path.join(process.cwd(), "db/migrations", f), "utf8"))
+    for (const f of ["0016_accounts.sql", "0017_cvs.sql", "0018_tracked_offers.sql", "0019_collections_notes.sql", "0020_alerts_notifications.sql"]) await client.exec(readFileSync(path.join(process.cwd(), "db/migrations", f), "utf8"))
     const cv = (n: string) => cvSchema.parse({ header: { fullName: n }, summary: "", experience: [], education: [], skills: [], languages: [] })
     const offer = (t: string) => offerSchema.parse({ title: t, company: "Acme", language: "es", requirements: ["SQL"], niceToHave: [], responsibilities: [] })
     for (const [id, n] of [[ana, "Ana"], [luis, "Luis"]] as const) {
@@ -32,6 +32,8 @@ describe("exportar y borrar la cuenta", () => {
       await client.exec(`insert into public.trusted_devices (user_id, label, expires_at) values ('${id}', 'Safari en macOS', now() + interval '1 day')`)
       await saveValidatedCv(db, id, { cv: cv(n), label: n, validatedAt: "2026-11-26T10:00:00.000Z" })
       await client.exec(`insert into public.collections (user_id, name) values ('${id}', 'Plan B')`)
+      await client.exec(`insert into public.alerts (user_id, name, filters) values ('${id}', 'Datos en CO', '{"regions":["CO"]}')`)
+      await client.exec(`insert into public.notifications (user_id, kind, title, href) values ('${id}', 'alerta', 'Algo nuevo', '/notificaciones')`)
       await saveTrackedOffer(db, id, { url: "https://empresa.com/e/1", offer: offer(`Oferta de ${n}`), text: `texto de ${n}` })
     }
   })
@@ -46,6 +48,8 @@ describe("exportar y borrar la cuenta", () => {
     expect(d.ofertasGuardadas).toHaveLength(1)
     expect(d.ofertasGuardadas[0]).toMatchObject({ titulo: "Oferta de Ana", texto: "texto de Ana", categoria: null, nota: null, origen: "enlace" })
     expect(d.categorias).toHaveLength(1)
+    expect(d.alertas).toMatchObject([{ nombre: "Datos en CO", condiciones: { regions: ["CO"] }, frecuencia: "cada_pasada", activa: true }])
+    expect(d.notificaciones).toMatchObject([{ titulo: "Algo nuevo", leida: false }])
     expect(d.dispositivos).toHaveLength(1)
     expect(JSON.stringify(d)).not.toContain("Luis")
   })
@@ -55,7 +59,7 @@ describe("exportar y borrar la cuenta", () => {
     for (const t of EXPORTED_TABLES) {
       const col = t === "profiles" ? "id" : "user_id"
       expect((await client.query<{ n: number }>(`select count(*)::int as n from public.${t} where ${col} = '${ana}'`)).rows[0].n, t).toBe(0)
-      if (t !== "collections") expect((await client.query<{ n: number }>(`select count(*)::int as n from public.${t} where ${col} = '${luis}'`)).rows[0].n, t).toBe(1)
+      expect((await client.query<{ n: number }>(`select count(*)::int as n from public.${t} where ${col} = '${luis}'`)).rows[0].n, t).toBe(1)
     }
   })
 

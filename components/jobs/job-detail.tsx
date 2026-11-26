@@ -10,6 +10,7 @@ import { CuratedBadge } from "@/components/magic/curated-badge"
 import { NewBadge } from "@/components/jobs/new-badge"
 import { Rise } from "@/components/motion/rise"
 import { AccountMenu } from "@/components/auth/account-menu"
+import { NotificationsBell } from "@/components/notifications/notifications-bell"
 import { Logo } from "@/components/brand/logo"
 import { PrivacyLink } from "@/components/privacy/privacy-dialog"
 import { Badge } from "@/components/ui/badge"
@@ -147,6 +148,7 @@ export function JobDetail({ job }: { job: JobCard }) {
             <LinkIcon aria-hidden />
           </Button>
           <CvRepository />
+          <NotificationsBell />
           <AccountMenu />
         </div>
       </header>

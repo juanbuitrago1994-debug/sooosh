@@ -1,17 +1,16 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
-import { PlusIcon, XIcon } from "lucide-react"
 import { toast } from "sonner"
 import type { ProfileFormState } from "@/lib/auth/profile-store"
+import { ChipsInput } from "@/components/common/chips-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Spinner } from "@/components/ui/spinner"
-import { MAX_ROLES, dedupeRoles } from "@/lib/auth/profile-schema"
+import { MAX_ROLES } from "@/lib/auth/profile-schema"
 
 export type CountryOption = { code: string; name: string }
 
@@ -22,14 +21,7 @@ export function OnboardingForm({ action: submit, defaultName, defaultCountry = "
   useEffect(() => {
     if (state.saved) toast.success("Cambios guardados")
   }, [state])
-  const [draft, setDraft] = useState("")
   const fe = state.fieldErrors ?? {}
-
-  function addRole() {
-    const next = dedupeRoles([...roles, draft]).slice(0, MAX_ROLES)
-    setRoles(next)
-    setDraft("")
-  }
 
   return (
     <form action={action} className="flex w-full flex-col gap-6">
@@ -57,41 +49,8 @@ export function OnboardingForm({ action: submit, defaultName, defaultCountry = "
 
         <Field data-invalid={!!fe.roleInterests}>
           <FieldLabel htmlFor="role-draft">Cargos que te interesa buscar</FieldLabel>
-          <div className="flex gap-2">
-            <Input
-              id="role-draft"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault()
-                  addRole()
-                }
-              }}
-              placeholder="Ej.: Diseñador de producto"
-              maxLength={60}
-              disabled={roles.length >= MAX_ROLES}
-            />
-            <Button type="button" variant="outline" size="icon" onClick={addRole} disabled={!draft.trim() || roles.length >= MAX_ROLES} aria-label="Añadir cargo">
-              <PlusIcon />
-            </Button>
-          </div>
+          <ChipsInput id="role-draft" value={roles} onChange={setRoles} max={MAX_ROLES} placeholder="Ej.: Diseñador de producto" addLabel="Añadir cargo" listLabel="Cargos añadidos" name="role" />
           <FieldDescription>Escribe un cargo y pulsa Enter. Hasta {MAX_ROLES}; los podrás cambiar en Ajustes.</FieldDescription>
-          {roles.length > 0 && (
-            <ul className="flex flex-wrap gap-2" aria-label="Cargos añadidos">
-              {roles.map((r) => (
-                <li key={r}>
-                  <Badge variant="secondary" className="gap-1 pr-1">
-                    {r}
-                    <button type="button" className="rounded-full p-0.5 hover:bg-muted" onClick={() => setRoles(roles.filter((x) => x !== r))} aria-label={`Quitar ${r}`}>
-                      <XIcon className="size-3" />
-                    </button>
-                    <input type="hidden" name="role" value={r} />
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          )}
           {fe.roleInterests && <FieldError>{fe.roleInterests}</FieldError>}
         </Field>
       </FieldGroup>

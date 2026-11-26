@@ -41,6 +41,10 @@ jobs:
       - name: Revisar ofertas guardadas
         run: pnpm sync --phase=track
 
+      # Fase 1c: alertas de las personas (ofertas nuevas que cumplen sus condiciones → avisos dentro de la app). Va después de leer las fuentes. Sin IA.
+      - name: Evaluar alertas
+        run: pnpm sync --phase=alerts
+
       # Fase 2: vectores. Ollama solo se instala si hay ofertas sin vector (lo normal es que haya pocas).
       - name: ¿Hay vectores pendientes?
         id: pending

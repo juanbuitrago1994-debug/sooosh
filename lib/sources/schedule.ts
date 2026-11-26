@@ -7,6 +7,8 @@ import { embedMissing } from "@/lib/jobs/embed"
 import { expireStale } from "./expire"
 import { effective, listCatalog, type CatalogRow } from "./catalog"
 import { acquireLock, releaseLock } from "./lock"
+import { purgeMatches, runAlerts, type AlertRunSummary } from "@/lib/alerts/engine"
+import { purgeNotifications } from "@/lib/alerts/notifications"
 import { probeOfferLink } from "@/lib/tracking/liveness"
 import { checkDueOffers, type CheckSummary } from "@/lib/tracking/store"
 import { snapshotSourceStats } from "./snapshots"
@@ -18,8 +20,8 @@ import type { SyncReport } from "./types"
  * Cada fuente tiene su propia cadencia —respetuosa con ella— y se omite si se leyó con éxito hace menos de ese tiempo; así el cron puede
  * pasar cada 3 h sin que ninguna fuente se lea de más (Remotive pide ≤ 4 lecturas al día; Jobicy responde 429 si se abusa).
  */
-export type Phase = "fetch" | "vectors" | "enrich" | "track"
-export const ALL_PHASES: Phase[] = ["fetch", "track", "vectors", "enrich"]
+export type Phase = "fetch" | "vectors" | "enrich" | "track" | "alerts"
+export const ALL_PHASES: Phase[] = ["fetch", "track", "alerts", "vectors", "enrich"]
 /** Un cron nunca cae exacto: una fuente «toca» si pasaron su cadencia menos esta tolerancia. */
 export const SLACK_MINUTES = 20
 /** Tras 3 fallos seguidos una fuente se considera degradada y solo se reintenta cada 12 h (no se insiste a una fuente caída). */
@@ -86,7 +88,7 @@ export async function pendingVectors(db: Db): Promise<number> {
 }
 
 export type DailyOptions = { runner?: Runner; force?: boolean; only?: string[]; phases?: Phase[]; holder?: string; enrichMinutes?: number; log?: (line: string) => void; now?: () => Date }
-export type DailySummary = { locked?: boolean;  targets: { id: string; skipped?: boolean; ok?: boolean; created?: number; updated?: number; closed?: number; error?: string }[]; expired: Awaited<ReturnType<typeof expireStale>>; enriched: number; embedded: number; purgedEvents: number; tracked?: CheckSummary; ms: number }
+export type DailySummary = { locked?: boolean;  targets: { id: string; skipped?: boolean; ok?: boolean; created?: number; updated?: number; closed?: number; error?: string }[]; expired: Awaited<ReturnType<typeof expireStale>>; enriched: number; embedded: number; purgedEvents: number; tracked?: CheckSummary; alerts?: AlertRunSummary; ms: number }
 
 export async function runDaily(db: Db, opts: DailyOptions = {}): Promise<DailySummary> {
   const t0 = Date.now()
@@ -163,6 +165,17 @@ export async function runDaily(db: Db, opts: DailyOptions = {}): Promise<DailySu
       return undefined
     })
     if (summary.tracked) log(`Ofertas guardadas: ${summary.tracked.urls} enlaces revisados (${summary.tracked.alive} abiertas, ${summary.tracked.dead} con señal de cierre, ${summary.tracked.unknown} sin poder verificar); ${summary.tracked.newlyClosed} pasaron a finalizada`)
+  }
+
+  // Alertas de las personas: ofertas nuevas del buscador que cumplen sus condiciones → avisos dentro de la app. Va DESPUÉS de leer las fuentes.
+  if (phases.includes("alerts")) {
+    summary.alerts = await runAlerts(db, now(), log).catch((e) => {
+      log(`Alertas: error (${(e as Error).message})`)
+      return undefined
+    })
+    if (summary.alerts) log(`Alertas: ${summary.alerts.alerts} revisadas, ${summary.alerts.newMatches} ofertas nuevas encontradas, ${summary.alerts.notifications} avisos, ${summary.alerts.paused} pausadas por inactividad`)
+    await purgeMatches(db).catch(() => 0)
+    await purgeNotifications(db).catch(() => 0)
   }
 
   if (phases.includes("enrich")) {

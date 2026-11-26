@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { BrainIcon, SearchIcon } from "lucide-react"
 import { AccountMenu } from "@/components/auth/account-menu"
+import { NotificationsBell } from "@/components/notifications/notifications-bell"
 import { Logo } from "@/components/brand/logo"
 import { CvRepository } from "@/components/history/cv-repository"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -29,6 +30,7 @@ export function AppHeader({ actions }: { actions: HeaderActions }) {
           <BrainIcon aria-hidden />
         </Button>
         <CvRepository onReopen={actions.onReopen} onNewOffer={actions.onNewOffer} />
+        <NotificationsBell />
         <AccountMenu />
       </div>
     </header>

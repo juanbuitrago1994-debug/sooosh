@@ -228,6 +228,8 @@ export const profiles = pgTable("profiles", {
   /** ISO 3166-1 de dos letras */
   country: text("country").notNull(),
   roleInterests: text("role_interests").array().notNull().default([]),
+  /** la alerta inicial ya se creó (una sola vez; si la persona la borra, no vuelve) */
+  alertsSeeded: boolean("alerts_seeded").notNull().default(false),
   createdAt: ts("created_at").notNull().defaultNow(),
   updatedAt: ts("updated_at").notNull().defaultNow(),
 })
@@ -310,3 +312,56 @@ export const collections = pgTable("collections", {
   name: text("name").notNull(),
   createdAt: ts("created_at").notNull().defaultNow(),
 })
+
+/** Alertas de ofertas nuevas del buscador (migración 0020). */
+export const alerts = pgTable(
+  "alerts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    name: text("name").notNull(),
+    filters: jsonb("filters").notNull().default({}),
+    /** cada_pasada | diaria | semanal */
+    frequency: text("frequency").notNull().default("cada_pasada"),
+    enabled: boolean("enabled").notNull().default(true),
+    pausedReason: text("paused_reason"),
+    lastRunAt: ts("last_run_at"),
+    lastNotifiedAt: ts("last_notified_at"),
+    lastOpenedAt: ts("last_opened_at"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("alerts_user_idx").on(t.userId, t.createdAt)],
+)
+
+/** Ofertas que una alerta ya encontró (una sola vez por alerta). */
+export const alertMatches = pgTable(
+  "alert_matches",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    alertId: uuid("alert_id").notNull(),
+    jobId: uuid("job_id").notNull(),
+    foundAt: ts("found_at").notNull().defaultNow(),
+    notifiedAt: ts("notified_at"),
+    seenAt: ts("seen_at"),
+  },
+  (t) => [unique("alert_matches_alert_job").on(t.alertId, t.jobId)],
+)
+
+/** Avisos dentro de la app (migración 0020). */
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    /** alerta | oferta_cerrada */
+    kind: text("kind").notNull(),
+    ref: text("ref"),
+    title: text("title").notNull(),
+    body: text("body").notNull().default(""),
+    href: text("href").notNull(),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    readAt: ts("read_at"),
+  },
+  (t) => [index("notifications_user_idx").on(t.userId, t.createdAt)],
+)
