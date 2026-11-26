@@ -1,6 +1,6 @@
 # Sincronización automática de ofertas de Sooosh (ver docs/SINCRONIZACION.md y docs/PLAN-SYNC-AUTOMATICA.md).
 # Cada 3 horas lee las fuentes públicas (cada una con su propia cadencia), vence lo viejo y calcula los vectores que falten.
-# Solo maneja ofertas públicas y la clave de la base (secreto DATABASE_URL): ningún CV ni dato personal pasa por aquí.
+# Lee ofertas públicas y los ENLACES de las ofertas que las personas guardaron (para marcar las que cerraron): solo la dirección pública, nunca un CV ni el nombre de nadie.
 name: Sincronizar ofertas
 
 on:
@@ -36,6 +36,10 @@ jobs:
       # su adaptador reintenta una vez con curl (autorizado por Juan el 20-nov-2026).
       - name: Leer fuentes
         run: pnpm sync --phase=fetch
+
+      # Fase 1b: revisar si siguen abiertas las ofertas que las personas guardaron en su cuenta («Mis ofertas»). Sin IA.
+      - name: Revisar ofertas guardadas
+        run: pnpm sync --phase=track
 
       # Fase 2: vectores. Ollama solo se instala si hay ofertas sin vector (lo normal es que haya pocas).
       - name: ¿Hay vectores pendientes?

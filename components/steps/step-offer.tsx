@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react"
 import { ChevronDownIcon, LinkIcon } from "lucide-react"
+import { toast } from "sonner"
+import { trackOffer } from "@/app/mis-ofertas/actions"
 import { useAiWork } from "@/components/ai/ai-work"
 import { StepHeader } from "@/components/wizard/step-header"
 import { Button } from "@/components/ui/button"
@@ -22,6 +24,8 @@ export type OfferState = {
   cleaned?: boolean
   /** Aviso de lo que hizo el pipeline (líneas quitadas, frases descartadas). */
   note?: string
+  /** Enlace desde el que se trajo la oferta (con lo que la página dice de sus fechas): permite guardarla y vigilarla en la cuenta. */
+  source?: { url: string; postedAt?: string; validThrough?: string }
 }
 
 export const emptyOffer: OfferState = { text: "", offer: null, analyzedText: "" }
@@ -78,8 +82,8 @@ export function StepOffer({ value, onChange }: { value: OfferState; onChange: (v
     setFetching(true)
     setError("")
     try {
-      const r = await post<{ text: string; removed: number; warning?: string }>({ url }, ctrl.signal)
-      onChange({ ...emptyOffer, text: r.text, cleaned: true, note: [r.removed > 0 ? `Se quitaron ${r.removed} líneas que no eran de la oferta (comentarios, menús, avisos).` : "", r.warning ?? ""].filter(Boolean).join(" ") })
+      const r = await post<{ text: string; removed: number; warning?: string; postedAt?: string; validThrough?: string }>({ url }, ctrl.signal)
+      onChange({ ...emptyOffer, text: r.text, cleaned: true, source: { url: url.trim(), postedAt: r.postedAt, validThrough: r.validThrough }, note: [r.removed > 0 ? `Se quitaron ${r.removed} líneas que no eran de la oferta (comentarios, menús, avisos).` : "", r.warning ?? ""].filter(Boolean).join(" ") })
       setTab("text")
     } catch (e) {
       if ((e as Error).name !== "AbortError") setError((e as Error).message)
@@ -104,7 +108,14 @@ export function StepOffer({ value, onChange }: { value: OfferState; onChange: (v
         .filter(Boolean)
         .join(" ")
       // El texto limpio reemplaza al pegado: es el que se analiza y el que verá el resto del flujo.
-      onChange({ text: r.text, offer: r.offer, analyzedText: r.text, cleaned: true, note })
+      onChange({ text: r.text, offer: r.offer, analyzedText: r.text, cleaned: true, note, source: value.source })
+      // Con enlace, la oferta se guarda sola en la cuenta (completa) y queda bajo seguimiento automático.
+      if (value.source) {
+        void trackOffer({ url: value.source.url, offer: r.offer, text: r.text, postedAt: value.source.postedAt, validThrough: value.source.validThrough }).then((t) => {
+          if (t.ok && t.created) toast.success("Oferta guardada en «Mis ofertas»: vigilamos si sigue abierta.")
+          else if (!t.ok && t.reason === "limit") toast.error("Llegaste al máximo de ofertas guardadas. Quita alguna en «Mis ofertas».")
+        })
+      }
     } catch (e) {
       if ((e as Error).name !== "AbortError") setError((e as Error).message)
     } finally {

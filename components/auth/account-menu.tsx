@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { LogOutIcon, SettingsIcon } from "lucide-react"
+import { BookmarkIcon, LogOutIcon, SettingsIcon } from "lucide-react"
 import { whoAmI } from "@/app/cuenta/actions"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { clearLocalAccountData } from "@/lib/auth/local-data"
@@ -38,6 +38,10 @@ export function AccountMenu() {
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/mis-ofertas" />}>
+          <BookmarkIcon aria-hidden />
+          Mis ofertas
+        </DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/ajustes" />}>
           <SettingsIcon aria-hidden />
           Ajustes

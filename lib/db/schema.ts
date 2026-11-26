@@ -267,3 +267,32 @@ export const cvs = pgTable(
   },
   (t) => [index("cvs_user_idx").on(t.userId, t.updatedAt)],
 )
+
+/** Ofertas guardadas con seguimiento automático de su enlace (migración 0018). */
+export const trackedOffers = pgTable(
+  "tracked_offers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    originalUrl: text("original_url").notNull(),
+    sourceName: text("source_name").notNull().default("web"),
+    title: text("title").notNull(),
+    company: text("company"),
+    companyKey: text("company_key").notNull().default(""),
+    offer: jsonb("offer").notNull(),
+    text: text("text").notNull(),
+    postedAt: ts("posted_at"),
+    validThrough: ts("valid_through"),
+    /** vigente | finalizada | sin_verificar */
+    status: text("status").notNull().default("sin_verificar"),
+    deadStreak: integer("dead_streak").notNull().default(0),
+    lastCheckedAt: ts("last_checked_at"),
+    lastAliveAt: ts("last_alive_at"),
+    closedDetectedAt: ts("closed_detected_at"),
+    checkNote: text("check_note"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [unique("tracked_offers_user_url").on(t.userId, t.sourceUrl), index("tracked_offers_user_idx").on(t.userId, t.createdAt)],
+)

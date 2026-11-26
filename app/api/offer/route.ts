@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       if (c.text.length < 60) {
         throw new OfferError("empty", "No encontramos el contenido de la oferta en esa página. Copia el texto de la oferta y pégalo en la pestaña «Pegar texto».")
       }
-      return NextResponse.json({ text: c.text, method: page.method, site: page.site, removed: c.removed, llm: c.llm, warning: c.warning })
+      return NextResponse.json({ text: c.text, method: page.method, site: page.site, removed: c.removed, llm: c.llm, warning: c.warning, postedAt: page.ld?.datePosted, validThrough: page.ld?.validThrough })
     }
     if (typeof body?.text === "string") {
       const raw = body.text.trim()
