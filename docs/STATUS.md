@@ -1542,3 +1542,9 @@ Con el servidor de Playwright reconectado con `--browser webkit` (build 2395 des
 
 ### Botones del login: de vuelta al tamaño normal y más juntos (27-nov-2026, pedido de Juan)
 - «Continuar con Google» / «Continuar como …» y «Usar otra cuenta» vuelven al tamaño `lg` (36 px, texto de 14 px) y quedan a 8 px entre sí (antes 44 px y 16 px). Medido en WebKit: 36 px los tres botones y 8 px de separación. El tamaño `xl` (44 px) sigue disponible en `components/ui/button.tsx` pero el login ya no lo usa.
+
+### Efecto lupa, ronda 4: final suave y algo más de esfera (27-nov-2026, pedido de Juan)
+- **Causa de que el final se sintiera «rudo»** (medida con fotogramas exactos): el cambio entre fotogramas crecía hasta el último tramo (la animación terminaba a máxima velocidad). Arreglo: tiempo frenado que llega con velocidad 0, abombamiento con subida y bajada suaves, resolución constante, página real encendida debajo del lienzo al 85 % y fundido final de 500 ms. Detalle en `docs/PLAN-LOGIN-LUPA.md` («Ronda 4»).
+- **Medido**: cambio entre fotogramas en el último 25 % del avance: de 4,1→11,6 a **2,6→0**; último paso 0; el máximo del último cuarto pasa del 98 % al 21 % del máximo global. Corrida real en WebKit (3 recargas): lienzo a los ~100–215 ms, página real encendida a ~1,2–1,4 s, lienzo retirado a ~1,9–2,2 s, un solo lienzo, sin errores (modo desarrollo). 10 pruebas del efecto, incluidas las que exigen que la velocidad de la lente, del abombamiento y del color decaiga hasta cero al final y que el 70 %+ del recorrido ocurra en la primera mitad.
+- **Más esfera**: `strength` 0,45, `curve` 0,10, `widthFactor` 2,4. Todo ajustable en `/login?afinar=1` (17 controles).
+- **NO verificado**: la fluidez percibida en un Safari real con GPU (el navegador de pruebas no sirve para medir fotogramas por segundo) y el aspecto; la revisión es de Juan.

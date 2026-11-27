@@ -5,7 +5,7 @@
 export type LensParams = {
   /** duración total, en milisegundos */
   durationMs: number
-  /** curva de velocidad: 1 = lineal; 2–3 = arranca y frena con más ímpetu */
+  /** frenado final: 1 = velocidad constante (termina en seco); 2–3 = arranca rápido y frena suave hasta detenerse (lo más fluido) */
   easePower: number
   /** tamaño de la lente (relativo a la altura de la pantalla) */
   radius: number
@@ -27,10 +27,12 @@ export type LensParams = {
   colorWidth: number
   /** curvatura global de toda la pantalla (como un cristal curvo): 0 = ninguna */
   curve: number
-  /** resolución del lienzo mientras se anima (1 = completa). Más bajo = más fluido; al final se pasa a resolución completa */
+  /** resolución del lienzo durante TODO el efecto (1 = completa). Más bajo = más fluido pero más suave de imagen; el fundido final la lleva a la nitidez de la página real */
   renderScale: number
-  /** cuánto dura el pico del efecto: 1 = un instante; 3 = se mantiene más tiempo fuerte */
+  /** cuánto se sostiene el pico del efecto: 1 = un instante; 1,8 = se mantiene más tiempo fuerte (siempre con subida y bajada suaves) */
   plateau: number
+  /** duración del fundido final entre la imagen del efecto y la página real, en milisegundos */
+  fadeMs: number
   /** suavidad con la que aparecen los elementos al pasar la lente */
   band: number
   /** la lente empieza por encima de la pantalla y termina por debajo */
@@ -40,22 +42,22 @@ export type LensParams = {
   x: number
 }
 
-/** Valores por defecto (ronda 3b, 27-nov-2026): 0,9 s; lupa y curvatura suaves y lente aplanada (menos «burbuja»); color MUY ligero y breve, al comienzo; curvatura global suave; lienzo al 60 % de resolución mientras se anima. */
 export const DEFAULT_LENS: LensParams = {
-  durationMs: 900,
-  easePower: 1.3,
+  durationMs: 950,
+  easePower: 2.2,
   radius: 0.45,
-  widthFactor: 3,
-  strength: 0.55,
+  widthFactor: 2.4,
+  strength: 0.45,
   dispersion: 0.2,
   prism: 0.016,
   blur: 0.07,
   rim: 0.5,
   colorPeak: 0.3,
   colorWidth: 0.1,
-  curve: 0.07,
-  renderScale: 0.6,
-  plateau: 1.5,
+  curve: 0.1,
+  renderScale: 0.75,
+  plateau: 1.3,
+  fadeMs: 500,
   band: 0.2,
   startY: 1.0,
   endY: -0.15,
@@ -65,7 +67,7 @@ export const DEFAULT_LENS: LensParams = {
 /** Rangos para el panel de ajuste (`?afinar=1`): [mínimo, máximo, paso, etiqueta]. */
 export const LENS_RANGES: Record<Exclude<keyof LensParams, "startY" | "endY" | "x">, [number, number, number, string]> = {
   durationMs: [400, 3000, 50, "Duración (ms)"],
-  easePower: [1, 4, 0.1, "Ímpetu de la curva"],
+  easePower: [1, 4, 0.1, "Frenado final (más = más suave)"],
   radius: [0.1, 1, 0.01, "Tamaño de la lente"],
   widthFactor: [1, 5, 0.1, "Ancho de la lente"],
   strength: [0.05, 1, 0.01, "Fuerza de la lupa (menos = más)"],
@@ -77,23 +79,34 @@ export const LENS_RANGES: Record<Exclude<keyof LensParams, "startY" | "endY" | "
   colorWidth: [0.04, 0.6, 0.01, "Duración del color"],
   curve: [0, 0.6, 0.01, "Curvatura global"],
   renderScale: [0.3, 1, 0.05, "Resolución al animar"],
-  plateau: [1, 4, 0.1, "Duración del pico"],
+  plateau: [1, 1.8, 0.05, "Duración del pico"],
+  fadeMs: [100, 1000, 25, "Fundido final (ms)"],
   band: [0.02, 0.5, 0.01, "Suavidad de aparición"],
 }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v))
 
-/** Aceleración y frenado con la potencia `n` (1 = lineal). Con n = 2,2 arranca y frena con más ímpetu que el seno de la primera versión. */
+/** Aceleración y frenado con la potencia `n` (1 = lineal). */
 export function easeInOutPower(t: number, n: number): number {
   const x = clamp01(t)
   return x < 0.5 ? 0.5 * Math.pow(2 * x, n) : 1 - 0.5 * Math.pow(2 * (1 - x), n)
 }
 
+/** Arranca rápido y FRENA hasta detenerse (la velocidad llega a 0 al final): 1 − (1 − t)^n. Con n = 2,2 casi el 80 % del recorrido ocurre en la primera mitad y el resto es una cola suave. */
+export function easeOutPower(t: number, n: number): number {
+  return 1 - Math.pow(1 - clamp01(t), n)
+}
+
 export type LensFrame = { lensY: number; bulge: number; /** intensidad del color (prisma), de 0 a 1: más breve que `bulge` y concentrada al comienzo */ color: number }
 
-/** Dónde está la lente y cuánto abomba en el avance `p`: el efecto sube hasta su pico a media pasada y se relaja en los extremos, para que al terminar la imagen sea idéntica a la página real. */
+/**
+ * Dónde está la lente y cuánto abomba / colorea en el avance `p`. Todo se mide sobre un tiempo «frenado» `q` (arranca rápido y llega al final con velocidad 0), así la animación
+ * no termina a toda velocidad. El abombamiento es un seno al cuadrado (sube y baja con pendiente cero en los extremos): empieza y termina sin tirones, y al terminar la imagen
+ * es idéntica a la página real.
+ */
 export function lensFrame(p: number, params: LensParams = DEFAULT_LENS): LensFrame {
-  const t = clamp01(p)
-  const z = (t - params.colorPeak) / params.colorWidth
-  return { lensY: params.startY + (params.endY - params.startY) * easeInOutPower(t, params.easePower), bulge: Math.min(1, Math.sin(Math.PI * t) * params.plateau), color: Math.exp(-z * z) }
+  const q = easeOutPower(p, params.easePower)
+  const s = Math.sin(Math.PI * q)
+  const z = (q - params.colorPeak) / params.colorWidth
+  return { lensY: params.startY + (params.endY - params.startY) * q, bulge: Math.pow(s * s, 1 / params.plateau), color: Math.exp(-z * z) }
 }

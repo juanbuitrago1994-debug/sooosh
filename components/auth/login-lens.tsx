@@ -35,14 +35,15 @@ export function LoginLens({ children }: { children: ReactNode }) {
     runRef.current?.destroy()
     const gen = ++genRef.current
     const { runLens } = await import("@/lib/lens/run")
-    const run = await runLens(el, paramsRef.current)
+    const params = paramsRef.current
+    const run = await runLens(el, params, { onNearEnd: () => first && (el.style.opacity = "1") })
     if (genRef.current !== gen) return run.destroy() // se canceló mientras se preparaba
     runRef.current = run
     await run.finished
     if (runRef.current !== run) return
-    // La página real ya está debajo (idéntica a la última imagen): se enciende y el lienzo se funde.
+    // La página real ya está encendida debajo (desde el 85 % del avance, tapada por el lienzo): solo queda fundir el lienzo, con calma.
     if (first) el.style.opacity = "1"
-    await animate(run.canvas, { opacity: 0 }, { duration: 0.35, ease: "easeOut" })
+    await animate(run.canvas, { opacity: 0 }, { duration: params.fadeMs / 1000, ease: "easeInOut" })
     run.destroy()
     if (runRef.current === run) runRef.current = null
   }, [])

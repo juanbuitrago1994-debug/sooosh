@@ -12,11 +12,11 @@ export type LensRun = { canvas: HTMLCanvasElement; finished: Promise<void>; skip
  * deformando y descubriendo el contenido. Al terminar, la imagen es idéntica a la página real. El canvas es decorativo (`aria-hidden`, no recibe clics). Lanza un error si
  * no hay WebGL: quien lo llama debe mostrar la página sin efecto.
  */
-export async function runLens(root: HTMLElement, params: LensParams = DEFAULT_LENS): Promise<LensRun> {
+export async function runLens(root: HTMLElement, params: LensParams = DEFAULT_LENS, opts: { onNearEnd?: () => void } = {}): Promise<LensRun> {
   const width = window.innerWidth
   const height = window.innerHeight
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
-  // La «foto» se hace a resolución completa (nítida); el lienzo se anima a menos resolución (más fluido) y pasa a la completa cuando el efecto ya casi terminó.
+  // La «foto» se hace a resolución completa (nítida); el lienzo se anima a menos resolución (más fluido) TODO el efecto: cambiarla a medio camino provocaba un tirón justo al final.
   const { canvas: photo, bg } = await rasterize(root, width, height, dpr)
   const animDpr = Math.max(0.3, dpr * params.renderScale)
 
@@ -63,17 +63,16 @@ export async function runLens(root: HTMLElement, params: LensParams = DEFAULT_LE
   const mesh = new Mesh(gl, { geometry: new Triangle(gl), program })
 
   let destroyed = false
-  let full = animDpr >= dpr
+  let nearEnd = false
   const draw = (p: number) => {
     const f = lensFrame(p, params)
     program.uniforms.uCenter.value = [params.x, f.lensY]
     program.uniforms.uBulge.value = f.bulge
     program.uniforms.uColor.value = f.color
-    // Cuando el efecto ya casi terminó (sin estela ni deformación apreciables) se pasa a resolución completa: así la última imagen es nítida como la página real.
-    if (!full && p > 0.8 && animDpr < dpr) {
-      full = true
-      renderer.dpr = dpr
-      renderer.setSize(width, height)
+    // Poco antes del final se avisa para encender la página real DEBAJO del lienzo (que la tapa por completo): así el coste de pintarla no cae sobre el último fotograma.
+    if (!nearEnd && p >= 0.85) {
+      nearEnd = true
+      opts.onNearEnd?.()
     }
     renderer.render({ scene: mesh })
   }
