@@ -13,6 +13,10 @@ describe("Your resume", () => {
     for (const t of ["Certificaciones y cursos", "Voluntariado", "Premios y reconocimientos", "Publicaciones y charlas"]) expect(html, t).not.toContain(`>${t}<`)
     expect(html).toContain("Agregar sección")
     expect(html).toContain("Llenar con tu CV")
+    // Título profesional y titulares son dos campos; los titulares son etiquetas (campo + botón «+»), no texto con comas.
+    expect(html).toContain("Título profesional")
+    expect(html).toContain("Titulares")
+    expect(html).toContain("Escribe una y pulsa Enter")
     // Sin botones que no hagan nada: no hay «Cancelar» y «Guardar cambios» siempre está disponible.
     expect(html).not.toContain("Cancelar")
     expect(html).toContain("Guardar cambios")

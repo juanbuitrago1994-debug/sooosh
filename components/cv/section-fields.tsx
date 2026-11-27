@@ -1,6 +1,6 @@
 "use client"
 
-import { EntryList, StringList, TagsField, TextField } from "./form-parts"
+import { ChipsField, EntryList, StringList, TagsField, TextField } from "./form-parts"
 
 /**
  * Campos de cada sección del CV, sin contenedor: los usan el formulario de corrección (`CvForm`, secciones plegables) y la vista «Your resume»
@@ -11,7 +11,7 @@ export function HeaderFields() {
     <>
       <TextField name="header.fullName" label="Nombre completo" />
       <TextField name="header.headline" label="Título profesional" />
-      <TagsField name="header.taglines" label="Titulares" placeholder="Estrategia de Producto, Design Systems, UX Research…" />
+      <ChipsField name="header.taglines" label="Titulares" hint="Frases que complementan tu título. Escribe una y pulsa Enter. Hasta 8." placeholder="Ej.: Design Systems" max={8} maxLength={80} />
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField name="header.email" label="Email" />
         <TextField name="header.phone" label="Teléfono" />

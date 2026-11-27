@@ -16,6 +16,8 @@ import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Empty, EmptyDescription, EmptyHeader } from "@/components/ui/empty"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { ChipsInput } from "@/components/common/chips-input"
+import { FieldDescription } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
 import type { CVInput } from "./types"
 
@@ -123,6 +125,24 @@ function TagsInput({ label, placeholder, error, value, onChange }: { label: stri
         }}
       />
     </FieldShell>
+  )
+}
+
+/** Lista de textos cortos como etiquetas quitables: se escribe y se pulsa Enter (o «+»). Para los titulares del encabezado. */
+export function ChipsField({ name, label, hint, placeholder, max, maxLength }: { name: Name; label: string; hint: string; placeholder?: string; max: number; maxLength?: number }) {
+  const { control, formState } = useFormContext<CVInput>()
+  const error = errorMessage(formState.errors, name)
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FieldShell label={label} error={error} htmlFor={name}>
+          <ChipsInput id={name} value={(field.value as string[] | undefined) ?? []} onChange={field.onChange} max={max} maxLength={maxLength} placeholder={placeholder} listLabel={label} addLabel={`Añadir a ${label.toLowerCase()}`} />
+          <FieldDescription>{hint}</FieldDescription>
+        </FieldShell>
+      )}
+    />
   )
 }
 
