@@ -28,7 +28,7 @@ export function AccountMenu() {
 
   return (
     <DropdownMenu onOpenChange={(open) => open && void whoAmI().then(setMe).catch(() => {})}>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Mi cuenta" className="text-xs font-medium" />}>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Mi cuenta" className="bg-muted text-xs font-medium dark:bg-muted/50" />}>
         {initials(name)}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={NAV_POPOVER_OFFSET} className="w-56">
