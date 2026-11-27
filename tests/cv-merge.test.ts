@@ -33,4 +33,11 @@ describe("llenar con tu CV", () => {
     expect(r.header.fullName).toBe("Ana Pérez")
     expect(r.header.links).toHaveLength(1)
   })
+  it("tolera un CV leído sin las listas nuevas (no se rompe con undefined)", () => {
+    const legacy = { header: { fullName: "Ana Pérez", links: [] }, experience: [], education: [], skills: [], languages: [], projects: [] } as unknown as CV
+    const r = mergeCv(emptyCv(), legacy)
+    expect(r.certifications).toEqual([])
+    expect(() => filledSections(emptyCv(), r)).not.toThrow()
+    expect(() => filledSections(emptyCv(), legacy)).not.toThrow()
+  })
 })

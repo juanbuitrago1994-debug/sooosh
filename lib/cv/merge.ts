@@ -2,17 +2,17 @@ import type { CV } from "@/lib/schemas/cv"
 
 /**
  * «Llenar con tu CV»: completa lo que está VACÍO del perfil con lo leído de un CV, sin pisar nada de lo que la persona ya escribió.
- * Cada campo de texto solo se llena si está vacío; cada lista (experiencia, educación…) solo se llena si está vacía; los enlaces se suman si su URL no estaba.
+ * Tolera CV sin las listas nuevas (un resultado viejo o de otra lectura). Cada campo de texto solo se llena si está vacío; cada lista (experiencia, educación…) solo se llena si está vacía; los enlaces se suman si su URL no estaba.
  */
 const blank = (s?: string) => !s?.trim()
 
 export function mergeCv(current: CV, incoming: CV): CV {
-  const h = current.header
-  const ih = incoming.header
+  const h = { ...current.header, links: current.header.links ?? [] }
+  const ih = { ...incoming.header, links: incoming.header.links ?? [] }
   const fill = <K extends keyof Pick<CV["header"], "headline" | "email" | "phone" | "location">>(k: K) => (blank(h[k]) ? ih[k] : h[k])
   const urls = new Set(h.links.map((l) => l.url.trim().toLowerCase()))
   const links = [...h.links, ...ih.links.filter((l) => l.url.trim() && !urls.has(l.url.trim().toLowerCase()))]
-  const list = <K extends "experience" | "education" | "skills" | "languages" | "projects" | "certifications" | "volunteering" | "awards" | "publications">(k: K): CV[K] => (current[k].length ? current[k] : incoming[k])
+  const list = <K extends "experience" | "education" | "skills" | "languages" | "projects" | "certifications" | "volunteering" | "awards" | "publications">(k: K): CV[K] => ((current[k] ?? []).length ? current[k] : (incoming[k] ?? []))
   return {
     ...current,
     header: {
@@ -43,7 +43,7 @@ export function filledSections(before: CV, after: CV): string[] {
   if (before.header !== after.header && JSON.stringify(before.header) !== JSON.stringify(after.header)) out.push("datos personales")
   if (blank(before.summary) && !blank(after.summary)) out.push("resumen")
   const names = { experience: "experiencia", education: "educación", skills: "habilidades", languages: "idiomas", projects: "proyectos", certifications: "certificaciones", volunteering: "voluntariado", awards: "premios", publications: "publicaciones" } as const
-  for (const k of Object.keys(names) as (keyof typeof names)[]) if (!before[k].length && after[k].length) out.push(names[k])
+  for (const k of Object.keys(names) as (keyof typeof names)[]) if (!(before[k] ?? []).length && (after[k] ?? []).length) out.push(names[k])
   return out
 }
 

@@ -51,22 +51,24 @@ export function ResumeForm() {
   const [reading, setReading] = useState<string | null>(null)
   const [added, setAdded] = useState<OptionalKey[]>([])
   const input = useRef<HTMLInputElement>(null)
-  const { isDirty, isSubmitting } = form.formState
+  const { isSubmitting } = form.formState
 
   const lists = useWatch({ control: form.control, name: ["certifications", "volunteering", "awards", "publications"] })
   const visible = OPTIONAL.filter((o, i) => (lists[i]?.length ?? 0) > 0 || added.includes(o.key))
   const hidden = OPTIONAL.filter((o) => !visible.includes(o))
 
-  function apply(source: CV) {
+  function apply(raw: unknown) {
+    // Lo leído puede venir sin las listas nuevas (otra lectura, un resultado anterior): se normaliza con el esquema antes de combinar.
+    const source = cvSchema.safeParse(raw)
+    if (!source.success) return void toast.error("No pudimos entender los datos leídos de tu CV. Prueba con otro archivo.")
     const base = form.getValues() as unknown as CV
-    const merged = mergeCv(base, source)
+    const merged = mergeCv(base, source.data)
     const sections = filledSections(base, merged)
     if (sections.length === 0) {
       toast.info("No encontramos nada nuevo para completar: tu perfil ya tiene esos datos.")
       return
     }
-    // Se conservan los valores guardados como «originales»: así el perfil queda con cambios por guardar y «Cancelar» los descarta.
-    form.reset(merged, { keepDefaultValues: true })
+    form.reset(merged)
     toast.success(`Completamos ${sections.join(", ")} con tu CV. Revisa y guarda.`)
   }
 
@@ -121,10 +123,7 @@ export function ResumeForm() {
               {reading ? <Spinner /> : <SparklesIcon data-icon="inline-start" aria-hidden />}
               {reading ?? "Llenar con tu CV"}
             </Button>
-            <Button type="button" variant="outline" disabled={!isDirty || isSubmitting} onClick={() => form.reset()}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={!isDirty || isSubmitting}>
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Spinner />}
               Guardar cambios
             </Button>

@@ -20,7 +20,7 @@ Investigación y decisiones: `docs/INVESTIGACION-YOUR-RESUME.md`.
 **Límites**: no hay reordenar secciones en la vista (el orden estándar manda; `sectionOrder` existe en el esquema); las 4 secciones nuevas no tienen paso propio en la validación guiada (se revisan en «Your resume»); el lector las parte con reglas, no con IA, así que una línea rara puede quedar entera en «nombre».
 
 **Para revisar por Juan** (escritorio y 375 px, solo oscuro)
-1. Menú de la cuenta → «Your resume». Mira el encabezado, las 7 secciones y el divisor entre ellas.
+1. Menú de la cuenta → «Your resume». Mira el encabezado (sin «Cancelar»), las 7 secciones y el divisor entre ellas.
 2. «Llenar con tu CV»: con un CV leído pero sin validar se llena al instante; sin CV pide un archivo. Revisa que no pise lo ya escrito.
 3. «Agregar sección» → Certificaciones/Voluntariado/Premios/Publicaciones; «Quitar sección».
 4. «Guardar cambios» y recarga: debe quedar guardado; entra desde otro dispositivo y debe aparecer.

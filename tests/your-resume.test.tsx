@@ -13,7 +13,8 @@ describe("Your resume", () => {
     for (const t of ["Certificaciones y cursos", "Voluntariado", "Premios y reconocimientos", "Publicaciones y charlas"]) expect(html, t).not.toContain(`>${t}<`)
     expect(html).toContain("Agregar sección")
     expect(html).toContain("Llenar con tu CV")
-    // Sin cambios no se puede guardar ni cancelar.
-    expect(html).toMatch(/<button[^>]*disabled[^>]*>(?:(?!<\/button>).)*Guardar cambios/)
+    // Sin botones que no hagan nada: no hay «Cancelar» y «Guardar cambios» siempre está disponible.
+    expect(html).not.toContain("Cancelar")
+    expect(html).toContain("Guardar cambios")
   })
 })
