@@ -1,13 +1,15 @@
 import { Suspense, type ReactNode } from "react"
 import { AccountProvider } from "@/components/auth/account-context"
 import { CvSync } from "@/components/auth/cv-sync"
+import { RememberPrompt } from "@/components/auth/remember-prompt"
 import { requireProfile } from "@/lib/auth/session"
 
 async function Gate({ children }: { children: ReactNode }) {
-  const { profile } = await requireProfile()
+  const { user, profile } = await requireProfile()
   return (
     <AccountProvider name={profile.name}>
       <CvSync />
+      <RememberPrompt remembered={user.remember} />
       {children}
     </AccountProvider>
   )
