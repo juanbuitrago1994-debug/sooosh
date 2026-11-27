@@ -1572,3 +1572,5 @@ Con el servidor de Playwright reconectado con `--browser webkit` (build 2395 des
 - «Usar mi ubicación» ya no es un botón: es la primera opción del desplegable de país (pedido de Juan); al elegirla pide el permiso, rellena país y ciudad y deja el país elegido. Mientras busca, el desplegable se desactiva y la opción dice «Buscando tu ubicación…».
 
 - «Usar mi ubicación» sale del desplegable y vuelve como botón de ícono (mismo `outline` + `icon` que el «+» de los cargos) a la derecha del selector de país, con `aria-label` y `title`; mientras busca muestra el spinner.
+
+- Ubicación denegada sin ventana de permiso (Juan, 27-nov-2026): el aviso ahora consulta el estado del permiso y explica dónde activarlo (Safari ▸ Ajustes ▸ Sitios web ▸ Ubicación; Ajustes del Sistema ▸ Privacidad y seguridad ▸ Servicios de localización ▸ Safari), 15 s en pantalla.

@@ -56,9 +56,15 @@ export function OnboardingForm({ action: submit, defaultName, defaultCountry = "
           setLocating(false)
         }
       },
-      (err) => {
+      async (err) => {
         setLocating(false)
-        toast.error(err.code === err.PERMISSION_DENIED ? "No diste permiso de ubicación; elige tu país a mano." : "No se pudo obtener tu ubicación; elige tu país a mano.")
+        if (err.code !== err.PERMISSION_DENIED) return void toast.error("No se pudo obtener tu ubicación; elige tu país a mano.")
+        // «Denegado» sin ventana de permiso: o ya hay una negativa guardada para este sitio, o el sistema no deja al navegador usar la ubicación.
+        const state = await navigator.permissions?.query({ name: "geolocation" }).then((p) => p.state).catch(() => null)
+        toast.error(state === "denied" ? "La ubicación está bloqueada para este sitio" : "No se pudo usar la ubicación", {
+          description: "En Safari: Safari ▸ Ajustes ▸ Sitios web ▸ Ubicación, y pon «Preguntar» o «Permitir» para este sitio. Si aun así no pregunta: Ajustes del Sistema ▸ Privacidad y seguridad ▸ Servicios de localización, y activa Safari. Mientras tanto, elige tu país a mano.",
+          duration: 15000,
+        })
       },
       { timeout: 10000, maximumAge: 600000 },
     )
