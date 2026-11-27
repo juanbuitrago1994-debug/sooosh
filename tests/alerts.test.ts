@@ -188,13 +188,13 @@ describe("alertas", () => {
     expect(describeFilters(a.filters)).toEqual(["Colombia", "«Analista de datos»", "«Científico de datos»"])
   })
 
-  it("la campana trae las últimas 5 y el total sin leer en UNA consulta", async () => {
-    for (let i = 0; i < 8; i++) await createNotification(db, { userId: ana, kind: "alerta", title: `n${i}`, href: "/notificaciones" })
+  it("la campana trae las últimas 30 y el total sin leer en UNA consulta", async () => {
+    for (let i = 0; i < 35; i++) await createNotification(db, { userId: ana, kind: "alerta", title: `n${i}`, href: "/notificaciones" })
     await createNotification(db, { userId: luis, kind: "alerta", title: "de luis", href: "/notificaciones" })
     await client.exec(`update public.notifications set read_at = now() where title in ('n0','n1') and user_id = '${ana}'`)
     const b = await bellData(db, ana)
-    expect(b.items).toHaveLength(5)
-    expect(b.unread).toBe(6) // las 8 menos 2 leídas, aunque solo se devuelvan 5
+    expect(b.items).toHaveLength(30)
+    expect(b.unread).toBe(33) // las 35 menos 2 leídas, aunque solo se devuelvan 30
     expect(b.items.every((x) => x.title.startsWith("n"))).toBe(true)
     expect(await bellData(db, "33333333-3333-4333-8333-333333333333")).toEqual({ unread: 0, items: [] })
   })

@@ -18,14 +18,14 @@ export async function unreadCount(db: Db, userId: string): Promise<number> {
   return r?.n ?? 0
 }
 
-/** Lo que pinta la campana en UNA sola consulta: las últimas 5 y cuántas hay sin leer en total (función de ventana: se calcula antes del límite). */
+/** Lo que pinta la campana en UNA sola consulta: las últimas 30 y cuántas hay sin leer en total (función de ventana: se calcula antes del límite). */
 export async function bellData(db: Db, userId: string): Promise<{ unread: number; items: Notification[] }> {
   const rows = await db
     .select({ id: notifications.id, kind: notifications.kind, title: notifications.title, body: notifications.body, href: notifications.href, createdAt: notifications.createdAt, readAt: notifications.readAt, unread: sql<number>`(count(*) filter (where ${notifications.readAt} is null) over ())::int` })
     .from(notifications)
     .where(eq(notifications.userId, userId))
     .orderBy(desc(notifications.createdAt))
-    .limit(5)
+    .limit(30)
   return { unread: rows[0]?.unread ?? 0, items: rows.map((r) => ({ id: r.id, kind: r.kind as Notification["kind"], title: r.title, body: r.body, href: r.href, createdAt: iso(r.createdAt), read: !!r.readAt })) }
 }
 
