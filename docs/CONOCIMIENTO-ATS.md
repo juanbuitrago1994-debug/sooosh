@@ -252,3 +252,12 @@ Motivo: con el CV real de Juan el porcentaje no llegaba a 100 % por cosas que el
 - **Rangos con guion corto** copiados de certificaciones («2018 - 2021») se escriben con « – » (solo puntuación).
 - **Resultado**: el Word de referencia pasa de 69 % por S1 falso a 69 % por **ATS-I1** (su contenido es de otra versión del CV, correcto que falle); nuestros archivos: 100 % de formato.
 - **Límite**: 1 solo CV real y 1 documento ajeno calibrados; es una heurística, no una prueba contra un ATS real.
+
+## 13. Título profesional y titulares (27-nov-2026)
+
+LinkedIn guarda el «Titular» como una sola línea libre. Los CV de las personas suelen escribirla con barras: «Semi Senior Product Designer | Estrategia de Producto | Design Systems | UX Research | Figma». Nosotros la repartimos en dos campos del esquema (`header`):
+
+- `headline` = **título profesional**: el primer trozo («Semi Senior Product Designer»). Es lo que usan la etiqueta del perfil, el correo de postulación y el paso «Rol» de la validación.
+- `taglines` = **titulares**: los trozos que siguen («Estrategia de Producto», «Design Systems», …), hasta 8, cada uno ≤ 80 caracteres.
+
+Reglas (`lib/cv/headline.ts`): solo se parte por `|`, `•` y `·`; la barra `/` no se parte («UX/UI Designer»); si un trozo pasa de 80 caracteres no es una lista y se deja entero; no se cambia ni una palabra, solo se reparte el texto original. Los documentos (ATS, PDF, Word, TXT, Markdown) y el análisis de palabras clave usan `fullHeadline()` (título | titulares), así no se pierde nada al separarlos. Un CV guardado con todo en `headline` se reparte al abrirlo en «Your resume» (`normalizeHeadline`) y «Llenar con tu CV» llena los titulares solo si están vacíos.

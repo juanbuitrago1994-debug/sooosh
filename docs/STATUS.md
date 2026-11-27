@@ -17,6 +17,8 @@ Investigación y decisiones: `docs/INVESTIGACION-YOUR-RESUME.md`.
 
 **Verificado**: lint 0 errores (8 avisos previos), tsc limpio, `pnpm build` ok (ruta `/cv`), 1058 tests en verde (nuevos: `cv-extras`, `cv-merge`, `your-resume`; actualizado `cv-parts` y `alerts`: la campana trae 30).
 
+**Titulares (27-nov-2026)**: el titular se reparte en título profesional (`headline`) y titulares (`taglines`), con su campo en «Your resume»; detalle en `docs/CONOCIMIENTO-ATS.md` §13. Incidente y guarda del caché en `docs/INCIDENTES.md` (`tests/logic-version.test.ts`).
+
 **Límites**: no hay reordenar secciones en la vista (el orden estándar manda; `sectionOrder` existe en el esquema); las 4 secciones nuevas no tienen paso propio en la validación guiada (se revisan en «Your resume»); el lector las parte con reglas, no con IA, así que una línea rara puede quedar entera en «nombre».
 
 **Para revisar por Juan** (escritorio y 375 px, solo oscuro)

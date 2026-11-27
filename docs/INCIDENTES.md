@@ -4,6 +4,37 @@ Registro corto de problemas que costaron tiempo, con su causa medida y cómo se 
 
 ---
 
+## 2026-11-27 · «Llenar con tu CV» no traía el titular (y el arreglo «no funcionaba»)
+
+**Síntoma.** En «Your resume», «Llenar con tu CV» completaba nombre, contacto y ubicación pero dejaba vacío el titular; sin embargo, subiendo el mismo archivo por el flujo de validación el rol parecía estar. Tras arreglar el motor, volvió a pasar.
+
+**Causas (eran tres, encadenadas).**
+1. **El motor descartaba el titular.** La heurística de identidad aceptaba la línea bajo el nombre solo si medía ≤ 90 caracteres; el titular real («Semi Senior Product Designer | Estrategia de Producto | Design Systems | UX Research | Figma») mide 92. Ni la validación ni «Your resume» lo veían: el paso «Rol» de la validación ofrece *sugerencias* sacadas de los cargos de la experiencia, que parecían «el titular».
+2. **El botón reutilizaba una lectura guardada.** Si había un CV leído y sin validar en el navegador, se usaba ese en vez de leer otra vez; una lectura hecha antes del arreglo nunca podía traer lo nuevo.
+3. **El caché del servidor no se invalidó.** La huella del caché (`versionFor` en `lib/cache/results.ts`) incluye modelo, prompts, esquemas y `LOGIC_VERSION`, pero la lógica determinista NO está en la huella: se sube `LOGIC_VERSION` a mano y no se subió. El servidor seguía entregando la lectura vieja del mismo archivo.
+
+Un hallazgo previo del mismo día: al llegar un CV leído **sin** las listas nuevas (`after[k].length` de `undefined`) la vista se rompía. Los datos guardados o en caché pueden ser de una versión anterior del esquema.
+
+**Cómo se diagnosticó** (sirve de guía).
+1. Mirar el último resultado guardado (`data/profile.json`): `header` sin `headline` → el problema estaba en la lectura, no en la vista.
+2. Correr `heuristicIdentity` sobre el texto original (`sourceText` del mismo archivo): devolvía `headline: undefined` → medir la línea: 92 caracteres contra un tope de 90.
+3. Tras el arreglo, la heurística ya devolvía el titular pero el botón no: revisar de dónde sale el CV que usa el botón (lectura guardada) y si el caché pudo devolver la vieja (versión sin subir).
+
+**Arreglo.**
+- `lib/cv/pipeline.ts`: el titular admite hasta 160 caracteres y no puede terminar en `.`, `:` o `;` (un párrafo no es un titular).
+- `lib/profile/parse-client.ts` (`parseStoredCv`) y `components/cv/your-resume.tsx`: el botón vuelve a leer el archivo ya subido con la lógica actual; si el archivo ya no está, usa la lectura guardada; si no hay nada, pide el archivo.
+- `lib/cv/merge.ts` y la vista normalizan lo leído con `cvSchema` y toleran listas ausentes.
+- **Guarda automática** (`tests/logic-version.test.ts`): calcula una huella de lo que produce la lógica determinista sobre textos fijos y la compara con `GOLDEN`. Si la lógica cambia, la prueba falla hasta que se suban **a la vez** `LOGIC_VERSION` y `GOLDEN`. Verificado: alterar un número en el pipeline hace fallar la prueba.
+
+**Reglas para que no vuelva a pasar.**
+- Cambiaste la lógica de lectura (`lib/cv/*`, heurísticas, regex, topes) → sube `LOGIC_VERSION` en `lib/cache/results.ts` y actualiza `GOLDEN` (la prueba te lo exige).
+- Todo código que consuma un CV guardado, en caché o leído por otra ruta debe pasarlo por `cvSchema` primero (los datos viejos no traen los campos nuevos) y usar `?? []` donde corresponda.
+- Un arreglo de lectura se prueba con el **archivo real** de la persona (su `sourceText` y su primera línea), no solo con ejemplos inventados; y se prueba el camino completo (botón → servidor → caché), no solo la función.
+- Un botón que «reutiliza lo ya leído» debe poder releer: lo guardado puede ser de una lógica anterior.
+- Un estado local de un campo (como `TagsInput`) debe sincronizarse cuando el formulario cambia desde fuera (`form.reset`).
+
+---
+
 ## 2026-11-20 · El buscador se quedaba cargando para siempre
 
 **Síntoma.** `/ofertas` cargaba bien la primera vez; al recargar, el cargador giraba sin fin y nunca aparecían ofertas. Reiniciar `pnpm dev` ayudaba solo un momento. Las peticiones a la API (`/api/search`, `/api/jobs/count`) no respondían nunca (ni éxito ni error), mientras la portada `/` sí respondía.
