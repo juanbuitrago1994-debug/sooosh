@@ -24,6 +24,8 @@ const buttonVariants = cva(
         xs: "h-6 gap-1 px-2 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 gap-1 px-2.5 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-9 gap-1.5 px-3.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        /** Botón principal de una portada (44 px, texto `text-base`; pedido por Juan el 27-nov-2026). Ya cumple el área táctil de 44 px. */
+        xl: "h-11 gap-2 px-5 text-base has-data-[icon=inline-end]:pr-3.5 has-data-[icon=inline-start]:pl-3.5",
         icon: "size-9 rounded-lg",
         "icon-xs":
           "size-6 rounded-sm [&_svg:not([class*='size-'])]:size-3",

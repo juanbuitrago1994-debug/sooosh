@@ -60,13 +60,13 @@ export function LoginCard({ error, last }: { error?: string; last?: LastUser | n
 
       <div className="flex flex-col gap-4">
         <Rise step={5}>
-          <Button type="submit" size="lg" className="w-full" {...(last ? { name: "cuenta", value: "ultima" } : {})}>
+          <Button type="submit" size="xl" className="w-full" {...(last ? { name: "cuenta", value: "ultima" } : {})}>
             {last ? `Continuar como ${first}` : "Continuar con Google"}
           </Button>
         </Rise>
         {last && (
           <Rise step={6}>
-            <Button type="submit" variant="ghost" size="lg" className="w-full text-muted-foreground">
+            <Button type="submit" variant="ghost" size="xl" className="w-full text-muted-foreground">
               Usar otra cuenta
             </Button>
           </Rise>
