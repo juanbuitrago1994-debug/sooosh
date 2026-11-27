@@ -34,6 +34,9 @@ Estas reglas aplican a toda fase y toda tarea. No se negocian.
 ## Rutas `/api/*`
 - Todas exigen sesión por defecto (lo aplica `proxy.ts`; sin sesión, 401 en JSON) y tienen un límite de peticiones por persona. **Toda ruta nueva de `app/api` debe agregarse a `lib/auth/api-policy.ts`** (pública / sesión / admin, y si es pesada); una prueba falla si falta. Lo único público es `/api/db/health`. Los scripts de banco de pruebas entran con `BENCH_KEY` (solo en `.env.local`, nunca en Vercel).
 
+## Navegador de pruebas
+- **Solo Safari/WebKit. JAMÁS Chrome ni Chromium** (regla de Juan, repetida el 27-nov-2026). `.mcp.json` arranca Playwright con `--browser webkit`, y un hook (`.claude/settings.json` → `scripts/guard-playwright-webkit.sh`) **bloquea** cualquier herramienta `mcp__playwright__*` si el servidor de Playwright en ejecución no se inició con `--browser webkit` (un servidor viejo, iniciado antes de esa configuración, abre Chrome por defecto: pasó). Si se bloquea, no se evita ni se usa otra vía con Chrome: se le pide a Juan reiniciar Claude Code o reconectar el servidor con `/mcp`. Nunca abrir `Google Chrome`, `chromium` ni `claude-in-chrome` para probar.
+
 ## Servidores
 - No arranques otro servidor de desarrollo. El servidor de Juan corre en el puerto 3000 con `pnpm dev`. Si necesitas probar algo, usa ese. Si no responde, avísame en vez de iniciar otro. `pnpm shots` usa ese servidor y falla con aviso si no responde.
 
