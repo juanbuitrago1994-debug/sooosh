@@ -15,7 +15,7 @@ import { MAX_ROLES } from "@/lib/auth/profile-schema"
 export type CountryOption = { code: string; name: string }
 
 /** Registro de una cuenta nueva: nombre, país de residencia y cargos que le interesan. Los mismos datos se editan en Ajustes (mismo formulario). */
-export function OnboardingForm({ action: submit, defaultName, defaultCountry = "", defaultRoles = [], countries, submitLabel = "Continuar" }: { action: (prev: ProfileFormState, form: FormData) => Promise<ProfileFormState>; defaultName: string; defaultCountry?: string; defaultRoles?: string[]; countries: CountryOption[]; submitLabel?: string }) {
+export function OnboardingForm({ action: submit, defaultName, defaultCountry = "", defaultRoles = [], countries, submitLabel = "Continuar", hint }: { action: (prev: ProfileFormState, form: FormData) => Promise<ProfileFormState>; defaultName: string; defaultCountry?: string; defaultRoles?: string[]; countries: CountryOption[]; submitLabel?: string; /** texto de ayuda de los cargos; por defecto el del registro */ hint?: string }) {
   const [state, action, pending] = useActionState<ProfileFormState, FormData>(submit, {})
   const [roles, setRoles] = useState<string[]>(defaultRoles)
   useEffect(() => {
@@ -50,7 +50,7 @@ export function OnboardingForm({ action: submit, defaultName, defaultCountry = "
         <Field data-invalid={!!fe.roleInterests}>
           <FieldLabel htmlFor="role-draft">Cargos que te interesa buscar</FieldLabel>
           <ChipsInput id="role-draft" value={roles} onChange={setRoles} max={MAX_ROLES} placeholder="Ej.: Diseñador de producto" addLabel="Añadir cargo" listLabel="Cargos añadidos" name="role" />
-          <FieldDescription>Escribe un cargo y pulsa Enter. Hasta {MAX_ROLES}; los podrás cambiar en Ajustes.</FieldDescription>
+          <FieldDescription className="text-xs">{hint ?? `Escribe un cargo y pulsa Enter. Hasta ${MAX_ROLES}; los podrás cambiar en Ajustes.`}</FieldDescription>
           {fe.roleInterests && <FieldError>{fe.roleInterests}</FieldError>}
         </Field>
       </FieldGroup>

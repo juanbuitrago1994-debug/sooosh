@@ -91,3 +91,6 @@ Juan: «un poco más de curvatura esférica pero más fluidez; hacia el final el
 - **Algo más de esfera**: `strength` 0,45 (antes 0,55), `curve` 0,10 (antes 0,07), `widthFactor` 2,4 (antes 3: lente más redonda).
 - **Más parámetros para explorar en `/login?afinar=1`** (17 controles): frenado final (`easePower`), duración del pico (`plateau`), fundido final (`fadeMs`) y resolución al animar (`renderScale`), además de los anteriores.
 - **Defecto de mis pruebas, no del código**: `addInitScript` de Playwright acumula scripts; el que fuerza `durationMs: 60000` seguía activo en las corridas siguientes. Se resetea registrando `window.__LENS_OVERRIDE = {}`.
+
+## Ronda 5 (27-nov-2026): dirección horizontal
+Juan pidió probar el efecto con la carga en horizontal. Nuevo parámetro `axis` (0 = la lente baja; 1 = va de izquierda a derecha, por defecto) y uniforme `uAxis`: el shader calcula todo en un espacio girado (`toS`/`toReal`), así la lente, la franja de aparición, la estela y el prisma siguen el eje elegido y la lente se ensancha en vertical. Medido con fotogramas exactos: la lente cruza de izquierda a derecha y el último fotograma queda idéntico a la página real (contenido x 35–64 %, color 0 %), igual que en vertical. En `/login?afinar=1` el control «Dirección» vuelve al vertical.

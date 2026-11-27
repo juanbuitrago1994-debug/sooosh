@@ -58,6 +58,7 @@ export async function runLens(root: HTMLElement, params: LensParams = DEFAULT_LE
       uRim: { value: params.rim },
       uColor: { value: 0 },
       uCurve: { value: params.curve },
+      uAxis: { value: params.axis },
     },
   })
   const mesh = new Mesh(gl, { geometry: new Triangle(gl), program })

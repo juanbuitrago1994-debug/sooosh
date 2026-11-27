@@ -31,6 +31,8 @@ export type LensParams = {
   renderScale: number
   /** cuánto se sostiene el pico del efecto: 1 = un instante; 1,8 = se mantiene más tiempo fuerte (siempre con subida y bajada suaves) */
   plateau: number
+  /** dirección: 0 = la lente baja (vertical); 1 = va de izquierda a derecha (horizontal). `startY`/`endY` miden el avance en ese eje */
+  axis: number
   /** duración del fundido final entre la imagen del efecto y la página real, en milisegundos */
   fadeMs: number
   /** suavidad con la que aparecen los elementos al pasar la lente */
@@ -57,6 +59,7 @@ export const DEFAULT_LENS: LensParams = {
   curve: 0.1,
   renderScale: 0.75,
   plateau: 1.3,
+  axis: 1,
   fadeMs: 500,
   band: 0.2,
   startY: 1.0,
@@ -80,6 +83,7 @@ export const LENS_RANGES: Record<Exclude<keyof LensParams, "startY" | "endY" | "
   curve: [0, 0.6, 0.01, "Curvatura global"],
   renderScale: [0.3, 1, 0.05, "Resolución al animar"],
   plateau: [1, 1.8, 0.05, "Duración del pico"],
+  axis: [0, 1, 1, "Dirección (0 vertical · 1 horizontal)"],
   fadeMs: [100, 1000, 25, "Fundido final (ms)"],
   band: [0.02, 0.5, 0.01, "Suavidad de aparición"],
 }

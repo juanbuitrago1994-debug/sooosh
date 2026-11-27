@@ -11,8 +11,8 @@ import { RememberSwitch } from "@/components/auth/remember-switch"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { OnboardingForm } from "@/components/auth/onboarding-form"
 import { buttonVariants } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { COUNTRY_CODES, countryName } from "@/lib/auth/profile-schema"
+import { SettingsSection, SettingsSections } from "@/components/settings/settings-section"
+import { COUNTRY_CODES, MAX_ROLES, countryName } from "@/lib/auth/profile-schema"
 import { requireProfile } from "@/lib/auth/session"
 import { getDb } from "@/lib/db"
 import { trustedDevices } from "@/lib/db/schema"
@@ -31,40 +31,23 @@ async function Settings() {
   const devices = rows.map((r) => ({ ...r, lastSeenAt: new Date(/[zZ]|[+-]\d\d(:?\d\d)?$/.test(r.lastSeenAt) ? r.lastSeenAt : `${r.lastSeenAt}Z`).toISOString(), current: r.id === user.deviceId }))
 
   return (
-    <>
-      <section className="flex flex-col gap-6" aria-labelledby="perfil">
-        <div className="flex flex-col gap-1">
-          <h2 id="perfil" className="text-sm font-medium">Tu perfil</h2>
-          <p className="text-xs text-muted-foreground">Lo que nos contaste al registrarte. Cámbialo cuando quieras.</p>
+    <SettingsSections>
+      <SettingsSection id="perfil" title="Tu perfil" description="Lo que nos contaste al registrarte. Cámbialo cuando quieras.">
+        <div className="flex max-w-md flex-col gap-6">
+          <OnboardingForm key={JSON.stringify(profile)} action={updateProfile} defaultName={profile.name} defaultCountry={profile.country} defaultRoles={profile.roleInterests} countries={countries} submitLabel="Guardar cambios" hint={`Escribe un cargo y pulsa Enter. Hasta ${MAX_ROLES}.`} />
         </div>
-        <OnboardingForm key={JSON.stringify(profile)} action={updateProfile} defaultName={profile.name} defaultCountry={profile.country} defaultRoles={profile.roleInterests} countries={countries} submitLabel="Guardar cambios" />
-      </section>
-      <Separator />
-      <section className="flex flex-col gap-6" aria-labelledby="cuenta">
-        <div className="flex flex-col gap-1">
-          <h2 id="cuenta" className="text-sm font-medium">Cuenta</h2>
-          <p className="text-xs text-muted-foreground">Entras con Google como {user.email}.</p>
-        </div>
+      </SettingsSection>
+      <SettingsSection id="cuenta" title="Cuenta" description={`Entras con Google como ${user.email}.`}>
         <LogoutButton />
-      </section>
-      <Separator />
-      <section className="flex flex-col gap-6" aria-labelledby="dispositivos">
-        <div className="flex flex-col gap-1">
-          <h2 id="dispositivos" className="text-sm font-medium">Dispositivos con sesión</h2>
-          <p className="text-xs text-muted-foreground">En un dispositivo nuevo siempre se pide entrar. Cierra aquí los que ya no uses.</p>
-        </div>
+      </SettingsSection>
+      <SettingsSection id="dispositivos" title="Dispositivos con sesión" description="En un dispositivo nuevo siempre se pide entrar. Cierra aquí los que ya no uses.">
         <RememberSwitch initial={user.remember} />
         <DevicesList devices={devices} />
-      </section>
-      <Separator />
-      <section className="flex flex-col gap-6" aria-labelledby="datos">
-        <div className="flex flex-col gap-1">
-          <h2 id="datos" className="text-sm font-medium">Tus datos</h2>
-          <p className="text-xs text-muted-foreground">Llévate todo lo que guardamos de ti en un archivo, o elimina tu cuenta con todos sus datos.</p>
-        </div>
+      </SettingsSection>
+      <SettingsSection id="datos" title="Tus datos" description="Llévate todo lo que guardamos de ti en un archivo, o elimina tu cuenta con todos sus datos.">
         <DataControls />
-      </section>
-    </>
+      </SettingsSection>
+    </SettingsSections>
   )
 }
 
@@ -77,7 +60,7 @@ export default function AjustesPage() {
         </Link>
         <h1 className="px-1 text-sm font-medium">Ajustes</h1>
       </header>
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pt-4 pb-12 sm:px-6">
+      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-2 pb-12 sm:px-6">
         <Suspense fallback={<ListSkeleton />}>
           <Settings />
         </Suspense>
