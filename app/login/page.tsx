@@ -23,7 +23,9 @@ export default function LoginPage(props: PageProps<"/login">) {
         </Suspense>
       </div>
       <Rise step={9}>
-        <footer className="px-4 pt-2 pb-6 text-center text-xs text-muted-foreground">Tu CV validado se guarda en tu cuenta y solo tú puedes verlo. El archivo original no se guarda.</footer>
+        <footer className="flex items-center justify-center px-4 py-8">
+          <p className="max-w-sm text-center text-xs text-balance text-muted-foreground">Tu CV validado se guarda en tu cuenta y solo tú puedes verlo. El archivo original no se guarda.</p>
+        </footer>
       </Rise>
     </main>
   )
