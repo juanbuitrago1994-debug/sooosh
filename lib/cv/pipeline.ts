@@ -52,7 +52,8 @@ export function heuristicIdentity(header: string): { fullName?: string; headline
   const fullName = nameIdx >= 0 ? lines[nameIdx] : undefined
   const next = nameIdx >= 0 ? lines[nameIdx + 1] : undefined
   const isPlace = (l: string) => /^[\p{L} .'’-]+,\s*[\p{L} .'’-]+$/u.test(l)
-  const headline = next && !isContactLine(next) && !isPlace(next) && next.length <= 90 ? next : undefined
+  // El titular puede ser largo («Semi Senior Product Designer | Estrategia de Producto | Design Systems | UX Research | Figma», 92 caracteres); un párrafo (termina en punto) no lo es.
+  const headline = next && !isContactLine(next) && !isPlace(next) && next.length <= 160 && !/[.:;]$/.test(next) ? next : undefined
   let location: string | undefined
   for (const l of lines) {
     for (const seg of l.split(/[|·•]/).map((s) => s.trim())) {

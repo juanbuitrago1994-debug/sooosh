@@ -118,6 +118,9 @@ describe("Word en párrafos y datos sueltos", () => {
   })
   it("una ubicación bajo el nombre no es el titular", () => {
     expect(heuristicIdentity("Camila Ortega\nMedellín, Colombia\nContadora")).toMatchObject({ fullName: "Camila Ortega", headline: undefined, location: "Medellín, Colombia" })
+    // Un titular largo con barras (92 caracteres) también es titular; un párrafo que termina en punto no.
+    expect(heuristicIdentity("Juan Buitrago\n\nSemi Senior Product Designer | Estrategia de Producto | Design Systems | UX Research | Figma\n\nBogotá, Colombia | +57 319 220 0959 | juan@mail.com").headline).toBe("Semi Senior Product Designer | Estrategia de Producto | Design Systems | UX Research | Figma")
+    expect(heuristicIdentity("Ana Pérez\nDiseñadora con nueve años de experiencia creando productos digitales para banca y salud en toda la región latinoamericana.\nana@mail.com").headline).toBeUndefined()
   })
   it("quita el dígito suelto de un ícono al final del teléfono", () => {
     expect(extractContact("x", "Teléfono +57 300123 4567 7").phone).toBe("+57 300123 4567")
