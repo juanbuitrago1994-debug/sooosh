@@ -9,10 +9,10 @@ import { DataControls } from "@/components/auth/data-controls"
 import { DevicesList } from "@/components/auth/devices-list"
 import { RememberSwitch } from "@/components/auth/remember-switch"
 import { LogoutButton } from "@/components/auth/logout-button"
-import { OnboardingForm } from "@/components/auth/onboarding-form"
 import { buttonVariants } from "@/components/ui/button"
-import { SettingsSection, SettingsSections } from "@/components/settings/settings-section"
-import { COUNTRY_CODES, MAX_ROLES, countryName } from "@/lib/auth/profile-schema"
+import { ProfileSettings } from "@/components/settings/profile-settings"
+import { SettingsSection } from "@/components/settings/settings-section"
+import { COUNTRY_CODES, countryName } from "@/lib/auth/profile-schema"
 import { requireProfile } from "@/lib/auth/session"
 import { getDb } from "@/lib/db"
 import { trustedDevices } from "@/lib/db/schema"
@@ -31,12 +31,7 @@ async function Settings() {
   const devices = rows.map((r) => ({ ...r, lastSeenAt: new Date(/[zZ]|[+-]\d\d(:?\d\d)?$/.test(r.lastSeenAt) ? r.lastSeenAt : `${r.lastSeenAt}Z`).toISOString(), current: r.id === user.deviceId }))
 
   return (
-    <SettingsSections>
-      <SettingsSection id="perfil" title="Tu perfil" description="Lo que nos contaste al registrarte. Cámbialo cuando quieras.">
-        <div className="flex max-w-md flex-col gap-6">
-          <OnboardingForm key={JSON.stringify(profile)} action={updateProfile} defaultName={profile.name} defaultCountry={profile.country} defaultRoles={profile.roleInterests} countries={countries} submitLabel="Guardar cambios" hint={`Escribe un cargo y pulsa Enter. Hasta ${MAX_ROLES}.`} />
-        </div>
-      </SettingsSection>
+    <ProfileSettings key={JSON.stringify(profile)} form={{ action: updateProfile, defaultName: profile.name, defaultCountry: profile.country, defaultRoles: profile.roleInterests, countries }}>
       <SettingsSection id="cuenta" title="Cuenta" description={`Entras con Google como ${user.email}.`}>
         <LogoutButton />
       </SettingsSection>
@@ -47,7 +42,7 @@ async function Settings() {
       <SettingsSection id="datos" title="Tus datos" description="Llévate todo lo que guardamos de ti en un archivo, o elimina tu cuenta con todos sus datos.">
         <DataControls />
       </SettingsSection>
-    </SettingsSections>
+    </ProfileSettings>
   )
 }
 
@@ -60,7 +55,7 @@ export default function AjustesPage() {
         </Link>
         <h1 className="px-1 text-sm font-medium">Ajustes</h1>
       </header>
-      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-2 pb-12 sm:px-6">
+      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-4 pb-12 sm:px-6">
         <Suspense fallback={<ListSkeleton />}>
           <Settings />
         </Suspense>

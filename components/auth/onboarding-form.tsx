@@ -15,16 +15,24 @@ import { MAX_ROLES } from "@/lib/auth/profile-schema"
 export type CountryOption = { code: string; name: string }
 
 /** Registro de una cuenta nueva: nombre, país de residencia y cargos que le interesan. Los mismos datos se editan en Ajustes (mismo formulario). */
-export function OnboardingForm({ action: submit, defaultName, defaultCountry = "", defaultRoles = [], countries, submitLabel = "Continuar", hint }: { action: (prev: ProfileFormState, form: FormData) => Promise<ProfileFormState>; defaultName: string; defaultCountry?: string; defaultRoles?: string[]; countries: CountryOption[]; submitLabel?: string; /** texto de ayuda de los cargos; por defecto el del registro */ hint?: string }) {
-  const [state, action, pending] = useActionState<ProfileFormState, FormData>(submit, {})
+export function OnboardingForm({ action: submit, defaultName, defaultCountry = "", defaultRoles = [], countries, submitLabel = "Continuar", hint, formId, hideSubmit = false, onStatus }: { action: (prev: ProfileFormState, form: FormData) => Promise<ProfileFormState>; defaultName: string; defaultCountry?: string; defaultRoles?: string[]; countries: CountryOption[]; submitLabel?: string; /** texto de ayuda de los cargos; por defecto el del registro */ hint?: string; /** id del formulario, para que botones de fuera lo envíen con `form="…"` */ formId?: string; /** oculta el botón de abajo (los botones viven en otra parte) */ hideSubmit?: boolean; /** avisa de si hay cambios sin guardar y si se está guardando */ onStatus?: (s: { dirty: boolean; pending: boolean }) => void }) {
+  const [dirty, setDirty] = useState(false)
+  const [state, action, pending] = useActionState<ProfileFormState, FormData>(async (prev, form) => {
+    const next = await submit(prev, form)
+    if (next.saved) setDirty(false)
+    return next
+  }, {})
   const [roles, setRoles] = useState<string[]>(defaultRoles)
   useEffect(() => {
     if (state.saved) toast.success("Cambios guardados")
   }, [state])
+  useEffect(() => {
+    onStatus?.({ dirty, pending })
+  }, [dirty, pending, onStatus])
   const fe = state.fieldErrors ?? {}
 
   return (
-    <form action={action} className="flex w-full flex-col gap-6">
+    <form id={formId} action={action} onChange={() => setDirty(true)} className="flex w-full flex-col gap-6">
       <FieldGroup>
         <Field data-invalid={!!fe.name}>
           <FieldLabel htmlFor="name">Nombre</FieldLabel>
@@ -49,7 +57,7 @@ export function OnboardingForm({ action: submit, defaultName, defaultCountry = "
 
         <Field data-invalid={!!fe.roleInterests}>
           <FieldLabel htmlFor="role-draft">Cargos que te interesa buscar</FieldLabel>
-          <ChipsInput id="role-draft" value={roles} onChange={setRoles} max={MAX_ROLES} placeholder="Ej.: Diseñador de producto" addLabel="Añadir cargo" listLabel="Cargos añadidos" name="role" />
+          <ChipsInput id="role-draft" value={roles} onChange={(r) => (setRoles(r), setDirty(true))} max={MAX_ROLES} placeholder="Ej.: Diseñador de producto" addLabel="Añadir cargo" listLabel="Cargos añadidos" name="role" />
           <FieldDescription className="text-xs">{hint ?? `Escribe un cargo y pulsa Enter. Hasta ${MAX_ROLES}; los podrás cambiar en Ajustes.`}</FieldDescription>
           {fe.roleInterests && <FieldError>{fe.roleInterests}</FieldError>}
         </Field>
@@ -60,10 +68,12 @@ export function OnboardingForm({ action: submit, defaultName, defaultCountry = "
           <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       )}
-      <Button type="submit" disabled={pending}>
-        {pending && <Spinner />}
-        {submitLabel}
-      </Button>
+      {!hideSubmit && (
+        <Button type="submit" disabled={pending}>
+          {pending && <Spinner />}
+          {submitLabel}
+        </Button>
+      )}
     </form>
   )
 }
