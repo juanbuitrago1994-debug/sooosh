@@ -4,7 +4,7 @@ import { fold } from "@/lib/keywords/normalize"
  * Sectorización DETERMINISTA del texto de un CV por sus encabezados (es/en). Sin IA: es la base que permite
  * usar el modelo solo en llamadas pequeñas y específicas.
  */
-export type SectionKind = "summary" | "experience" | "education" | "skills" | "languages" | "projects" | "other"
+export type SectionKind = "summary" | "experience" | "education" | "skills" | "languages" | "projects" | "certifications" | "volunteering" | "awards" | "publications" | "other"
 export type Section = { kind: SectionKind; title: string; text: string; order: number }
 
 const HEADINGS: Record<Exclude<SectionKind, "other">, string[]> = {
@@ -14,12 +14,16 @@ const HEADINGS: Record<Exclude<SectionKind, "other">, string[]> = {
   skills: ["habilidades", "skills", "competencias", "conocimientos", "tecnologias", "stack", "stack tecnologico", "herramientas", "technical skills", "habilidades tecnicas", "aptitudes", "tools", "technologies", "core skills"],
   languages: ["idiomas", "lenguas", "languages"],
   projects: ["proyectos", "projects", "proyectos destacados", "personal projects", "proyectos personales", "selected projects"],
+  certifications: ["certificaciones", "certificados", "cursos", "cursos y certificaciones", "certificaciones y cursos", "capacitaciones", "formacion complementaria", "certifications", "courses", "certifications and courses", "licenses and certifications", "licenses & certifications"],
+  volunteering: ["voluntariado", "experiencia de voluntariado", "trabajo voluntario", "volunteering", "volunteer experience", "volunteer work"],
+  awards: ["premios", "reconocimientos", "premios y reconocimientos", "honores", "awards", "honors", "honors and awards", "honors & awards"],
+  publications: ["publicaciones", "publicaciones y charlas", "charlas", "publications", "talks", "publications and talks"],
 }
 
 /** Encabezados conocidos que no son parte del esquema: se detectan para no mezclarlos con la sección anterior. */
 const OTHER_HEADINGS = [
-  "certificaciones", "certificados", "cursos", "cursos y certificaciones", "capacitaciones", "referencias", "intereses", "hobbies", "voluntariado", "publicaciones", "premios", "logros", "datos personales", "informacion adicional", "informacion personal",
-  "certifications", "courses", "references", "interests", "volunteering", "volunteer experience", "publications", "awards", "achievements", "additional information", "personal information",
+  "referencias", "intereses", "hobbies", "logros", "datos personales", "informacion adicional", "informacion personal",
+  "references", "interests", "achievements", "additional information", "personal information",
 ]
 
 const normHeading = (line: string) =>

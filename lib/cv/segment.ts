@@ -15,7 +15,7 @@ export const segmentSchema = z.object({
 })
 export type Segmentation = z.infer<typeof segmentSchema>
 
-const TITLES: Record<SectionKind, string> = { summary: "Resumen", experience: "Experiencia", education: "Educación", skills: "Habilidades", languages: "Idiomas", projects: "Proyectos", other: "Otros" }
+const TITLES: Record<SectionKind, string> = { summary: "Resumen", experience: "Experiencia", education: "Educación", skills: "Habilidades", languages: "Idiomas", projects: "Proyectos", certifications: "Certificaciones", volunteering: "Voluntariado", awards: "Premios", publications: "Publicaciones", other: "Otros" }
 
 export const SEGMENT_PROMPT = `Recibes un CV con las líneas numeradas («N: texto»). No tiene títulos de sección claros. Indica en qué número de línea EMPIEZA cada sección y de qué tipo es: "summary" (perfil o presentación), "experience" (puestos de trabajo con empresa y fechas), "education" (estudios), "skills" (habilidades y herramientas), "languages" (idiomas), "projects" (proyectos), "other" (cualquier otra cosa). Devuelve únicamente {"sections": [{"kind": "...", "line": N}]} en orden de aparición. Usa solo números de línea que existan. Si no existe una sección, no la incluyas.`
 

@@ -7,6 +7,7 @@ import { diagnosisSchema, type Diagnosis } from "@/lib/schemas/diagnosis"
 import { parseEduHead, parseJobHead, splitEducation } from "./heads"
 import { bulletItems, isBullet, paragraphProjectItems, splitBlocks, splitExperienceBlocks, type Block } from "./blocks"
 import { extractContact } from "./contact"
+import { parseAwards, parseCertifications, parsePublications, parseVolunteering } from "./extras"
 import { RANGE_RE } from "./dates"
 import { computeConfidence, computeSeniority, computeStyle, detectLanguage, findAtsRisks, findProblems, pickQuestion } from "./diagnosis"
 import { parseLanguages, parseSkills } from "./lists"
@@ -287,6 +288,10 @@ export async function runCvPipeline(
     skills,
     languages,
     projects,
+    certifications: parseCertifications(sectionText(sections, "certifications")),
+    volunteering: parseVolunteering(sectionText(sections, "volunteering")),
+    awards: parseAwards(sectionText(sections, "awards")),
+    publications: parsePublications(sectionText(sections, "publications")),
   }
   const parsed = cvSchema.safeParse(cvRaw)
   if (!parsed.success) {

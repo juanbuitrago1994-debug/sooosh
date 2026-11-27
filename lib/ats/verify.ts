@@ -66,17 +66,17 @@ const fail = (detail: string, evidence?: string[]): Outcome => ({ status: "fail"
 const na = (detail: string): Outcome => ({ status: "na", detail })
 
 // ---- títulos de sección aceptados (nombres que usan las fuentes; docs/CONOCIMIENTO-ATS.md §4) ----
-type Key = "summary" | "experience" | "education" | "skills" | "languages" | "projects" | "certifications" | "volunteering"
+type Key = "summary" | "experience" | "education" | "skills" | "languages" | "projects" | "certifications" | "volunteering" | "awards" | "publications"
 const SYN: Record<AtsLang, Record<Key, string[]>> = {
-  es: { summary: ["resumen profesional", "resumen", "perfil profesional"], experience: ["experiencia laboral", "experiencia profesional", "experiencia"], education: ["educacion", "formacion academica", "formacion"], skills: ["habilidades", "competencias"], languages: ["idiomas"], projects: ["proyectos"], certifications: ["certificaciones"], volunteering: ["voluntariado"] },
-  en: { summary: ["professional summary", "summary"], experience: ["work experience", "professional experience", "experience"], education: ["education"], skills: ["skills", "core skills"], languages: ["languages"], projects: ["projects"], certifications: ["certifications"], volunteering: ["volunteering", "volunteer experience"] },
+  es: { summary: ["resumen profesional", "resumen", "perfil profesional"], experience: ["experiencia laboral", "experiencia profesional", "experiencia"], education: ["educacion", "formacion academica", "formacion"], skills: ["habilidades", "competencias"], languages: ["idiomas"], projects: ["proyectos"], certifications: ["certificaciones"], volunteering: ["voluntariado"], awards: ["premios y reconocimientos", "premios"], publications: ["publicaciones"] },
+  en: { summary: ["professional summary", "summary"], experience: ["work experience", "professional experience", "experience"], education: ["education"], skills: ["skills", "core skills"], languages: ["languages"], projects: ["projects"], certifications: ["certifications"], volunteering: ["volunteering", "volunteer experience"], awards: ["honors and awards", "awards"], publications: ["publications"] },
 }
 function headingInfo(title: string): { key: Key; lang: AtsLang } | null {
   const t = fold(title).trim()
   for (const lang of ["es", "en"] as const) for (const [key, names] of Object.entries(SYN[lang]) as [Key, string[]][]) if (names.includes(t)) return { key, lang }
   return null
 }
-const RANK: Record<Key, number> = { summary: 0, experience: 1, education: 2, skills: 2, certifications: 2, languages: 3, projects: 3, volunteering: 4 }
+const RANK: Record<Key, number> = { summary: 0, experience: 1, education: 2, skills: 2, certifications: 2, languages: 3, projects: 3, volunteering: 4, awards: 4, publications: 4 }
 
 const BULLET_START = /^[•·▪▫■□◦‣⁃●○◆◇➢➤►▶*\-–—]\s/
 const isBullet = (l: Line) => (l.bullet != null ? true : BULLET_START.test(l.text))

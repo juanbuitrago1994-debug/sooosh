@@ -7,7 +7,7 @@ const level = z.enum(["alta", "media", "baja"])
 export const diagnosisSchema = z.object({
   language: z.enum(["es", "en", "otro"]),
   /** Secciones detectadas, en el orden en que aparecen en el CV. */
-  sections: z.array(z.object({ kind: z.enum(["summary", "experience", "education", "skills", "languages", "projects", "other"]), title: z.string(), order: z.number().int() })),
+  sections: z.array(z.object({ kind: z.enum(["summary", "experience", "education", "skills", "languages", "projects", "certifications", "volunteering", "awards", "publications", "other"]), title: z.string(), order: z.number().int() })),
   style: z.object({
     tone: z.enum(["formal", "neutro", "cercano"]),
     person: z.enum(["primera", "impersonal", "tercera", "mixta"]),

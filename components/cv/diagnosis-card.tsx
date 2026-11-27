@@ -14,7 +14,7 @@ const SENIORITY = { practicante: "Practicante", junior: "Junior", "semi-senior":
 const PERSON = { primera: "primera persona", impersonal: "estilo impersonal", tercera: "tercera persona", mixta: "persona mixta" } as const
 const TENSE = { pasado: "verbos en pasado", presente: "verbos en presente", infinitivo: "verbos en infinitivo", mixto: "tiempos mezclados" } as const
 const BULLETS = { viñetas: "con viñetas", párrafos: "en párrafos", mixto: "con viñetas y párrafos", "sin-viñetas": "sin viñetas" } as const
-const SECTION = { summary: "Resumen", experience: "Experiencia", education: "Educación", skills: "Habilidades", languages: "Idiomas", projects: "Proyectos", other: "Otros" } as const
+const SECTION = { summary: "Resumen", experience: "Experiencia", education: "Educación", skills: "Habilidades", languages: "Idiomas", projects: "Proyectos", certifications: "Certificaciones", volunteering: "Voluntariado", awards: "Premios", publications: "Publicaciones", other: "Otros" } as const
 
 /** Frase corta que resume el estilo del CV (lo que importa para reescribirlo sin cambiarle la voz). */
 export function styleSentence(d: Diagnosis): string {

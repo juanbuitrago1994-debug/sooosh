@@ -22,6 +22,10 @@ export function toDocModel(cv: CV, lang: PdfLang = "es"): DocModel {
     skills: cv.skills.map((g) => ({ kind: "para" as const, text: `${g.category?.trim() ? `${g.category.trim()}: ` : ""}${clean(g.items).join(", ")}` })).filter((b) => b.text.trim()),
     languages: cv.languages.length ? [{ kind: "para", text: cv.languages.map((l) => clean([l.name, l.level && `(${l.level.trim()})`]).join(" ")).join(", ") }] : [],
     projects: cv.projects.map((p) => ({ kind: "entry" as const, title: p.name, meta: "", sub: clean([p.url, p.description, p.technologies.length ? clean(p.technologies).join(", ") : undefined]).join(" · "), bullets: clean(p.bullets) })),
+    certifications: cv.certifications.map((c) => ({ kind: "entry" as const, title: c.name, meta: c.date?.trim() ?? "", sub: clean([c.issuer, c.url]).join(" · "), bullets: [] })),
+    volunteering: cv.volunteering.map((v) => ({ kind: "entry" as const, title: v.role?.trim() || v.organization, meta: range(v.startDate, v.endDate), sub: v.role?.trim() ? v.organization : "", bullets: clean(v.bullets) })),
+    awards: cv.awards.map((a) => ({ kind: "entry" as const, title: a.name, meta: a.date?.trim() ?? "", sub: clean([a.issuer, a.description]).join(" · "), bullets: [] })),
+    publications: cv.publications.map((p) => ({ kind: "entry" as const, title: p.title, meta: p.date?.trim() ?? "", sub: clean([p.publisher, p.url]).join(" · "), bullets: [] })),
   }
   const order = [...new Set([...(cv.sectionOrder ?? []), ...SECTION_KEYS])]
   return {

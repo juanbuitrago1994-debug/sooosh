@@ -18,7 +18,7 @@ const fx = (n: string) => readFileSync(path.join(__dirname, "fixtures", n), "utf
 
 describe("sectorización por encabezados", () => {
   it("reconoce encabezados en español e inglés, con tildes, mayúsculas y dos puntos", () => {
-    for (const [l, k] of [["EXPERIENCIA", "experience"], ["Experiencia laboral:", "experience"], ["Educación", "education"], ["WORK EXPERIENCE", "experience"], ["Skills", "skills"], ["Idiomas", "languages"], ["Perfil profesional", "summary"], ["Proyectos", "projects"], ["Certificaciones", "other"]] as const) {
+    for (const [l, k] of [["EXPERIENCIA", "experience"], ["Experiencia laboral:", "experience"], ["Educación", "education"], ["WORK EXPERIENCE", "experience"], ["Skills", "skills"], ["Idiomas", "languages"], ["Perfil profesional", "summary"], ["Proyectos", "projects"], ["Certificaciones", "certifications"], ["VOLUNTARIADO", "volunteering"], ["Honors & Awards", "awards"], ["Publications", "publications"], ["Referencias", "other"]] as const) {
       expect(headingKind(l)?.kind, l).toBe(k)
     }
   })

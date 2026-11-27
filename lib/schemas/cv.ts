@@ -53,7 +53,40 @@ export const projectSchema = z.object({
   bullets: z.array(text(400).min(1)).default([]),
 })
 
-export const SECTION_KEYS = ["summary", "experience", "education", "skills", "languages", "projects"] as const
+/** Certificaciones y cursos: nombre, entidad, fecha y enlace de la credencial. */
+export const certificationSchema = z.object({
+  name: text(200).min(1),
+  issuer: text(160).optional(),
+  date: partialDate.optional(),
+  url: link.optional(),
+})
+
+/** Voluntariado: organización, rol y fechas, con viñetas opcionales. */
+export const volunteeringSchema = z.object({
+  organization: text(160).min(1),
+  role: text(120).optional(),
+  startDate: partialDate.optional(),
+  endDate: partialDate.optional(),
+  bullets: z.array(text(400).min(1)).default([]),
+})
+
+/** Premios y reconocimientos. */
+export const awardSchema = z.object({
+  name: text(200).min(1),
+  issuer: text(160).optional(),
+  date: partialDate.optional(),
+  description: text(400).optional(),
+})
+
+/** Publicaciones y charlas. */
+export const publicationSchema = z.object({
+  title: text(200).min(1),
+  publisher: text(160).optional(),
+  date: partialDate.optional(),
+  url: link.optional(),
+})
+
+export const SECTION_KEYS = ["summary", "experience", "education", "certifications", "skills", "languages", "projects", "volunteering", "awards", "publications"] as const
 export type SectionKey = (typeof SECTION_KEYS)[number]
 
 export const cvSchema = z.object({
@@ -64,6 +97,10 @@ export const cvSchema = z.object({
   skills: z.array(skillGroupSchema).default([]),
   languages: z.array(languageSchema).default([]),
   projects: z.array(projectSchema).default([]),
+  certifications: z.array(certificationSchema).default([]),
+  volunteering: z.array(volunteeringSchema).default([]),
+  awards: z.array(awardSchema).default([]),
+  publications: z.array(publicationSchema).default([]),
   /** Orden en que se muestran las secciones; si falta, el estándar (resumen, experiencia, educación, habilidades, idiomas, proyectos). */
   sectionOrder: z.array(z.enum(SECTION_KEYS)).optional(),
 })
@@ -75,3 +112,7 @@ export type CVEducation = z.infer<typeof educationSchema>
 export type CVSkillGroup = z.infer<typeof skillGroupSchema>
 export type CVLanguage = z.infer<typeof languageSchema>
 export type CVProject = z.infer<typeof projectSchema>
+export type CVCertification = z.infer<typeof certificationSchema>
+export type CVVolunteering = z.infer<typeof volunteeringSchema>
+export type CVAward = z.infer<typeof awardSchema>
+export type CVPublication = z.infer<typeof publicationSchema>

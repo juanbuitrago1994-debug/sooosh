@@ -25,7 +25,7 @@ export const strong: CV = {
   education: [{ institution: "UNI", degree: "Ingeniería de Sistemas", field: "", startDate: "2012", endDate: "2017", details: [] }],
   skills: [{ category: "Datos", items: ["SQL", "Python", "Power BI", "Airflow"] }],
   languages: [{ name: "Inglés", level: "B2" }],
-  projects: [],
+  projects: [], certifications: [], volunteering: [], awards: [], publications: [],
 }
 export const mid: CV = {
   header: { fullName: "Luis Pérez", email: "luis@mail.com", phone: "888", links: [] },
@@ -34,7 +34,7 @@ export const mid: CV = {
   education: [{ institution: "UPC", degree: "Administración", field: "", startDate: "2015", endDate: "2019", details: [] }],
   skills: [{ items: ["Excel", "SQL", "Tableau"] }],
   languages: [],
-  projects: [],
+  projects: [], certifications: [], volunteering: [], awards: [], publications: [],
 }
 export const weak: CV = {
   header: { fullName: "Eva Ruiz", links: [] },
@@ -42,6 +42,6 @@ export const weak: CV = {
   education: [],
   skills: [{ items: ["Word"] }],
   languages: [],
-  projects: [],
+  projects: [], certifications: [], volunteering: [], awards: [], publications: [],
 }
 

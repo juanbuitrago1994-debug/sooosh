@@ -1,4 +1,4 @@
-import { SECTION_KEYS, type CV } from "@/lib/schemas/cv"
+import { SECTION_KEYS, type CV, type SectionKey } from "@/lib/schemas/cv"
 
 /**
  * Plantilla del CV en HTML para el PDF (y para la vista previa).
@@ -9,9 +9,9 @@ import { SECTION_KEYS, type CV } from "@/lib/schemas/cv"
  */
 export type PdfLang = "es" | "en"
 
-export const HEADINGS: Record<PdfLang, Record<"summary" | "experience" | "education" | "skills" | "languages" | "projects", string>> = {
-  es: { summary: "Resumen", experience: "Experiencia", education: "Educación", skills: "Habilidades", languages: "Idiomas", projects: "Proyectos" },
-  en: { summary: "Summary", experience: "Experience", education: "Education", skills: "Skills", languages: "Languages", projects: "Projects" },
+export const HEADINGS: Record<PdfLang, Record<SectionKey, string>> = {
+  es: { summary: "Resumen", experience: "Experiencia", education: "Educación", certifications: "Certificaciones", skills: "Habilidades", languages: "Idiomas", projects: "Proyectos", volunteering: "Voluntariado", awards: "Premios", publications: "Publicaciones" },
+  en: { summary: "Summary", experience: "Experience", education: "Education", certifications: "Certifications", skills: "Skills", languages: "Languages", projects: "Projects", volunteering: "Volunteering", awards: "Awards", publications: "Publications" },
 }
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
@@ -79,6 +79,15 @@ export function renderCvHtml(cv: CV, lang: PdfLang = "es"): string {
       )
       .join(""),
   )
+
+  section(
+    "certifications",
+    h.certifications,
+    cv.certifications.map((c) => entry(c.name, c.date?.trim() ?? "", clean([c.issuer, c.url]).join(" · "), [])).join(""),
+  )
+  section("volunteering", h.volunteering, cv.volunteering.map((v) => entry(v.role?.trim() || v.organization, range(v.startDate, v.endDate), v.role?.trim() ? v.organization : "", clean(v.bullets))).join(""))
+  section("awards", h.awards, cv.awards.map((a) => entry(a.name, a.date?.trim() ?? "", a.issuer?.trim() ?? "", [], a.description?.trim() ? `<p>${esc(a.description.trim())}</p>` : "")).join(""))
+  section("publications", h.publications, cv.publications.map((p) => entry(p.title, p.date?.trim() ?? "", clean([p.publisher, p.url]).join(" · "), [])).join(""))
 
   // Orden de secciones: el elegido por la persona (cv.sectionOrder) y, para lo que falte, el orden estándar.
   const parts = [...new Set([...(cv.sectionOrder ?? []), ...SECTION_KEYS])].map((k) => bodies.get(k) ?? "").filter(Boolean)

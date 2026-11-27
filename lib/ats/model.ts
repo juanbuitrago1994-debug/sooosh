@@ -214,9 +214,18 @@ export function buildAtsDoc(original: CV, opts: { lang?: AtsLang; summary?: stri
     const w = comparable(c).split(" ").filter((x) => x.length > 2 && !/^\d+$/.test(x))
     return w.length > 0 && w.filter((x) => eduText.includes(x)).length / w.length >= 0.8
   }
-  const certs = dedupe(clean((extras?.certifications ?? []).filter((c) => !inEducation(c))).map(dashRanges))
+  const fromCv = cv.certifications.map((c) => clean([c.name, c.issuer, c.date]).join(" — "))
+  const certs = dedupe(clean([...fromCv, ...(extras?.certifications ?? [])].filter((c) => !inEducation(c))).map(dashRanges))
   const volunteering = dedupe(clean(extras?.volunteering ?? []).map(dashRanges))
-  const filled = cv !== original || usedNotes.size > 0 || certs.length > 0 || volunteering.length > 0
+  const volunteeringCv = cv.volunteering.map((v) => ({
+    kind: "entry" as const,
+    head: withDate(clean([v.role, v.organization]).join(" — "), range(v.startDate, v.endDate)),
+    lines: [] as string[],
+    bullets: v.bullets.map(cleanBullet).filter(Boolean),
+  }))
+  const awards = cv.awards.map((a) => clean([a.name, a.issuer, a.date, a.description]).join(" — "))
+  const publications = cv.publications.map((p) => clean([p.title, p.publisher, p.date, p.url]).join(" — "))
+  const filled = cv !== original || usedNotes.size > 0 || (extras?.certifications.length ?? 0) > 0 || (extras?.volunteering.length ?? 0) > 0
   if (filled) warn("extras-used", "Se completó con contenido de tu CV original que el análisis general no había recogido (viñetas, descripciones de empresa, certificaciones, habilidades o voluntariado).")
 
   const bodies: Record<AtsSectionKey, AtsBlock[]> = {
@@ -243,7 +252,9 @@ export function buildAtsDoc(original: CV, opts: { lang?: AtsLang; summary?: stri
       lines: clean([p.description, p.technologies.length ? `${ATS_LABELS[lang].technologies}: ${clean(p.technologies).join(", ")}` : undefined]),
       bullets: p.bullets.map(cleanBullet).filter(Boolean),
     })),
-    volunteering: volunteering.map((v) => ({ kind: "para" as const, text: v })),
+    volunteering: [...volunteeringCv, ...volunteering.map((v) => ({ kind: "para" as const, text: v }))],
+    awards: dedupe(clean(awards)).map((a) => ({ kind: "para" as const, text: a })),
+    publications: dedupe(clean(publications)).map((p) => ({ kind: "para" as const, text: p })),
   }
 
   const headings = ATS_HEADINGS[lang]

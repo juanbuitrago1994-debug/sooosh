@@ -14,7 +14,7 @@ const cv: CV = {
   education: [{ institution: "UNI", degree: "Ingeniería de Sistemas", field: "", startDate: "2012", endDate: "2017", details: [] }],
   skills: [{ category: "Datos", items: ["SQL", "Python", "Power BI", "Airflow"] }],
   languages: [{ name: "Inglés", level: "B2" }],
-  projects: [],
+  projects: [], certifications: [], volunteering: [], awards: [], publications: [],
 }
 
 describe("perfil del CV por secciones (K3)", () => {
@@ -62,7 +62,7 @@ describe("perfil del CV por secciones (K3)", () => {
     expect(p.length.words).toBeGreaterThan(50)
   })
   it("un CV vacío no rompe nada y no inventa", () => {
-    const empty = buildCvProfile({ header: { fullName: "X", links: [] }, experience: [], education: [], skills: [], languages: [], projects: [] }, NOW)
+    const empty = buildCvProfile({ header: { fullName: "X", links: [] }, experience: [], education: [], skills: [], languages: [], projects: [], certifications: [], volunteering: [], awards: [], publications: [] }, NOW)
     expect(cvProfileSchema.safeParse(empty).success).toBe(true)
     expect(empty).toMatchObject({ totalYears: null, chronology: "desconocida", bullets: { total: 0, metricRatio: 0 } })
   })
