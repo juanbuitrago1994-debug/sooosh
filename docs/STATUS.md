@@ -1561,3 +1561,5 @@ Con el servidor de Playwright reconectado con `--browser webkit` (build 2395 des
 
 ### Avisos (Sonner) abajo y sin borde (27-nov-2026, pedido de Juan)
 - `<Toaster position="bottom-center" />` y `--normal-border: transparent` en `components/ui/sonner.tsx` (el resto es el Sonner estándar de shadcn). Para revisar por Juan: guardar cambios en Ajustes o cambiar «Mantener sesión» y mirar el aviso abajo al centro, sin borde.
+
+- Avisos sin ícono: se quitó el `icons` de `components/ui/sonner.tsx` y el contenedor del ícono se oculta (`classNames.icon: "hidden!"`). No verificado en pantalla (sin sesión en el navegador de pruebas).
