@@ -16,7 +16,9 @@ export async function runLens(root: HTMLElement, params: LensParams = DEFAULT_LE
   const width = window.innerWidth
   const height = window.innerHeight
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  // La «foto» se hace a resolución completa (nítida); el lienzo se anima a menos resolución (más fluido) y pasa a la completa cuando el efecto ya casi terminó.
   const { canvas: photo, bg } = await rasterize(root, width, height, dpr)
+  const animDpr = Math.max(0.3, dpr * params.renderScale)
 
   const canvas = document.createElement("canvas")
   canvas.setAttribute("aria-hidden", "true")
@@ -24,8 +26,8 @@ export async function runLens(root: HTMLElement, params: LensParams = DEFAULT_LE
   document.body.appendChild(canvas)
   let renderer: Renderer
   try {
-    // `preserveDrawingBuffer`: solo para poder comprobar en las pruebas que el canvas tiene contenido; en un efecto de 2 s no cuesta nada.
-    renderer = new Renderer({ canvas, dpr, width, height, alpha: false, antialias: false, preserveDrawingBuffer: true })
+    // `preserveDrawingBuffer`: solo en desarrollo, para poder comprobar en las pruebas que el lienzo tiene contenido (en producción cuesta una copia por fotograma).
+    renderer = new Renderer({ canvas, dpr: animDpr, width, height, alpha: false, antialias: false, preserveDrawingBuffer: process.env.NODE_ENV !== "production" })
   } catch (e) {
     canvas.remove()
     throw e
@@ -54,15 +56,25 @@ export async function runLens(root: HTMLElement, params: LensParams = DEFAULT_LE
       uPrism: { value: params.prism },
       uBlur: { value: params.blur },
       uRim: { value: params.rim },
+      uColor: { value: 0 },
+      uCurve: { value: params.curve },
     },
   })
   const mesh = new Mesh(gl, { geometry: new Triangle(gl), program })
 
   let destroyed = false
+  let full = animDpr >= dpr
   const draw = (p: number) => {
     const f = lensFrame(p, params)
     program.uniforms.uCenter.value = [params.x, f.lensY]
     program.uniforms.uBulge.value = f.bulge
+    program.uniforms.uColor.value = f.color
+    // Cuando el efecto ya casi terminó (sin estela ni deformación apreciables) se pasa a resolución completa: así la última imagen es nítida como la página real.
+    if (!full && p > 0.8 && animDpr < dpr) {
+      full = true
+      renderer.dpr = dpr
+      renderer.setSize(width, height)
+    }
     renderer.render({ scene: mesh })
   }
   draw(0)
@@ -70,6 +82,9 @@ export async function runLens(root: HTMLElement, params: LensParams = DEFAULT_LE
   let done!: () => void
   const finished = new Promise<void>((resolve) => (done = resolve))
   const controls = animate(0, 1, { duration: params.durationMs / 1000, ease: "linear", onUpdate: (p) => !destroyed && draw(p) })
+
+  // Solo en desarrollo: permite a las pruebas dibujar el fotograma exacto de un avance `p` (sin depender del ritmo de fotogramas del navegador) y leer sus píxeles.
+  if (process.env.NODE_ENV !== "production") (window as unknown as { __lensRenderAt?: (p: number) => void }).__lensRenderAt = (p) => (controls.pause(), draw(p))
 
   const destroy = () => {
     if (destroyed) return

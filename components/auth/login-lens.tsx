@@ -19,8 +19,12 @@ const subscribeNothing = () => () => {}
 export function LoginLens({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
   const runRef = useRef<Run | null>(null)
-  const paramsRef = useRef<LensParams>({ ...DEFAULT_LENS })
-  const [params, setParams] = useState<LensParams>({ ...DEFAULT_LENS })
+  /** Cada ejecución lleva un número; si mientras espera (módulo, foto, lienzo) llega otra o se desmonta, la vieja se destruye en vez de quedar huérfana (React en desarrollo ejecuta los efectos dos veces). */
+  const genRef = useRef(0)
+  // En desarrollo, `window.__LENS_OVERRIDE` permite probar valores desde un script de pruebas sin tocar el código (no existe en producción).
+  const initial = (): LensParams => ({ ...DEFAULT_LENS, ...(process.env.NODE_ENV !== "production" ? (window as unknown as { __LENS_OVERRIDE?: Partial<LensParams> }).__LENS_OVERRIDE : undefined) })
+  const paramsRef = useRef<LensParams>(DEFAULT_LENS)
+  const [params, setParams] = useState<LensParams>(DEFAULT_LENS)
   const tuning = useSyncExternalStore(subscribeNothing, tunerFlag, () => false)
   const reduce = useReducedMotion()
 
@@ -29,8 +33,10 @@ export function LoginLens({ children }: { children: ReactNode }) {
     const el = ref.current
     if (!el) return
     runRef.current?.destroy()
+    const gen = ++genRef.current
     const { runLens } = await import("@/lib/lens/run")
     const run = await runLens(el, paramsRef.current)
+    if (genRef.current !== gen) return run.destroy() // se canceló mientras se preparaba
     runRef.current = run
     await run.finished
     if (runRef.current !== run) return
@@ -44,6 +50,9 @@ export function LoginLens({ children }: { children: ReactNode }) {
   useEffect(() => {
     const el = ref.current
     if (!el) return
+    const start = initial()
+    paramsRef.current = start
+    queueMicrotask(() => setParams(start))
     let alive = true
     const reveal = (seconds: number) => void animate(el, { opacity: 1 }, { duration: seconds, ease: "easeOut" })
     // Seguro: pase lo que pase, la página nunca queda invisible.
@@ -67,6 +76,7 @@ export function LoginLens({ children }: { children: ReactNode }) {
 
     return () => {
       alive = false
+      genRef.current++
       clearTimeout(safety)
       window.removeEventListener("pointerdown", skip)
       window.removeEventListener("keydown", skip)

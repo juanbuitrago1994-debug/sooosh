@@ -35,13 +35,27 @@ describe("línea de tiempo del efecto lupa", () => {
     expect(easeInOutPower(0.2, 3)).toBeLessThan(easeInOutPower(0.2, 1.5)) // más potencia = arranque más lento y más ímpetu después
     expect(Math.abs(lensFrame(0.401).lensY - lensFrame(0.4).lensY)).toBeLessThan(0.01)
   })
-  it("los valores por defecto son rápidos (≤ 1,6 s), más fuertes que la primera versión (fuerza < 0,5) y con color y estela", () => {
-    expect(LENS.durationMs).toBeLessThanOrEqual(1600)
-    expect(LENS.strength).toBeLessThan(0.5)
+  it("los valores por defecto son ágiles (≤ 1 s), con color y estela presentes pero ligeros, y con curvatura global suave", () => {
+    expect(LENS.durationMs).toBeLessThanOrEqual(1000)
     expect(LENS.dispersion).toBeGreaterThan(0)
+    expect(LENS.dispersion).toBeLessThanOrEqual(0.25) // «muy ligera»
     expect(LENS.prism).toBeGreaterThan(0)
+    expect(LENS.prism).toBeLessThanOrEqual(0.02)
+    expect(LENS.colorPeak).toBeLessThan(0.5) // el color vive en la primera mitad
     expect(LENS.blur).toBeGreaterThan(0)
     expect(LENS.widthFactor).toBeGreaterThan(1)
+    expect(LENS.curve).toBeGreaterThan(0)
+    expect(LENS.curve).toBeLessThanOrEqual(0.2) // «la curvatura es muy grande» → suave
+    expect(LENS.renderScale).toBeLessThan(1)
+  })
+  it("el color es breve: llega al máximo al comienzo, se apaga mucho antes que la deformación y es cero al terminar", () => {
+    expect(lensFrame(LENS.colorPeak).color).toBeCloseTo(1, 5)
+    expect(lensFrame(0).color).toBeLessThan(0.3) // se insinúa desde el principio, sin saltar
+    for (const p of [0.55, 0.7, 0.85, 1]) expect(lensFrame(p).color, `p=${p}`).toBeLessThan(0.02)
+    // mientras el color ya es invisible, la lupa sigue deformando
+    expect(lensFrame(0.6).bulge).toBeGreaterThan(0.5)
+    // y el color nunca dura más que la deformación: en el tramo final solo queda lupa
+    expect(lensFrame(0.7).color).toBeLessThan(lensFrame(0.7).bulge)
   })
   it("cada parámetro del panel de ajuste tiene un rango que contiene su valor por defecto", () => {
     for (const [k, [min, max]] of Object.entries(LENS_RANGES)) {
