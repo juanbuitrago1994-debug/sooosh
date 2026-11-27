@@ -45,8 +45,9 @@ export function LoginCard({ error, last }: { error?: string; last?: LastUser | n
 
       {last && (
         <Rise step={4} className="flex items-center gap-3 rounded-2xl border px-3 py-2.5">
-          <Avatar>
-            <AvatarFallback>{initialsOf(last.name)}</AvatarFallback>
+          {/* Semiredondo, del mismo tamaño y forma que el botón de perfil de la barra superior (nunca un círculo). */}
+          <Avatar className="size-9 rounded-lg after:rounded-lg">
+            <AvatarFallback className="rounded-lg text-xs font-medium text-foreground">{initialsOf(last.name)}</AvatarFallback>
           </Avatar>
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="truncate text-sm font-medium">{last.name}</span>
