@@ -181,7 +181,7 @@ Leída una sola vez y sintetizada aquí. Es una pantalla de «resultado de anál
 - Botones `h-9`, radio completo, una sola acción primaria por pantalla, y solo cuando hay algo que confirmar.
 - Entrada: toda la página es zona de soltar; al arrastrar, el degradado se intensifica (opacity) en vez de dibujar un recuadro.
 
-**Prohibido en v2**: `Card` fuera de la lista de `GlassPanel`, `border-dashed`, `font-serif`/`font-heading` serif, tamaños sobre `text-xl`, pesos 600+, cajas alrededor de títulos, sombras.
+**Prohibido en v2** (con UNA excepción: la zona punteada de cancelar de la pantalla inicial, abajo, solo mientras se arrastra un archivo; pedida por Juan el 27-nov-2026: si se suelta el archivo ahí, no se sube nada y se vuelve al inicio): `Card` fuera de la lista de `GlassPanel`, `border-dashed`, `font-serif`/`font-heading` serif, tamaños sobre `text-xl`, pesos 600+, cajas alrededor de títulos, sombras.
 
 **Vista previa de documento (K7)**: la hoja del CV en el paso Exportar se muestra con un marco muy tenue (`border-border/40`, radio `rounded-xl`, sin sombra). No cuenta como contenedor de interfaz: es el propio documento. Decisión a revisar por Juan.
 

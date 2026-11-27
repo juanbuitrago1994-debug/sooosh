@@ -2,6 +2,32 @@
 
 Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: avanzar A–E en orden sin detenerse entre fases, documentar cada una aquí, y **hacer él la revisión visual y de accesibilidad directamente en la app** (yo verifico con lint, tsc, build y tests).
 
+## Aura de luz en la pantalla inicial al arrastrar un CV (27-nov-2026)
+
+Historia: se probó un haz (`FlowBeam`), ondas dibujadas con fórmulas (lineales, con física, con cristal), un barrido de lupa y agua simulada; Juan los descartó uno tras otro. Diagnóstico de fondo: una ola o una lupa se ven por lo que DEFORMAN, y esta pantalla es un fondo oscuro y liso con casi nada que deformar (con la simulación de agua solo se veía un anillo gris y un hueco negro). Juan eligió la opción de LUZ en vez de distorsión: un aura «tipo Siri o Apple Intelligence». Todo lo descartado se eliminó por completo.
+
+**Hecho**
+- `AuraField` (`components/magic/aura-field.tsx`) + `lib/aura/aura.ts` + `lib/aura/aura-shader.ts` + `lib/aura/color.ts`: en el instante en que se detecta el archivo (o empieza la subida y lectura), un lienzo WebGL TRANSPARENTE a pantalla completa lanza un GOLPE de luz desde el centro: el halo se hincha y se enciende con fuerza y sale una onda de luz ancha del centro a los bordes frenándose; después se calma (decae de forma exponencial) y sigue en bucle un halo que respira (radio y brillo) y un pulso de luz suave cada ~3,8 s (mucho más débil que el golpe).
+- Es luz fluida y orgánica: un ruido que fluye deforma el contorno del halo y mezcla el color; la paleta cíclica de 5 tonos gira alrededor del halo con lóbulos que se desplazan. El centro del halo se atenúa (`hole`) para que el mensaje se lea. Solo SUMA luz (alfa premultiplicado): no deforma, no desenfoca y no necesita «foto» (se quitó la dependencia de `rasterize` para este efecto).
+- Colores: solo los tokens documentados `flow-*` (pizarra, azul, hielo, cielo, gris), convertidos de OKLCH a RGB para el shader (`oklchToRgb`). **Una paleta más cálida o multicolor como la de Siri real (violeta, rosa, naranja, cian) exigiría tokens nuevos que Juan debe aprobar**; el cambio sería una línea en `AURA_PALETTE`.
+- Para que el golpe se vea completo: el módulo se precarga al montar, el lienzo entra en 120 ms (`fadeInMs`) y el reloj arranca en el primer cuadro dibujado. Se pausa con la pestaña oculta y el lienzo se destruye al terminar; con «reducir movimiento» o sin WebGL no hay aura.
+- Parámetros en `AURA` (`lib/aura/aura.ts`): halo (`radius`, `width`, `hole`, `intensity`, `warp`, `scale`, `flow`), respiración (`breathHz`, `breathRadius`, `breathLight`), golpe (`hit`, `hitDecayS`, `swell`, `shockS`, `shockPower`, `shockWidth`), pulsos (`pulseStartS`, `pulseEveryS`, `pulseAmp`), `reach`, fundidos y `renderScale`.
+- Pantalla inicial (`entry-screen.tsx`): sin haz ni desenfoque; el mensaje de reposo se desvanece (solo opacidad) y el del momento cambia de frase con motion (`SwapText`, `blur={false}`) con el aura detrás. Textos en `lib/profile/cv-drop.ts` (`ENTRY_IDLE`, `entryDropCopy`). La página no es clicable (solo se arrastra), con UNA excepción pedida por Juan el 27-nov-2026: mientras no hay nada subido, el cuadro del ícono es un BOTÓN que abre el selector de archivos (`open` de `useCvDropzone`; `DropMessage` con `onPick`). Mensaje: título de UNA línea (`truncate`, ≤ 38 caracteres) y descripción de DOS (`line-clamp-2`, alto de dos líneas reservado, ≤ 95 caracteres), igual en reposo y al arrastrar; los formatos «PDF, Word o imagen» van en una insignia redonda (también en el panel «Mi CV», que comparte `DropMessage`).
+- El LOGIN no se tocó (una prueba lo vigila) y el panel «Mi CV» conserva su haz y sus textos (`dropCopy`). `CLAUDE.md` actualizado.
+
+**Zona de cancelar (27-nov-2026)**: mientras se arrastra un archivo, abajo aparece una zona punteada («¿Te equivocaste de archivo?»). Si se suelta ahí, NO se sube nada, aparece un aviso («Cancelaste la carga: no se subió nada.») y se vuelve a la pantalla de inicio; al pasar el archivo por encima la zona se resalta y el mensaje central cambia a «Cancelar la carga» (`entryDropCopy(info, overCancel)`). Implementación: `useCvDropzone` (`overCancel`, `cancelZoneProps`, `onCancelDrop`; `onDropAccepted`/`onDropRejected` ignoran el archivo si la bandera está activa). Única excepción a «sin dashed» de la UI v2 (documentada en `DESIGN-PATTERNS.md`).
+
+**Verificado**: lint 0 errores, tsc y build ok, 1097 tests en verde (`tests/aura.test.ts`: conversión de color, paleta solo de tokens, golpe fuerte y exponencial, pulsos en bucle más débiles, centro atenuado, solo suma luz, fundido rápido, reducir movimiento, login intacto, sin restos). En Safari/WebKit (página en blanco, lectura numérica, sin capturas) el shader compila y, renderizado: en el golpe el centro queda casi vacío (alfa 17/255, el texto se lee), el halo llega a pleno brillo y las esquinas quedan transparentes; en calma el halo baja a alfa ≈ 150/255 (luego se bajó `intensity` de 0,5 a 0,42). **No verificado**: el aspecto visual (no tomo capturas) ni el rendimiento en la GPU de Juan.
+
+**Para revisar por Juan** (Safari, escritorio; sin CV cargado)
+1. Arrastra un PDF encima (sin soltar): en cuanto entra, un golpe de luz desde el centro (halo hinchado y brillante + una onda de luz hacia los bordes) y después un halo que respira con pulsos suaves; el mensaje cambia de frase con motion encima.
+2. Suelta: el aura calmada sigue durante la lectura; al terminar, funde y desaparece.
+3. Ajustes a ojo: más punch → `hit`, `swell`; más o menos luz en calma → `intensity`; halo más ancho o grande → `width`, `radius`; más orgánico → `warp`; más rápido el flujo de color → `flow`; pulsos más o menos seguidos → `pulseEveryS`; texto poco legible → `hole` más alto.
+4. Si quieres colores más Siri (violeta, rosa, naranja, cian), dime y propongo los tokens para aprobarlos.
+5. Login: debe verse igual que antes.
+
+---
+
 ## «Your resume»: perfil profesional editable (27-nov-2026)
 
 Investigación y decisiones: `docs/INVESTIGACION-YOUR-RESUME.md`.
@@ -13,11 +39,13 @@ Investigación y decisiones: `docs/INVESTIGACION-YOUR-RESUME.md`.
 - Vista `/cv` «Your resume» (menú de la cuenta): título a la izquierda y campos a la derecha con divisor por sección (mismo patrón de Ajustes). Reutiliza `form-parts.tsx` y los campos extraídos a `components/cv/section-fields.tsx` (también los usa `CvForm`). Las 4 opcionales se agregan con «Agregar sección» y se quitan con «Quitar sección».
 - Botón «Llenar con tu CV»: completa SOLO lo vacío (`lib/cv/merge.ts`, nunca pisa lo escrito). Si hay un CV leído y no validado en este navegador lo usa directo; si no, pide un archivo y lo lee con el pipeline de siempre.
 - «Guardar cambios» deja el perfil como CV validado (`saveProfileCv`); `CvSync` lo sube a la cuenta. Un perfil sin archivo recibe un `fileId` propio estable para que cada guardado actualice la misma fila.
-- Validación del CV: botón «Salir» arriba a la derecha de la mitad izquierda; lleva a `/ofertas` y conserva lo avanzado.
+- Validación del CV: botón «Salir» junto a «Omitir», abajo de la mitad izquierda; lleva a la pantalla de inicio con el CV adjunto (el logo «Sooosh» hace lo mismo) sin descartar nada; desde ahí «Validar mis datos» retoma la validación.
 
 **Verificado**: lint 0 errores (8 avisos previos), tsc limpio, `pnpm build` ok (ruta `/cv`), 1058 tests en verde (nuevos: `cv-extras`, `cv-merge`, `your-resume`; actualizado `cv-parts` y `alerts`: la campana trae 30).
 
 **Titulares (27-nov-2026)**: el titular se reparte en título profesional (`headline`) y titulares (`taglines`), con su campo en «Your resume»; detalle en `docs/CONOCIMIENTO-ATS.md` §13. Incidente y guarda del caché en `docs/INCIDENTES.md` (`tests/logic-version.test.ts`).
+
+**Aviso antes de llenar y tarjeta de avance (27-nov-2026)**: «Llenar con tu CV» ya no aplica directo: un modal (`FillConfirmDialog`) lista lo que se completará y lo que se conserva (`describeFill`); nada se borra ni se reemplaza. La tarjeta `ResumeProgress` (esquina inferior derecha, `GlassPanel`, lista (7) de CLAUDE.md) mide campo por campo, de arriba hacia abajo (`lib/cv/completeness.ts`: nombre, título, titulares, correo, teléfono, ubicación, enlaces, resumen; y por puesto/estudio sus datos clave; proyectos y secciones opcionales no cuentan), muestra la barra y el botón «Ir a: …» lleva con desplazamiento suave al siguiente pendiente y enfoca el campo.
 
 **Límites**: no hay reordenar secciones en la vista (el orden estándar manda; `sectionOrder` existe en el esquema); las 4 secciones nuevas no tienen paso propio en la validación guiada (se revisan en «Your resume»); el lector las parte con reglas, no con IA, así que una línea rara puede quedar entera en «nombre».
 
@@ -26,7 +54,7 @@ Investigación y decisiones: `docs/INVESTIGACION-YOUR-RESUME.md`.
 2. «Llenar con tu CV»: con un CV leído pero sin validar se llena al instante; sin CV pide un archivo. Revisa que no pise lo ya escrito.
 3. «Agregar sección» → Certificaciones/Voluntariado/Premios/Publicaciones; «Quitar sección».
 4. «Guardar cambios» y recarga: debe quedar guardado; entra desde otro dispositivo y debe aparecer.
-5. Valida un CV: mira el nuevo «Salir» y a dónde lleva (¿`/ofertas` es la vista inicial que querías?).
+5. Valida un CV: pulsa «Salir» o el logo → debe verse «Tu CV está adjunto» con «Validar mis datos».
 
 ---
 
