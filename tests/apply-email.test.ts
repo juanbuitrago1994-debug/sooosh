@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { DEFAULT_CONTACT, buildBody, buildSubject, personName, pickMatches, platformLabel, webLinks } from "@/lib/apply/email"
 import type { CV } from "@/lib/schemas/cv"
 
-const cv = (header: Partial<CV["header"]> = {}): CV => ({ header: { fullName: "Ana Pérez", links: [], ...header }, experience: [], education: [], skills: [], languages: [], projects: [], certifications: [], volunteering: [], awards: [], publications: [] }) as CV
+const cv = (header: Partial<CV["header"]> = {}): CV => ({ header: { fullName: "Ana Pérez", links: [], taglines: [], ...header }, experience: [], education: [], skills: [], languages: [], projects: [], certifications: [], volunteering: [], awards: [], publications: [] }) as CV
 const job = { title: "Diseñador/a UX/UI", company: "Vos Consultora" }
 
 describe("asunto", () => {

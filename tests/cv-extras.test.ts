@@ -38,7 +38,7 @@ describe("secciones extra del CV (sin IA)", () => {
     expect(cvSchema.safeParse(r.cv).success).toBe(true)
   })
   it("un CV guardado antes (sin las secciones nuevas) sigue siendo válido", () => {
-    const old = { header: { fullName: "Ana", links: [] }, experience: [], education: [], skills: [], languages: [], projects: [] }
+    const old = { header: { fullName: "Ana", links: [], taglines: [] }, experience: [], education: [], skills: [], languages: [], projects: [] }
     const p = cvSchema.parse(old)
     expect(p.certifications).toEqual([])
     expect(p.awards).toEqual([])
@@ -53,7 +53,7 @@ import { emptyCv } from "@/lib/cv/merge"
 describe("las secciones nuevas llegan a los documentos", () => {
   const cv = {
     ...emptyCv(),
-    header: { fullName: "Ana Pérez", email: "ana@mail.com", links: [] },
+    header: { fullName: "Ana Pérez", email: "ana@mail.com", links: [], taglines: [] },
     experience: [{ company: "Acme", role: "Diseñadora", startDate: "2020", endDate: "2023", bullets: ["Rediseñé el flujo de pago"] }],
     certifications: [{ name: "Google UX Design", issuer: "Coursera", date: "2023" }],
     volunteering: [{ organization: "Fundación Código", role: "Mentora", startDate: "2022", endDate: "2023", bullets: ["Acompañé a 10 estudiantes"] }],

@@ -10,6 +10,7 @@ import { SettingsSection, SettingsSections } from "@/components/settings/setting
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Spinner } from "@/components/ui/spinner"
+import { normalizeHeadline } from "@/lib/cv/headline"
 import { emptyCv, filledSections, mergeCv } from "@/lib/cv/merge"
 import { friendlyReadError, pickCvFile } from "@/lib/profile/cv-drop"
 import { parseStoredCv, uploadAndParseCv } from "@/lib/profile/parse-client"
@@ -46,7 +47,7 @@ export function YourResume() {
 export function ResumeForm() {
   const [initial] = useState<CV>(() => {
     const p = getSearchProfile()
-    return p?.validatedAt ? p.cv : emptyCv()
+    return p?.validatedAt ? normalizeHeadline(p.cv) : emptyCv()
   })
   const form = useForm<CVInput, unknown, CV>({ resolver: zodResolver(cvSchema), defaultValues: initial, mode: "onTouched" })
   const [reading, setReading] = useState<string | null>(null)
@@ -63,7 +64,7 @@ export function ResumeForm() {
     const source = cvSchema.safeParse(raw)
     if (!source.success) return void toast.error("No pudimos entender los datos leídos de tu CV. Prueba con otro archivo.")
     const base = form.getValues() as unknown as CV
-    const merged = mergeCv(base, source.data)
+    const merged = normalizeHeadline(mergeCv(base, source.data))
     const sections = filledSections(base, merged)
     if (sections.length === 0) {
       toast.info("No encontramos nada nuevo para completar: tu perfil ya tiene esos datos.")

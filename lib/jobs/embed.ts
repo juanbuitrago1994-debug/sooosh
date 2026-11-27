@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto"
+import { fullHeadline } from "@/lib/cv/headline"
 import { eq, isNull } from "drizzle-orm"
 import { embed, resolveEmbedModel } from "@/lib/ai/embeddings"
 import type { Db } from "@/lib/db"
@@ -25,7 +26,7 @@ export function jobEmbeddingText(j: { title: string; company?: string | null; lo
 /** Texto que representa a una persona para la búsqueda por significado: titular, resumen, habilidades y sus cargos con las primeras viñetas. */
 export function cvEmbeddingText(cv: CV): string {
   return [
-    cv.header.headline,
+    fullHeadline(cv.header),
     cv.summary,
     cv.skills.length ? `Habilidades: ${cv.skills.flatMap((g) => g.items).slice(0, 30).join(", ")}` : undefined,
     ...cv.experience.slice(0, 4).map((e) => `${e.role}: ${e.bullets.slice(0, 3).join(" ")}`),

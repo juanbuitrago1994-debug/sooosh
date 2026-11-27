@@ -1,4 +1,5 @@
 import { HEADINGS, type PdfLang } from "@/lib/pdf/template"
+import { fullHeadline } from "@/lib/cv/headline"
 import { SECTION_KEYS, type CV } from "@/lib/schemas/cv"
 
 /**
@@ -30,7 +31,7 @@ export function toDocModel(cv: CV, lang: PdfLang = "es"): DocModel {
   const order = [...new Set([...(cv.sectionOrder ?? []), ...SECTION_KEYS])]
   return {
     name: cv.header.fullName.trim(),
-    headline: cv.header.headline?.trim() ?? "",
+    headline: fullHeadline(cv.header),
     contact: clean([cv.header.email, cv.header.phone, cv.header.location, ...cv.header.links.map((l) => clean([l.label, l.url]).join(": "))]),
     sections: order.map((key) => ({ key, title: h[key], blocks: bodies[key] })).filter((s) => s.blocks.length),
   }

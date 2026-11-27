@@ -23,6 +23,8 @@ export function mergeCv(current: CV, incoming: CV): CV {
       phone: fill("phone"),
       location: fill("location"),
       links,
+      // Los titulares complementarios se llenan solo si no hay ninguno escrito.
+      taglines: (h.taglines ?? []).length ? h.taglines : (ih.taglines ?? []),
     },
     summary: blank(current.summary) ? incoming.summary : current.summary,
     experience: list("experience"),
@@ -47,4 +49,4 @@ export function filledSections(before: CV, after: CV): string[] {
   return out
 }
 
-export const emptyCv = (): CV => ({ header: { fullName: "", links: [] }, experience: [], education: [], skills: [], languages: [], projects: [], certifications: [], volunteering: [], awards: [], publications: [] })
+export const emptyCv = (): CV => ({ header: { fullName: "", links: [], taglines: [] }, experience: [], education: [], skills: [], languages: [], projects: [], certifications: [], volunteering: [], awards: [], publications: [] })

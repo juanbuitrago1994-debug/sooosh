@@ -1,4 +1,5 @@
 import { fold } from "@/lib/keywords/normalize"
+import { fullHeadline } from "@/lib/cv/headline"
 import { comparable, type AtsExtras } from "./enrich"
 import type { CV } from "@/lib/schemas/cv"
 import { formatRange, sortKey, type DateIssue } from "./dates"
@@ -265,6 +266,7 @@ export function buildAtsDoc(original: CV, opts: { lang?: AtsLang; summary?: stri
   if (!cv.experience.length) warn("no-experience", "El CV no trae experiencia laboral: la sección no aparece.")
   if (summarySource === "none") warn("summary-missing", "El CV no trae resumen y no se generó uno: la sección no aparece.")
 
-  const headline = cv.header.headline ? title(cv.header.headline) : ""
+  const full = fullHeadline(cv.header)
+  const headline = full ? title(full) : ""
   return { lang, langDetection: detection, name: oneLine(cv.header.fullName), headline, contact, fileRole: headline || (exp.items[0] ? title(exp.items[0].role) : ""), sections, summarySource, warnings }
 }

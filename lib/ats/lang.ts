@@ -1,4 +1,5 @@
 import { fold } from "@/lib/keywords/normalize"
+import { fullHeadline } from "@/lib/cv/headline"
 import type { CV } from "@/lib/schemas/cv"
 import type { AtsLang } from "./headings"
 
@@ -13,7 +14,7 @@ export type LangDetection = { lang: AtsLang; detected: AtsLang | "otro"; scores:
 
 function textOf(cv: CV): string {
   return [
-    cv.header.headline,
+    fullHeadline(cv.header),
     cv.summary,
     ...cv.experience.flatMap((e) => [e.role, ...e.bullets]),
     ...cv.education.flatMap((e) => [e.degree, e.field, ...e.details]),

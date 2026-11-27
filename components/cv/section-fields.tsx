@@ -10,7 +10,8 @@ export function HeaderFields() {
   return (
     <>
       <TextField name="header.fullName" label="Nombre completo" />
-      <TextField name="header.headline" label="Titular profesional" />
+      <TextField name="header.headline" label="Título profesional" />
+      <TagsField name="header.taglines" label="Titulares" placeholder="Estrategia de Producto, Design Systems, UX Research…" />
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField name="header.email" label="Email" />
         <TextField name="header.phone" label="Teléfono" />

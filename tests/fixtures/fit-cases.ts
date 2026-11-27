@@ -16,7 +16,7 @@ export const offer: Offer = {
 }
 
 export const strong: CV = {
-  header: { fullName: "Ana Torres", headline: "Analista de Datos Senior", email: "ana@mail.com", phone: "999", location: "Lima", links: [] },
+  header: { fullName: "Ana Torres", headline: "Analista de Datos Senior", email: "ana@mail.com", phone: "999", location: "Lima", links: [], taglines: [] },
   summary: "Analista de datos con 6 años de experiencia en SQL, Python y Power BI. Construyo dashboards que aceleran decisiones comerciales.",
   experience: [
     { company: "Globex", role: "Analista de Datos Sr", startDate: "Mar 2022", endDate: "Actual", bullets: ["Reduje 40% el tiempo de reporte con SQL y Python", "Construí 12 dashboards en Power BI para el equipo comercial", "Comuniqué hallazgos a stakeholders de 5 áreas", "Mantuve pipelines ETL en Airflow"] },
@@ -28,7 +28,7 @@ export const strong: CV = {
   projects: [], certifications: [], volunteering: [], awards: [], publications: [],
 }
 export const mid: CV = {
-  header: { fullName: "Luis Pérez", email: "luis@mail.com", phone: "888", links: [] },
+  header: { fullName: "Luis Pérez", email: "luis@mail.com", phone: "888", links: [], taglines: [] },
   summary: "Persona proactiva y dinámica con experiencia en análisis.",
   experience: [{ company: "Acme", role: "Analista", startDate: "Ene 2022", endDate: "Actual", bullets: ["Responsable de reportes en Excel", "Preparé tableros en Tableau", "Usé SQL para consultas básicas"] }],
   education: [{ institution: "UPC", degree: "Administración", field: "", startDate: "2015", endDate: "2019", details: [] }],
@@ -37,7 +37,7 @@ export const mid: CV = {
   projects: [], certifications: [], volunteering: [], awards: [], publications: [],
 }
 export const weak: CV = {
-  header: { fullName: "Eva Ruiz", links: [] },
+  header: { fullName: "Eva Ruiz", links: [], taglines: [] },
   experience: [{ company: "Tienda", role: "Vendedora", startDate: "", endDate: "", bullets: ["Atención al cliente en tienda"] }],
   education: [],
   skills: [{ items: ["Word"] }],

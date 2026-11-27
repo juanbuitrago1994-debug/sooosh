@@ -1,4 +1,5 @@
 import type { CV } from "@/lib/schemas/cv"
+import { fullHeadline } from "@/lib/cv/headline"
 
 /** Fragmentos de evidencia del CV: lo único con lo que se puede respaldar algo. Cada uno sabe de qué sección viene. */
 export type Unit = { id: string; text: string; section: "Titular" | "Resumen" | "Experiencia" | "Educación" | "Habilidades" | "Idiomas" | "Proyectos" }
@@ -11,7 +12,7 @@ export function buildUnits(cv: CV): Unit[] {
     const t = text?.replace(/\s+/g, " ").trim()
     if (t && t.length >= 2) out.push({ id: `u${out.length}`, text: t, section })
   }
-  add(cv.header.headline, "Titular")
+  add(fullHeadline(cv.header), "Titular")
   for (const s of (cv.summary ?? "").split(/(?<=[.!?])\s+/)) add(s, "Resumen")
   for (const e of cv.experience) {
     add(`${e.role} en ${e.company}`, "Experiencia")

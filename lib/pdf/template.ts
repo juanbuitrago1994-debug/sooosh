@@ -1,4 +1,5 @@
 import { SECTION_KEYS, type CV, type SectionKey } from "@/lib/schemas/cv"
+import { fullHeadline } from "@/lib/cv/headline"
 
 /**
  * Plantilla del CV en HTML para el PDF (y para la vista previa).
@@ -53,7 +54,7 @@ export function renderCvHtml(cv: CV, lang: PdfLang = "es"): string {
   const section = (key: string, title: string, body: string) => body && bodies.set(key, `<section><h2>${esc(title)}</h2>${body}</section>`)
 
   const contact = clean([cv.header.email, cv.header.phone, cv.header.location, ...cv.header.links.map((l) => clean([l.label, l.url]).join(": "))])
-  const head = `<header><h1>${esc(cv.header.fullName)}</h1>${cv.header.headline ? `<p class="headline">${esc(cv.header.headline)}</p>` : ""}${
+  const head = `<header><h1>${esc(cv.header.fullName)}</h1>${fullHeadline(cv.header) ? `<p class="headline">${esc(fullHeadline(cv.header))}</p>` : ""}${
     contact.length ? `<p class="contact">${contact.map(esc).join(" · ")}</p>` : ""
   }</header>`
 

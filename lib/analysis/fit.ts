@@ -1,4 +1,5 @@
 import { containsKeys, contentKeys, streamOf } from "@/lib/keywords/lexical"
+import { fullHeadline } from "@/lib/cv/headline"
 import { fold } from "@/lib/keywords/normalize"
 import type { MatchResult } from "@/lib/match/types"
 import { buildUnits, type Unit } from "@/lib/match/units"
@@ -115,7 +116,7 @@ export function computeFit(cv: CV, offer: Offer, opts: { match?: MatchResult; ju
 
   /** Qué tan pronto se ven las habilidades de mayor peso: titular, resumen, primeras viñetas de los dos puestos más recientes y los 3 primeros elementos de cada grupo de habilidades. */
   const ubicacion = (): Crit => {
-    const parts = [cv.header.headline ?? "", cv.summary ?? "", ...cv.experience.slice(0, 2).flatMap((e) => [e.role, ...e.bullets.slice(0, 2)]), ...cv.skills.flatMap((g) => g.items.slice(0, 3))].filter(Boolean)
+    const parts = [fullHeadline(cv.header), cv.summary ?? "", ...cv.experience.slice(0, 2).flatMap((e) => [e.role, ...e.bullets.slice(0, 2)]), ...cv.skills.flatMap((g) => g.items.slice(0, 3))].filter(Boolean)
     const partSkills = parts.map((t) => new Set(skillsIn(t).map((s) => s.id)))
     // Las 5 de mayor peso (estén o no en el CV): así cubrir una habilidad nueva nunca baja este criterio.
     const top = coverage.filter((c) => c.term.canonical && c.term.necessity !== "contexto").slice(0, 5)
@@ -177,7 +178,7 @@ export function computeFit(cv: CV, offer: Offer, opts: { match?: MatchResult; ju
   {
     const latest = cv.experience[0]
     const roleKeys = contentKeys(op.role)
-    const mine = new Set([...contentKeys(cv.header.headline ?? ""), ...contentKeys(latest?.role ?? "")])
+    const mine = new Set([...contentKeys(fullHeadline(cv.header)), ...contentKeys(latest?.role ?? "")])
     const overlap = roleKeys.length ? roleKeys.filter((k) => mine.has(k)).length / roleKeys.length : null
     const topTerms = coverage.filter((c) => c.term.necessity !== "contexto" && c.term.canonical).slice(0, 5)
     const sumFold = fold(cv.summary ?? "")
@@ -284,7 +285,7 @@ export function computeFit(cv: CV, offer: Offer, opts: { match?: MatchResult; ju
   const scorecard: Scorecard = { dimensions: dims.sort((a, b) => order.get(a.id)! - order.get(b.id)!) }
 
   // Defensa anti-invención: cualquier cita que no esté literal en el CV se degrada a «no verificable».
-  const cvText = [cv.header.fullName, cv.header.headline, cv.header.email, cv.summary, ...cv.experience.flatMap((e) => [e.role, e.company, e.startDate, e.endDate, ...e.bullets]), ...cv.education.flatMap((e) => [e.institution, e.degree, e.field, ...e.details]), ...cv.skills.flatMap((g) => g.items), ...cv.projects.flatMap((p) => [p.name, p.description, ...p.bullets]), ...units.map((u) => u.text)].filter(Boolean).join("\n")
+  const cvText = [cv.header.fullName, fullHeadline(cv.header), cv.header.email, cv.summary, ...cv.experience.flatMap((e) => [e.role, e.company, e.startDate, e.endDate, ...e.bullets]), ...cv.education.flatMap((e) => [e.institution, e.degree, e.field, ...e.details]), ...cv.skills.flatMap((g) => g.items), ...cv.projects.flatMap((p) => [p.name, p.description, ...p.bullets]), ...units.map((u) => u.text)].filter(Boolean).join("\n")
   const bad = unverifiedEvidence(scorecard, cvText)
   for (const f of bad) {
     warnings.push(`Cita no verificable en «${f.criterion}»: se descartó.`)

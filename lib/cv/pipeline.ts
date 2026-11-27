@@ -7,6 +7,7 @@ import { diagnosisSchema, type Diagnosis } from "@/lib/schemas/diagnosis"
 import { parseEduHead, parseJobHead, splitEducation } from "./heads"
 import { bulletItems, isBullet, paragraphProjectItems, splitBlocks, splitExperienceBlocks, type Block } from "./blocks"
 import { extractContact } from "./contact"
+import { splitHeadline } from "./headline"
 import { parseAwards, parseCertifications, parsePublications, parseVolunteering } from "./extras"
 import { RANGE_RE } from "./dates"
 import { computeConfidence, computeSeniority, computeStyle, detectLanguage, findAtsRisks, findProblems, pickQuestion } from "./diagnosis"
@@ -282,7 +283,7 @@ export async function runCvPipeline(
   const summary = oneLine(sectionText(sections, "summary"))
 
   const cvRaw = {
-    header: { fullName: ident.fullName ?? "Sin nombre", headline: ident.headline, email: contact.email, phone: contact.phone, location: ident.location, links: contact.links },
+    header: { fullName: ident.fullName ?? "Sin nombre", ...splitHeadline(ident.headline), email: contact.email, phone: contact.phone, location: ident.location, links: contact.links },
     summary: summary ? clip(summary, 1200) : undefined,
     experience,
     education,

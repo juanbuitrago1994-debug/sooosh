@@ -102,7 +102,15 @@ export function TagsField({ name, label, placeholder }: { name: Name; label: str
 
 function TagsInput({ label, placeholder, error, value, onChange }: { label: string; placeholder?: string; error?: string; value?: string[]; onChange: (v: string[]) => void }) {
   // Texto local: si recalculáramos desde el array, la coma y el espacio final se perderían al teclear.
-  const [text, setText] = useState((value ?? []).join(", "))
+  const parse = (t: string) => t.split(",").map((x) => x.trim()).filter(Boolean)
+  const joined = (value ?? []).join(", ")
+  const [text, setText] = useState(joined)
+  const [seen, setSeen] = useState(joined)
+  // Si el formulario cambia desde fuera (p. ej. «Llenar con tu CV»), el texto se actualiza; lo que la persona teclea no se pisa.
+  if (joined !== seen) {
+    setSeen(joined)
+    if (parse(text).join("|") !== (value ?? []).join("|")) setText(joined)
+  }
   return (
     <FieldShell label={`${label} (separados por comas)`} error={error}>
       <Input
@@ -111,7 +119,7 @@ function TagsInput({ label, placeholder, error, value, onChange }: { label: stri
         aria-label={label}
         onChange={(e) => {
           setText(e.target.value)
-          onChange(e.target.value.split(",").map((s) => s.trim()).filter(Boolean))
+          onChange(parse(e.target.value))
         }}
       />
     </FieldShell>

@@ -9,6 +9,8 @@ const link = text(300)
 export const headerSchema = z.object({
   fullName: text(120).min(1, "Requerido"),
   headline: text(160).optional(),
+  /** «Titulares»: las frases complementarias del titular («Estrategia de Producto | Design Systems | UX Research»), separadas del título profesional. */
+  taglines: z.array(text(80).min(1)).max(8).default([]),
   email: text(120).optional(),
   phone: text(40).optional(),
   location: text(120).optional(),

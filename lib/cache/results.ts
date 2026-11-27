@@ -15,7 +15,7 @@ import { offerSchema } from "@/lib/schemas/offer"
  * con este modelo, estos prompts y estos esquemas, se reutiliza. Cambiar cualquiera de los tres invalida solo.
  * LOGIC_VERSION se sube a mano cuando cambia la lógica determinista (sectorización, cabeceras, diagnóstico…).
  */
-export const LOGIC_VERSION = 7
+export const LOGIC_VERSION = 8
 
 export type CacheKind = "cv" | "offer"
 

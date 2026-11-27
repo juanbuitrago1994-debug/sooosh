@@ -4,7 +4,7 @@ import type { CV } from "@/lib/schemas/cv"
 
 const NOW = new Date(2026, 10, 18)
 const cv: CV = {
-  header: { fullName: "Ana Torres", headline: "Analista de Datos", email: "ana@mail.com", phone: "", location: "Lima", links: [] },
+  header: { fullName: "Ana Torres", headline: "Analista de Datos", email: "ana@mail.com", phone: "", location: "Lima", links: [], taglines: [] },
   summary: "Persona proactiva y dinámica con 6 años de experiencia en análisis de datos. Experta en SQL.",
   experience: [
     { company: "Globex", role: "Analista Sr", startDate: "Mar 2023", endDate: "Actual", bullets: ["Reduje el tiempo de reporte en 40% con SQL y Python", "Responsable de los reportes semanales", "Lideré un equipo de 5 analistas"] },
@@ -62,7 +62,7 @@ describe("perfil del CV por secciones (K3)", () => {
     expect(p.length.words).toBeGreaterThan(50)
   })
   it("un CV vacío no rompe nada y no inventa", () => {
-    const empty = buildCvProfile({ header: { fullName: "X", links: [] }, experience: [], education: [], skills: [], languages: [], projects: [], certifications: [], volunteering: [], awards: [], publications: [] }, NOW)
+    const empty = buildCvProfile({ header: { fullName: "X", links: [], taglines: [] }, experience: [], education: [], skills: [], languages: [], projects: [], certifications: [], volunteering: [], awards: [], publications: [] }, NOW)
     expect(cvProfileSchema.safeParse(empty).success).toBe(true)
     expect(empty).toMatchObject({ totalYears: null, chronology: "desconocida", bullets: { total: 0, metricRatio: 0 } })
   })

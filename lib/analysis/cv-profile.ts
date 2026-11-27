@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { fullHeadline } from "@/lib/cv/headline"
 import { RANGE_RE, isOpen, parseDate, totalYears } from "@/lib/cv/dates"
 import { fold } from "@/lib/keywords/normalize"
 import type { CV } from "@/lib/schemas/cv"
@@ -187,7 +188,7 @@ export function buildCvProfile(cv: CV, now = new Date()): CvProfile {
   const eduLevels = cv.education.map((e) => educationLevelOf([e.degree, e.field].filter(Boolean).join(" ")))
   const highest = eduLevels.reduce<EducationLevel>((best, l) => (EDU_RANK[l] > EDU_RANK[best] ? l : best), "ninguno")
 
-  const allText = [cv.header.fullName, cv.header.headline, cv.summary, ...cv.experience.flatMap((e) => [e.role, e.company, ...e.bullets]), ...cv.education.flatMap((e) => [e.institution, e.degree, e.field, ...e.details]), ...cv.skills.flatMap((g) => g.items), ...cv.projects.flatMap((p) => [p.name, p.description, ...p.bullets])].filter(Boolean).join(" ")
+  const allText = [cv.header.fullName, fullHeadline(cv.header), cv.summary, ...cv.experience.flatMap((e) => [e.role, e.company, ...e.bullets]), ...cv.education.flatMap((e) => [e.institution, e.degree, e.field, ...e.details]), ...cv.skills.flatMap((g) => g.items), ...cv.projects.flatMap((p) => [p.name, p.description, ...p.bullets])].filter(Boolean).join(" ")
   const wc = words(allText)
 
   const contact = { name: !!cv.header.fullName?.trim(), email: !!cv.header.email, phone: !!cv.header.phone, location: !!cv.header.location, link: cv.header.links.length > 0 }
