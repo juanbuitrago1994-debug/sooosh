@@ -1539,3 +1539,6 @@ Con el servidor de Playwright reconectado con `--browser webkit` (build 2395 des
 
 ### Efecto lupa, ajuste de forma: menos «esférico» (27-nov-2026, pedido de Juan)
 - La deformación se veía como una burbuja: se suavizó la lupa (`strength` 0,4 → 0,55, aumento ≈ ×1,8 en lugar de ×2,5), la curvatura global (`curve` 0,12 → 0,07) y se aplanó la lente (`widthFactor` 2,2 → 3: una banda ancha en lugar de un círculo). Medido con fotogramas exactos: el contenido ampliado en el pico baja del 14,1 % al 11,3 % de los píxeles; el color sigue acotado al 25–55 % del avance y la imagen final es idéntica a la página real (contenido 2,7 %, color 0 %). 8 pruebas del efecto, sin errores. La revisión a ojo es de Juan; los tres valores se ajustan en `/login?afinar=1`.
+
+### Botones del login: de vuelta al tamaño normal y más juntos (27-nov-2026, pedido de Juan)
+- «Continuar con Google» / «Continuar como …» y «Usar otra cuenta» vuelven al tamaño `lg` (36 px, texto de 14 px) y quedan a 8 px entre sí (antes 44 px y 16 px). Medido en WebKit: 36 px los tres botones y 8 px de separación. El tamaño `xl` (44 px) sigue disponible en `components/ui/button.tsx` pero el login ya no lo usa.
