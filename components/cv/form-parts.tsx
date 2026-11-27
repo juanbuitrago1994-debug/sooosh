@@ -79,7 +79,7 @@ export function StringList({ name, label, addLabel }: { name: Name; label: strin
                 </li>
               ))}
             </ul>
-            <Button type="button" variant="outline" className="self-start" onClick={() => set([...items, ""])}>
+            <Button id={name} type="button" variant="outline" className="self-start" onClick={() => set([...items, ""])}>
               <PlusIcon data-icon="inline-start" /> {addLabel}
             </Button>
           </FieldShell>

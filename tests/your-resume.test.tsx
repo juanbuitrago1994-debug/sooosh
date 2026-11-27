@@ -13,10 +13,24 @@ describe("Your resume", () => {
     for (const t of ["Certificaciones y cursos", "Voluntariado", "Premios y reconocimientos", "Publicaciones y charlas"]) expect(html, t).not.toContain(`>${t}<`)
     expect(html).toContain("Agregar sección")
     expect(html).toContain("Llenar con tu CV")
+    // Divisor bajo el encabezado (el mismo que separa las secciones).
+    expect(html).toContain("border-b border-foreground/10 pt-2 pb-6")
     // Título profesional y titulares son dos campos; los titulares son etiquetas (campo + botón «+»), no texto con comas.
     expect(html).toContain("Título profesional")
     expect(html).toContain("Titulares")
     expect(html).toContain("Escribe una y pulsa Enter")
+    // Tarjeta de avance (esquina inferior derecha): perfil vacío = 0/10 y el botón lleva al primer pendiente.
+    expect(html).toContain("Completa tu perfil")
+    expect(html).toContain("Continúa con Nombre")
+    expect(html).not.toContain("Falta:")
+    expect(html).not.toContain("Ir a:")
+    expect(html).toContain("0/12")
+    expect(html).toContain("Continuar")
+    // Una sola barra de progreso (el componente de shadcn ya dibuja la suya).
+    expect(html.match(/data-slot="progress-track"/g) ?? []).toHaveLength(1)
+    expect(html).toContain("bottom-4")
+    // Ancho fijo: la tarjeta no cambia de tamaño según el contenido; y el botón es un enlace con chevron, no un botón grande.
+    expect(html).toContain("sm:w-56")
     // Sin botones que no hagan nada: no hay «Cancelar» y «Guardar cambios» siempre está disponible.
     expect(html).not.toContain("Cancelar")
     expect(html).toContain("Guardar cambios")

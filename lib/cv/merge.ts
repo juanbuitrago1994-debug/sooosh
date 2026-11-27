@@ -50,3 +50,49 @@ export function filledSections(before: CV, after: CV): string[] {
 }
 
 export const emptyCv = (): CV => ({ header: { fullName: "", links: [], taglines: [] }, experience: [], education: [], skills: [], languages: [], projects: [], certifications: [], volunteering: [], awards: [], publications: [] })
+
+/**
+ * Qué pasaría si se completa el perfil con un CV leído, para mostrarlo ANTES de aplicar: `fills` = lo vacío que se llenaría; `keeps` = lo que la persona
+ * ya tiene y es distinto de lo que trae el archivo (se conserva tal cual: nunca se borra ni se reemplaza).
+ */
+export function describeFill(base: CV, source: CV): { fills: string[]; keeps: string[] } {
+  const fills: string[] = []
+  const keeps: string[] = []
+  const same = (a?: string, b?: string) => (a ?? "").trim().toLowerCase() === (b ?? "").trim().toLowerCase()
+  const text = (label: string, mine?: string, theirs?: string) => {
+    if (blank(theirs)) return
+    if (blank(mine) || mine === "Sin nombre") fills.push(label)
+    else if (!same(mine, theirs)) keeps.push(`${label}: conservas «${mine!.trim().slice(0, 60)}»`)
+  }
+  const bh = base.header
+  const sh = source.header
+  text("Nombre", bh.fullName, sh.fullName)
+  text("Título profesional", bh.headline, sh.headline)
+  text("Correo", bh.email, sh.email)
+  text("Teléfono", bh.phone, sh.phone)
+  text("Ubicación", bh.location, sh.location)
+  if (!(bh.taglines ?? []).length && (sh.taglines ?? []).length) fills.push(`Titulares (${sh.taglines.length})`)
+  const urls = new Set((bh.links ?? []).map((l) => l.url.trim().toLowerCase()))
+  const newLinks = (sh.links ?? []).filter((l) => l.url.trim() && !urls.has(l.url.trim().toLowerCase())).length
+  if (newLinks > 0) fills.push(`Enlaces (+${newLinks})`)
+  text("Resumen profesional", base.summary, source.summary)
+  const lists = {
+    experience: "Experiencia",
+    education: "Educación",
+    skills: "Habilidades",
+    languages: "Idiomas",
+    projects: "Proyectos",
+    certifications: "Certificaciones",
+    volunteering: "Voluntariado",
+    awards: "Premios",
+    publications: "Publicaciones",
+  } as const
+  for (const k of Object.keys(lists) as (keyof typeof lists)[]) {
+    const mine = base[k] ?? []
+    const theirs = source[k] ?? []
+    if (!theirs.length) continue
+    if (!mine.length) fills.push(`${lists[k]} (${theirs.length})`)
+    else if (JSON.stringify(mine) !== JSON.stringify(theirs)) keeps.push(`${lists[k]}: conservas tus ${mine.length}; el archivo trae ${theirs.length}`)
+  }
+  return { fills, keeps }
+}

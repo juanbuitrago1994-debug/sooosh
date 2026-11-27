@@ -18,7 +18,7 @@ export function ProfileSettings({ form, children }: { form: Omit<ComponentProps<
   const onStatus = useCallback((s: { dirty: boolean; pending: boolean }) => setStatus(s), [])
   return (
     <>
-      <div className="flex flex-col gap-4 pt-2 pb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 border-b border-foreground/10 pt-2 pb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
           <h2 className="text-base font-medium">Preferencias</h2>
           <p className="text-xs text-muted-foreground">Configura tu perfil, tu cuenta y tus datos.</p>

@@ -11,13 +11,15 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Spinner } from "@/components/ui/spinner"
 import { normalizeHeadline } from "@/lib/cv/headline"
-import { emptyCv, filledSections, mergeCv } from "@/lib/cv/merge"
+import { describeFill, emptyCv, mergeCv } from "@/lib/cv/merge"
 import { friendlyReadError, pickCvFile } from "@/lib/profile/cv-drop"
 import { parseStoredCv, uploadAndParseCv } from "@/lib/profile/parse-client"
 import { getSearchProfile, saveProfileCv } from "@/lib/profile/search-profile"
 import { cvSchema, type CV } from "@/lib/schemas/cv"
 import { STORED_ID_RE } from "@/lib/uploads"
 import { AwardsFields, CertificationsFields, EducationFields, ExperienceFields, HeaderFields, LanguagesFields, ProjectsFields, PublicationsFields, SkillsFields, SummaryFields, VolunteeringFields } from "./section-fields"
+import { FillConfirmDialog } from "./fill-confirm-dialog"
+import { ResumeProgress } from "./resume-progress"
 import type { CVInput } from "./types"
 
 const FORM_ID = "resume-form"
@@ -52,6 +54,7 @@ export function ResumeForm() {
   const form = useForm<CVInput, unknown, CV>({ resolver: zodResolver(cvSchema), defaultValues: initial, mode: "onTouched" })
   const [reading, setReading] = useState<string | null>(null)
   const [added, setAdded] = useState<OptionalKey[]>([])
+  const [pending, setPending] = useState<{ merged: CV; fills: string[]; keeps: string[] } | null>(null)
   const input = useRef<HTMLInputElement>(null)
   const { isSubmitting } = form.formState
 
@@ -59,19 +62,26 @@ export function ResumeForm() {
   const visible = OPTIONAL.filter((o, i) => (lists[i]?.length ?? 0) > 0 || added.includes(o.key))
   const hidden = OPTIONAL.filter((o) => !visible.includes(o))
 
+  /** Calcula qué cambiaría y se lo muestra a la persona ANTES de tocar nada; solo al confirmar se completa el perfil. */
   function apply(raw: unknown) {
     // Lo leído puede venir sin las listas nuevas (otra lectura, un resultado anterior): se normaliza con el esquema antes de combinar.
     const source = cvSchema.safeParse(raw)
     if (!source.success) return void toast.error("No pudimos entender los datos leídos de tu CV. Prueba con otro archivo.")
     const base = form.getValues() as unknown as CV
     const merged = normalizeHeadline(mergeCv(base, source.data))
-    const sections = filledSections(base, merged)
-    if (sections.length === 0) {
-      toast.info("No encontramos nada nuevo para completar: tu perfil ya tiene esos datos.")
+    const { fills, keeps } = describeFill(base, normalizeHeadline(source.data))
+    if (fills.length === 0) {
+      toast.info(keeps.length ? "Ese CV trae datos distintos, pero tu perfil ya tiene esos campos: no cambiamos nada." : "Tu perfil ya tiene lo que trae ese CV: no hay nada para completar.")
       return
     }
-    form.reset(merged)
-    toast.success(`Completamos ${sections.join(", ")} con tu CV. Revisa y guarda.`)
+    setPending({ merged, fills, keeps })
+  }
+
+  function confirmFill() {
+    if (!pending) return
+    form.reset(pending.merged, { keepDefaultValues: true })
+    toast.success(`Completamos ${pending.fills.length} ${pending.fills.length === 1 ? "dato" : "datos"} con tu CV. Revisa y guarda.`)
+    setPending(null)
   }
 
   async function onFile(files: FileList | null) {
@@ -118,6 +128,7 @@ export function ResumeForm() {
       <form
         id={FORM_ID}
         noValidate
+        className="pb-28"
         onSubmit={form.handleSubmit(
           (cv) => {
             if (!saveProfileCv(cv)) return void toast.error("No pudimos guardar tu perfil en este navegador.")
@@ -128,7 +139,7 @@ export function ResumeForm() {
         )}
       >
         <input ref={input} type="file" className="sr-only" tabIndex={-1} aria-hidden accept={ACCEPT_ATTR} onChange={(e) => (void onFile(e.target.files), (e.target.value = ""))} />
-        <div className="flex flex-col gap-4 pt-2 pb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 border-b border-foreground/10 pt-2 pb-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-1">
             <h1 className="text-base font-medium">Your resume</h1>
             <p className="text-xs text-muted-foreground">Tu perfil profesional. Con él armamos tu CV para cada oferta.</p>
@@ -195,6 +206,8 @@ export function ResumeForm() {
           </div>
         )}
       </form>
+      <ResumeProgress />
+      <FillConfirmDialog plan={pending} onConfirm={confirmFill} onCancel={() => setPending(null)} />
     </FormProvider>
   )
 }

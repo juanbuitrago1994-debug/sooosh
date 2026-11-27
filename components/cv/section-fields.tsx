@@ -17,7 +17,7 @@ export function HeaderFields() {
         <TextField name="header.phone" label="Teléfono" />
       </div>
       <TextField name="header.location" label="Ubicación" />
-      <h3 className="text-sm font-medium">Enlaces</h3>
+      <h3 id="header-links" className="text-sm font-medium">Enlaces</h3>
       <EntryList name="header.links" itemLabel="Enlace" addLabel="Agregar enlace" emptyEntry={{ label: "", url: "" }}>
         {(i) => (
           <div className="grid gap-4 sm:grid-cols-2">
