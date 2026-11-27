@@ -31,6 +31,9 @@ Estas reglas aplican a toda fase y toda tarea. No se negocian.
 ## Next.js
 - Esta versión de Next tiene cambios incompatibles: lee la guía relevante en `node_modules/next/dist/docs/` antes de escribir código (ver AGENTS.md).
 
+## Rutas `/api/*`
+- Todas exigen sesión por defecto (lo aplica `proxy.ts`; sin sesión, 401 en JSON) y tienen un límite de peticiones por persona. **Toda ruta nueva de `app/api` debe agregarse a `lib/auth/api-policy.ts`** (pública / sesión / admin, y si es pesada); una prueba falla si falta. Lo único público es `/api/db/health`. Los scripts de banco de pruebas entran con `BENCH_KEY` (solo en `.env.local`, nunca en Vercel).
+
 ## Servidores
 - No arranques otro servidor de desarrollo. El servidor de Juan corre en el puerto 3000 con `pnpm dev`. Si necesitas probar algo, usa ese. Si no responde, avísame en vez de iniciar otro. `pnpm shots` usa ese servidor y falla con aviso si no responde.
 

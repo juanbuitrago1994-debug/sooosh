@@ -145,7 +145,8 @@ describe("alertas", () => {
 
   it("se pausa sola a los 30 días sin abrir; abrir (o reanudar) reinicia el reloj", async () => {
     const a = (await createAlert(db, ana, input())) as { id: string }
-    const s = await runAlerts(db, at(24 * (INACTIVE_DAYS + 1)))
+    // La alerta se crea con la hora real de la base: el «ahora» de la prueba se mide desde ella (no desde una fecha fija, que dejaba de valer al cambiar el día).
+    const s = await runAlerts(db, new Date(Date.now() + (INACTIVE_DAYS + 1) * 86_400_000))
     expect(s.paused).toBe(1)
     let [al] = await listAlerts(db, ana)
     expect(al).toMatchObject({ enabled: false, pausedReason: "inactiva" })

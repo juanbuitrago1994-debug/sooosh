@@ -8,7 +8,10 @@ import path from "node:path"
 const dir = path.resolve(process.argv[2] ?? "Pruebas VC")
 const out = path.resolve(process.argv[3] ?? "data/bench-cv")
 const filter = process.argv[4]
+try { process.loadEnvFile(".env.local") } catch {}
 const BASE = process.env.BENCH_URL ?? "http://localhost:3000"
+// Las rutas /api/* exigen sesión; los scripts entran con la clave de banco de pruebas (BENCH_KEY de .env.local, ver proxy.ts).
+const AUTH = process.env.BENCH_KEY ? { "x-sooosh-bench": process.env.BENCH_KEY } : {}
 await mkdir(out, { recursive: true })
 
 const norm = (s) => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9ñ]+/g, " ").trim()
@@ -44,10 +47,10 @@ for (const [i, f] of files.entries()) {
   try {
     const form = new FormData()
     form.set("file", new File([await readFile(path.join(dir, f))], f, { type: f.endsWith(".pdf") ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }))
-    const up = await fetch(`${BASE}/api/upload`, { method: "POST", body: form })
+    const up = await fetch(`${BASE}/api/upload`, { method: "POST", body: form, headers: AUTH })
     if (!up.ok) throw new Error(`upload ${up.status}`)
     id = (await up.json()).id
-    const res = await fetch(`${BASE}/api/cv/parse`, { method: "POST", body: JSON.stringify({ id }), signal: AbortSignal.timeout(420_000) })
+    const res = await fetch(`${BASE}/api/cv/parse`, { method: "POST", headers: AUTH, body: JSON.stringify({ id }), signal: AbortSignal.timeout(420_000) })
     const text = await res.text()
     let result, error
     for (const line of text.split("\n").filter(Boolean)) { try { const o = JSON.parse(line); if (o.t === "result") result = o; if (o.t === "error") error = o.error } catch {} }
@@ -67,7 +70,7 @@ for (const [i, f] of files.entries()) {
   } catch (e) {
     rows.push({ f, error: String(e.message ?? e) })
   } finally {
-    if (id) await fetch(`${BASE}/api/upload?id=${id}`, { method: "DELETE" }).catch(() => {})
+    if (id) await fetch(`${BASE}/api/upload?id=${id}`, { method: "DELETE", headers: AUTH }).catch(() => {})
   }
   process.stdout.write(`\r${i + 1}/${files.length} ${(Date.now() - t0) / 1000}s ${f.slice(0, 40)}   `)
 }
