@@ -5,13 +5,15 @@ import { toast } from "sonner"
 import type { ProfileFormState } from "@/lib/auth/profile-store"
 import { ChipsInput } from "@/components/common/chips-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { LocateFixedIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Spinner } from "@/components/ui/spinner"
 import { MAX_ROLES } from "@/lib/auth/profile-schema"
+
+/** opción especial del desplegable de país: no es un país, pide la ubicación al navegador */
+const LOCATE = "__locate__"
 
 export type CountryOption = { code: string; name: string }
 
@@ -75,20 +77,17 @@ export function OnboardingForm({ action: submit, defaultName, defaultCountry = "
 
         <Field data-invalid={!!fe.country}>
           <FieldLabel htmlFor="country">País de residencia</FieldLabel>
-          <NativeSelect id="country" name="country" value={country} onChange={(e) => setCountry(e.target.value)} className="w-full" aria-invalid={!!fe.country} required>
+          <NativeSelect id="country" name="country" value={country} onChange={(e) => (e.target.value === LOCATE ? locate() : setCountry(e.target.value))} disabled={locating} className="w-full" aria-invalid={!!fe.country} required>
             <NativeSelectOption value="" disabled>
               Elige tu país
             </NativeSelectOption>
+            <NativeSelectOption value={LOCATE}>{locating ? "Buscando tu ubicación…" : "Usar mi ubicación"}</NativeSelectOption>
             {countries.map((c) => (
               <NativeSelectOption key={c.code} value={c.code}>
                 {c.name}
               </NativeSelectOption>
             ))}
           </NativeSelect>
-          <Button type="button" variant="ghost" size="sm" className="w-fit text-muted-foreground" onClick={locate} disabled={locating}>
-            {locating ? <Spinner /> : <LocateFixedIcon aria-hidden />}
-            Usar mi ubicación
-          </Button>
           {fe.country && <FieldError>{fe.country}</FieldError>}
         </Field>
 
