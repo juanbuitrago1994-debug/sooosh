@@ -86,6 +86,24 @@ export function setSearchProfile(cv: CV, fileId?: string, sourceText?: string, f
   }
 }
 
+/**
+ * «Your resume»: la persona editó su perfil a mano y lo guardó. El CV pasa a ser el validado (se sube a la cuenta por `CvSync`); se conserva lo demás
+ * (archivo original, texto, lectura profunda). Si el perfil no venía de un archivo se le da un id propio y estable, para que cada guardado
+ * actualice la misma fila de la cuenta en vez de crear una nueva.
+ */
+export function saveProfileCv(cv: CV): boolean {
+  try {
+    const cur = getSearchProfile()
+    const now = new Date().toISOString()
+    const p: SearchProfile = { ...cur, cv, label: profileLabel(cv), fileId: cur?.fileId ?? `manual-${crypto.randomUUID()}`, validatedAt: now, updatedAt: now }
+    localStorage.setItem(SEARCH_PROFILE_KEY, JSON.stringify(p))
+    window.dispatchEvent(new Event(EVENT))
+    return true
+  } catch {
+    return false
+  }
+}
+
 /** Carga en este navegador el CV validado que viene de la cuenta (no trae el archivo ni su texto: nunca se guardan en la cuenta). */
 export function hydrateSearchProfile(r: { cv: CV; label: string; file?: FileMeta; originalAts?: OriginalAtsSummary | null; fileId?: string; validatedAt: string }): boolean {
   try {

@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useAiWork } from "@/components/ai/ai-work"
 import { Button } from "@/components/ui/button"
@@ -56,6 +57,7 @@ export function StepProfile({
   onPhase: (p: ProfilePhase) => void
   onChange: (p: ProfileData | null) => void
 }) {
+  const router = useRouter()
   const [phase, setPhase] = useState<ProfilePhase>(initial ? "review" : "upload")
   const [data, setData] = useState<ProfileData | null>(initial)
   const [file, setFile] = useState<UploadedFile | null>(initial?.file ?? null)
@@ -206,7 +208,7 @@ export function StepProfile({
           // CV ya validado (se volvió o se recargó la página): su tarjeta y el botón para seguir.
           <ValidatedCv file={fileFacts} onChangeFile={reset} onContinue={() => onContinue?.()} />
         ) : (
-          <ValidationFlow cv={data.cv} file={fileFacts} onChange={(cv) => update({ ...data, cv })} onChangeFile={reset} onContinue={onContinue} validated={validated} onValidated={onValid} />
+          <ValidationFlow cv={data.cv} file={fileFacts} onChange={(cv) => update({ ...data, cv })} onChangeFile={reset} onContinue={onContinue} validated={validated} onValidated={onValid} onExit={() => router.push("/ofertas")} />
         ))}
 
       <Dialog open={correcting} onOpenChange={setCorrecting}>

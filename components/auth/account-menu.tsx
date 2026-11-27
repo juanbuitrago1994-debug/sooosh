@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { BookmarkIcon, LogOutIcon, SettingsIcon } from "lucide-react"
+import { BookmarkIcon, FileUserIcon, LogOutIcon, SettingsIcon } from "lucide-react"
 import { whoAmI } from "@/app/cuenta/actions"
 import { initialsOf as initials } from "@/lib/auth/last-user"
 import { clearLocalAccountData } from "@/lib/auth/local-data"
@@ -39,6 +39,10 @@ export function AccountMenu() {
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/cv" />}>
+          <FileUserIcon aria-hidden />
+          Your resume
+        </DropdownMenuItem>
         <DropdownMenuItem render={<Link href="/mis-ofertas" />}>
           <BookmarkIcon aria-hidden />
           Mis ofertas

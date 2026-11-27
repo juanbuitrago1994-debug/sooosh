@@ -5,7 +5,8 @@ import { FormProvider, get, useForm, useFormContext, type FieldErrors } from "re
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { cvSchema, type CV } from "@/lib/schemas/cv"
-import { EntryList, Section, StringList, TagsField, TextField } from "./form-parts"
+import { Section } from "./form-parts"
+import { EducationFields, ExperienceFields, HeaderFields, LanguagesFields, ProjectsFields, SkillsFields, SummaryFields } from "./section-fields"
 import type { CVInput } from "./types"
 
 export const CV_FORM_ID = "cv-form"
@@ -31,96 +32,31 @@ function Sections({ open, setOpen }: { open: Record<SectionKey, boolean>; setOpe
   return (
     <div className="flex flex-col gap-3">
       <Section title="Cabecera" {...props("header")}>
-        <TextField name="header.fullName" label="Nombre completo" />
-        <TextField name="header.headline" label="Titular profesional" />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <TextField name="header.email" label="Email" />
-          <TextField name="header.phone" label="Teléfono" />
-        </div>
-        <TextField name="header.location" label="Ubicación" />
-        <h2 className="text-sm font-medium">Enlaces</h2>
-        <EntryList name="header.links" itemLabel="Enlace" addLabel="Agregar enlace" emptyEntry={{ label: "", url: "" }}>
-          {(i) => (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField name={`header.links.${i}.label`} label="Etiqueta (LinkedIn, GitHub…)" />
-              <TextField name={`header.links.${i}.url`} label="URL" />
-            </div>
-          )}
-        </EntryList>
+        <HeaderFields />
       </Section>
 
       <Section title="Resumen" {...props("summary")}>
-        <TextField name="summary" label="Resumen profesional" multiline />
+        <SummaryFields />
       </Section>
 
       <Section title="Experiencia" count={len("experience")} {...props("experience")}>
-        <EntryList name="experience" itemLabel="Puesto" addLabel="Agregar experiencia" emptyEntry={{ company: "", role: "", startDate: "", bullets: [] }}>
-          {(i) => (
-            <>
-              <TextField name={`experience.${i}.role`} label="Cargo" />
-              <TextField name={`experience.${i}.company`} label="Empresa" />
-              <TextField name={`experience.${i}.location`} label="Ubicación" />
-              <div className="grid grid-cols-2 gap-4">
-                <TextField name={`experience.${i}.startDate`} label="Inicio" />
-                <TextField name={`experience.${i}.endDate`} label="Fin" />
-              </div>
-              <StringList name={`experience.${i}.bullets`} label="Logros y responsabilidades" addLabel="Agregar bullet" />
-            </>
-          )}
-        </EntryList>
+        <ExperienceFields />
       </Section>
 
       <Section title="Educación" count={len("education")} {...props("education")}>
-        <EntryList name="education" itemLabel="Estudio" addLabel="Agregar estudio" emptyEntry={{ institution: "", details: [] }}>
-          {(i) => (
-            <>
-              <TextField name={`education.${i}.institution`} label="Institución" />
-              <TextField name={`education.${i}.degree`} label="Título" />
-              <TextField name={`education.${i}.field`} label="Área" />
-              <div className="grid grid-cols-2 gap-4">
-                <TextField name={`education.${i}.startDate`} label="Inicio" />
-                <TextField name={`education.${i}.endDate`} label="Fin" />
-              </div>
-              <StringList name={`education.${i}.details`} label="Detalles" addLabel="Agregar detalle" />
-            </>
-          )}
-        </EntryList>
+        <EducationFields />
       </Section>
 
       <Section title="Skills" count={len("skills")} {...props("skills")}>
-        <EntryList name="skills" itemLabel="Grupo" addLabel="Agregar grupo" emptyEntry={{ category: "", items: [] }}>
-          {(i) => (
-            <>
-              <TextField name={`skills.${i}.category`} label="Categoría (opcional)" />
-              <TagsField name={`skills.${i}.items`} label="Skills" placeholder="TypeScript, PostgreSQL…" />
-            </>
-          )}
-        </EntryList>
+        <SkillsFields />
       </Section>
 
       <Section title="Idiomas" count={len("languages")} {...props("languages")}>
-        <EntryList name="languages" itemLabel="Idioma" addLabel="Agregar idioma" emptyEntry={{ name: "", level: "" }}>
-          {(i) => (
-            <div className="grid grid-cols-2 gap-4">
-              <TextField name={`languages.${i}.name`} label="Idioma" />
-              <TextField name={`languages.${i}.level`} label="Nivel" />
-            </div>
-          )}
-        </EntryList>
+        <LanguagesFields />
       </Section>
 
       <Section title="Proyectos" count={len("projects")} {...props("projects")}>
-        <EntryList name="projects" itemLabel="Proyecto" addLabel="Agregar proyecto" emptyEntry={{ name: "", technologies: [], bullets: [] }}>
-          {(i) => (
-            <>
-              <TextField name={`projects.${i}.name`} label="Nombre" />
-              <TextField name={`projects.${i}.url`} label="URL" />
-              <TextField name={`projects.${i}.description`} label="Descripción" multiline />
-              <TagsField name={`projects.${i}.technologies`} label="Tecnologías" />
-              <StringList name={`projects.${i}.bullets`} label="Logros" addLabel="Agregar bullet" />
-            </>
-          )}
-        </EntryList>
+        <ProjectsFields />
       </Section>
     </div>
   )

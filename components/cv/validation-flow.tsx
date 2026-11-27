@@ -47,7 +47,7 @@ export type FileFacts = { name: string; detail: string; notes: string[]; /** afi
  * La persona confirma («Es correcto») o corrige. Se escribe a mano solo lo que la IA no puede generar o es sensible (nombre, contacto); el rol
  * se puede escoger entre los cargos que ya trae el CV. Nunca se inventa un dato.
  */
-export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, validated = false, onValidated }: { cv: CV; file: FileFacts; onChange: (cv: CV) => void; onChangeFile: () => void; /** botón del último paso */ onContinue?: () => void; /** ya se validó todo (al volver a este paso) */ validated?: boolean; /** avisa cuando se validan todas las etapas */ onValidated?: (all: boolean) => void }) {
+export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, validated = false, onValidated, onExit }: { cv: CV; file: FileFacts; onChange: (cv: CV) => void; onChangeFile: () => void; /** botón del último paso */ onContinue?: () => void; /** ya se validó todo (al volver a este paso) */ validated?: boolean; /** avisa cuando se validan todas las etapas */ onValidated?: (all: boolean) => void; /** salir de la validación sin terminarla (lleva a la vista inicial); lo avanzado se conserva */ onExit?: () => void }) {
   // Las etapas se arman una vez con el CV leído (una por experiencia y por estudio); `step` es la actual y las anteriores ya se confirmaron.
   const [stages, setStages] = useState<Stage[]>(() => stagesFor(cv))
   const [step, setStep] = useState(validated ? stagesFor(cv).length : 0)
@@ -111,13 +111,18 @@ export function ValidationFlow({ cv, file, onChange, onChangeFile, onContinue, v
 
       {/* Dos mitades sin contenedor común. Izquierda (fija al hacer scroll): «Volver» arriba, a la izquierda, y, en el medio y centrado, el sello, qué hacer, la tarjeta del CV y sus notas. Derecha (panel enmarcado con resplandor frío): las preguntas, el formulario y la botonería. */}
       <section aria-label="Tu archivo" className="flex min-h-112 flex-col px-4 pt-4 pb-2 md:px-6 md:pt-6">
-        <div className="flex min-h-9 items-center">
+        <div className="flex min-h-9 items-center justify-between">
           {step > 0 ? (
             <Button variant="ghost" size="sm" className="-ml-2 text-muted-foreground" onClick={back}>
               <ArrowLeftIcon data-icon="inline-start" aria-hidden /> Volver
             </Button>
           ) : (
             <span />
+          )}
+          {onExit && (
+            <Button variant="ghost" size="sm" className="-mr-2 text-muted-foreground" onClick={onExit}>
+              <XIcon data-icon="inline-start" aria-hidden /> Salir
+            </Button>
           )}
         </div>
         <div className="flex flex-1 flex-col items-center justify-center py-6">

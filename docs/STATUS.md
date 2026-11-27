@@ -2,6 +2,32 @@
 
 Bitácora por fase (la más reciente arriba). Desde el 16-nov-2026 Juan pidió: avanzar A–E en orden sin detenerse entre fases, documentar cada una aquí, y **hacer él la revisión visual y de accesibilidad directamente en la app** (yo verifico con lint, tsc, build y tests).
 
+## «Your resume»: perfil profesional editable (27-nov-2026)
+
+Investigación y decisiones: `docs/INVESTIGACION-YOUR-RESUME.md`.
+
+**Hecho**
+- Esquema (`lib/schemas/cv.ts`): 4 secciones nuevas, todas opcionales y con `default([])` (los CV ya guardados siguen válidos): `certifications`, `volunteering`, `awards`, `publications`. `SECTION_KEYS` y `sectionOrder` las incluyen.
+- Lector del CV sin IA: `lib/cv/sections.ts` reconoce sus encabezados (antes caían en «otros» y se marcaban como «encabezado poco estándar»); `lib/cv/extras.ts` las lee (separa por «—», «|», « - », toma el año del final o entre paréntesis, solo enlaces escritos como https/www); `lib/cv/pipeline.ts` las agrega al CV.
+- Salidas: PDF/HTML, Word/TXT/Markdown y versión ATS (`lib/ats/*`, con sus encabezados estándar y su orden) pintan las secciones nuevas solo si traen datos.
+- Vista `/cv` «Your resume» (menú de la cuenta): título a la izquierda y campos a la derecha con divisor por sección (mismo patrón de Ajustes). Reutiliza `form-parts.tsx` y los campos extraídos a `components/cv/section-fields.tsx` (también los usa `CvForm`). Las 4 opcionales se agregan con «Agregar sección» y se quitan con «Quitar sección».
+- Botón «Llenar con tu CV»: completa SOLO lo vacío (`lib/cv/merge.ts`, nunca pisa lo escrito). Si hay un CV leído y no validado en este navegador lo usa directo; si no, pide un archivo y lo lee con el pipeline de siempre.
+- «Guardar cambios» deja el perfil como CV validado (`saveProfileCv`); `CvSync` lo sube a la cuenta. Un perfil sin archivo recibe un `fileId` propio estable para que cada guardado actualice la misma fila.
+- Validación del CV: botón «Salir» arriba a la derecha de la mitad izquierda; lleva a `/ofertas` y conserva lo avanzado.
+
+**Verificado**: lint 0 errores (8 avisos previos), tsc limpio, `pnpm build` ok (ruta `/cv`), 1058 tests en verde (nuevos: `cv-extras`, `cv-merge`, `your-resume`; actualizado `cv-parts` y `alerts`: la campana trae 30).
+
+**Límites**: no hay reordenar secciones en la vista (el orden estándar manda; `sectionOrder` existe en el esquema); las 4 secciones nuevas no tienen paso propio en la validación guiada (se revisan en «Your resume»); el lector las parte con reglas, no con IA, así que una línea rara puede quedar entera en «nombre».
+
+**Para revisar por Juan** (escritorio y 375 px, solo oscuro)
+1. Menú de la cuenta → «Your resume». Mira el encabezado, las 7 secciones y el divisor entre ellas.
+2. «Llenar con tu CV»: con un CV leído pero sin validar se llena al instante; sin CV pide un archivo. Revisa que no pise lo ya escrito.
+3. «Agregar sección» → Certificaciones/Voluntariado/Premios/Publicaciones; «Quitar sección».
+4. «Guardar cambios» y recarga: debe quedar guardado; entra desde otro dispositivo y debe aparecer.
+5. Valida un CV: mira el nuevo «Salir» y a dónde lleva (¿`/ofertas` es la vista inicial que querías?).
+
+---
+
 ## Fase K — paso K7: vista previa y descarga en varios formatos (18-nov-2026)
 
 **Hecho**
