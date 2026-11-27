@@ -40,20 +40,20 @@ export type LensParams = {
   x: number
 }
 
-/** Valores por defecto (ronda 3, 27-nov-2026): 0,9 s; lupa más suave que la ronda 2; color MUY ligero y breve, al comienzo; curvatura global suave; lienzo al 60 % de resolución mientras se anima. */
+/** Valores por defecto (ronda 3b, 27-nov-2026): 0,9 s; lupa y curvatura suaves y lente aplanada (menos «burbuja»); color MUY ligero y breve, al comienzo; curvatura global suave; lienzo al 60 % de resolución mientras se anima. */
 export const DEFAULT_LENS: LensParams = {
   durationMs: 900,
   easePower: 1.3,
   radius: 0.45,
-  widthFactor: 2.2,
-  strength: 0.4,
+  widthFactor: 3,
+  strength: 0.55,
   dispersion: 0.2,
   prism: 0.016,
   blur: 0.07,
   rim: 0.5,
   colorPeak: 0.3,
   colorWidth: 0.1,
-  curve: 0.12,
+  curve: 0.07,
   renderScale: 0.6,
   plateau: 1.5,
   band: 0.2,
