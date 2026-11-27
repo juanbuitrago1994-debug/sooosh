@@ -1,5 +1,6 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
+import { LAST_USER_COOKIE, LAST_USER_MAX_AGE, encodeLastUser } from "@/lib/auth/last-user"
 import { registerDevice } from "@/lib/auth/session"
 import { createAuthClient } from "@/lib/auth/supabase"
 
@@ -21,5 +22,9 @@ export async function GET(request: Request) {
     await supabase.auth.signOut({ scope: "local" })
     return NextResponse.redirect(new URL("/login?error=dispositivo", url.origin))
   }
+  // Para ofrecer «Continuar como …» la próxima vez en este dispositivo.
+  const meta = (data.user.user_metadata ?? {}) as { full_name?: string; name?: string }
+  const email = data.user.email ?? ""
+  if (email) store.set(LAST_USER_COOKIE, encodeLastUser({ name: meta.full_name ?? meta.name ?? email.split("@")[0], email }), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: LAST_USER_MAX_AGE })
   return NextResponse.redirect(new URL("/", url.origin))
 }

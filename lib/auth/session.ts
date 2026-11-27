@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { and, eq, isNull, sql } from "drizzle-orm"
 import { getDb } from "@/lib/db"
 import { profiles, trustedDevices } from "@/lib/db/schema"
+import { LAST_USER_COOKIE } from "./last-user"
 import { DEVICE_COOKIE, deviceCookieOptions, deviceExpiry, signDevice, verifyDevice } from "./device"
 import { createAuthClient } from "./supabase"
 
@@ -105,6 +106,7 @@ export async function clearSessionCookies(): Promise<void> {
   const supabase = await authClientFor(false)
   await supabase.auth.signOut({ scope: "local" }).catch(() => {})
   store.delete(DEVICE_COOKIE)
+  store.delete(LAST_USER_COOKIE) // la cuenta ya no existe: no se ofrece más «Continuar como…»
 }
 
 /** Cierra la sesión de este dispositivo: revoca su fila, borra las cookies y cierra la sesión en Supabase. */

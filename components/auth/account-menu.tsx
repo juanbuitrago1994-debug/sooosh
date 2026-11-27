@@ -4,13 +4,13 @@ import { useState } from "react"
 import Link from "next/link"
 import { BookmarkIcon, LogOutIcon, SettingsIcon } from "lucide-react"
 import { whoAmI } from "@/app/cuenta/actions"
+import { initialsOf as initials } from "@/lib/auth/last-user"
 import { clearLocalAccountData } from "@/lib/auth/local-data"
 import { NAV_POPOVER_OFFSET } from "@/lib/nav"
 import { useAccountName } from "@/components/auth/account-context"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "?"
 
 /** Menú de la cuenta (en todas las cabeceras): quién eres, Ajustes y «Cerrar sesión» en este dispositivo. */
 export function AccountMenu() {
