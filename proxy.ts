@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { RATE_PER_MINUTE, policyFor } from "@/lib/auth/api-policy"
 import { DEVICE_COOKIE, verifyDevice } from "@/lib/auth/device"
+import { LAST_USER_COOKIE, LAST_USER_MAX_AGE, encodeLastUser } from "@/lib/auth/last-user"
 import { createLimiter } from "@/lib/auth/rate-limit"
 import { createAuthClient } from "@/lib/auth/supabase"
 
@@ -54,6 +55,16 @@ export async function proxy(request: NextRequest) {
     if (!r.ok) return NextResponse.json({ error: "Demasiadas peticiones seguidas. Espera un momento y vuelve a intentar." }, { status: 429, headers: { "Retry-After": String(r.retryAfterSeconds) } })
     return response
   }
+  // Quien ya tenía la sesión abierta antes de existir la tarjeta «Continuar como …» (o la perdió) también la recibe: se guarda el último usuario al ver cualquier página.
+  if (signedIn) {
+    const email = String(data?.claims?.email ?? "")
+    const meta = (data?.claims?.user_metadata ?? {}) as { full_name?: string; name?: string }
+    if (email) {
+      const value = encodeLastUser({ name: meta.full_name ?? meta.name ?? email.split("@")[0], email })
+      if (request.cookies.get(LAST_USER_COOKIE)?.value !== value) response.cookies.set(LAST_USER_COOKIE, value, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: LAST_USER_MAX_AGE })
+    }
+  }
+
   if (!signedIn && !isPublic(pathname)) return NextResponse.redirect(new URL("/login", request.url))
   if (signedIn && pathname === "/login") return NextResponse.redirect(new URL("/", request.url))
   return response
