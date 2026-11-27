@@ -21,7 +21,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full font-sans">
         <ThemeProvider>
           {children}
-          <Toaster position="top-center" />
+          <Toaster position="bottom-center" />
         </ThemeProvider>
       </body>
     </html>

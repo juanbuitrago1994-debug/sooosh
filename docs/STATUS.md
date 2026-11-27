@@ -1558,3 +1558,6 @@ Con el servidor de Playwright reconectado con `--browser webkit` (build 2395 des
 
 ### Lupa: de vuelta a vertical (27-nov-2026, pedido de Juan)
 - `axis` por defecto vuelve a 0 (la lente baja). La opción horizontal sigue en `/login?afinar=1` («Dirección»).
+
+### Avisos (Sonner) abajo y sin borde (27-nov-2026, pedido de Juan)
+- `<Toaster position="bottom-center" />` y `--normal-border: transparent` en `components/ui/sonner.tsx` (el resto es el Sonner estándar de shadcn). Para revisar por Juan: guardar cambios en Ajustes o cambiar «Mantener sesión» y mirar el aviso abajo al centro, sin borde.
