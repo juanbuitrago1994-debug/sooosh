@@ -1555,3 +1555,6 @@ Con el servidor de Playwright reconectado con `--browser webkit` (build 2395 des
 
 ### Ajustes: barra «Cancelar / Guardar cambios» (27-nov-2026, pedido de Juan)
 - Cabecera de Ajustes («Preferencias» + descripción a la izquierda; «Cancelar» y «Guardar cambios» a la derecha, apiladas en móvil) en `components/settings/profile-settings.tsx`. Gobiernan el formulario del perfil (botón con `form="profile-form"`): desactivados hasta que haya cambios; «Cancelar» devuelve los campos a lo guardado; al guardar muestra el spinner y el aviso «Cambios guardados». El botón de abajo del formulario desaparece en Ajustes (el registro lo conserva). Las demás secciones mantienen sus propias acciones. lint, tsc, build y 1042 pruebas en verde; NO verificado en pantalla (el navegador de pruebas no tiene sesión). Para revisar por Juan: `/ajustes` a 1280 y 375 px, editar el nombre → se activan los botones → Cancelar y Guardar.
+
+### Lupa: de vuelta a vertical (27-nov-2026, pedido de Juan)
+- `axis` por defecto vuelve a 0 (la lente baja). La opción horizontal sigue en `/login?afinar=1` («Dirección»).

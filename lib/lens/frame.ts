@@ -59,7 +59,7 @@ export const DEFAULT_LENS: LensParams = {
   curve: 0.1,
   renderScale: 0.75,
   plateau: 1.3,
-  axis: 1,
+  axis: 0,
   fadeMs: 500,
   band: 0.2,
   startY: 1.0,
