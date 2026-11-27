@@ -250,6 +250,9 @@ importers:
       officeparser:
         specifier: ^8.8.0
         version: 8.8.0(supports-color@7.2.0)
+      ogl:
+        specifier: 1.0.11
+        version: 1.0.11
       playwright:
         specifier: ^1.65.1
         version: 1.65.1
@@ -3669,6 +3672,9 @@ packages:
         optional: true
       puppeteer:
         optional: true
+
+  ogl@1.0.11:
+    resolution: {integrity: sha512-kUpC154AFfxi16pmZUK4jk3J+8zxwTWGPo03EoYA8QPbzikHoaC82n6pNTbd+oEaJonaE8aPWBlX7ad9zrqLsA==}
 
   onetime@5.1.2:
     resolution: {integrity: sha512-kbpaSSGJTWdAY5KPVeMOKXSrPtr8C8C7wodJbcsd51jRnmD+GZu8Y0VoU6Dm5Z4vWr0Ig/1NKuWRKf7j5aaYSg==}
@@ -7755,6 +7761,8 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+
+  ogl@1.0.11: {}
 
   onetime@5.1.2:
     dependencies:
