@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { StickyHeader } from "@/components/common/sticky-header"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeftIcon, BookmarkIcon, CheckIcon, LinkIcon } from "lucide-react"
@@ -130,7 +131,8 @@ export function JobDetail({ job }: { job: JobCard }) {
   return (
     <div className="flex min-h-dvh w-full flex-col">
       {/* Cabecera igual a la de inicio y búsqueda: atrás y marca a la izquierda, acciones a la derecha, pegadas arriba. */}
-      <header className="mx-auto flex w-full max-w-2xl items-center justify-between px-4 py-3 sm:px-6">
+      <StickyHeader>
+        <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-4 py-3 sm:px-6">
         <div className="flex items-center gap-1">
           <Link href="/ofertas" aria-label="Volver a los resultados" className={buttonVariants({ variant: "ghost", size: "icon" })}>
             <ArrowLeftIcon aria-hidden />
@@ -151,7 +153,8 @@ export function JobDetail({ job }: { job: JobCard }) {
           <NotificationsBell />
           <AccountMenu />
         </div>
-      </header>
+      </div>
+      </StickyHeader>
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 pt-4 sm:px-6">
         <Rise className="flex flex-col items-start gap-1">

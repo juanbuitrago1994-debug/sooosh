@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { StickyHeader } from "@/components/common/sticky-header"
 import Link from "next/link"
 import { Suspense } from "react"
 import { ListSkeleton } from "@/components/common/list-skeleton"
@@ -22,12 +23,14 @@ async function Offers() {
 export default function MisOfertasPage() {
   return (
     <div className="flex min-h-dvh w-full flex-col">
-      <header className="mx-auto flex w-full max-w-2xl items-center gap-1 px-4 py-3 sm:px-6">
+      <StickyHeader>
+        <div className="mx-auto flex w-full max-w-2xl items-center gap-1 px-4 py-3 sm:px-6">
         <Link href="/" aria-label="Volver" className={buttonVariants({ variant: "ghost", size: "icon" })}>
           <ArrowLeftIcon aria-hidden />
         </Link>
         <h1 className="px-1 text-sm font-medium">Mis ofertas</h1>
-      </header>
+      </div>
+      </StickyHeader>
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 pt-4 pb-12 sm:px-6">
         <p className="text-xs text-muted-foreground">Guardamos cada oferta completa y revisamos su enlace varias veces al día. Si cierra, te lo marcamos para que no pierdas tiempo.</p>
         <Suspense fallback={<ListSkeleton />}>

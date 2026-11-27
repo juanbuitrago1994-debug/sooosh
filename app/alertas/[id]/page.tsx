@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { StickyHeader } from "@/components/common/sticky-header"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
@@ -77,12 +78,14 @@ async function Results({ params }: { params: Promise<{ id: string }> }) {
 export default function AlertaPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <div className="flex min-h-dvh w-full flex-col">
-      <header className="mx-auto flex w-full max-w-2xl items-center gap-1 px-4 py-3 sm:px-6">
+      <StickyHeader>
+        <div className="mx-auto flex w-full max-w-2xl items-center gap-1 px-4 py-3 sm:px-6">
         <Link href="/notificaciones?tab=alertas" aria-label="Volver a mis alertas" className={buttonVariants({ variant: "ghost", size: "icon" })}>
           <ArrowLeftIcon aria-hidden />
         </Link>
         <h1 className="px-1 text-sm font-medium">Ofertas de tu alerta</h1>
-      </header>
+      </div>
+      </StickyHeader>
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 pt-4 pb-12 sm:px-6">
         <Suspense fallback={<ListSkeleton label="Buscando las ofertas de tu alerta" />}>
           <Results params={params} />
