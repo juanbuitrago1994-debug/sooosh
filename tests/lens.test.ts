@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { LENS, easeInOutSine, lensFrame } from "@/lib/lens/frame"
+import { DEFAULT_LENS as LENS, LENS_RANGES, easeInOutPower, lensFrame } from "@/lib/lens/frame"
 import { cornerRadius, groupLines } from "@/lib/lens/rasterize"
 
 describe("línea de tiempo del efecto lupa", () => {
@@ -28,14 +28,27 @@ describe("línea de tiempo del efecto lupa", () => {
   it("ignora avances fuera de 0 a 1 y la curva es suave (sin saltos)", () => {
     expect(lensFrame(-3).lensY).toBeCloseTo(LENS.startY)
     expect(lensFrame(9).lensY).toBeCloseTo(LENS.endY)
-    expect(easeInOutSine(0)).toBeCloseTo(0, 10)
-    expect(easeInOutSine(1)).toBeCloseTo(1)
-    expect(easeInOutSine(0.5)).toBeCloseTo(0.5)
+    expect(easeInOutPower(0, 2.2)).toBeCloseTo(0, 10)
+    expect(easeInOutPower(1, 2.2)).toBeCloseTo(1)
+    expect(easeInOutPower(0.5, 2.2)).toBeCloseTo(0.5)
+    expect(easeInOutPower(0.3, 1)).toBeCloseTo(0.3) // potencia 1 = lineal
+    expect(easeInOutPower(0.2, 3)).toBeLessThan(easeInOutPower(0.2, 1.5)) // más potencia = arranque más lento y más ímpetu después
     expect(Math.abs(lensFrame(0.401).lensY - lensFrame(0.4).lensY)).toBeLessThan(0.01)
   })
-  it("la duración total no pasa de 2,5 s (el login debe ser legible pronto)", () => {
-    expect(LENS.durationMs).toBeLessThanOrEqual(2500)
-    expect(LENS.strength).toBeLessThan(1) // lupa que agranda, no que encoge
+  it("los valores por defecto son rápidos (≤ 1,6 s), más fuertes que la primera versión (fuerza < 0,5) y con color y estela", () => {
+    expect(LENS.durationMs).toBeLessThanOrEqual(1600)
+    expect(LENS.strength).toBeLessThan(0.5)
+    expect(LENS.dispersion).toBeGreaterThan(0)
+    expect(LENS.prism).toBeGreaterThan(0)
+    expect(LENS.blur).toBeGreaterThan(0)
+    expect(LENS.widthFactor).toBeGreaterThan(1)
+  })
+  it("cada parámetro del panel de ajuste tiene un rango que contiene su valor por defecto", () => {
+    for (const [k, [min, max]] of Object.entries(LENS_RANGES)) {
+      const v = LENS[k as keyof typeof LENS] as number
+      expect(v, k).toBeGreaterThanOrEqual(min)
+      expect(v, k).toBeLessThanOrEqual(max)
+    }
   })
 })
 

@@ -1,6 +1,6 @@
 import { Mesh, Program, Renderer, Texture, Triangle } from "ogl"
 import { animate } from "motion/react"
-import { LENS, lensFrame } from "./frame"
+import { DEFAULT_LENS, lensFrame, type LensParams } from "./frame"
 import { rasterize } from "./rasterize"
 import { FRAGMENT, VERTEX } from "./shaders"
 
@@ -12,7 +12,7 @@ export type LensRun = { canvas: HTMLCanvasElement; finished: Promise<void>; skip
  * deformando y descubriendo el contenido. Al terminar, la imagen es idéntica a la página real. El canvas es decorativo (`aria-hidden`, no recibe clics). Lanza un error si
  * no hay WebGL: quien lo llama debe mostrar la página sin efecto.
  */
-export async function runLens(root: HTMLElement): Promise<LensRun> {
+export async function runLens(root: HTMLElement, params: LensParams = DEFAULT_LENS): Promise<LensRun> {
   const width = window.innerWidth
   const height = window.innerHeight
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
@@ -43,20 +43,25 @@ export async function runLens(root: HTMLElement): Promise<LensRun> {
     uniforms: {
       uTexture: { value: texture },
       uBg: { value: bg },
-      uCenter: { value: [LENS.x, LENS.startY] },
+      uCenter: { value: [params.x, params.startY] },
       uAspect: { value: width / height },
-      uRadius: { value: LENS.radius },
-      uStrength: { value: LENS.strength },
+      uRadius: { value: params.radius },
+      uWidth: { value: params.widthFactor },
+      uStrength: { value: params.strength },
       uBulge: { value: 0 },
-      uBand: { value: LENS.band },
+      uBand: { value: params.band },
+      uDispersion: { value: params.dispersion },
+      uPrism: { value: params.prism },
+      uBlur: { value: params.blur },
+      uRim: { value: params.rim },
     },
   })
   const mesh = new Mesh(gl, { geometry: new Triangle(gl), program })
 
   let destroyed = false
   const draw = (p: number) => {
-    const f = lensFrame(p)
-    program.uniforms.uCenter.value = [LENS.x, f.lensY]
+    const f = lensFrame(p, params)
+    program.uniforms.uCenter.value = [params.x, f.lensY]
     program.uniforms.uBulge.value = f.bulge
     renderer.render({ scene: mesh })
   }
@@ -64,7 +69,7 @@ export async function runLens(root: HTMLElement): Promise<LensRun> {
 
   let done!: () => void
   const finished = new Promise<void>((resolve) => (done = resolve))
-  const controls = animate(0, 1, { duration: LENS.durationMs / 1000, ease: "linear", onUpdate: (p) => !destroyed && draw(p) })
+  const controls = animate(0, 1, { duration: params.durationMs / 1000, ease: "linear", onUpdate: (p) => !destroyed && draw(p) })
 
   const destroy = () => {
     if (destroyed) return

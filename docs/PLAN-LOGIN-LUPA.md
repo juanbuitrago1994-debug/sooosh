@@ -58,3 +58,16 @@ Juan indicó como referencia el tutorial de Codrops («Creating a Bulge Distorti
 - **Piezas**: `lib/lens/frame.ts` (línea de tiempo y parámetros `LENS`: 2 s, radio 0,3, fuerza 0,5 ≈ ×2, lente de arriba abajo), `shaders.ts`, `rasterize.ts`, `run.ts` (OGL), `components/auth/login-lens.tsx` (envuelve toda la pantalla; el contenido real existe desde el principio pero invisible hasta el final; un clic o una tecla saltan el efecto).
 - **Sin efecto**: con «reducir movimiento» aparece al instante; sin WebGL, con un fundido de 0,6 s; un seguro de 7 s garantiza que la página nunca quede invisible. Se perdió la entrada escalonada (`Rise`) del login: la sustituye la lupa.
 - **Pendiente de Juan**: ver el efecto a ojo y ajustar `LENS` (fuerza, radio, duración); las demás decisiones del §5 (referencias en vídeo, frecuencia) quedan abiertas: hoy se ve en CADA carga, como pidió.
+
+## Ronda 2 (27-nov-2026): prisma, estela, más rápido y más fuerte
+Juan mostró tres fotogramas de referencia: franjas verticales con color (azul/violeta arriba, naranja abajo), texto borroso con bordes de colores y tarjetas curvadas con franjas iridiscentes a los lados. Se añadió al shader (`lib/lens/shaders.ts`):
+- **Prisma lateral** (`dispersion`): rojo, verde y azul se abomban con distinta fuerza → franjas de color en los bordes de la lente.
+- **Prisma vertical** (`prism`): los canales de color se desplazan hacia arriba y abajo → azul arriba, naranja abajo.
+- **Estela vertical** (`blur`): desenfoque direccional de 9 muestras que crece con la intensidad.
+- **Fuerza en el borde** (`rim`): la intensidad se concentra en el borde de la lente (donde se ve el color) en vez de en su centro.
+- **Lente ancha** (`widthFactor`): de círculo a banda casi tan ancha como la pantalla, como en las referencias.
+- **Más rápido y fuerte**: 1,2 s (antes 2 s), curva con más ímpetu (`easePower` 1,8), lupa ×4–5 (`strength` 0,22; antes 0,5), la lente arranca pegada al borde superior (antes había ~0,7 s de pantalla vacía).
+- **Panel de ajuste en vivo** (solo en desarrollo, `http://localhost:3000/login?afinar=1`): 11 controles con los parámetros de abajo, «Repetir efecto», «Copiar valores» (JSON para pegarle a Claude) y «Restablecer». Valores por defecto en `DEFAULT_LENS` (`lib/lens/frame.ts`).
+
+**Parámetros para explorar**: `durationMs`, `easePower`, `radius`, `widthFactor`, `strength`, `dispersion`, `prism`, `blur`, `rim`, `plateau` (cuánto se sostiene el pico), `band` (suavidad con que aparecen los elementos), y fuera del panel `startY`/`endY` (por dónde entra y sale) y `x` (posición horizontal).
+**Ideas que NO están hechas** (siguiente ronda si Juan las quiere): curvatura global tipo pantalla curva (la referencia 3: las tarjetas laterales se doblan hacia afuera), estela horizontal o diagonal, brillo/«blanqueado» en el pico, ondulación con ruido, dos lentes a la vez, entrada desde un lado, y desenfoque de las zonas aún no reveladas.
