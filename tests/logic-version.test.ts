@@ -2,9 +2,10 @@ import { createHash } from "node:crypto"
 import { describe, expect, it } from "vitest"
 import { LOGIC_VERSION } from "@/lib/cache/results"
 import { parseAwards, parseCertifications, parsePublications, parseVolunteering } from "@/lib/cv/extras"
+import { parseEduHead, splitEducation } from "@/lib/cv/heads"
 import { splitHeadline } from "@/lib/cv/headline"
 import { parseLanguages, parseSkills } from "@/lib/cv/lists"
-import { heuristicIdentity } from "@/lib/cv/pipeline"
+import { educationAndCertificationText, heuristicIdentity } from "@/lib/cv/pipeline"
 import { splitSections } from "@/lib/cv/sections"
 
 /**
@@ -25,7 +26,16 @@ const CV_TEXT = [
   "CERTIFICACIONES", "• Google UX Design - Coursera (2023)", "VOLUNTARIADO", "Mentora — Fundación Código", "2022 - 2023", "• Acompañé a 10 estudiantes", "PREMIOS", "Premio a la innovación — Cámara de Comercio (2022)", "PUBLICACIONES", "Diseño de sistemas — Medium (2024)",
 ].join("\n")
 
+// Caso REAL (incidente del 27-nov-2026): encabezado combinado, título + universidad en líneas aparte, fechas con mes, rangos y «En curso».
+const COMBINED = [
+  "HABILIDADES", "Diseño: Figma, Sketch", "EDUCACIÓN Y CERTIFICACIONES", "Formación profesional en Ingeniería de Sistemas / Diseño Interactivo", "Universidad Jorge Tadeo Lozano | 2018 – 2021",
+  "Nielsen Norman Group (NN/g) UX Certification | Nielsen Norman Group | Jun 2026 – Ago 2026", "Claude 101 y AI Fluency | Anthropic Academy | En curso", "IxDF Course Certificate – UX Design | Interaction Design Foundation (IxDF) | Feb 2026",
+  "Webflow 101 Certification Exam | Webflow | 2024", "Programación Básica | Platzi | 2021", "VOLUNTARIADO", "UI Mentor | ADPList | Ago 2023 – Actualidad", "Mentoría one to one con diseñadores de Latinoamérica y Colombia, y contenido educativo sobre diseño.",
+].join("\n\n")
+
 function fingerprint(): string {
+  const combined = splitSections(COMBINED).sections
+  const split = educationAndCertificationText(combined)
   const out = {
     ids: HEADERS.map((h) => {
       const id = heuristicIdentity(h)
@@ -37,12 +47,18 @@ function fingerprint(): string {
     certs: parseCertifications("• Google UX Design - Coursera (2023)\n• Curso de Figma"),
     volunteering: parseVolunteering("Mentora — Fundación Código\n2022 - 2023\n• Acompañé a 10 estudiantes"),
     awards: parseAwards("Premio a la innovación — Cámara de Comercio (2022)"),
+    combined: {
+      kinds: combined.map((x) => x.kind),
+      education: splitEducation(split.education).map((b) => parseEduHead(b.head)),
+      certs: parseCertifications(split.certifications),
+      volunteering: parseVolunteering(combined.filter((x) => x.kind === "volunteering").map((x) => x.text).join("\n")),
+    },
     publications: parsePublications("Diseño de sistemas — Medium (2024)"),
   }
   return createHash("sha256").update(JSON.stringify(out)).digest("hex").slice(0, 16)
 }
 
-const GOLDEN = { version: 8, hash: "05bf782c4816bb9c" }
+const GOLDEN = { version: 9, hash: "cd064d8a01dda405" }
 
 describe("guarda de LOGIC_VERSION", () => {
   it("la lógica de lectura y la versión del caché cambian juntas", () => {

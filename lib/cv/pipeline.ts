@@ -8,11 +8,11 @@ import { parseEduHead, parseJobHead, splitEducation } from "./heads"
 import { bulletItems, isBullet, paragraphProjectItems, splitBlocks, splitExperienceBlocks, type Block } from "./blocks"
 import { extractContact } from "./contact"
 import { splitHeadline } from "./headline"
-import { parseAwards, parseCertifications, parsePublications, parseVolunteering } from "./extras"
+import { parseAwards, parseCertifications, parsePublications, parseVolunteering, splitEducationAndCertifications } from "./extras"
 import { RANGE_RE } from "./dates"
 import { computeConfidence, computeSeniority, computeStyle, detectLanguage, findAtsRisks, findProblems, pickQuestion } from "./diagnosis"
 import { parseLanguages, parseSkills } from "./lists"
-import { splitSections, type Section } from "./sections"
+import { isCombinedEducationTitle, splitSections, type Section } from "./sections"
 import { applySegmentation, numberLines, SEGMENT_PROMPT, segmentSchema } from "./segment"
 
 /**
@@ -152,6 +152,24 @@ function parseProjects(text: string): CV["projects"] {
     .filter((p) => p.name)
 }
 
+/**
+ * Estudios y certificaciones, teniendo en cuenta las secciones combinadas («EDUCACIÓN Y CERTIFICACIONES»): su texto se reparte entre los dos y
+ * lo que son certificaciones se suma a las de la sección propia de certificaciones, si existe.
+ */
+export function educationAndCertificationText(sections: Section[]): { education: string; certifications: string } {
+  const edu: string[] = []
+  const cert: string[] = []
+  for (const s of sections) {
+    if (s.kind === "certifications") cert.push(s.text)
+    else if (s.kind === "education" && isCombinedEducationTitle(s.title)) {
+      const r = splitEducationAndCertifications(s.text)
+      edu.push(r.education)
+      cert.push(r.certifications)
+    } else if (s.kind === "education") edu.push(s.text)
+  }
+  return { education: edu.filter(Boolean).join("\n"), certifications: cert.filter(Boolean).join("\n") }
+}
+
 function sectionText(sections: Section[], kind: Section["kind"]) {
   return sections.filter((s) => s.kind === kind).map((s) => s.text).join("\n")
 }
@@ -256,7 +274,7 @@ export async function runCvPipeline(
 
   // ── 4 · formación: determinista; el modelo solo si no se pudo identificar la institución
   stage(4)
-  const eduText = sectionText(sections, "education")
+  const { education: eduText, certifications: certText } = educationAndCertificationText(sections)
   let education: CV["education"] = []
   if (eduText) {
     const eduBlocks = splitEducation(eduText)
@@ -290,7 +308,7 @@ export async function runCvPipeline(
     skills,
     languages,
     projects,
-    certifications: parseCertifications(sectionText(sections, "certifications")),
+    certifications: parseCertifications(certText),
     volunteering: parseVolunteering(sectionText(sections, "volunteering")),
     awards: parseAwards(sectionText(sections, "awards")),
     publications: parsePublications(sectionText(sections, "publications")),

@@ -35,6 +35,25 @@ Un hallazgo previo del mismo día: al llegar un CV leído **sin** las listas nue
 
 ---
 
+## 2026-11-27 (2) · Educación y certificaciones salían vacías: encabezado combinado
+
+**Síntoma.** «Your resume» mostraba Educación vacía y no aparecían certificaciones, con un CV que tiene la sección «EDUCACIÓN Y CERTIFICACIONES» (universidad y 9 certificaciones).
+
+**Causa.** `headingKind` solo conocía encabezados de UN tema («Educación», «Certificaciones»). «EDUCACIÓN Y CERTIFICACIONES» no coincidía con ninguno, así que todo su contenido se pegó a la sección anterior (Habilidades). Además, aun reconocido: (a) el título del estudio y su universidad iban en líneas separadas y se leían como dos estudios, el primero sin institución (se descartaba); (b) en las certificaciones, los guiones de «Jun 2026 – Ago 2026» y de «Certificate – UX Design» se tomaban como separadores y partían fechas y títulos; (c) la descripción del voluntariado (un párrafo sin viñeta) se perdía.
+
+**Cómo se diagnosticó.** Con el texto original del mismo archivo (`sourceText` en `data/profile.json`): listar los encabezados que sí se reconocen (`splitSections`) y ver en cuál terminaba el bloque. No hizo falta IA ni el navegador.
+
+**Arreglo.**
+- `lib/cv/sections.ts`: encabezados combinados (es/en) se reconocen como estudios (`COMBINED_EDUCATION`, `isCombinedEducationTitle`).
+- `lib/cv/extras.ts` (`splitEducationAndCertifications`) y `lib/cv/pipeline.ts` (`educationAndCertificationText`): una sección combinada se reparte línea por línea; certificado, curso, diplomado, bootcamp, plataforma de cursos → certificaciones (los diplomados cuentan como certificación, a pedido de Juan); lo demás → estudios.
+- `lib/cv/heads.ts` (`splitEducation`): un título sin institución ni año espera a su institución de la línea siguiente.
+- `lib/cv/extras.ts` (`piece`): la barra `|` es el separador principal; el rango de fechas se extrae antes de partir; «Feb 2026», «2024» y «En curso» como parte suelta son la fecha. El voluntariado conserva su descripción como viñeta.
+- `LOGIC_VERSION` = 9 y la guarda (`tests/logic-version.test.ts`) ahora incluye este caso real: **la guarda anterior no lo habría detectado** porque sus textos de muestra no tenían un encabezado combinado.
+
+**Regla nueva.** Cada vez que un CV real revele un caso que la lógica no leía, ese fragmento se agrega a `tests/logic-version.test.ts` y a una prueba propia (`tests/cv-extras.test.ts`, fragmento real de Juan). Si la guarda no falla al cambiar la lógica, sus muestras no cubren el caso.
+
+---
+
 ## 2026-11-20 · El buscador se quedaba cargando para siempre
 
 **Síntoma.** `/ofertas` cargaba bien la primera vez; al recargar, el cargador giraba sin fin y nunca aparecían ofertas. Reiniciar `pnpm dev` ayudaba solo un momento. Las peticiones a la API (`/api/search`, `/api/jobs/count`) no respondían nunca (ni éxito ni error), mientras la portada `/` sí respondía.

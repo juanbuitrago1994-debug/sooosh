@@ -76,3 +76,48 @@ describe("las secciones nuevas llegan a los documentos", () => {
     expect(renderCvHtml(emptyCv(), "es")).not.toContain("Voluntariado")
   })
 })
+
+import { educationAndCertificationText } from "@/lib/cv/pipeline"
+import { splitEducation, parseEduHead } from "@/lib/cv/heads"
+import { isCombinedEducationTitle, splitSections } from "@/lib/cv/sections"
+
+// Fragmento REAL del CV de Juan (incidente del 27-nov-2026: «EDUCACIÓN Y CERTIFICACIONES» no se reconocía y todo quedaba vacío).
+const COMBINED = [
+  "HABILIDADES", "Diseño: Figma, Sketch", "EDUCACIÓN Y CERTIFICACIONES", "Formación profesional en Ingeniería de Sistemas / Diseño Interactivo", "Universidad Jorge Tadeo Lozano | 2018 – 2021",
+  "Nielsen Norman Group (NN/g) UX Certification | Nielsen Norman Group | Jun 2026 – Ago 2026", "Claude 101 y AI Fluency: Framework & Foundations | Anthropic Academy | En curso",
+  "IxDF Course Certificate – UX Design | Interaction Design Foundation (IxDF) | Feb 2026", "Google UX Design Professional Certificate | Google / Coursera | Oct 2025 – Dic 2025",
+  "Webflow 101 Certification Exam | Webflow | 2024", "Carrera de Product Design | Coderhouse | 2022 – 2023", "Programación Básica | Platzi | 2021", "VOLUNTARIADO", "UI Mentor | ADPList | Ago 2023 – Actualidad",
+  "Mentoría one to one con diseñadores de Latinoamérica y Colombia, y contenido educativo sobre diseño de interfaces y Figma.",
+].join("\n\n")
+
+describe("encabezado combinado «Educación y certificaciones»", () => {
+  const { sections } = splitSections(COMBINED)
+  it("se reconoce como estudios y no se traga nada de la sección anterior", () => {
+    expect(isCombinedEducationTitle("EDUCACIÓN Y CERTIFICACIONES")).toBe(true)
+    expect(isCombinedEducationTitle("EDUCACIÓN")).toBe(false)
+    expect(sections.map((s) => s.kind)).toEqual(["skills", "education", "volunteering"])
+    expect(sections[0].text).not.toContain("Universidad")
+  })
+  it("reparte estudios y certificaciones: el título y su universidad son UNA entrada", () => {
+    const r = educationAndCertificationText(sections)
+    const edu = splitEducation(r.education).map((b) => parseEduHead(b.head))
+    expect(edu).toHaveLength(1)
+    expect(edu[0]).toMatchObject({ institution: "Universidad Jorge Tadeo Lozano", degree: "Formación profesional en Ingeniería de Sistemas / Diseño Interactivo", startDate: "2018", endDate: "2021" })
+    expect(r.certifications).not.toContain("Universidad")
+  })
+  it("certificaciones con fechas de mes, rangos y «En curso», y guiones dentro del título", () => {
+    const certs = parseCertifications(educationAndCertificationText(sections).certifications)
+    expect(certs).toHaveLength(7)
+    expect(certs[0]).toEqual({ name: "Nielsen Norman Group (NN/g) UX Certification", issuer: "Nielsen Norman Group", date: "Jun 2026 – Ago 2026", url: undefined })
+    expect(certs[1]).toMatchObject({ issuer: "Anthropic Academy", date: "En curso" })
+    expect(certs[2]).toMatchObject({ name: "IxDF Course Certificate – UX Design", issuer: "Interaction Design Foundation (IxDF)", date: "Feb 2026" })
+    expect(certs[3]).toMatchObject({ issuer: "Google / Coursera", date: "Oct 2025 – Dic 2025" })
+    expect(certs[6]).toMatchObject({ name: "Programación Básica", issuer: "Platzi", date: "2021" })
+  })
+  it("voluntariado: rol, organización, fechas y la descripción como viñeta", () => {
+    const v = parseVolunteering(sections.find((s) => s.kind === "volunteering")!.text)
+    expect(v).toHaveLength(1)
+    expect(v[0]).toMatchObject({ organization: "ADPList", role: "UI Mentor", startDate: "Ago 2023", endDate: "Actualidad" })
+    expect(v[0].bullets[0]).toContain("Mentoría one to one")
+  })
+})

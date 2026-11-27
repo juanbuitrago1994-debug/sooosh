@@ -104,7 +104,11 @@ export function splitEducation(text: string): { head: string[]; bullets: string[
       continue
     }
     const opens = ORG_WORDS.test(line) || /\b(?:19|20)\d{2}\b/.test(line) || out.length === 0
-    if (opens) out.push({ head: [line], bullets: [] })
+    // «Formación profesional en Ingeniería de Sistemas» y, en la línea siguiente, «Universidad X | 2018 – 2021»: el título sin institución ni año espera a su institución, no es un estudio aparte.
+    const last = out[out.length - 1]
+    const waiting = !!last && last.head.length === 1 && last.bullets.length === 0 && !ORG_WORDS.test(last.head[0]) && !/\b(?:19|20)\d{2}\b/.test(last.head[0])
+    if (opens && waiting && ORG_WORDS.test(line)) last.head.push(line)
+    else if (opens) out.push({ head: [line], bullets: [] })
     else out[out.length - 1].head.push(line)
   }
   return out

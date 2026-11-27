@@ -7,10 +7,23 @@ import { fold } from "@/lib/keywords/normalize"
 export type SectionKind = "summary" | "experience" | "education" | "skills" | "languages" | "projects" | "certifications" | "volunteering" | "awards" | "publications" | "other"
 export type Section = { kind: SectionKind; title: string; text: string; order: number }
 
+/** Encabezados que reúnen estudios y certificaciones/cursos en una sola sección. */
+const COMBINED_EDUCATION = [
+  "educacion y certificaciones", "formacion y certificaciones", "formacion academica y certificaciones", "estudios y certificaciones", "educacion y cursos", "formacion y cursos",
+  "educacion y formacion complementaria", "educacion, certificaciones y cursos", "educacion y certificados", "estudios y certificados", "estudios y cursos", "certificaciones y educacion",
+  "education and certifications", "education & certifications", "education and courses", "education & courses", "education, certifications and courses", "education and training",
+]
+/** ¿El título de una sección de estudios es de los combinados (trae también certificaciones o cursos)? */
+export const isCombinedEducationTitle = (title: string) => /certific|cursos|courses|complementaria|training/i.test(title)
+
 const HEADINGS: Record<Exclude<SectionKind, "other">, string[]> = {
   summary: ["perfil", "perfil profesional", "resumen", "resumen profesional", "sobre mi", "acerca de mi", "objetivo", "objetivo profesional", "summary", "profile", "professional summary", "about me", "objective", "career objective"],
   experience: ["experiencia", "experiencia laboral", "experiencia profesional", "historial laboral", "trayectoria", "trayectoria profesional", "experience", "work experience", "professional experience", "employment", "employment history", "work history"],
-  education: ["educacion", "formacion", "formacion academica", "estudios", "estudios realizados", "education", "academic background", "academic education"],
+  education: [
+    "educacion", "formacion", "formacion academica", "estudios", "estudios realizados", "education", "academic background", "academic education",
+    // Encabezados combinados: educación y certificaciones comparten sección (el pipeline las separa; ver `splitEducationAndCertifications`).
+    ...COMBINED_EDUCATION,
+  ],
   skills: ["habilidades", "skills", "competencias", "conocimientos", "tecnologias", "stack", "stack tecnologico", "herramientas", "technical skills", "habilidades tecnicas", "aptitudes", "tools", "technologies", "core skills"],
   languages: ["idiomas", "lenguas", "languages"],
   projects: ["proyectos", "projects", "proyectos destacados", "personal projects", "proyectos personales", "selected projects"],
