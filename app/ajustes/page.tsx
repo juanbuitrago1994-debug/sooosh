@@ -49,7 +49,7 @@ async function Settings() {
 export default function AjustesPage() {
   return (
     <div className="flex min-h-dvh w-full flex-col">
-      <header className="flex items-center gap-1 px-4 py-3 sm:px-6">
+      <header className="mx-auto flex w-full max-w-4xl items-center gap-1 px-4 py-3 sm:px-6">
         <Link href="/" aria-label="Volver" className={buttonVariants({ variant: "ghost", size: "icon" })}>
           <ArrowLeftIcon aria-hidden />
         </Link>

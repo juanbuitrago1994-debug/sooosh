@@ -130,7 +130,7 @@ export function JobDetail({ job }: { job: JobCard }) {
   return (
     <div className="flex min-h-dvh w-full flex-col">
       {/* Cabecera igual a la de inicio y búsqueda: atrás y marca a la izquierda, acciones a la derecha, pegadas arriba. */}
-      <header className="flex items-center justify-between px-4 py-3 sm:px-6">
+      <header className="mx-auto flex w-full max-w-2xl items-center justify-between px-4 py-3 sm:px-6">
         <div className="flex items-center gap-1">
           <Link href="/ofertas" aria-label="Volver a los resultados" className={buttonVariants({ variant: "ghost", size: "icon" })}>
             <ArrowLeftIcon aria-hidden />
