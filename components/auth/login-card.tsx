@@ -4,8 +4,6 @@ import { Rise } from "@/components/motion/rise"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { initialsOf, type LastUser } from "@/lib/auth/last-user"
 
 const ERRORS: Record<string, string> = {
@@ -14,7 +12,7 @@ const ERRORS: Record<string, string> = {
 }
 
 /**
- * Entrada única: Google. Un formulario GET normal (sin JavaScript para entrar): la casilla viaja como `?remember=1` solo si está marcada. Los elementos entran uno tras otro
+ * Entrada única: Google. Un formulario GET normal (sin JavaScript para entrar). «Mantener sesión iniciada» ya no se elige aquí: se configura en Ajustes, con la sesión abierta. Los elementos entran uno tras otro
  * (`Rise`, el mismo movimiento suave de la búsqueda de ofertas). Si en este dispositivo ya entró alguien, se le ofrece «Continuar como …» (ver `lib/auth/last-user.ts`).
  */
 export function LoginCard({ error, last }: { error?: string; last?: LastUser | null }) {
@@ -73,15 +71,6 @@ export function LoginCard({ error, last }: { error?: string; last?: LastUser | n
             </Button>
           </Rise>
         )}
-        <Rise step={last ? 7 : 6}>
-          <Field orientation="horizontal">
-            <Checkbox id="remember" name="remember" value="1" />
-            <FieldContent>
-              <FieldLabel htmlFor="remember">Mantener sesión iniciada en este dispositivo</FieldLabel>
-              <FieldDescription className="text-xs">Solo en tu equipo personal.</FieldDescription>
-            </FieldContent>
-          </Field>
-        </Rise>
       </div>
     </form>
   )

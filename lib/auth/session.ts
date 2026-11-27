@@ -6,6 +6,7 @@ import { and, eq, isNull, sql } from "drizzle-orm"
 import { getDb } from "@/lib/db"
 import { profiles, trustedDevices } from "@/lib/db/schema"
 import { LAST_USER_COOKIE } from "./last-user"
+import { updateDeviceRemember } from "./devices"
 import { DEVICE_COOKIE, deviceCookieOptions, deviceExpiry, signDevice, verifyDevice } from "./device"
 import { createAuthClient } from "./supabase"
 
@@ -98,6 +99,24 @@ export async function registerDevice(userId: string, remember: boolean): Promise
     .returning({ id: trustedDevices.id })
   const value = await signDevice({ id: row.id, userId, expiresAt, remember })
   ;(await cookies()).set(DEVICE_COOKIE, value, deviceCookieOptions(remember, expiresAt))
+}
+
+/**
+ * Cambia «Mantener sesión iniciada» del dispositivo actual (Ajustes): actualiza su fila, reemite la cookie de dispositivo (persistente o de sesión) y
+ * renueva la sesión de Supabase para que sus cookies también pasen a durar lo que corresponde. Solo desde acciones o rutas (escribe cookies).
+ */
+export async function setDeviceRemember(remember: boolean): Promise<boolean> {
+  const session = await getSession()
+  if (!session) return false
+  const { user } = session
+  const expiresAt = await updateDeviceRemember(getDb(), user.id, user.deviceId, remember)
+  if (expiresAt === null) return false
+  const store = await cookies()
+  store.set(DEVICE_COOKIE, await signDevice({ id: user.deviceId, userId: user.id, expiresAt, remember }), deviceCookieOptions(remember, expiresAt))
+  // Renovar la sesión reescribe sus cookies con la regla nueva (con «mantener»: duración larga; sin ella: cookies de sesión).
+  const supabase = await authClientFor(remember)
+  await supabase.auth.refreshSession().catch(() => {})
+  return true
 }
 
 /** Tras borrar la cuenta: solo quedan por limpiar las cookies de este navegador (la fila del dispositivo ya se fue con la persona). */

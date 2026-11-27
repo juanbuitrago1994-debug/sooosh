@@ -5,7 +5,7 @@ import { and, eq, isNull } from "drizzle-orm"
 import { z } from "zod"
 import { DELETE_PHRASE } from "@/lib/account/constants"
 import { deleteAuthUser } from "@/lib/auth/admin"
-import { clearSessionCookies, getCurrentUser, getSession } from "@/lib/auth/session"
+import { clearSessionCookies, getCurrentUser, getSession, setDeviceRemember } from "@/lib/auth/session"
 import type { ProfileFormState } from "@/lib/auth/profile-store"
 import { persistProfile } from "@/lib/auth/profile-store"
 import { trustedDevices } from "@/lib/db/schema"
@@ -97,4 +97,16 @@ export async function deleteMyAccount(confirmation: string): Promise<{ ok: boole
   }
   await clearSessionCookies()
   return { ok: true }
+}
+
+/** «Mantener sesión iniciada en este dispositivo» (Ajustes). */
+export async function setRememberDevice(remember: boolean): Promise<boolean> {
+  try {
+    const ok = await setDeviceRemember(!!remember)
+    if (ok) revalidatePath("/ajustes")
+    return ok
+  } catch (e) {
+    console.error("[cuenta] mantener sesión", e)
+    return false
+  }
 }

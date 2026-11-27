@@ -7,6 +7,7 @@ import { ArrowLeftIcon } from "lucide-react"
 import { updateProfile } from "@/app/cuenta/actions"
 import { DataControls } from "@/components/auth/data-controls"
 import { DevicesList } from "@/components/auth/devices-list"
+import { RememberSwitch } from "@/components/auth/remember-switch"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { OnboardingForm } from "@/components/auth/onboarding-form"
 import { buttonVariants } from "@/components/ui/button"
@@ -52,6 +53,7 @@ async function Settings() {
           <h2 id="dispositivos" className="text-sm font-medium">Dispositivos con sesión</h2>
           <p className="text-xs text-muted-foreground">En un dispositivo nuevo siempre se pide entrar. Cierra aquí los que ya no uses.</p>
         </div>
+        <RememberSwitch initial={user.remember} />
         <DevicesList devices={devices} />
       </section>
       <Separator />
