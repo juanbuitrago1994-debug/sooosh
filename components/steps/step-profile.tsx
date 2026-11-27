@@ -1,7 +1,6 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useAiWork } from "@/components/ai/ai-work"
 import { Button } from "@/components/ui/button"
@@ -48,7 +47,16 @@ export function StepProfile({
   validated = false,
   onValidated,
   onContinue,
+  home = false,
+  onGoHome,
+  onStartValidation,
 }: {
+  /** mostrar la pantalla de inicio con el CV adjunto aunque aún no esté validado */
+  home?: boolean
+  /** ir a la pantalla de inicio (botón «Salir» de la validación) */
+  onGoHome?: () => void
+  /** salir del inicio y empezar a validar */
+  onStartValidation?: () => void
   onContinue?: () => void
   validated?: boolean
   onValidated?: (all: boolean) => void
@@ -57,7 +65,6 @@ export function StepProfile({
   onPhase: (p: ProfilePhase) => void
   onChange: (p: ProfileData | null) => void
 }) {
-  const router = useRouter()
   const [phase, setPhase] = useState<ProfilePhase>(initial ? "review" : "upload")
   const [data, setData] = useState<ProfileData | null>(initial)
   const [file, setFile] = useState<UploadedFile | null>(initial?.file ?? null)
@@ -204,11 +211,11 @@ export function StepProfile({
   return (
     <div className="flex flex-1 flex-col gap-8">
       {data &&
-        (resumed ? (
+        (resumed || home ? (
           // CV ya validado (se volvió o se recargó la página): su tarjeta y el botón para seguir.
-          <ValidatedCv file={fileFacts} onChangeFile={reset} onContinue={() => onContinue?.()} />
+          <ValidatedCv file={fileFacts} onChangeFile={reset} onContinue={() => onContinue?.()} validated={resumed || validated} onValidate={onStartValidation} />
         ) : (
-          <ValidationFlow cv={data.cv} file={fileFacts} onChange={(cv) => update({ ...data, cv })} onChangeFile={reset} onContinue={onContinue} validated={validated} onValidated={onValid} onExit={() => router.push("/ofertas")} />
+          <ValidationFlow cv={data.cv} file={fileFacts} onChange={(cv) => update({ ...data, cv })} onChangeFile={reset} onContinue={onContinue} validated={validated} onValidated={onValid} onExit={onGoHome} />
         ))}
 
       <Dialog open={correcting} onOpenChange={setCorrecting}>

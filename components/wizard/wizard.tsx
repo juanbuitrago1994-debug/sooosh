@@ -63,7 +63,11 @@ function Shell() {
   const phase: ProfilePhase = profile && phaseState === "upload" ? "review" : phaseState
   // Se validaron todos los datos del CV leído (paso 1): hasta entonces «Continuar» está bloqueado.
   const [validatedState, setValidated] = useState(false)
+  // Pantalla de inicio con el CV adjunto (se llega con «Salir» de la validación o con el logo); sirve aunque el CV aún no esté validado.
+  const [home, setHome] = useState(false)
   const validated = validatedState || !!stored?.validatedAt
+  // Si se empieza de nuevo (cambiar de CV, subir otro), el inicio ya no aplica: no debe reaparecer al terminar la nueva lectura.
+  if (phase !== "review" && home) setHome(false)
   const { work } = useAiWork()
   const mainRef = useRef<HTMLDivElement>(null)
 
@@ -187,7 +191,16 @@ function Shell() {
   }
 
   // Entrada (UI v2): sin tarjeta; la pantalla completa es el degradado y la zona de soltar.
-  const headerActions = { onLearning: () => setLearningOpen(true), onReopen: reopen, onNewOffer: newOffer }
+  const headerActions = {
+    onLearning: () => setLearningOpen(true),
+    onReopen: reopen,
+    onNewOffer: newOffer,
+    onHome: () => {
+      if (!profile) return
+      setHome(true)
+      if (step !== 0) goTo(0)
+    },
+  }
   const entry = isProfile && phase !== "review"
   const dialogs = (
     <>
@@ -217,7 +230,7 @@ function Shell() {
           </p>}
           <AiStage className={isProfile ? "flex flex-1 flex-col" : undefined} innerClassName={isProfile ? "flex flex-1 flex-col" : undefined} working={!!work} messages={work?.messages ?? []} step={work?.step ?? 0} onCancel={work?.onCancel}>
             <StepTransition id={step} className={isProfile ? "flex flex-1 flex-col" : undefined}>
-              {step === 0 && <StepProfile initial={profile} onPhase={setPhase} onChange={setProfile} validated={validated} onValidated={setValidated} onContinue={next} />}
+              {step === 0 && <StepProfile initial={profile} onPhase={setPhase} onChange={setProfile} validated={validated} onValidated={setValidated} onContinue={next} home={home} onGoHome={() => setHome(true)} onStartValidation={() => setHome(false)} />}
               {step === 1 && <StepOffer value={offer} onChange={setOffer} />}
               {step === 2 && <StepAnalysis cv={profile?.cv ?? null} offer={offerValue} cvLanguage={profile?.diagnosis?.language} value={match} onChange={setMatch} />}
               {step === 3 && <StepReview cv={profile?.cv ?? null} guard={guard} offer={offerValue} match={matchReady(match, profile?.cv ?? null, offerValue) ? match!.result : null} style={profile?.diagnosis ? styleSentence(profile.diagnosis) : undefined} value={review} onChange={setReview} />}
