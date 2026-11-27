@@ -72,6 +72,22 @@ export function dropCopy(info: DragInfo | null): { title: string; description: s
   return { title: "Suelta tu CV aquí", description: info.label ? `${info.label} · un solo archivo` : "Un solo archivo" }
 }
 
+/**
+ * Textos de la PANTALLA INICIAL al arrastrar (más explicativos y cercanos que los del panel «Mi CV», que sigue con `dropCopy`). Dicen qué va a pasar con el archivo
+ * y, si algo no sirve (varios archivos, un formato que no leemos), qué hacer. La página no es clicable (solo se arrastra, o se pulsa el botón del ícono): los textos no prometen «haz clic». Cada título cabe en UNA línea (≤ 38 caracteres) y cada descripción en DOS (≤ 95).
+ */
+export function entryDropCopy(info: DragInfo | null, overCancel = false): { title: string; description: string } {
+  // Encima de la zona de cancelar: se explica qué pasará si se suelta ahí.
+  if (overCancel) return { title: "Cancelar la carga", description: "Si lo sueltas aquí, no se sube nada y vuelves al inicio." }
+  if (info && info.count > 1) return { title: "Un solo archivo a la vez", description: `Traes ${info.count} archivos. Suelta solo tu CV más reciente.` }
+  if (info?.unsupported) return { title: "Ese tipo de archivo no lo podemos leer", description: "Prueba con un PDF, un Word o una imagen de tu CV." }
+  const label = info?.label
+  return { title: "Suéltalo aquí, ya casi está", description: label ? `Formato ${label}: lo leeremos por ti y revisarás cada dato.` : "Con este CV armaremos tu perfil y tú revisas cada dato." }
+}
+
+/** Texto de la pantalla inicial en reposo (sin arrastrar): qué subir y qué pasará después. */
+export const ENTRY_IDLE = { title: "Sube tu CV para empezar", description: "Arrastra el archivo hasta aquí o pulsa el botón. Lo leemos por ti y revisas cada dato." } as const
+
 /** Una línea con lo que SÍ se sabe una vez soltado el archivo: nombre, peso y tipo. */
 export function fileSummary(file: { name: string; size: number; type?: string }): string {
   const kind = (file.type && mimeLabel(file.type)) || getExtension(file.name).toUpperCase()

@@ -68,3 +68,27 @@ describe("lo que se ve mientras se arrastra (antes de soltar)", () => {
     expect(fileSummary({ name: "reabierto.pdf", size: 0 })).toBe("reabierto.pdf · PDF")
   })
 })
+
+import { ENTRY_IDLE, entryDropCopy } from "@/lib/profile/cv-drop"
+
+describe("textos de la pantalla inicial", () => {
+  it("en reposo explica qué subir y qué pasará, sin prometer clic", () => {
+    expect(ENTRY_IDLE.title).toBe("Sube tu CV para empezar")
+    expect(ENTRY_IDLE.description).toContain("Arrastra el archivo hasta aquí")
+    expect(ENTRY_IDLE.description).not.toMatch(/clic|toca/i)
+  })
+  it("al arrastrar dice qué va a pasar; con un formato conocido lo menciona", () => {
+    expect(entryDropCopy(null).title).toBe("Suéltalo aquí, ya casi está")
+    expect(entryDropCopy(describeDrag([{ kind: "file", type: "application/pdf" }])).description).toBe("Formato PDF: lo leeremos por ti y revisarás cada dato.")
+  })
+  it("varios archivos y formatos que no leemos dicen qué hacer", () => {
+    const many = describeDrag([{ kind: "file", type: "application/pdf" }, { kind: "file", type: "application/pdf" }, { kind: "file", type: "application/pdf" }])
+    expect(entryDropCopy(many)).toEqual({ title: "Un solo archivo a la vez", description: "Traes 3 archivos. Suelta solo tu CV más reciente." })
+    const bad = describeDrag([{ kind: "file", type: "application/zip" }])
+    expect(entryDropCopy(bad).title).toBe("Ese tipo de archivo no lo podemos leer")
+    expect(entryDropCopy(bad).description).toContain("PDF")
+  })
+  it("el panel «Mi CV» conserva sus textos de siempre", () => {
+    expect(dropCopy(null)).toEqual({ title: "Suelta tu CV aquí", description: "Un solo archivo" })
+  })
+})

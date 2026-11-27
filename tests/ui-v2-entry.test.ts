@@ -9,7 +9,11 @@ describe("UI v2 · pantalla de Entrada (criterios verificables por código)", ()
     const s = read(f)
     expect(s).not.toMatch(/font-serif|font-heading/)
     expect(s).not.toMatch(/\bCard\b|components\/ui\/card/)
-    expect(s).not.toMatch(/border-dashed|border-2|shadow-/)
+    // Única excepción (pedida por Juan el 27-nov-2026): la zona punteada de CANCELAR que aparece abajo mientras se arrastra un archivo (`data-cancel-zone`). Todo lo demás, sin dashed ni bordes gruesos.
+    const a = s.indexOf("data-cancel-zone")
+    const rest = a < 0 ? s : s.slice(0, a) + s.slice(s.indexOf("</motion.div>", a))
+    expect(rest).not.toMatch(/border-dashed|border-2|shadow-/)
+    if (a >= 0) expect(s.slice(a, s.indexOf("</motion.div>", a))).toContain("border-dashed") // y la zona SÍ es punteada
   })
 
   it.each(["components/wizard/entry-screen.tsx", "components/dropzone.tsx"])("%s: solo tamaños de la escala (xs, sm, base, lg) y pesos 400/500", (f) => {

@@ -40,11 +40,13 @@ describe("ProgressLine: spinner + frase + porcentaje en una línea", () => {
   })
 })
 
-describe("pantalla inicial del CV: misma experiencia que el panel «Mi CV»", () => {
+describe("pantalla inicial del CV: aura, mensaje y línea de lectura", () => {
   const entry = readFileSync(path.join(__dirname, "..", "components/wizard/entry-screen.tsx"), "utf8")
-  it("al arrastrar y al leer usa la capa compartida con el haz, el mensaje compartido y la línea spinner + frase + porcentaje", () => {
-    expect(entry).toContain("<CvDropOverlay")
-    expect(entry).toContain("show={dragging || busy}")
+  it("al arrastrar y al leer usa el aura de luz (AuraField), el mensaje compartido y la línea spinner + frase + porcentaje; ya no usa el haz", () => {
+    expect(entry).toContain("<AuraField")
+    expect(entry).toContain("active={active}")
+    expect(entry).toContain("const active = dragging || busy")
+    expect(entry.replace(/\/\*[\s\S]*?\*\//g, "")).not.toMatch(/CvDropOverlay|FlowBeam|beam=/) // el comentario de cabecera puede nombrarlos
     expect(entry).toContain("<DropMessage")
     expect(entry).toContain("<ReadingStatus")
     expect(entry).not.toMatch(/MatrixLoader|ThinkingTicker|patternForStep/)
@@ -52,9 +54,8 @@ describe("pantalla inicial del CV: misma experiencia que el panel «Mi CV»", ()
   })
   it("en reposo usa el mismo mensaje centrado e ícono en cuadro que el panel «Mi CV» sin CV (DropMessage), no el ícono suelto ni el texto largo de antes", () => {
     expect(entry.match(/<DropMessage/g)).toHaveLength(2) // reposo + arrastrando
-    expect(entry).toContain("Sube tu CV")
+    expect(entry).toContain("ENTRY_IDLE") // «Sube tu CV para empezar» + la frase explicativa viven en lib/profile/cv-drop.ts
     // esta pantalla solo admite arrastrar (el clic está desactivado a propósito): no promete «haz clic»
-    expect(entry).toContain("Arrastra el archivo aquí")
     expect(entry).not.toContain("haz clic")
     expect(entry).not.toMatch(/FileTextIcon|se lee en tu equipo|MAX_UPLOAD_BYTES/)
     // sin el contador «1 de 5», y el cuadro del ícono es pequeño (36 px para un ícono de 16 px) en todos los lugares donde se usa
@@ -63,9 +64,16 @@ describe("pantalla inicial del CV: misma experiencia que el panel «Mi CV»", ()
     expect(drop).toContain("size-9")
     expect(drop).not.toContain("size-14")
   })
-  it("el porcentaje sigue la etapa real (-1 mientras sube) y solo se atenúa el contenido al arrastrar", () => {
+  it("el porcentaje sigue la etapa real (-1 mientras sube) y el contenido de reposo solo se desvanece (opacidad), sin desenfoque", () => {
     expect(entry).toContain('phase === "parsing" ? (work?.step ?? 0) : -1')
-    expect(entry).toContain("dragging && !reduce")
+    expect(entry).toContain("animate={{ opacity: active ? 0 : 1 }}")
+    expect(entry).not.toMatch(/filter|blur\(/)
+  })
+  it("las frases cambian con motion (SwapText sin desenfoque) y dicen qué va a pasar; esta pantalla no promete «haz clic»", () => {
+    expect(entry).toContain("<SwapText")
+    expect(entry).toContain("blur={false}")
+    expect(entry).toContain("entryDropCopy")
+    expect(entry).not.toContain("haz clic")
   })
 })
 
@@ -93,8 +101,9 @@ describe("FlowBeam: fluido (animación en la GPU), con máscaras válidas y vuel
     // hilo de 1 px y franja de 14 px (la mitad de 2 y 28) y tonos fríos de baja saturación
     expect(src).toContain("const LINE_PX = 1")
   })
-  it("la pantalla inicial usa el haz rápido y denso; el panel no cambia", () => {
-    expect(readFileSync(path.join(__dirname, "..", "components/wizard/entry-screen.tsx"), "utf8")).toContain("beam={{ lap: 4, density: 0.6 }}")
+  it("el haz sigue en el panel «Mi CV» (con su vuelta y densidad por defecto) y ya no está en la pantalla inicial", () => {
+    expect(readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")).toContain("<CvDropOverlay")
     expect(readFileSync(path.join(__dirname, "..", "components/jobs/search-profile-panel.tsx"), "utf8")).not.toContain("beam={{")
+    expect(readFileSync(path.join(__dirname, "..", "components/wizard/entry-screen.tsx"), "utf8")).not.toContain("beam={{")
   })
 })
