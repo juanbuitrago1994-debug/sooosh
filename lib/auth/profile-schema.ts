@@ -14,6 +14,7 @@ const role = z.string().trim().min(2, "Cada cargo necesita al menos 2 letras.").
 export const profileSchema = z.object({
   name: z.string().trim().min(2, "Escribe tu nombre.").max(80, "El nombre admite hasta 80 caracteres."),
   country: z.enum(COUNTRY_CODES, { message: "Elige tu país de residencia." }),
+  city: z.string().trim().max(80, "La ciudad admite hasta 80 caracteres.").optional().transform((v) => v || null),
   roleInterests: z.array(role).min(1, "Añade al menos un cargo que te interese.").max(MAX_ROLES, `Máximo ${MAX_ROLES} cargos.`),
 })
 

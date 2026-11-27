@@ -227,6 +227,8 @@ export const profiles = pgTable("profiles", {
   name: text("name").notNull(),
   /** ISO 3166-1 de dos letras */
   country: text("country").notNull(),
+  /** ciudad (opcional, texto libre) */
+  city: text("city"),
   roleInterests: text("role_interests").array().notNull().default([]),
   /** la alerta inicial ya se creó (una sola vez; si la persona la borra, no vuelve) */
   alertsSeeded: boolean("alerts_seeded").notNull().default(false),

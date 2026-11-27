@@ -31,7 +31,7 @@ async function Settings() {
   const devices = rows.map((r) => ({ ...r, lastSeenAt: new Date(/[zZ]|[+-]\d\d(:?\d\d)?$/.test(r.lastSeenAt) ? r.lastSeenAt : `${r.lastSeenAt}Z`).toISOString(), current: r.id === user.deviceId }))
 
   return (
-    <ProfileSettings key={JSON.stringify(profile)} form={{ action: updateProfile, defaultName: profile.name, defaultCountry: profile.country, defaultRoles: profile.roleInterests, countries }}>
+    <ProfileSettings key={JSON.stringify(profile)} form={{ action: updateProfile, defaultName: profile.name, defaultCountry: profile.country, defaultCity: profile.city ?? "", defaultRoles: profile.roleInterests, countries }}>
       <SettingsSection id="cuenta" title="Cuenta" description={`Entras con Google como ${user.email}.`}>
         <LogoutButton />
       </SettingsSection>

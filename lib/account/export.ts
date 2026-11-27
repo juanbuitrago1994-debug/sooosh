@@ -20,7 +20,7 @@ export async function buildExport(db: Db, userId: string, account: { email: stri
   return {
     sooosh: { version: EXPORT_VERSION, exportedAt: now.toISOString(), note: "Todos tus datos en Sooosh. Los CV y las ofertas están completos." },
     cuenta: { correo: account.email, id: userId },
-    perfil: profile ? { nombre: profile.name, pais: profile.country, cargosDeInteres: profile.roleInterests, creadoEn: profile.createdAt } : null,
+    perfil: profile ? { nombre: profile.name, pais: profile.country, ciudad: profile.city, cargosDeInteres: profile.roleInterests, creadoEn: profile.createdAt } : null,
     cvs: cvRows.map((r) => ({ activo: r.isActive, etiqueta: r.label, validadoEn: r.validatedAt, archivo: r.file, afinidadAts: r.originalAts, cv: r.cv })),
     categorias: cats.map((c) => ({ nombre: c.name, creadaEn: c.createdAt })),
     ofertasGuardadas: offers.map((o) => ({

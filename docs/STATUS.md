@@ -1563,3 +1563,8 @@ Con el servidor de Playwright reconectado con `--browser webkit` (build 2395 des
 - `<Toaster position="bottom-center" />` y `--normal-border: transparent` en `components/ui/sonner.tsx` (el resto es el Sonner estándar de shadcn). Para revisar por Juan: guardar cambios en Ajustes o cambiar «Mantener sesión» y mirar el aviso abajo al centro, sin borde.
 
 - Avisos sin ícono: se quitó el `icons` de `components/ui/sonner.tsx` y el contenedor del ícono se oculta (`classNames.icon: "hidden!"`). No verificado en pantalla (sin sesión en el navegador de pruebas).
+
+### «Usar mi ubicación»: país y ciudad (27-nov-2026, pedido de Juan)
+- Botón «Usar mi ubicación» bajo el país (registro y Ajustes): el navegador pide permiso, las coordenadas (redondeadas a ~1 km) van a `/api/geo/country` (sesión; en `lib/auth/api-policy.ts`), que consulta Nominatim (OpenStreetMap, gratis) desde el servidor y devuelve país y ciudad; no se guardan ni se registran. Decisión de Juan: servicio externo. Si el país no está en la lista, o se niega el permiso, avisa y se elige a mano.
+- **Ciudad**: campo opcional nuevo en el perfil (`profiles.city`, migración `0021_profile_city.sql`, YA aplicada en Supabase «Sooosh»; texto libre hasta 80), editable en Ajustes e incluida en la exportación de datos.
+- lint, build y 1045 pruebas en verde (pruebas nuevas de coordenadas, país y ciudad). NO probado con ubicación real (el navegador de pruebas no tiene sesión ni GPS). Pendiente: mencionar el envío de coordenadas a Nominatim en `docs/CONSENTIMIENTO.md` (lo revisa el abogado de Juan).

@@ -11,7 +11,7 @@ import { DEVICE_COOKIE, deviceCookieOptions, deviceExpiry, signDevice, verifyDev
 import { createAuthClient } from "./supabase"
 
 export type AuthUser = { id: string; email: string; googleName: string; deviceId: string; remember: boolean }
-export type Profile = { name: string; country: string; roleInterests: string[] }
+export type Profile = { name: string; country: string; city: string | null; roleInterests: string[] }
 
 /** Lee las cookies de la petición y devuelve una función que guarda las cookies nuevas (solo posible en acciones y rutas, no al renderizar). */
 async function authClientFor(remember: boolean) {
@@ -54,7 +54,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
   const claims = data?.claims
   if (!claims || claims.sub !== device.userId) return null
   const [row] = await getDb()
-    .select({ id: trustedDevices.id, name: profiles.name, country: profiles.country, roleInterests: profiles.roleInterests, alertsSeeded: profiles.alertsSeeded, hasProfile: sql<boolean>`${profiles.id} is not null` })
+    .select({ id: trustedDevices.id, name: profiles.name, country: profiles.country, city: profiles.city, roleInterests: profiles.roleInterests, alertsSeeded: profiles.alertsSeeded, hasProfile: sql<boolean>`${profiles.id} is not null` })
     .from(trustedDevices)
     .leftJoin(profiles, eq(profiles.id, trustedDevices.userId))
     .where(and(eq(trustedDevices.id, device.id), eq(trustedDevices.userId, device.userId), isNull(trustedDevices.revokedAt)))
@@ -62,7 +62,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
   if (!row) return null
   const meta = (claims.user_metadata ?? {}) as { full_name?: string; name?: string }
   const user: AuthUser = { id: device.userId, email: String(claims.email ?? ""), googleName: meta.full_name ?? meta.name ?? "", deviceId: device.id, remember: device.remember }
-  return { user, profile: row.hasProfile ? { name: row.name!, country: row.country!, roleInterests: row.roleInterests ?? [] } : null, alertsSeeded: !!row.alertsSeeded }
+  return { user, profile: row.hasProfile ? { name: row.name!, country: row.country!, city: row.city ?? null, roleInterests: row.roleInterests ?? [] } : null, alertsSeeded: !!row.alertsSeeded }
 })
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
@@ -70,7 +70,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 }
 
 export async function getProfile(userId: string): Promise<Profile | null> {
-  const [row] = await getDb().select({ name: profiles.name, country: profiles.country, roleInterests: profiles.roleInterests }).from(profiles).where(eq(profiles.id, userId)).limit(1)
+  const [row] = await getDb().select({ name: profiles.name, country: profiles.country, city: profiles.city, roleInterests: profiles.roleInterests }).from(profiles).where(eq(profiles.id, userId)).limit(1)
   return row ?? null
 }
 

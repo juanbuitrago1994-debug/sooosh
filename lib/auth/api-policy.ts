@@ -23,6 +23,7 @@ export const API_POLICY: ApiRule[] = [
   { route: "/api/events", access: "sesion" },
   { route: "/api/export", access: "sesion", pesada: true },
   { route: "/api/improve", access: "sesion", pesada: true },
+  { route: "/api/geo/country", access: "sesion" },
   { route: "/api/jobs/[id]/fit", access: "sesion" },
   { route: "/api/jobs/count", access: "sesion" },
   { route: "/api/judge", access: "sesion", pesada: true },

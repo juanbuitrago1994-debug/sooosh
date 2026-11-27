@@ -24,7 +24,7 @@ describe("exportar y borrar la cuenta", () => {
     client = (db as unknown as { $client: Client }).$client
     await client.exec("create schema auth; create table auth.users (id uuid primary key); create function auth.uid() returns uuid language sql as 'select null::uuid';")
     await client.exec(`insert into auth.users (id) values ('${ana}'), ('${luis}')`)
-    for (const f of ["0016_accounts.sql", "0017_cvs.sql", "0018_tracked_offers.sql", "0019_collections_notes.sql", "0020_alerts_notifications.sql"]) await client.exec(readFileSync(path.join(process.cwd(), "db/migrations", f), "utf8"))
+    for (const f of ["0016_accounts.sql", "0017_cvs.sql", "0018_tracked_offers.sql", "0019_collections_notes.sql", "0020_alerts_notifications.sql", "0021_profile_city.sql"]) await client.exec(readFileSync(path.join(process.cwd(), "db/migrations", f), "utf8"))
     const cv = (n: string) => cvSchema.parse({ header: { fullName: n }, summary: "", experience: [], education: [], skills: [], languages: [] })
     const offer = (t: string) => offerSchema.parse({ title: t, company: "Acme", language: "es", requirements: ["SQL"], niceToHave: [], responsibilities: [] })
     for (const [id, n] of [[ana, "Ana"], [luis, "Luis"]] as const) {
