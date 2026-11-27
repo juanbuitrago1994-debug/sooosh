@@ -4,14 +4,11 @@ import type { FileMeta } from "@/lib/profile/search-profile"
 
 type Ev = { t: "stage"; i: number } | { t: "result"; cv: CV; sourceText?: string; meta?: { totalMs?: number } } | { t: "error"; error: string }
 
-/** Sube un archivo de CV y lo lee con el mismo pipeline de la app (flujo NDJSON de `/api/cv/parse`). Devuelve el CV leído. */
-export async function uploadAndParseCv(file: File, onStage: (label: string) => void, signal?: AbortSignal): Promise<{ cv: CV; fileId: string; sourceText?: string; file: FileMeta }> {
-  const body = new FormData()
-  body.append("file", file)
-  const up = await fetch("/api/upload", { method: "POST", body, signal })
-  const saved = await up.json().catch(() => ({}))
-  if (!up.ok) throw new Error(saved.error ?? "No se pudo subir el archivo.")
-  const res = await fetch("/api/cv/parse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: saved.id }), signal })
+type Read = { cv: CV; sourceText?: string; readMs?: number }
+
+/** Lee con el pipeline un archivo que YA está en el servidor (su `id`). Sirve para releer el CV de la persona con la lógica actual sin pedirle el archivo otra vez. */
+export async function parseStoredCv(id: string, onStage: (label: string) => void, signal?: AbortSignal): Promise<Read> {
+  const res = await fetch("/api/cv/parse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }), signal })
   if (!res.ok || !res.body) {
     const j = await res.json().catch(() => ({}))
     throw new Error(j.error ?? "No se pudo leer el CV.")
@@ -40,5 +37,16 @@ export async function uploadAndParseCv(file: File, onStage: (label: string) => v
   handle(buf)
   if (!result) throw new Error("La lectura terminó sin resultado. Inténtalo de nuevo.")
   const r = result as { cv: CV; sourceText?: string; readMs?: number }
+  return { cv: r.cv, sourceText: r.sourceText, readMs: r.readMs }
+}
+
+/** Sube un archivo de CV y lo lee con el mismo pipeline de la app (flujo NDJSON de `/api/cv/parse`). Devuelve el CV leído. */
+export async function uploadAndParseCv(file: File, onStage: (label: string) => void, signal?: AbortSignal): Promise<{ cv: CV; fileId: string; sourceText?: string; file: FileMeta }> {
+  const body = new FormData()
+  body.append("file", file)
+  const up = await fetch("/api/upload", { method: "POST", body, signal })
+  const saved = await up.json().catch(() => ({}))
+  if (!up.ok) throw new Error(saved.error ?? "No se pudo subir el archivo.")
+  const r = await parseStoredCv(saved.id, onStage, signal)
   return { cv: r.cv, fileId: saved.id, sourceText: r.sourceText, file: { name: saved.name, type: saved.type, size: saved.size, readMs: r.readMs } }
 }

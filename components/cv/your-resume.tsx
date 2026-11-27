@@ -12,9 +12,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Spinner } from "@/components/ui/spinner"
 import { emptyCv, filledSections, mergeCv } from "@/lib/cv/merge"
 import { friendlyReadError, pickCvFile } from "@/lib/profile/cv-drop"
-import { uploadAndParseCv } from "@/lib/profile/parse-client"
+import { parseStoredCv, uploadAndParseCv } from "@/lib/profile/parse-client"
 import { getSearchProfile, saveProfileCv } from "@/lib/profile/search-profile"
 import { cvSchema, type CV } from "@/lib/schemas/cv"
+import { STORED_ID_RE } from "@/lib/uploads"
 import { AwardsFields, CertificationsFields, EducationFields, ExperienceFields, HeaderFields, LanguagesFields, ProjectsFields, PublicationsFields, SkillsFields, SummaryFields, VolunteeringFields } from "./section-fields"
 import type { CVInput } from "./types"
 
@@ -86,10 +87,23 @@ export function ResumeForm() {
     }
   }
 
-  function fill() {
-    // Si la persona ya subió un CV pero se salió sin validarlo, ese CV leído está en este navegador: se usa directo, sin volver a leer nada.
+  async function fill() {
     const stored = getSearchProfile()
+    // 1) El archivo que la persona ya subió sigue en el servidor: se vuelve a leer con la lógica ACTUAL (una lectura guardada de antes puede no traer lo que hoy sí se detecta, p. ej. el titular).
+    if (stored?.fileId && STORED_ID_RE.test(stored.fileId)) {
+      setReading("Leyendo tu CV…")
+      try {
+        const r = await parseStoredCv(stored.fileId, setReading)
+        return apply(r.cv)
+      } catch {
+        /* el archivo ya no está en el servidor: se sigue con lo que haya */
+      } finally {
+        setReading(null)
+      }
+    }
+    // 2) Un CV leído y sin validar que está en este navegador.
     if (stored && !stored.validatedAt) return apply(stored.cv)
+    // 3) Nada que reutilizar: se pide el archivo.
     input.current?.click()
   }
 
@@ -119,7 +133,7 @@ export function ResumeForm() {
             <p className="text-xs text-muted-foreground">Tu perfil profesional. Con él armamos tu CV para cada oferta.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="secondary" disabled={!!reading} onClick={fill}>
+            <Button type="button" variant="secondary" disabled={!!reading} onClick={() => void fill()}>
               {reading ? <Spinner /> : <SparklesIcon data-icon="inline-start" aria-hidden />}
               {reading ?? "Llenar con tu CV"}
             </Button>
