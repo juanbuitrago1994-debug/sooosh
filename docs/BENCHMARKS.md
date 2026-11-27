@@ -424,3 +424,18 @@ Medido desde el Mac de Juan contra `https://sooosh.vercel.app` (funciones en `gr
 - **Viaje a la base desde la función** (`/api/db/health`, campo `ms`): **4–5 ms**, frente a **133–350 ms (mediana 207)** desde el Mac. Cada consulta seguida de una vista cuesta ~150–200 ms menos que en modo desarrollo.
 - **Lo que no baja**: el recorrido navegador → borde (EE. UU., `iad1`) → función (São Paulo). Una ruta trivial (`/api/db/health`) tarda de media **0,43–0,49 s** en total con conexión nueva: ~0,19 s de conexión y TLS (3 viajes de red) y ~0,24 s hasta el primer byte (borde → São Paulo). Con la conexión ya abierta en el navegador se ahorran los 0,19 s.
 - **Búsqueda sin texto** (CO, sin memoria): 0,57–2,0 s con conexión nueva (la primera tras un rato paga el arranque en frío de la función); **búsqueda distinta (MX remoto, tecnología)**: 0,67–0,68 s. Es decir: una vista de UNA consulta no gana frente a `localhost`, porque pierde en el recorrido por el borde lo que gana en la base; **ganan las vistas con varias consultas seguidas** (puerta de acceso, alertas, «Mis ofertas»), que pasan de N×~170 ms a casi 0.
+
+### Páginas con sesión: producción (São Paulo) frente a `localhost` (26-nov-2026)
+Medido desde el Mac de Juan con `curl`, reutilizando la conexión (como un navegador), con una sesión real de un usuario de prueba temporal (ya borrado; creada con la API de administración de Supabase y la cookie de dispositivo firmada con el secreto de cada servidor). Mediana de 4 repeticiones tras una de calentamiento (en `localhost` la primera compila la ruta). «Total» = hasta el último byte.
+
+| Vista | Producción | `localhost` (dev) |
+|---|---|---|
+| Inicio `/` | 399 ms | 411 ms |
+| Buscador `/ofertas` | 341 ms | 415 ms |
+| Detalle de oferta | 442 ms | 736 ms |
+| «Mis ofertas» | 518 ms | 680 ms |
+| Notificaciones | 421 ms | 757 ms |
+| **Resultados de una alerta** | **682 ms** | **1.641 ms** |
+| Ajustes | 521 ms | 803 ms |
+
+Todas respondieron 200 con la sesión (ninguna redirigió al login). Lo que las separa: las vistas con 2 o más consultas seguidas ganan entre 150 y 960 ms; las de casi ninguna consulta (inicio) empatan, porque producción paga el recorrido por el borde de EE. UU. Un arranque en frío de la función tras un rato inactiva suma ~1–1,5 s a la primera petición.
