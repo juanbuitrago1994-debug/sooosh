@@ -1570,3 +1570,5 @@ Con el servidor de Playwright reconectado con `--browser webkit` (build 2395 des
 - lint, build y 1045 pruebas en verde (pruebas nuevas de coordenadas, país y ciudad). NO probado con ubicación real (el navegador de pruebas no tiene sesión ni GPS). Pendiente: mencionar el envío de coordenadas a Nominatim en `docs/CONSENTIMIENTO.md` (lo revisa el abogado de Juan).
 
 - «Usar mi ubicación» ya no es un botón: es la primera opción del desplegable de país (pedido de Juan); al elegirla pide el permiso, rellena país y ciudad y deja el país elegido. Mientras busca, el desplegable se desactiva y la opción dice «Buscando tu ubicación…».
+
+- «Usar mi ubicación» sale del desplegable y vuelve como botón de ícono (mismo `outline` + `icon` que el «+» de los cargos) a la derecha del selector de país, con `aria-label` y `title`; mientras busca muestra el spinner.
