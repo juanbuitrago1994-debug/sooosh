@@ -11,7 +11,7 @@ describe("catálogo de fuentes (tabla sources)", () => {
     db = await createTestDb()
   })
 
-  it("la migración siembra las 8 fuentes del código, con atribución y sitio cuando lo tienen", async () => {
+  it("la migración siembra las 9 fuentes del código, con atribución y sitio cuando lo tienen", async () => {
     const rows = await listCatalog(db)
     expect(rows.map((r) => r.key).sort()).toEqual(TARGETS.map((t) => t.id).sort())
     const himalayas = rows.find((r) => r.key === "remote:himalayas")!

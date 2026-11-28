@@ -35,6 +35,20 @@ Un hallazgo previo del mismo día: al llegar un CV leído **sin** las listas nue
 
 ---
 
+## 2026-11-28 (4) · Ashby y Workable llevaban 9 días sin leerse (12 tableros, entre ellos Addi, Nubank y Platzi)
+
+**Síntoma.** Al mirar producción para decidir prioridades: las 12 empresas de Ashby y Workable tenían `last_status = «The operation was aborted due to timeout»` y `last_count = 0`, y su última lectura buena era del 19-nov. Sus ofertas seguían «activas» (Nubank 73, Addi 33, Toku 25…): datos de hace 9 días mostrados como vigentes. La sincronización figuraba como «success» en GitHub, porque un error por empresa no falla el trabajo (`12 con error` en el registro).
+
+**Causa (hipótesis, sin confirmar).** Desde el 20-nov solo fallan esos dos proveedores y solo en GitHub Actions: desde el equipo de desarrollo responden en 0,05–0,3 s con el mismo identificador. Es el mismo patrón que Get on Board (cortafuegos contra IPs de centros de datos, que responde bien a `curl`), pero allí el síntoma era un 403 y aquí es una conexión que «cuelga» hasta agotar el tiempo. El reintento con `curl` solo cubría el 403. Descarté la tilde del User-Agent como causa de esto (se probó: con y sin tilde responden igual).
+
+**Arreglo.** `fetchWithCurlFallback` también reintenta una vez con `curl` ante un tiempo agotado o una conexión cortada, y se aplica a Ashby y Workable. Forzando un timeout de 1 ms, `curl` devolvió las 31 ofertas de Addi. Si `curl` también falla se mantiene el error original. Misma identificación y mismo ritmo; solo cambia el cliente HTTP.
+
+**Cómo comprobar que funcionó.** Tras el próximo despliegue y la siguiente sincronización: `select ats, token, last_status, last_count from source_companies where ats in ('ashby','workable')` debe mostrar `ok` y conteos > 0. Si siguen en error, la hipótesis era falsa y hay que mirar el registro de Actions.
+
+**Lo que sigue pendiente.** (1) Un error por empresa no alerta: «Revisar salud» solo mira que el paso termine. (2) Las ofertas de una fuente que falla quedan «activas» indefinidamente; deberían caducar tras N días sin lectura.
+
+---
+
 ## 2026-11-28 (3) · El User-Agent de las fuentes llevaba tildes y Magneto365 respondía 502
 
 **Síntoma.** Al conectar Magneto365 con el lector de portales, `robots.txt` daba **502** de forma constante desde Node, aunque `curl` recibía 200. Por la regla «ante la duda, no se entra», el lector se detenía.

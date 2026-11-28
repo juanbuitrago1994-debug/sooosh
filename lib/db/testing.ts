@@ -12,6 +12,6 @@ export async function createTestDb(): Promise<Db> {
   const client = new PGlite()
   // Supabase ya trae estos roles; la migración los usa en `revoke`.
   await client.exec("create role anon; create role authenticated;")
-  for (const f of ["0001_memory.sql", "0008_events.sql", "0013_sources.sql", "0014_source_daily_stats.sql", "0022_source_magneto.sql"]) await client.exec(readFileSync(path.join(process.cwd(), "db/migrations", f), "utf8"))
+  for (const f of ["0001_memory.sql", "0008_events.sql", "0013_sources.sql", "0014_source_daily_stats.sql", "0022_source_magneto.sql", "0023_source_gallito.sql"]) await client.exec(readFileSync(path.join(process.cwd(), "db/migrations", f), "utf8"))
   return drizzle(client) as unknown as Db
 }

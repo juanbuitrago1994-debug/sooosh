@@ -3,7 +3,7 @@ import { detectLanguage } from "@/lib/cv/diagnosis"
 import { detectApply } from "@/lib/jobs/apply"
 import { classifyRole } from "@/lib/jobs/classify"
 import { detectEmploymentType, detectRemoteScope, detectWorkMode, type JobDraft, type WorkMode } from "@/lib/jobs/draft"
-import { countryFromName, detectGeo, LATAM_CODES, regionsFor } from "@/lib/jobs/geo"
+import { countryFromName, detectGeo, regionsFor, SERVED_CODES } from "@/lib/jobs/geo"
 import { detectSalary } from "@/lib/jobs/salary"
 import { normalizeSourceUrl } from "@/lib/jobs/url"
 import { fold } from "@/lib/keywords/normalize"
@@ -53,10 +53,10 @@ export function externalToDraft(e: ExternalJob): { draft: JobDraft; dedupe: stri
   const workMode: WorkMode | undefined = e.workMode ?? detectWorkMode(`${e.locationText ?? ""}\n${text}`)
   const isRemote = workMode === "remoto" || (e.remote === true && !workMode)
   const latamRemote = isRemote && (e.assumeRemoteLatam === true || geo.latam)
-  const latamCountries = countries.filter((c) => LATAM_CODES.has(c))
-  if (latamCountries.length === 0 && !latamRemote) return null
+  const servedCountries = countries.filter((c) => SERVED_CODES.has(c))
+  if (servedCountries.length === 0 && !latamRemote) return null
   // Una oferta presencial o híbrida vale en las ciudades que la fuente lista; una remota, en esos países y en LATAM si está abierta a la región.
-  const openCountries = latamCountries.slice(0, 4)
+  const openCountries = servedCountries.slice(0, 4)
   const regions = regionsFor({ countries: openCountries, latam: latamRemote })
   const country = openCountries.length === 1 ? openCountries[0] : undefined
 

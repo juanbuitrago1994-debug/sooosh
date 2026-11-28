@@ -66,7 +66,17 @@ export const MAGNETO: PortalConfig = {
   titleFromUrl: (u) => decodeURIComponent(u.split("/").pop() ?? "").replace(/-\d+$/, "").replace(/-/g, " "),
 }
 
-export const PORTALS: PortalConfig[] = [CHILETRABAJOS, TRABAJANDO, MAGNETO]
+/** Gallito Trabajo (Uruguay): robots.txt abierto, sitemap con ~860 avisos y JSON-LD completo (medido el 28-nov-2026). Términos de uso sin cláusulas sobre lectura automática. */
+export const GALLITO: PortalConfig = {
+  key: "gallito",
+  name: "Gallito Trabajo",
+  origin: "https://trabajo.gallito.com.uy",
+  sitemaps: ["https://trabajo.gallito.com.uy/sitemap.xml"],
+  jobUrl: /\/anuncio\/[^/?]+$/,
+  titleFromUrl: (u) => decodeURIComponent(u.split("/").pop() ?? "").replace(/-[a-z0-9]{5}$/, "").replace(/-/g, " "),
+}
+
+export const PORTALS: PortalConfig[] = [CHILETRABAJOS, TRABAJANDO, MAGNETO, GALLITO]
 
 const BLOCK = new Set([401, 403, 429, 500, 502, 503, 504])
 const WORK: Record<string, WorkMode> = { TELECOMMUTE: "remoto" }

@@ -38,6 +38,8 @@ export const COUNTRIES: Country[] = [
 
 export const COUNTRY_NAME = new Map(COUNTRIES.map((x) => [x.code, x.name]))
 export const LATAM_CODES = new Set(COUNTRIES.filter((x) => x.latam).map((x) => x.code))
+/** Países cuyas ofertas entran al buscador: Latinoamérica y España (decisión de Juan, 28-nov-2026: México, Colombia y España son el foco). El resto se descarta al importar. */
+export const SERVED_CODES = new Set<string>([...LATAM_CODES, "ES"])
 const LATAM_WORDS = /\b(latam|latinoamerica|latin america|america latina|latinoamericano|latin-america)\b/
 
 /** Regiones que se ofrecen como filtro: LATAM + un país. */

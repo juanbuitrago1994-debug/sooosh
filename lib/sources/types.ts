@@ -81,16 +81,32 @@ import { execFile } from "node:child_process"
  */
 export function fetchWithCurlFallback(f: typeof fetch = fetch): typeof fetch {
   return (async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
-    const res = await f(input, init)
-    if (res.status !== 403 || process.env.VITEST || process.env.SYNC_CURL_FALLBACK === "0") return res
-    const headers = new Headers(init?.headers)
-    const args = ["-sS", "--max-time", "45", "-w", "\n__STATUS__%{http_code}"]
-    headers.forEach((v, k) => args.push("-H", `${k}: ${v}`))
-    args.push(String(input))
-    const out = await new Promise<string | null>((resolve) => execFile("curl", args, { maxBuffer: 64 * 1024 * 1024 }, (err, stdout) => resolve(err ? null : stdout)))
-    const m = out?.match(/^([\s\S]*)\n__STATUS__(\d{3})$/)
-    return m ? new Response(m[2] === "204" ? null : m[1], { status: Number(m[2]) }) : res
+    const off = process.env.VITEST || process.env.SYNC_CURL_FALLBACK === "0"
+    let res: Response
+    try {
+      res = await f(input, init)
+    } catch (e) {
+      // Un tiempo de espera agotado o una conexión cortada (Ashby y Workable «cuelgan» la conexión de Node desde GitHub Actions desde el 20-nov-2026) también se reintenta una vez con curl.
+      const msg = `${(e as Error)?.name ?? ""} ${(e as Error)?.message ?? ""}`
+      if (off || !/timeout|abort|ETIMEDOUT|ECONNRESET|fetch failed/i.test(msg)) throw e
+      const viaCurl = await curlOnce(input, init)
+      if (viaCurl) return viaCurl
+      throw e
+    }
+    if (res.status !== 403 || off) return res
+    return (await curlOnce(input, init)) ?? res
   }) as typeof fetch
+}
+
+/** Una sola petición con `curl` (mismas cabeceras, sin tocar el ritmo). null si curl también falla. */
+async function curlOnce(input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]): Promise<Response | null> {
+  const headers = new Headers(init?.headers)
+  const args = ["-sS", "--max-time", "45", "-w", "\n__STATUS__%{http_code}"]
+  headers.forEach((v, k) => args.push("-H", `${k}: ${v}`))
+  args.push(String(input))
+  const out = await new Promise<string | null>((resolve) => execFile("curl", args, { maxBuffer: 64 * 1024 * 1024 }, (err, stdout) => resolve(err ? null : stdout)))
+  const m = out?.match(/^([\s\S]*)\n__STATUS__(\d{3})$/)
+  return m ? new Response(m[2] === "204" ? null : m[1], { status: Number(m[2]) }) : null
 }
 
 const RETRY_WAITS = process.env.VITEST ? [] : [10_000, 30_000]

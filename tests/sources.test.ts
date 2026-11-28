@@ -92,8 +92,10 @@ describe("empresas por tablero (ATS)", () => {
     expect(d.apply).toMatchObject({ method: "formulario" })
     expect(d.offer.requirements).toEqual(["Excel avanzado", "2 años de experiencia"])
   })
-  it("Greenhouse de otra región se descarta", () => {
-    expect(externalToDraft(mapGreenhouseJob({ id: 2, title: "Accountant", absolute_url: "https://job-boards.greenhouse.io/cabify/jobs/2", location: { name: "Madrid" }, content: body }, "cabify", "Cabify")!)).toBeNull()
+  it("Greenhouse de una región que no atendemos se descarta; la de España entra (28-nov-2026)", () => {
+    expect(externalToDraft(mapGreenhouseJob({ id: 2, title: "Accountant", absolute_url: "https://job-boards.greenhouse.io/cabify/jobs/2", location: { name: "Berlin, Germany" }, content: body }, "cabify", "Cabify")!)).toBeNull()
+    const es = externalToDraft(mapGreenhouseJob({ id: 3, title: "Accountant", absolute_url: "https://job-boards.greenhouse.io/cabify/jobs/3", location: { name: "Madrid, Spain" }, content: body }, "cabify", "Cabify")!)!.draft
+    expect(es).toMatchObject({ country: "ES", regions: ["ES"] })
   })
   it("Lever: usa applyUrl, el país y la modalidad que declara", () => {
     const j = mapLeverJob({ id: "x", text: "Planner", hostedUrl: "https://jobs.lever.co/despegar/x", applyUrl: "https://jobs.lever.co/despegar/x/apply", country: "AR", workplaceType: "hybrid", categories: { location: "Buenos Aires", commitment: "Full Time" }, descriptionPlain: "Somos Despegar.", lists: [{ text: "¿Qué valoramos?", content: "<li>Excel</li>" }, { text: "¿Qué desafíos te esperan?", content: "<li>Liderar proyecciones</li>" }] }, "despegar", "Despegar")!
