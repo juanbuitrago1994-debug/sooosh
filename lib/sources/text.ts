@@ -1,4 +1,5 @@
 import { decodeEntities } from "@/lib/offer/html"
+import { dropHiddenHtml, stripInvisible } from "@/lib/offer/integrity"
 
 const clip = (s: string, n = 300) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s)
 
@@ -8,13 +9,13 @@ export function htmlToLines(html: string | null | undefined): string[] {
   let h = html
   // Greenhouse entrega el HTML escapado («&lt;p&gt;…»): se decodifica primero.
   if (/&lt;\/?[a-z]/i.test(h)) h = decodeEntities(h)
-  return h
+  return dropHiddenHtml(h)
     .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
     .replace(/<li[^>]*>/gi, "\n• ")
     .replace(/<\/(li|p|div|h[1-6]|ul|ol|tr)>|<br\s*\/?>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
     .split("\n")
-    .map((l) => decodeEntities(l).replace(/\s+/g, " ").trim())
+    .map((l) => stripInvisible(decodeEntities(l)).replace(/\s+/g, " ").trim())
     .filter((l) => l.length > 2 && !/^[•\-–]$/.test(l))
 }
 

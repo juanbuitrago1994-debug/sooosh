@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { getProvider } from "@/lib/ai"
 import { HOOK_START, isSectionHeading } from "./identity"
+import { sanitizeOfferText } from "./integrity"
 import { CONTACT_LINE, segmentOffer } from "./segment"
 import { OFFER_MAX_CHARS } from "@/lib/schemas/offer"
 
@@ -94,13 +95,18 @@ export type CleanResult = {
  * Si el LLM falla o devuelve algo sospechoso (casi nada), se conserva el resultado del prefiltro.
  */
 export async function cleanOfferText(text: string, opts: { signal?: AbortSignal; useLlm?: boolean; /** `false` solo sirve para medir el antes y el después */ protect?: boolean } = {}): Promise<CleanResult> {
-  const lines = prefilterLines(text)
+  // Integridad primero (ver `integrity.ts`): sin caracteres invisibles y sin líneas escritas para darle órdenes a una IA. Cuentan como «quitadas».
+  const guard = sanitizeOfferText(text)
+  const lines = prefilterLines(guard.text)
   const before = text.split("\n").filter((l) => l.trim()).length
+  const guardNote = guard.instructionLines.length
+    ? `Se quitaron ${guard.instructionLines.length} ${guard.instructionLines.length === 1 ? "línea que parecía una orden" : "líneas que parecían órdenes"} para una IA; revisa que el texto de la oferta esté completo.`
+    : undefined
   const done = (kept: string[], llm: boolean, warning?: string): CleanResult => ({
     text: kept.join("\n").slice(0, OFFER_MAX_CHARS),
     removed: Math.max(0, before - kept.length),
     llm,
-    warning,
+    warning: [guardNote, warning].filter(Boolean).join(" ") || undefined,
   })
   if (lines.length === 0 || opts.useLlm === false) return done(lines, false)
   const safe = opts.protect === false ? new Set<number>() : protectedLines(lines)

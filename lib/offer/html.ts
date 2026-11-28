@@ -1,3 +1,5 @@
+import { dropHiddenHtml, stripInvisible } from "./integrity"
+
 const ENTITIES: Record<string, string> = {
   amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", ndash: "–", mdash: "—", hellip: "…",
   bull: "•", middot: "·", aacute: "á", eacute: "é", iacute: "í", oacute: "ó", uacute: "ú", ntilde: "ñ",
@@ -22,7 +24,7 @@ export function decodeEntities(s: string): string {
 const BLOCK = "p|div|section|article|main|h[1-6]|ul|ol|table|tr|blockquote|pre|dl|dt|dd|fieldset"
 
 function tidy(s: string): string {
-  return decodeEntities(s)
+  return stripInvisible(decodeEntities(s))
     .replace(/[ \t ]+/g, " ")
     .replace(/ *\n */g, "\n")
     .replace(/\n{3,}/g, "\n\n")
@@ -41,7 +43,7 @@ export function fragmentToText(html: string): string {
 }
 
 function stripNoise(html: string): string {
-  return html
+  return dropHiddenHtml(html)
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/<(script|style|noscript|svg|template|iframe|nav|footer|header|aside|form|button|select)\b[\s\S]*?<\/\1>/gi, "")
 }
