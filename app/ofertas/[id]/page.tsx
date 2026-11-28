@@ -19,7 +19,7 @@ async function Oferta({ params }: { params: Promise<{ id: string }> }) {
   if (!job) notFound()
   return (
     <AccountProvider name={profile.name}>
-      <JobDetail job={job} />
+      <JobDetail job={job} userCountry={profile.country} />
     </AccountProvider>
   )
 }

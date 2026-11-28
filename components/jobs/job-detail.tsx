@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { StickyHeader } from "@/components/common/sticky-header"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -20,6 +20,7 @@ import { CvRepository } from "@/components/history/cv-repository"
 import { ApplyEmailPanel } from "@/components/jobs/apply-email-panel"
 import { applyChannels, applyCta, applyHint, applyLabel, channelHref, emailsOf } from "@/lib/jobs/apply"
 import { buildFacts, companyLine, curatedDates } from "@/lib/jobs/facts"
+import { eligibility, languageIssues, languageMessage } from "@/lib/jobs/gates"
 import { offerToText, savePrefill } from "@/lib/jobs/prefill"
 import { TailoredAts } from "@/components/steps/tailored-ats"
 import { saveAtsEntry } from "@/lib/ats/save-entry"
@@ -49,7 +50,7 @@ function List({ title, items }: { title: string; items: string[] }) {
  * Detalle de una oferta DENTRO de Sooosh: un resumen concreto con los datos que tenemos (nada de «No indica»), cómo se postula, cuánto
  * encaja el CV y, siempre a la vista, el botón de postular y el de adaptar el CV.
  */
-export function JobDetail({ job }: { job: JobCard }) {
+export function JobDetail({ job, userCountry }: { job: JobCard; /** país de la cuenta (para avisar si la oferta es de otra región) */ userCountry?: string }) {
   const router = useRouter()
   const marks = useMarks()
   const isSaved = marks.saved.includes(job.id)
@@ -76,6 +77,15 @@ export function JobDetail({ job }: { job: JobCard }) {
       alive = false
     }
   }, [job.id, profileCv])
+
+  // «Antes de postular»: avisos con reglas (idioma exigido y país), sin ocultar nada ni tocar el puntaje.
+  const notices = useMemo(() => {
+    const out: string[] = []
+    const e = eligibility(userCountry, job)
+    if (!e.ok) out.push(e.message)
+    if (profileCv) for (const i of languageIssues(profileCv.languages, job.offer.languagesRequired ?? [], job.language)) out.push(languageMessage(i))
+    return out
+  }, [job, userCountry, profileCv])
 
   const covered = new Set([...(fit?.covered ?? []), ...(fit?.related ?? [])].map((x) => x.toLowerCase()))
   const apply = job.apply
@@ -220,6 +230,19 @@ export function JobDetail({ job }: { job: JobCard }) {
         </Rise>
 
         <Rise step={2} className="flex flex-col gap-6">
+          {notices.length > 0 && (
+            <section className="flex flex-col gap-1.5" aria-label="Antes de postular">
+              <h2 className="text-sm font-medium">Antes de postular</h2>
+              <ul className="flex flex-col gap-1.5">
+                {notices.map((n) => (
+                  <li key={n} className="text-sm text-muted-foreground">
+                    {n}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {fit && profileCv && (
             <section className="flex flex-col gap-1.5" aria-label="Encaje con tu CV">
               <h2 className="text-sm font-medium">Encaje con tu CV: {fit.score} %</h2>

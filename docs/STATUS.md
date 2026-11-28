@@ -21,7 +21,14 @@ Origen: Juan pidió investigar `ai-job-search-dev/ai-job-search` (MIT, ~73 mil e
 
 **Pendiente**
 - **Guion largo `–` en fechas de ATS** (`ATS-E3` lo exige hoy). Evidencia de ai-job-search: UNA importación real en Workday perdió la fecha final de un rol y toda la educación, pero mezclaba dos causas (guion largo y años sueltos sin rango) y no la aislaron. No basta para cambiar la regla. Se preparó un experimento controlado (ver abajo); falta que Juan lo pruebe en el lector de Enhancv, como en la prueba de C6. No cambiar `ATS-E3` hasta ver el resultado.
-- Puertas de idioma y elegibilidad como veto o aviso en la tarjeta (decisión de producto de Juan).
+- **Puertas de idioma y país** (hecho, ver abajo). Falta decidir si también van en la tarjeta de la lista.
+
+**Antes de postular (28-nov-2026)**: en el detalle de la oferta (`/ofertas/[id]`), sobre «Encaje con tu CV», un bloque con avisos que se calculan con reglas (`lib/jobs/gates.ts`), sin IA, sin ocultar la oferta y sin tocar el puntaje.
+- **Idioma**: si la oferta exige un idioma (`offer.languagesRequired`) que el CV no lista («Pide Portugués (B2) y tu CV no lo muestra. Si lo hablas, agrégalo en tu CV…») o lo muestra con menos nivel (CEFR o palabras: básico, intermedio, avanzado, nativo). No avisa por el idioma en que está escrita la oferta ni por idiomas que no reconoce, ni compara niveles que no se pueden comparar.
+- **País**: si las regiones de la oferta no incluyen el país de la cuenta (LATAM sí sirve a quien vive en LATAM; «TODAS» sirve a todos). Es un aviso («Confirma en el anuncio si aceptan postulantes de allí»), porque muchas empresas contratan fuera de lo que dice el anuncio.
+- A diferencia de ai-job-search, un idioma ausente es aviso y no descarte: que el CV no lo liste no prueba que no se hable.
+- **Límite**: `languagesRequired` solo existe si la oferta lo trae o la IA/reglas lo extrajeron; las ofertas de fuentes sin ese dato no avisan nada de idioma. La parte de pantalla solo se verificó con tipos, lint y build (la auditoría visual es de Juan).
+- **Para revisar por Juan**: abrir una oferta que pida un idioma que tu CV no tenga, y una de otro país (`/ofertas/[id]`, escritorio y 375 px, tema oscuro): el bloque «Antes de postular» debe verse sobre el encaje, solo con texto.
 
 **Para revisar por Juan**: nada visual. Si al pegar una oferta aparece el aviso «Se quitaron N líneas que parecían órdenes para una IA», es lo nuevo.
 
