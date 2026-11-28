@@ -20,8 +20,17 @@ const SENIORITY: [RegExp, string][] = [
   [/\b(senior|sr\.?|sr\b)\b/i, "senior"],
 ]
 
+/**
+ * Clave para reconocer la MISMA oferta publicada en dos fuentes (título, empresa y país sin tildes, mayúsculas ni signos).
+ * «+» y «#» se escriben como palabras ANTES de quitar los signos: si no, «C++», «C#» y «C» (tres puestos distintos) darían la misma clave y la
+ * segunda oferta se omitiría por «duplicada» (`ingest` descarta lo que otra fuente ya tiene con esa clave). Incidente 28-nov-2026; la idea sale de
+ * `tools/job_key.py` de ai-job-search-dev/ai-job-search (MIT), que hace lo mismo con «plus» y «sharp». Un `.` o `/` sigue siendo solo separador:
+ * «Node.js» y «Node» se distinguen por el «js», y «UX/UI» y «UX UI» son lo mismo.
+ */
+const spellSymbols = (s: string) => s.replace(/\+/g, "plus").replace(/#/g, "sharp")
+
 export const dedupeKey = (title: string, company: string | undefined, country: string | undefined) =>
-  [title, company ?? "", country ?? ""].map((s) => fold(s).replace(/[^a-z0-9]+/g, " ").trim()).join("|")
+  [title, company ?? "", country ?? ""].map((s) => fold(spellSymbols(s)).replace(/[^a-z0-9]+/g, " ").trim()).join("|")
 
 /**
  * Oferta de una fuente → tarjeta, SIN IA. Devuelve null si la oferta no es para Latinoamérica ni remota abierta a la región

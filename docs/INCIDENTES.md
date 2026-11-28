@@ -35,6 +35,24 @@ Un hallazgo previo del mismo día: al llegar un CV leído **sin** las listas nue
 
 ---
 
+## 2026-11-28 · Ofertas distintas se omitían por «duplicadas»: «C++», «C#» y «C» tenían la misma clave
+
+**Síntoma.** Ninguno visible: se detectó al comparar nuestro código con `tools/job_key.py` de ai-job-search-dev/ai-job-search (MIT), que resolvió el mismo problema. No hay ofertas perdidas confirmadas en producción (no se revisó la base).
+
+**Causa.** `dedupeKey` (`lib/sources/normalize.ts`) quitaba todo lo que no fuera `a-z0-9`, incluidos `+` y `#`: «Desarrollador C++», «Desarrollador C#» y «Desarrollador C» de una misma empresa y país daban `desarrollador c|acme|co`. `ingest` (`lib/sources/ingest.ts`) omite una oferta nueva si OTRA fuente ya tiene una activa con la misma clave, así que el «C#» de una fuente se descartaba por el «C++» de otra.
+
+**Por qué lo generamos.** La clave se diseñó el 19-nov-2026 para que la MISMA oferta de dos fuentes coincidiera aunque cambiaran tildes, mayúsculas y signos («Ingeniero de Datos (Sr.)» ≈ «INGENIERO DE DATOS Sr», «Acme S.A.» ≈ «acme s a»). Para eso se borró todo lo que no fuera letra o número, y las pruebas de entonces usaron títulos en español sin símbolos. Nunca se preguntó qué signos CAMBIAN el puesto: en un buscador de tecnología, «+» y «#» son parte del nombre del lenguaje. Faltó una prueba de la propiedad inversa: «dos títulos distintos no pueden dar la misma clave». Normalizar para unir y distinguir para separar son dos requisitos, y solo se probó el primero.
+
+**Cómo se diagnosticó.** Se ejecutó la función real con los tres títulos (una reimplementación aparte no basta: se confirmó con `dedupeKey` importada) y se leyó `ingest` para ver qué hace con la coincidencia. Después se escribió la prueba de punta a punta y se comprobó que FALLA sin la corrección.
+
+**Arreglo.** `+` → «plus» y `#` → «sharp» antes de quitar los signos. «Node.js» y «Node» ya se distinguían por el «js»; «UX/UI» y «UX UI» siguen siendo lo mismo. Las claves de títulos sin `+` ni `#` no cambian (hay una prueba), así que las filas guardadas se siguen reconociendo. `tests/sources-dedupe.test.ts` incluye una versión de `jobs` para PGlite con todas las columnas de `ingest` (el vector, como texto).
+
+**Efecto en filas existentes.** Cada sincronización reescribe `dedupe_key` (`onConflictDoUpdate`), así que las filas con `+` o `#` toman la clave nueva en su próxima sincronización. Hasta entonces, una oferta genuinamente duplicada con esos signos podría entrar una vez más desde otra fuente.
+
+**Regla.** Una clave de duplicados debe distinguir todo lo que cambia el puesto (`+`, `#`, `.NET`…). Si un título normalizado puede quedar igual para dos puestos distintos, el error es silencioso: la oferta simplemente no aparece.
+
+---
+
 ## 2026-11-27 (2) · Educación y certificaciones salían vacías: encabezado combinado
 
 **Síntoma.** «Your resume» mostraba Educación vacía y no aparecían certificaciones, con un CV que tiene la sección «EDUCACIÓN Y CERTIFICACIONES» (universidad y 9 certificaciones).
