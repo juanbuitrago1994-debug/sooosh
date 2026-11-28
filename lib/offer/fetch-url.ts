@@ -1,5 +1,6 @@
 import { lookup as dnsLookup } from "node:dns/promises"
 import { isIP } from "node:net"
+import { decodePage } from "./decode"
 import { extractOffer, type ExtractMethod } from "./extract"
 import type { JobLd } from "./html"
 import { OFFER_MAX_CHARS } from "@/lib/schemas/offer"
@@ -67,8 +68,9 @@ export function looksLikeLoginWall(finalUrl: string, text: string): boolean {
 }
 
 async function readCapped(res: Response): Promise<string> {
+  const type = res.headers.get("content-type")
   const reader = res.body?.getReader()
-  if (!reader) return await res.text()
+  if (!reader) return decodePage(new Uint8Array(await res.arrayBuffer()), type)
   const chunks: Uint8Array[] = []
   let total = 0
   for (;;) {
@@ -81,7 +83,8 @@ async function readCapped(res: Response): Promise<string> {
     }
     chunks.push(value)
   }
-  return new TextDecoder().decode(Buffer.concat(chunks))
+  // Se decodifica según el `charset` de la cabecera o de la página (no siempre es UTF-8: ver `decode.ts`).
+  return decodePage(Buffer.concat(chunks), type)
 }
 
 export type FetchedOffer = { text: string; method: ExtractMethod | "texto"; site?: string; title?: string; company?: string; postedBy?: string; ld?: JobLd; /** dirección final tras las redirecciones */ finalUrl?: string }

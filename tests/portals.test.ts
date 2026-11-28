@@ -52,7 +52,7 @@ describe("lector de portales sin API", () => {
     const asked: string[] = []
     const fake = (async (u: string) => {
       asked.push(u)
-      const ok = (text: string) => ({ ok: true, status: 200, text: async () => text })
+      const ok = (text: string) => new Response(text, { status: 200 })
       if (u.endsWith("/robots.txt")) return ok("User-agent: *\nDisallow: /trabajo/prohibido")
       if (u.endsWith("/sitemap.xml")) return ok(`<urlset><url><loc>https://www.chiletrabajos.cl/trabajo/desarrollador-backend-1</loc></url><url><loc>https://www.chiletrabajos.cl/trabajo/bartender-2</loc></url><url><loc>https://www.chiletrabajos.cl/trabajo/desarrollador-viejo-3</loc></url><url><loc>https://www.chiletrabajos.cl/trabajo/prohibido-4</loc></url></urlset>`)
       return ok(page("Desarrollador Backend"))
@@ -67,10 +67,10 @@ describe("lector de portales sin API", () => {
   it("ante un 403 se DETIENE sin reintentar", async () => {
     let pages = 0
     const fake = (async (u: string) => {
-      if (u.endsWith("/robots.txt")) return { ok: true, status: 200, text: async () => "" }
-      if (u.includes("sitemap")) return { ok: true, status: 200, text: async () => `<urlset><url><loc>https://www.chiletrabajos.cl/trabajo/desarrollador-a-1</loc></url><url><loc>https://www.chiletrabajos.cl/trabajo/desarrollador-b-2</loc></url></urlset>` }
+      if (u.endsWith("/robots.txt")) return new Response("", { status: 200 })
+      if (u.includes("sitemap")) return new Response(`<urlset><url><loc>https://www.chiletrabajos.cl/trabajo/desarrollador-a-1</loc></url><url><loc>https://www.chiletrabajos.cl/trabajo/desarrollador-b-2</loc></url></urlset>`, { status: 200 })
       pages++
-      return { ok: false, status: 403, text: async () => "" }
+      return new Response("", { status: 403 })
     }) as unknown as typeof fetch
     const r = await fetchPortal(CHILETRABAJOS, { fetchImpl: fake, pauseMs: 0 })
     expect(pages).toBe(1)

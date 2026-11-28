@@ -2,6 +2,7 @@ import { classifyRole } from "@/lib/jobs/classify"
 import type { WorkMode } from "@/lib/jobs/draft"
 import { detectEmploymentType } from "@/lib/jobs/draft"
 import { normalizeSourceUrl } from "@/lib/jobs/url"
+import { decodePage } from "@/lib/offer/decode"
 import { jobPostingFromJsonLd } from "@/lib/offer/html"
 import { htmlToLines } from "../text"
 import { SOURCE_HEADERS, sleep, type ExternalJob, type FetchResult } from "../types"
@@ -77,7 +78,8 @@ const norm = (u: string) => {
 
 async function getText(url: string, f: typeof fetch, accept: string): Promise<{ status: number; text: string }> {
   const res = await f(url, { headers: { ...SOURCE_HEADERS, Accept: accept }, signal: AbortSignal.timeout(30_000) })
-  return { status: res.status, text: res.ok ? await res.text() : "" }
+  // HTML de portales sin API: no siempre es UTF-8 (ver `lib/offer/decode.ts`).
+  return { status: res.status, text: res.ok ? decodePage(new Uint8Array(await res.arrayBuffer()), res.headers.get("content-type")) : "" }
 }
 
 /** De la página de una oferta (su JSON-LD) a una oferta común. null si la página no publica una oferta legible. */

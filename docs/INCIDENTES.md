@@ -35,6 +35,22 @@ Un hallazgo previo del mismo día: al llegar un CV leído **sin** las listas nue
 
 ---
 
+## 2026-11-28 (2) · Páginas en latin-1 o windows-1252 salían con «�» y una oferta cerrada se veía viva
+
+**Síntoma.** Ninguno reportado: se detectó al comparar con `tools/page_decode.py` de ai-job-search-dev/ai-job-search (MIT). Un portal antiguo que sirve `charset=iso-8859-1` se descargaba y se leía siempre como UTF-8: cada tilde y la «ñ» salían como «�».
+
+**Causa.** `fetch-url.ts` (oferta por enlace), `liveness.ts` (revisión de «Mis ofertas») y `portals/portal.ts` (portales con JSON-LD) llamaban a `new TextDecoder()` o `res.text()` sin mirar el `charset`. Efectos: texto roto para la IA y el extractor, y, lo más serio, en `liveness.ts` la frase «ya no **está** disponible» no coincidía con `CLOSED_TEXT` (`est[aá]`), así que una oferta cerrada seguía figurando viva.
+
+**Por qué lo generamos.** Se asumió UTF-8 porque todas las páginas de prueba lo eran (fixtures propios y sitios modernos). Nadie probó una página con otra codificación.
+
+**Arreglo.** `lib/offer/decode.ts` (`decodePage`): primero UTF-8 estricto (un sitio que declara latin-1 pero sirve UTF-8 es común); si no es válido, el `charset` de la cabecera, luego `<meta charset>` o `http-equiv` en los primeros 1024 bytes, y UTF-16 por su marca de orden de bytes. Solo se aceptan códecs de una lista cerrada (windows-125x, ISO-8859-x, KOI8, japonés, coreano, chino); `utf-7` y etiquetas desconocidas se ignoran y no lanza nunca. Las tres rutas usan esa función. `tests/offer-decode.test.ts` (11 pruebas): sin la corrección fallan 6 y la de oferta cerrada en latin-1.
+
+**Límite.** `lib/offer/short-links.ts`, `personio.ts` y `robots.ts` siguen con `res.text()`: leen XML, robots.txt o solo cabeceras de enlaces cortos, donde la codificación no afecta. Si algún día importa, se cambian.
+
+**Regla.** Todo HTML descargado de internet se decodifica con `decodePage`, nunca con `TextDecoder()` ni `res.text()`.
+
+---
+
 ## 2026-11-28 · Ofertas distintas se omitían por «duplicadas»: «C++», «C#» y «C» tenían la misma clave
 
 **Síntoma.** Ninguno visible: se detectó al comparar nuestro código con `tools/job_key.py` de ai-job-search-dev/ai-job-search (MIT), que resolvió el mismo problema. No hay ofertas perdidas confirmadas en producción (no se revisó la base).

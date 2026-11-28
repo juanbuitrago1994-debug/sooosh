@@ -1,3 +1,4 @@
+import { decodePage } from "@/lib/offer/decode"
 import { assertPublic, defaultLookup, looksLikeLoginWall, parseOfferUrl, type Lookup } from "@/lib/offer/fetch-url"
 import { htmlToText, jobPostingFromJsonLd } from "@/lib/offer/html"
 
@@ -73,7 +74,7 @@ export async function probeOfferLink(rawUrl: string, opts: { fetchImpl?: typeof 
     let html = ""
     if (res.ok) {
       const buf = new Uint8Array(await res.arrayBuffer())
-      html = new TextDecoder().decode(buf.length > MAX_BYTES ? buf.slice(0, MAX_BYTES) : buf)
+      html = decodePage(buf.length > MAX_BYTES ? buf.slice(0, MAX_BYTES) : buf, res.headers.get("content-type"))
     }
     return judgeResponse({ status: res.status, finalUrl: url.toString(), originalUrl: rawUrl, html, now: opts.now })
   } catch (e) {
