@@ -1,6 +1,7 @@
 import { decodePage } from "@/lib/offer/decode"
 import { assertPublic, defaultLookup, looksLikeLoginWall, parseOfferUrl, type Lookup } from "@/lib/offer/fetch-url"
 import { htmlToText, jobPostingFromJsonLd } from "@/lib/offer/html"
+import { normalizeSourceUrl } from "@/lib/jobs/url"
 
 /**
  * ¿Sigue abierta la oferta de este enlace? Tres respuestas honestas: `alive`, `dead` (hay una señal clara de que cerró) o `unknown`
@@ -15,6 +16,16 @@ const CLOSED_TEXT =
 const HEAD_CHARS = 4000
 const MIN_READABLE = 200
 
+/** Segundos niveles que cuelgan de un país (`com.co`, `com.mx`…): el sitio es el nombre de más a la izquierda más ese sufijo. */
+const SECOND_LEVEL = new Set(["com", "co", "org", "net", "gob", "gov", "edu", "ac", "or", "go", "nom"])
+
+/** «Sitio» de un host: `job-boards.greenhouse.io` y `boards.greenhouse.io` son el mismo; `empleo.com.co` y `otro.com.co` no. */
+export function siteOf(host: string): string {
+  const parts = host.toLowerCase().replace(/\.$/, "").split(".")
+  if (parts.length <= 2) return parts.join(".")
+  return parts.slice(SECOND_LEVEL.has(parts[parts.length - 2]) && parts[parts.length - 1].length === 2 ? -3 : -2).join(".")
+}
+
 export function judgeResponse(p: { status: number; finalUrl: string; originalUrl: string; html: string; now?: Date }): Verdict {
   const now = p.now ?? new Date()
   if (p.status === 404 || p.status === 410) return { state: "dead", reason: `El sitio responde que la página ya no existe (${p.status}).` }
@@ -23,6 +34,13 @@ export function judgeResponse(p: { status: number; finalUrl: string; originalUrl
 
   const text = htmlToText(p.html)
   if (looksLikeLoginWall(p.finalUrl, text)) return { state: "unknown", reason: "El sitio pide iniciar sesión para ver la oferta; no se puede revisar sola." }
+
+  // Si el enlace termina en OTRO sitio (un dominio parecido, una página estacionada, otro portal), esa página no es la oferta: no se puede decir que sigue abierta.
+  try {
+    if (siteOf(new URL(p.finalUrl).hostname) !== siteOf(new URL(p.originalUrl).hostname)) return { state: "unknown", reason: "El enlace ahora lleva a otro sitio; no se puede confirmar que la oferta siga publicada." }
+  } catch {
+    /* enlaces ya validados al guardarse */
+  }
 
   // Cuando una oferta cierra, muchos sitios redirigen: a la portada, a la lista de ofertas de la empresa (Lever, Ashby…) o a una página con `?error=true` (Greenhouse).
   try {
@@ -58,7 +76,15 @@ export async function probeOfferLink(rawUrl: string, opts: { fetchImpl?: typeof 
   const doFetch = opts.fetchImpl ?? fetch
   const lookup = opts.lookup ?? defaultLookup
   try {
-    let url = parseOfferUrl(rawUrl)
+    // Se pide siempre la forma canónica (sin rastreadores; LinkedIn e Indeed reconstruidos desde su id), no el texto guardado tal cual.
+    const canonical = (() => {
+      try {
+        return normalizeSourceUrl(rawUrl).url
+      } catch {
+        return rawUrl
+      }
+    })()
+    let url = parseOfferUrl(canonical)
     let res: Response | undefined
     for (let hop = 0; hop < 5; hop++) {
       await assertPublic(url, lookup)
@@ -76,7 +102,7 @@ export async function probeOfferLink(rawUrl: string, opts: { fetchImpl?: typeof 
       const buf = new Uint8Array(await res.arrayBuffer())
       html = decodePage(buf.length > MAX_BYTES ? buf.slice(0, MAX_BYTES) : buf, res.headers.get("content-type"))
     }
-    return judgeResponse({ status: res.status, finalUrl: url.toString(), originalUrl: rawUrl, html, now: opts.now })
+    return judgeResponse({ status: res.status, finalUrl: url.toString(), originalUrl: canonical, html, now: opts.now })
   } catch (e) {
     return { state: "unknown", reason: `No se pudo abrir el enlace (${(e as Error).message.slice(0, 80)}).` }
   }
