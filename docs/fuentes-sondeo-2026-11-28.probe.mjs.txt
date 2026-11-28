@@ -1,0 +1,59 @@
+import "/Users/banks./Projects/cv-tailor/scripts/ts-alias.mjs"
+import { writeFileSync } from "node:fs"
+const { loadRobots, isAllowed } = await import("/Users/banks./Projects/cv-tailor/lib/sources/portals/robots.ts")
+const { parseSitemap } = await import("/Users/banks./Projects/cv-tailor/lib/sources/portals/sitemap.ts")
+const { jobPostingFromJsonLd } = await import("/Users/banks./Projects/cv-tailor/lib/offer/html.ts")
+const { SOURCE_HEADERS, sleep } = await import("/Users/banks./Projects/cv-tailor/lib/sources/types.ts")
+
+const SITES = JSON.parse((await import("node:fs")).readFileSync(new URL("./sites.json", import.meta.url), "utf8"))
+const JOBISH = /(empleo|trabajo|oferta|vacante|vaga|emprego|job|career|anuncio|aviso|puesto|offer)/i
+const get = async (url, accept) => {
+  const res = await fetch(url, { headers: { ...SOURCE_HEADERS, Accept: accept }, signal: AbortSignal.timeout(20000), redirect: "follow" })
+  return { status: res.status, type: res.headers.get("content-type") ?? "", text: res.ok ? await res.text() : "", final: res.url }
+}
+
+async function probe(s) {
+  const out = { ...s }
+  try {
+    const rob = await loadRobots(s.origin)
+    out.robots = rob.blocked ? { blocked: true, reason: rob.reason } : { blocked: false, rootAllowed: isAllowed(rob, "/"), sitemaps: rob.sitemaps.length }
+    if (rob.blocked) return out
+    // Qué prohíbe para nosotros (reglas del grupo * o propio) que suene a ofertas
+    out.robots.jobDisallows = rob.rules.filter((r) => !r.allow && JOBISH.test(r.pattern)).map((r) => r.pattern).slice(0, 6)
+    if (!out.robots.rootAllowed) return out
+    await sleep(1500)
+    const smUrl = rob.sitemaps[0] ?? `${s.origin}/sitemap.xml`
+    if (/\.gz($|\?)/.test(smUrl)) { out.sitemap = { note: "gz (no se abre)" }; return out }
+    const sm = await get(smUrl, "application/xml,text/xml,*/*;q=0.5")
+    if (sm.status !== 200 || !/<(urlset|sitemapindex)/i.test(sm.text)) { out.sitemap = { status: sm.status, note: "sin sitemap legible" }; return out }
+    let p = parseSitemap(sm.text)
+    out.sitemap = { url: smUrl, index: p.index, entries: p.entries.length }
+    let entries = p.entries
+    if (p.index) {
+      const child = entries.find((e) => JOBISH.test(e.loc) && !/\.gz($|\?)/.test(e.loc))
+      if (!child) { out.sitemap.note = "índice sin hijo de ofertas (o solo .gz)"; out.sitemap.children = entries.slice(0, 5).map((e) => e.loc); return out }
+      await sleep(1500)
+      const c = await get(child.loc, "application/xml,text/xml,*/*;q=0.5")
+      if (c.status !== 200 || !/<urlset/i.test(c.text)) { out.sitemap.note = `hijo ilegible (${c.status})`; return out }
+      p = parseSitemap(c.text); entries = p.entries
+      out.sitemap.child = child.loc; out.sitemap.childEntries = entries.length
+    }
+    const jobUrl = entries.map((e) => e.loc).find((u) => JOBISH.test(new URL(u).pathname) && new URL(u).pathname.length > 12)
+    if (!jobUrl) { out.sitemap.note = (out.sitemap.note ?? "") + " sin URL de oferta reconocible"; out.sitemap.sample = entries.slice(0, 3).map((e) => e.loc); return out }
+    const u = new URL(jobUrl)
+    if (!isAllowed(rob, u.pathname + u.search)) { out.page = { allowed: false, sample: jobUrl }; return out }
+    await sleep(1500)
+    const page = await get(jobUrl, "text/html,*/*;q=0.5")
+    const ld = page.status === 200 ? jobPostingFromJsonLd(page.text) : null
+    out.page = { allowed: true, url: jobUrl, status: page.status, jsonld: !!ld, jsonldFields: ld ? { title: !!ld.title, company: !!ld.company, desc: ld.description.length > 200, validThrough: !!ld.ld.validThrough, datePosted: !!ld.ld.datePosted, location: !!ld.ld.location, salary: !!ld.ld.salary } : undefined, nextData: /__NEXT_DATA__/.test(page.text), crossHost: new URL(page.final).hostname !== u.hostname ? new URL(page.final).hostname : undefined }
+  } catch (e) {
+    out.error = String(e.message ?? e).slice(0, 120)
+  }
+  return out
+}
+
+const results = []
+let i = 0
+const worker = async () => { while (i < SITES.length) { const s = SITES[i++]; const r = await probe(s); results.push(r); writeFileSync(new URL("./resultados.json", import.meta.url), JSON.stringify(results, null, 1)); console.log(`${results.length}/${SITES.length} ${s.origin}`) } }
+await Promise.all(Array.from({ length: 4 }, worker))
+console.log("FIN")

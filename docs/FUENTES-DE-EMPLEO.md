@@ -47,3 +47,59 @@ Los tokens de empresa no se adivinan bien: de ~100 intentos solo 15 tableros exi
 ## Mediciones propias
 - Get on Board: 979 ofertas leídas en 10 páginas de 100 (≈ 12 s con 1,2 s de pausa).
 - Encaje con el CV: **7,6 ms por oferta** (1 000 ofertas sintéticas contra el CV real = 7,6 s). Por eso el orden por encaje se calcula solo sobre las ~100–200 mejores candidatas tras filtrar por región y por texto/significado, no sobre todas.
+
+---
+
+# Ampliación del 28-nov-2026: México, Colombia, España y el resto de Latinoamérica
+
+Pedida por Juan: todos los portales posibles, con foco en **México, Colombia y España**. Se midieron **126 sitios** (≈ 25 de MX/CO/ES, el resto de 18 países y fuentes remotas) con el lector de `robots.txt` y de sitemaps que ya usa Sooosh (`lib/sources/portals/*`), con nuestra identidad `SoooshBot` y pausas de 1,5 s (3 a 4 peticiones por sitio). Datos crudos: `docs/fuentes-sondeo-2026-11-28.json`; script: `docs/fuentes-sondeo-2026-11-28.probe.mjs.txt` (renombrado para que no se ejecute solo; copiarlo a `.mjs` y poner la lista de sitios en `sites.json`).
+
+**Qué mide y qué NO mide.** Por sitio: (1) ¿se puede leer su `robots.txt`?, (2) ¿permite lo que pedimos?, (3) ¿tiene sitemap con ofertas?, (4) ¿una página de oferta trae JSON-LD `JobPosting` completo? Eso dice si **técnicamente** cabe en nuestro lector de portales. **No dice si tenemos permiso**: un `robots.txt` abierto no autoriza reutilizar el contenido. Los términos de uso solo se leyeron para tres sitios (abajo). Limitaciones: una página de ejemplo por sitio (la sonda a veces eligió un blog o una categoría; donde pasó, se repitió a mano con una oferta real), y algunos `robots.txt` responden distinto según el momento (OCC y Magneto dieron resultados distintos entre dos pasadas; se anota la lectura repetida).
+
+## 1. Leíbles hoy con nuestro lector (robots abierto + sitemap + JSON-LD completo)
+
+| País | Portal | Ofertas en sitemap | Verificado | Permiso / términos |
+|---|---|---|---|---|
+| **CO** | **Magneto365** (3.º en tráfico de Colombia) | **38.681** URLs, todas con fecha de hoy | `robots.txt` permite todo salvo `/*?` y `/manager`, **invita a bots de IA** y publica `llms.txt`; la oferta trae JobPosting con título, fecha, vigencia, empresa, lugar, tipo y descripción | Los términos de uso **no se pudieron aislar** (la página legal que se obtuvo era la política de datos). **Pedir confirmación por escrito antes de leer.** |
+| **ES** | **Infoempleo** | **8.807** activas | JobPosting completo (incluye `validThrough`); `robots.txt` solo prohíbe filtros | Su aviso legal **prohíbe** reproducir los contenidos y obtenerlos por medios distintos a los que ofrece, y el uso comercial, **sin autorización**. **No leer sin permiso.** |
+| **ES** | **Jobtoday** (hostelería y turnos) | **34.791** (país `es`) | JobPosting con fecha, vigencia y lugar | Sus términos prohíben «apropiarse de los datos de la plataforma para beneficio comercial propio». **Consultar.** |
+| **ES** | **Manfred** (tecnología) | 22 | JobPosting con salario | Términos no leídos. Pocas ofertas |
+| **ES** | **Domestika** (creativos) | 265 | JobPosting con fecha y lugar | Términos no leídos |
+| PE | **Laborum PE** | ≥ 49.999 | JobPosting completo | Términos no leídos |
+| CL | **Trabajando.cl** | 11.612 | JobPosting completo | Términos no leídos |
+| UY | **Gallito Trabajo** | 860 | JobPosting completo | Términos no leídos |
+
+## 2. `robots.txt` abierto pero sin datos estructurados
+
+Familia **Navent**: Bumeran (MX, CO, AR, PE, BO), Zonajobs, Laborum CL, Multitrabajos (EC), Konzerta (PA). `robots.txt` permite las ofertas y publica sitemap (Bumeran MX: 5.801 avisos), pero la página de oferta **no trae JSON-LD ni microdatos** (comprobado en una oferta real de Bumeran MX). Leerlos exige un extractor HTML por sitio, frágil. Otros en esta situación: Vagas.com y Catho (BR), Buscojobs (UY, PY), Empleos.net y Vacantes.com (MX).
+
+## 3. Bloquean a nuestro identificador (no se entra, por regla)
+
+`robots.txt` responde **403** a `SoooshBot` (repetido): **Computrabajo en todos los países**, **OCC Mundial** (MX), **Tecnoempleo** y **Randstad** (ES), Jobrapido, Adzuna (el sitio; su API es otra cosa), Glassdoor, Jobatus y Empléate (SEPE) no respondieron. Nunca fingimos ser un navegador, así que quedan fuera.
+
+## 4. Prohíben las ofertas o no son leíbles por este método
+
+Jobrapido (`/job/*`), **elempleo** (`/colombia/JobOffers/` y términos ya leídos el 19-nov), Indeed (sin sitemap legible; términos), LinkedIn, Jooble y Talent.com (sitemaps solo `.gz` o sin ofertas).
+
+## 5. APIs y datos oficiales (lo más sólido a largo plazo)
+
+| Fuente | Estado | Siguiente paso |
+|---|---|---|
+| **InfoJobs API** (ES) | Existe API oficial con búsqueda de ofertas, candidaturas y CV; hay que registrar una aplicación con una cuenta de InfoJobs. Condiciones de uso **no leídas** | Registrar la app y leer las condiciones: ¿se pueden guardar y mostrar sus ofertas? |
+| **Adzuna API** (MX, quizá ES) | Clave gratuita (`app_id` + `app_key`); código `mx` confirmado en documentación de terceros; **España no confirmada**; sus términos no se leyeron | Pedir clave y consultar `/jobs/mx/search`; verificar país y condiciones. Requiere una clave (decisión de Juan) |
+| **Jooble API** | Requiere clave; ya descartado el 19-nov | — |
+| **Servicio Público de Empleo** (CO) | Por la **Ley 1636 de 2013** los empleadores deben registrar vacantes; ≈ 265.000 vacantes; su sitio institucional es WordPress y el buscador (`buscadordeempleo.gov.co`) es una aplicación de JavaScript. **No hallé API ni datos abiertos de vacantes** | Escribir al SPE y a MinTrabajo pidiendo un feed (hay norma de estructura de datos: Resolución 0029 de 2015) |
+| **SEPE / Empléate** (ES) | Existe una **solicitud ciudadana** en datos.gob.es para publicar las ofertas como datos abiertos; no confirmé que esté publicada. Su `robots.txt` no respondió | Revisar el catálogo de datos abiertos del SEPE |
+| **Servicio Nacional de Empleo** (MX) | Sin API; el único conjunto de datos hallado es estatal y de 2018. Hubo una filtración en 2024 (cuidado) | Escribir a la STPS |
+| **EURES** (UE) | Portal europeo; sitemap sin ofertas por URL; API solo para miembros | Consultar acceso |
+
+## 6. Lectura por país
+
+- **Colombia** (mejor posición): **Magneto365** es la fuente grande y técnicamente más limpia; falta el permiso. Computrabajo y elempleo están fuera. El **Servicio Público de Empleo** sería la fuente oficial y más legítima si entregan un feed.
+- **España**: Infoempleo y Jobtoday son técnicamente excelentes pero sus términos exigen autorización; **InfoJobs tiene API oficial** (camino más sano); Tecnoempleo y Randstad bloquean; hay nicho útil en Manfred (tecnología) y Domestika (creativos).
+- **México** (la más difícil): **OCC y Computrabajo bloquean**, Indeed y LinkedIn no, Bumeran MX no trae datos estructurados. Camino realista: **Adzuna API (`mx`)**, Get on Board (ya conectada, ~25 ofertas MX), ATS por empresa (Greenhouse, Lever, Ashby) y, si lo aprueba Juan, un extractor HTML para Bumeran MX.
+- **Resto**: Laborum PE (≥ 50 mil), Trabajando.cl y Gallito UY son leíbles; la familia Navent necesita extractor propio.
+
+## 7. Decisión pendiente de Juan
+
+No se agregó ningún portal al código. Antes de hacerlo hay que decidir, por fuente, entre **pedir permiso por escrito** (Magneto, Infoempleo, Jobtoday, Laborum, Trabajando.cl, Gallito, SPE) y **usar APIs oficiales** (InfoJobs, Adzuna). Leer sin permiso un sitio cuyos términos lo limitan es un riesgo legal del producto, aunque el `robots.txt` lo deje pasar.

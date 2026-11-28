@@ -1,0 +1,2459 @@
+[
+ {
+  "c": "MX",
+  "n": "Computrabajo MX",
+  "origin": "https://mx.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://mx.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "MX",
+  "n": "OCC Mundial",
+  "origin": "https://www.occ.com.mx",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/Ayuda/Aviso_Privacidad",
+    "/Empleo/Guardar_Oferta/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Indeed MX",
+  "origin": "https://mx.indeed.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/api/getrecjobs",
+    "/empleo/",
+    "/emprego/",
+    "/empregos/BR/",
+    "/empregos/title",
+    "/job/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Servicio Nacional de Empleo",
+  "origin": "https://www.empleo.gob.mx",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "status": 200,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Bumeran MX",
+  "origin": "https://www.bumeran.com.mx",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 4,
+   "jobDisallows": [
+    "/empleos.html/111",
+    "/empleos.html/100",
+    "/empleos-area-*/111",
+    "/empleos-area-*/100",
+    "/en-*/empleos.html/111",
+    "/en-*/empleos.html/100"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.bumeran.com.mx/sitemap_avisos_bum.xml",
+   "index": false,
+   "entries": 5801
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.bumeran.com.mx/empleos/becario-a-de-recursos-humanos-comservicon-integral-1118681215.html",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Glassdoor MX",
+  "origin": "https://www.glassdoor.com.mx",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/about/forCareerCenters/",
+    "/about/jobs/",
+    "/jobview/",
+    "/partners/jobs/",
+    "/job-listing/details.htm?*",
+    "/job-listing/*_IE*.htm"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Jooble MX",
+  "origin": "https://mx.jooble.org",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/*?closedJob=True",
+    "/m/JobDesc"
+   ]
+  },
+  "sitemap": {
+   "url": "https://mx.jooble.org/sitemap.xml",
+   "index": true,
+   "entries": 229,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://mx.jooble.org/sitemap_tree_jdp_es_MX_61.xml",
+    "https://mx.jooble.org/sitemap_tree_jdp_es_MX_60.xml",
+    "https://mx.jooble.org/sitemap_tree_jdp_es_MX_59.xml",
+    "https://mx.jooble.org/sitemap_tree_jdp_es_MX_58.xml",
+    "https://mx.jooble.org/sitemap_tree_jdp_es_MX_57.xml"
+   ]
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Talent.com MX",
+  "origin": "https://mx.talent.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 2,
+   "jobDisallows": [
+    "/search-jobs/*"
+   ]
+  },
+  "sitemap": {
+   "url": "https://mx.talent.com/sitemaps/salary-es/sitemap.xml",
+   "index": true,
+   "entries": 1,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://mx.talent.com/sitemaps/salary-es-1/sitemap.xml"
+   ]
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Jobrapido MX",
+  "origin": "https://mx.jobrapido.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 2,
+   "jobDisallows": [
+    "/job/*",
+    "/jobpreview/*",
+    "/empleo/*",
+    "/trabajo/*"
+   ]
+  },
+  "sitemap": {
+   "url": "https://mx.jobrapido.com/jr-sitemaps/listings/listings_sitemapindex_mx.xml",
+   "index": true,
+   "entries": 57,
+   "child": "https://mx.jobrapido.com/jr-sitemaps/listings/listings_mx_1.xml",
+   "childEntries": 50000
+  },
+  "page": {
+   "allowed": false,
+   "sample": "https://mx.jobrapido.com/jobpreview/4872831022992982016"
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Zippia/Neuvoo MX",
+  "origin": "https://www.neuvoo.com.mx",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://www.neuvoo.com.mx"
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Empleos.net",
+  "origin": "https://www.empleos.net",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://empleos.net/sitemap.xml",
+   "index": false,
+   "entries": 59
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://empleos.net/buscar_vacantes.php?Area=1&amp;Pais=",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Empleo Mexico Aldia",
+  "origin": "https://www.bolsadetrabajo.com.mx",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": false,
+   "sitemaps": 0,
+   "jobDisallows": []
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Vacantes.com",
+  "origin": "https://vacantes.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/saved-jobs/",
+    "/*/vacantes/*?*q=*",
+    "/*/vacantes/*?*page=*",
+    "/*/vacantes/*?*country=*",
+    "/*/vacantes/*?*countryId=*",
+    "/*/vacantes/*?*city=*"
+   ]
+  },
+  "sitemap": {
+   "url": "https://vacantes.com/sitemap.xml",
+   "index": true,
+   "entries": 6,
+   "child": "https://vacantes.com/sitemap-static.xml",
+   "childEntries": 70
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://vacantes.com/es/vacantes/",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Computrabajo CO",
+  "origin": "https://co.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://co.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Opcionempleo MX",
+  "origin": "https://www.opcionempleo.com.mx",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/job/",
+    "/jobview/",
+    "/jobviewx/",
+    "/jobviewex/",
+    "/recruiter/posting/post-your-job",
+    "/partners/jsjobbox.html"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Workana",
+  "origin": "https://www.workana.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/job/insight/",
+    "/*/job/insight/",
+    "/job/get-insight/",
+    "/*/job/get-insight/"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.workana.com/sitemap_index.xml",
+   "index": true,
+   "entries": 5,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://www.workana.com/workana-sitemap/69504ca3eb437cd6893c8069abef5d32.SitemapIndex.810.xml",
+    "https://www.workana.com/workana-sitemap/69504ca3eb437cd6893c8069abef5d32.SitemapIndex.811.xml",
+    "https://www.workana.com/workana-sitemap/69504ca3eb437cd6893c8069abef5d32.SitemapIndex.812.xml",
+    "https://blog.workana.com/sitemap.xml",
+    "https://i.workana.com/sitemap.xml"
+   ]
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Magneto365",
+  "origin": "https://www.magneto365.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://www.magneto365.com no deja leer su robots.txt (HTTP 502): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Indeed CO",
+  "origin": "https://co.indeed.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/api/getrecjobs",
+    "/empleo/",
+    "/emprego/",
+    "/empregos/BR/",
+    "/empregos/title",
+    "/job/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Servicio Público de Empleo",
+  "origin": "https://www.serviciodeempleo.gov.co",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://www.serviciodeempleo.gov.co"
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Buscador de Empleo SPE",
+  "origin": "https://buscadordeempleo.gov.co",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://buscadordeempleo.gov.co"
+  }
+ },
+ {
+  "c": "MX",
+  "n": "Trabajos.com MX",
+  "origin": "https://www.trabajos.com.mx",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://www.trabajos.com.mx"
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Bumeran CO",
+  "origin": "https://www.bumeran.com.co",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "status": 200,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Jooble CO",
+  "origin": "https://co.jooble.org",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/*?closedJob=True",
+    "/m/JobDesc"
+   ]
+  },
+  "sitemap": {
+   "url": "https://co.jooble.org/sitemap.xml",
+   "index": true,
+   "entries": 32,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://co.jooble.org/sitemap_tree_jdp_es_CO_1.xml",
+    "https://co.jooble.org/sitemap_tree_kwserp_es_CO_1.xml",
+    "https://co.jooble.org/sitemap_tree_kwserp_es_CO_2.xml",
+    "https://co.jooble.org/sitemap_tree_kwserp_es_CO_3.xml",
+    "https://co.jooble.org/sitemap_tree_kwserp_es_CO_4.xml"
+   ]
+  }
+ },
+ {
+  "c": "CO",
+  "n": "elempleo",
+  "origin": "https://www.elempleo.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 2,
+   "jobDisallows": [
+    "/colombia/JobOffers/",
+    "*?&trabajo="
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.elempleo.com/colombia/Files/siteMap/googleIndexerSitemap.xml",
+   "index": true,
+   "entries": 7,
+   "child": "https://www.elempleo.com/colombia/files/sitemap/sitemap-resultados-area.xml",
+   "childEntries": 29
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.elempleo.com/co/ofertas-empleo/area-servicio-cliente",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Glassdoor CO",
+  "origin": "https://www.glassdoor.com.co",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://www.glassdoor.com.co"
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Trabajos Diarios CO",
+  "origin": "https://www.trabajosdiarios.co",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://www.trabajosdiarios.co"
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Talent.com CO",
+  "origin": "https://co.talent.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 3,
+   "jobDisallows": [
+    "/search-jobs/*"
+   ]
+  },
+  "sitemap": {
+   "url": "https://co.talent.com/sitemaps/salary-es/sitemap.xml",
+   "index": true,
+   "entries": 1,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://co.talent.com/sitemaps/salary-es-1/sitemap.xml"
+   ]
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Opcionempleo CO",
+  "origin": "https://www.opcionempleo.com.co",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/job/",
+    "/jobview/",
+    "/jobviewx/",
+    "/jobviewex/",
+    "/recruiter/posting/post-your-job",
+    "/partners/jsjobbox.html"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Torre",
+  "origin": "https://torre.ai",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 7,
+   "jobDisallows": [
+    "/search/jobs?*",
+    "/*/search/jobs?*",
+    "/jobalerts",
+    "/jobalerts/*",
+    "/*/jobalerts",
+    "/*/jobalerts/*"
+   ]
+  },
+  "sitemap": {
+   "status": 400,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "CO",
+  "n": "Jobrapido CO",
+  "origin": "https://co.jobrapido.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 2,
+   "jobDisallows": [
+    "/job/*",
+    "/jobpreview/*",
+    "/empleo/*",
+    "/trabajo/*"
+   ]
+  },
+  "sitemap": {
+   "url": "https://co.jobrapido.com/jr-sitemaps/listings/listings_sitemapindex_co.xml",
+   "index": true,
+   "entries": 3,
+   "child": "https://co.jobrapido.com/jr-sitemaps/listings/listings_co_1.xml",
+   "childEntries": 50000
+  },
+  "page": {
+   "allowed": false,
+   "sample": "https://co.jobrapido.com/jobpreview/4646900865456668672"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Tecnoempleo",
+  "origin": "https://www.tecnoempleo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://www.tecnoempleo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Indeed ES",
+  "origin": "https://es.indeed.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/api/getrecjobs",
+    "/empleo/",
+    "/emprego/",
+    "/empregos/BR/",
+    "/empregos/title",
+    "/job/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Jooble ES",
+  "origin": "https://es.jooble.org",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/*?closedJob=True",
+    "/m/JobDesc"
+   ]
+  },
+  "sitemap": {
+   "url": "https://es.jooble.org/sitemap.xml",
+   "index": true,
+   "entries": 182,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://es.jooble.org/sitemap_tree_jdp_es_ES_24.xml",
+    "https://es.jooble.org/sitemap_tree_jdp_es_ES_23.xml",
+    "https://es.jooble.org/sitemap_tree_jdp_es_ES_22.xml",
+    "https://es.jooble.org/sitemap_tree_jdp_es_ES_21.xml",
+    "https://es.jooble.org/sitemap_tree_jdp_es_ES_20.xml"
+   ]
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Jobrapido ES",
+  "origin": "https://es.jobrapido.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://es.jobrapido.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Jobtoday",
+  "origin": "https://jobtoday.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 8,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://jobtoday.com/sitemap.xml",
+   "index": false,
+   "entries": 483
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://jobtoday.com/es/blog/donde-publicar-ofertas-de-empleo-gratis",
+   "status": 200,
+   "jsonld": false,
+   "nextData": true
+  }
+ },
+ {
+  "c": "ES",
+  "n": "InfoJobs",
+  "origin": "https://www.infojobs.net",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/busqueda_ofertas_lista_home.cfm",
+    "/ofertas_lista.cfm",
+    "/ver-oferta.xhtml",
+    "/visualizar_oferta.ij/",
+    "/visualizar_oferta.cfm",
+    "/visualizar_oferta_no_accesible.cfm"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.infojobs.net/sitemap.xml",
+   "index": false,
+   "entries": 26
+  },
+  "page": {
+   "allowed": true,
+   "url": "http://www.infojobs.net/informa/sobre-infojobs-informa",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false,
+   "crossHost": "nosotros.infojobs.net"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Infoempleo",
+  "origin": "https://www.infoempleo.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 2,
+   "jobDisallows": [
+    "/trabajo/fecha_*/*",
+    "/trabajo/categoria-profesional_*/*",
+    "/trabajo/omitir2_*/*",
+    "/trabajo/omitir1_*/*",
+    "/trabajo/pais_*/*",
+    "/GestionOfertas/*"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.infoempleo.com/sitemap-index.xml",
+   "index": true,
+   "entries": 8,
+   "child": "https://www.infoempleo.com/sitemap-ofertas-activas.xml",
+   "childEntries": 8807
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.infoempleo.com/ofertasdetrabajo/10-conductores-de-camion-ce-en-bretten-alemania/bretten/3188262/",
+   "status": 200,
+   "jsonld": true,
+   "jsonldFields": {
+    "title": true,
+    "company": true,
+    "desc": true,
+    "validThrough": true,
+    "datePosted": true,
+    "location": true,
+    "salary": true
+   },
+   "nextData": false
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Jobatus ES",
+  "origin": "https://www.jobatus.es",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://www.jobatus.es"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Talent.com ES",
+  "origin": "https://es.talent.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 3,
+   "jobDisallows": [
+    "/search-jobs/*"
+   ]
+  },
+  "sitemap": {
+   "url": "https://es.talent.com/sitemaps/salary-es/sitemap.xml",
+   "index": true,
+   "entries": 1,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://es.talent.com/sitemaps/salary-es-1/sitemap.xml"
+   ]
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Glassdoor ES",
+  "origin": "https://www.glassdoor.es",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/about/forCareerCenters/",
+    "/about/jobs/",
+    "/jobview/",
+    "/partners/jobs/",
+    "/job-listing/details.htm?*",
+    "/job-listing/*_IE*.htm"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Trabajos.com",
+  "origin": "https://www.trabajos.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "asemwork.trabajos.com/empresas/1193787401/puerto-80-projects-s-l/"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.trabajos.com/sitemap/www/index.xml",
+   "index": true,
+   "entries": 10,
+   "note": "hijo ilegible (200)"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Computrabajo ES",
+  "origin": "https://www.computrabajo.es",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "status": 200,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Opcionempleo ES",
+  "origin": "https://www.opcionempleo.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/job/",
+    "/jobview/",
+    "/jobviewx/",
+    "/jobviewex/",
+    "/recruiter/posting/post-your-job",
+    "/partners/jsjobbox.html"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Turijobs",
+  "origin": "https://www.turijobs.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 9,
+   "jobDisallows": [
+    "*/inscripcionoferta.aspx$",
+    "/es/anuncio",
+    "/en/anuncio",
+    "/es-es/anuncio",
+    "/en-es/anuncio",
+    "/es-mx/anuncio"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.turijobs.com/sitemap.xml",
+   "index": true,
+   "entries": 8,
+   "note": "hijo ilegible (200)"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Empléate SEPE",
+  "origin": "https://www.empleate.gob.es",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://www.empleate.gob.es"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Randstad ES",
+  "origin": "https://www.randstad.es",
+  "robots": {
+   "blocked": true,
+   "reason": "https://www.randstad.es no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Jobfluent",
+  "origin": "https://www.jobfluent.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/offer_subscriptions*",
+    "/offer_subscriptions/new"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.jobfluent.com/sitemap.xml",
+   "index": true,
+   "entries": 22,
+   "child": "https://www.jobfluent.com/sitemaps/site.xml",
+   "childEntries": 4,
+   "note": " sin URL de oferta reconocible",
+   "sample": [
+    "https://www.jobfluent.com/",
+    "https://www.jobfluent.com/companies",
+    "https://www.jobfluent.com/for-companies"
+   ]
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Milanuncios empleo",
+  "origin": "https://www.milanuncios.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/milanunciosexpress-app/?adId=",
+    "/anuncios-usuario/"
+   ]
+  },
+  "sitemap": {
+   "status": 403,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Manfred",
+  "origin": "https://www.getmanfred.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 2,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://www.getmanfred.com/sitemap.xml",
+   "index": true,
+   "entries": 2,
+   "child": "https://www.getmanfred.com/sitemap-offers.xml",
+   "childEntries": 22
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.getmanfred.com/ofertas-empleo/8557/sdg-group-big-data-architect-nov26",
+   "status": 200,
+   "jsonld": true,
+   "jsonldFields": {
+    "title": true,
+    "company": true,
+    "desc": true,
+    "validThrough": false,
+    "datePosted": true,
+    "location": false,
+    "salary": true
+   },
+   "nextData": true
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Michael Page ES",
+  "origin": "https://www.michaelpage.es",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/job-apply/",
+    "/*/job-apply/",
+    "/job-apply-external/",
+    "/*/job-apply-external/",
+    "/*?*field_job_salary_min=",
+    "/*?*field_job_salary_max="
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.michaelpage.es/sitemap.xml",
+   "index": true,
+   "entries": 1,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://www.michaelpage.es/sitemap.xml?lang=es"
+   ]
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Adecco ES",
+  "origin": "https://www.adecco.es",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "status": 200,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Cornerjob",
+  "origin": "https://www.cornerjob.com",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://www.cornerjob.com"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Nubelo/Freelancer",
+  "origin": "https://www.freelancer.es",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 13,
+   "jobDisallows": [
+    "/jobs/?*"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.freelancer.es/sitemap_index_es_s3.xml",
+   "index": true,
+   "entries": 2,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://www.freelancer.es/sitemap/es/community-1.xml.gz",
+    "https://www.freelancer.es/sitemap/es/static-pages-1.xml.gz"
+   ]
+  }
+ },
+ {
+  "c": "ES",
+  "n": "EURES",
+  "origin": "https://eures.europa.eu",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://eures.europa.eu/sitemap.xml",
+   "index": false,
+   "entries": 1343
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://eures.europa.eu/stemployment-find-your-next-job-denmark-2023-10-25_en",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Empleo Público 060",
+  "origin": "https://administracion.gob.es",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 6,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://administracion.gob.es/sitemap.xml",
+   "index": false,
+   "entries": 607
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://administracion.gob.es/informacion/aplicaciones-moviles-para-la-ciudadania/declaracion-accesibilidad-app-empleo-publico",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "AR",
+  "n": "Computrabajo AR",
+  "origin": "https://ar.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://ar.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "AR",
+  "n": "Indeed AR",
+  "origin": "https://ar.indeed.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/api/getrecjobs",
+    "/empleo/",
+    "/emprego/",
+    "/empregos/BR/",
+    "/empregos/title",
+    "/job/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "ES",
+  "n": "Domestika empleo",
+  "origin": "https://www.domestika.org",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/*/jobs/new",
+    "/*/jobs/*/edit",
+    "/jobs/offer",
+    "/job-offer/post",
+    "/job-offer/edit"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.domestika.org/sitemapindex.xml",
+   "index": true,
+   "entries": 106,
+   "child": "https://www.domestika.org/es/sitemap-jobs-1.xml",
+   "childEntries": 265
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.domestika.org/es/jobs/49921-disenador-grafico-editor-de-video-madrid-espana",
+   "status": 200,
+   "jsonld": true,
+   "jsonldFields": {
+    "title": true,
+    "company": true,
+    "desc": true,
+    "validThrough": true,
+    "datePosted": true,
+    "location": true,
+    "salary": false
+   },
+   "nextData": false
+  }
+ },
+ {
+  "c": "AR",
+  "n": "Zonajobs",
+  "origin": "https://www.zonajobs.com.ar",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 5,
+   "jobDisallows": [
+    "/empleos.html/111",
+    "/empleos.html/100",
+    "/empleos-area-*/111",
+    "/empleos-area-*/100",
+    "/en-*/empleos.html/111",
+    "/en-*/empleos.html/100"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.zonajobs.com.ar/sitemap_avisos_zj.xml",
+   "index": false,
+   "entries": 2441
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.zonajobs.com.ar/empleos/vendedor-polivalente-con-orientacion-a-deposito-|-local-de-indumentaria-caba-le-utthe-2194357.html",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "AR",
+  "n": "Bumeran AR",
+  "origin": "https://www.bumeran.com.ar",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 5,
+   "jobDisallows": [
+    "/empleos.html/111",
+    "/empleos.html/100",
+    "/empleos-area-*/111",
+    "/empleos-area-*/100",
+    "/en-*/empleos.html/111",
+    "/en-*/empleos.html/100"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.bumeran.com.ar/sitemap_avisos_bum.xml",
+   "index": false,
+   "entries": 5913
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.bumeran.com.ar/empleos/jefe-de-administracion-hucap-1118442790.html",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "AR",
+  "n": "Empleos Clarín",
+  "origin": "https://empleos.clarin.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "status": 200,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "AR",
+  "n": "Portal Empleo AR",
+  "origin": "https://www.argentina.gob.ar",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://www.argentina.gob.ar/sitemap.xml",
+   "index": true,
+   "entries": 4,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://www.argentina.gob.ar/sitemap.xml?page=1",
+    "https://www.argentina.gob.ar/sitemap.xml?page=2",
+    "https://www.argentina.gob.ar/sitemap.xml?page=3",
+    "https://www.argentina.gob.ar/sitemap.xml?page=4"
+   ]
+  }
+ },
+ {
+  "c": "CL",
+  "n": "Computrabajo CL",
+  "origin": "https://cl.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://cl.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "CL",
+  "n": "Laborum",
+  "origin": "https://www.laborum.cl",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 5,
+   "jobDisallows": [
+    "/empleos.html/111",
+    "/empleos.html/100",
+    "/empleos-area-*/111",
+    "/empleos-area-*/100",
+    "/en-*/empleos.html/111",
+    "/en-*/empleos.html/100"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.laborum.cl/sitemap_avisos_bum.xml",
+   "index": false,
+   "entries": 17806
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.laborum.cl/empleos/ejecutivos-as-de-atencion-al-cliente.30-y-42-hrs-empresa-de-medios-de-pago-electronico.-cgs-chile-1118681541.html",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "CL",
+  "n": "Chiletrabajos",
+  "origin": "https://www.chiletrabajos.cl",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/ofertasmuchomas"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.chiletrabajos.cl/sitemap.xml",
+   "index": false,
+   "entries": 0,
+   "note": " sin URL de oferta reconocible",
+   "sample": []
+  }
+ },
+ {
+  "c": "CL",
+  "n": "Empleos Públicos",
+  "origin": "https://www.empleospublicos.cl",
+  "robots": {
+   "blocked": true,
+   "reason": "https://www.empleospublicos.cl no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "CL",
+  "n": "Indeed CL",
+  "origin": "https://cl.indeed.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/api/getrecjobs",
+    "/empleo/",
+    "/emprego/",
+    "/empregos/BR/",
+    "/empregos/title",
+    "/job/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "PE",
+  "n": "Computrabajo PE",
+  "origin": "https://pe.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://pe.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "CL",
+  "n": "BNE",
+  "origin": "https://www.bne.cl",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "PE",
+  "n": "Aptitus",
+  "origin": "https://aptitus.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "status": 200,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "CL",
+  "n": "Trabajando.cl",
+  "origin": "https://www.trabajando.cl",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://www.trabajando.cl/sitemap.xml",
+   "index": true,
+   "entries": 4,
+   "child": "https://www.trabajando.cl/sitemap-ofertas.xml",
+   "childEntries": 11612
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.trabajando.cl/trabajo/6155885-ingeniero-senior-en-tratamiento-de-aguas-servidas",
+   "status": 200,
+   "jsonld": true,
+   "jsonldFields": {
+    "title": true,
+    "company": true,
+    "desc": true,
+    "validThrough": true,
+    "datePosted": true,
+    "location": true,
+    "salary": false
+   },
+   "nextData": false
+  }
+ },
+ {
+  "c": "PE",
+  "n": "Indeed PE",
+  "origin": "https://pe.indeed.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/api/getrecjobs",
+    "/empleo/",
+    "/emprego/",
+    "/empregos/BR/",
+    "/empregos/title",
+    "/job/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "EC",
+  "n": "Computrabajo EC",
+  "origin": "https://ec.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://ec.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "PE",
+  "n": "Bumeran PE",
+  "origin": "https://www.bumeran.com.pe",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 5,
+   "jobDisallows": [
+    "/empleos.html/111",
+    "/empleos.html/100",
+    "/empleos-area-*/111",
+    "/empleos-area-*/100",
+    "/en-*/empleos.html/111",
+    "/en-*/empleos.html/100"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.bumeran.com.pe/sitemap_avisos_bum.xml",
+   "index": false,
+   "entries": 35656
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.bumeran.com.pe/empleos/atencion-al-cliente-servicio-y-ventas-asia-canete-s-.-1.5k-2k-human-to-business-s.a.c.-1118681606.html",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "EC",
+  "n": "Indeed EC",
+  "origin": "https://ec.indeed.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/api/getrecjobs",
+    "/empleo/",
+    "/emprego/",
+    "/empregos/BR/",
+    "/empregos/title",
+    "/job/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "EC",
+  "n": "Socio Empleo",
+  "origin": "https://www.socioempleo.gob.ec",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://www.socioempleo.gob.ec"
+  }
+ },
+ {
+  "c": "EC",
+  "n": "Multitrabajos",
+  "origin": "https://www.multitrabajos.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 5,
+   "jobDisallows": [
+    "/empleos.html/111",
+    "/empleos.html/100",
+    "/empleos-area-*/111",
+    "/empleos-area-*/100",
+    "/en-*/empleos.html/111",
+    "/en-*/empleos.html/100"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.multitrabajos.com/sitemap_avisos_bum.xml",
+   "index": false,
+   "entries": 5619
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.multitrabajos.com/empleos/asistente-de-ventas-y-atencion-al-cliente-ferreteria-torres-1118681583.html",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "UY",
+  "n": "Gallito Trabajo",
+  "origin": "https://trabajo.gallito.com.uy",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "http://trabajo.gallito.com.uy/sitemap.xml",
+   "index": false,
+   "entries": 860
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://trabajo.gallito.com.uy/anuncio/administrador-de-empresa-encargado-de-area-n3ymu",
+   "status": 200,
+   "jsonld": true,
+   "jsonldFields": {
+    "title": true,
+    "company": true,
+    "desc": true,
+    "validThrough": true,
+    "datePosted": true,
+    "location": true,
+    "salary": false
+   },
+   "nextData": false
+  }
+ },
+ {
+  "c": "UY",
+  "n": "Computrabajo UY",
+  "origin": "https://uy.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://uy.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "PE",
+  "n": "Bolsa Trabajo MTPE",
+  "origin": "https://www.empleosperu.gob.pe",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://www.empleosperu.gob.pe"
+  }
+ },
+ {
+  "c": "UY",
+  "n": "Indeed UY",
+  "origin": "https://uy.indeed.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/api/getrecjobs",
+    "/empleo/",
+    "/emprego/",
+    "/empregos/BR/",
+    "/empregos/title",
+    "/job/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "PE",
+  "n": "Laborum PE",
+  "origin": "https://www.laborum.pe",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/preview-job"
+   ]
+  },
+  "sitemap": {
+   "url": "https://laborum.pe/api/v1/sitemaps/index",
+   "index": true,
+   "entries": 5,
+   "child": "https://www.laborum.pe/api/v1/sitemaps/jobs",
+   "childEntries": 49999
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.laborum.pe/job/buk-sac/sdr-outbound/6b0a77cd7b7786f235c09a53",
+   "status": 200,
+   "jsonld": true,
+   "jsonldFields": {
+    "title": true,
+    "company": true,
+    "desc": true,
+    "validThrough": true,
+    "datePosted": true,
+    "location": true,
+    "salary": false
+   },
+   "nextData": false
+  }
+ },
+ {
+  "c": "UY",
+  "n": "Buscojobs UY",
+  "origin": "https://www.buscojobs.com.uy",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/ofertas/*fechainicio=",
+    "/jobs/*fechainicio=",
+    "/vagas/*fechainicio=",
+    "/offerte/*fechainicio="
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.buscojobs.com.uy/sitemap",
+   "index": true,
+   "entries": 4,
+   "child": "https://www.buscojobs.com.uy/sitemap/sitemaps/bjuy/sitemap-categories.xml",
+   "childEntries": 21
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.buscojobs.com.uy/ofertas/tc33/trabajo-de-otros",
+   "status": 200,
+   "jsonld": false,
+   "nextData": true
+  }
+ },
+ {
+  "c": "BR",
+  "n": "InfoJobs BR",
+  "origin": "https://www.infojobs.com.br",
+  "robots": {
+   "blocked": true,
+   "reason": "https://www.infojobs.com.br no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "BR",
+  "n": "Gupy portal",
+  "origin": "https://portal.gupy.io",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "status": 200,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "BR",
+  "n": "Indeed BR",
+  "origin": "https://br.indeed.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/api/getrecjobs",
+    "/empleo/",
+    "/emprego/",
+    "/empregos/BR/",
+    "/empregos/title",
+    "/job/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "BR",
+  "n": "Vagas.com",
+  "origin": "https://www.vagas.com.br",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/vagas/pesquisas"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.vagas.com.br/sitemap.xml",
+   "index": false,
+   "entries": 10795
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.vagas.com.br/vagas-de-recepcionista",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "BR",
+  "n": "SINE",
+  "origin": "https://sine.com.br",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://sine.com.br"
+  }
+ },
+ {
+  "c": "BR",
+  "n": "Catho",
+  "origin": "https://www.catho.com.br",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/buscar/vagas/",
+    "/inc/vaga/pop_inc_canc.php",
+    "/vagas-emprego/lab-ssj/85355/",
+    "/vagas-emprego/locarrier/641689/"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.catho.com.br/sitemap-index.xml",
+   "index": true,
+   "entries": 24,
+   "child": "https://www.catho.com.br/sitemap2/sitemap_vagas_1.xml",
+   "childEntries": 50000
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.catho.com.br/vagas/ajudante-de-logistica-es/22044132/",
+   "status": 403,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "BR",
+  "n": "Trabalha Brasil",
+  "origin": "https://www.trabalhabrasil.com.br",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "*/alerta-de-vagas/*",
+    "*/anunciar-vagas-empregos/*",
+    "*/administrar-vagas/*"
+   ]
+  },
+  "sitemap": {
+   "status": 400,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "CR",
+  "n": "Computrabajo CR",
+  "origin": "https://cr.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://cr.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "BR",
+  "n": "Empregos.com.br",
+  "origin": "https://www.empregos.com.br",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/buscar-vagas$",
+    "/buscar-vagas?",
+    "/buscar-vagas/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "CR",
+  "n": "Tecoloco CR",
+  "origin": "https://www.tecoloco.co.cr",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://www.tecoloco.co.cr/sitemap.xml",
+   "index": false,
+   "entries": 13,
+   "note": " sin URL de oferta reconocible",
+   "sample": [
+    "https://www.tecoloco.co.cr/general.xml",
+    "https://www.tecoloco.co.cr/areas.xml",
+    "https://www.tecoloco.co.cr/areaDepartamento.xml"
+   ]
+  }
+ },
+ {
+  "c": "CR",
+  "n": "Indeed CR",
+  "origin": "https://cr.indeed.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/api/getrecjobs",
+    "/empleo/",
+    "/emprego/",
+    "/empregos/BR/",
+    "/empregos/title",
+    "/job/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "PA",
+  "n": "Computrabajo PA",
+  "origin": "https://pa.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://pa.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "PA",
+  "n": "Indeed PA",
+  "origin": "https://pa.indeed.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": [
+    "/api/getrecjobs",
+    "/empleo/",
+    "/emprego/",
+    "/empregos/BR/",
+    "/empregos/title",
+    "/job/"
+   ]
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "PA",
+  "n": "Konzerta",
+  "origin": "https://www.konzerta.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 5,
+   "jobDisallows": [
+    "/empleos.html/111",
+    "/empleos.html/100",
+    "/empleos-area-*/111",
+    "/empleos-area-*/100",
+    "/en-*/empleos.html/111",
+    "/en-*/empleos.html/100"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.konzerta.com/sitemap_avisos_bum.xml",
+   "index": false,
+   "entries": 2329
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.konzerta.com/empleos/ejecutiva-de-ventas-panama-sanjue-importaciones-sa-1118681496.html",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "GT",
+  "n": "Computrabajo GT",
+  "origin": "https://gt.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://gt.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "GT",
+  "n": "Tecoloco GT",
+  "origin": "https://www.tecoloco.com.gt",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://www.tecoloco.com.gt/sitemap.xml",
+   "index": false,
+   "entries": 13,
+   "note": " sin URL de oferta reconocible",
+   "sample": [
+    "https://www.tecoloco.com.gt/general.xml",
+    "https://www.tecoloco.com.gt/areas.xml",
+    "https://www.tecoloco.com.gt/areaDepartamento.xml"
+   ]
+  }
+ },
+ {
+  "c": "CR",
+  "n": "Elempleo CR",
+  "origin": "https://www.elempleo.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 2,
+   "jobDisallows": [
+    "/colombia/JobOffers/",
+    "*?&trabajo="
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.elempleo.com/colombia/Files/siteMap/googleIndexerSitemap.xml",
+   "index": true,
+   "entries": 7,
+   "child": "https://www.elempleo.com/colombia/files/sitemap/sitemap-resultados-area.xml",
+   "childEntries": 29
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://www.elempleo.com/co/ofertas-empleo/area-servicio-cliente",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "SV",
+  "n": "Computrabajo SV",
+  "origin": "https://sv.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://sv.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "HN",
+  "n": "Computrabajo HN",
+  "origin": "https://hn.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://hn.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "NI",
+  "n": "Computrabajo NI",
+  "origin": "https://ni.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://ni.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "DO",
+  "n": "Computrabajo DO",
+  "origin": "https://do.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://do.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "DO",
+  "n": "Indeed DO",
+  "origin": "https://do.indeed.com",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://do.indeed.com"
+  }
+ },
+ {
+  "c": "PY",
+  "n": "Computrabajo PY",
+  "origin": "https://py.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://py.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "BO",
+  "n": "Computrabajo BO",
+  "origin": "https://bo.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://bo.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "BO",
+  "n": "Bumeran BO",
+  "origin": "https://www.bumeran.com.bo",
+  "robots": {
+   "blocked": true,
+   "reason": "No se pudo leer el robots.txt de https://www.bumeran.com.bo"
+  }
+ },
+ {
+  "c": "VE",
+  "n": "Computrabajo VE",
+  "origin": "https://ve.computrabajo.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://ve.computrabajo.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "PR",
+  "n": "Indeed PR",
+  "origin": "https://pr.indeed.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://pr.indeed.com no deja leer su robots.txt (HTTP 403): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "SV",
+  "n": "Tecoloco SV",
+  "origin": "https://www.tecoloco.com.sv",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://www.tecoloco.com.sv/sitemap.xml",
+   "index": false,
+   "entries": 13,
+   "note": " sin URL de oferta reconocible",
+   "sample": [
+    "https://www.tecoloco.com.sv/general.xml",
+    "https://www.tecoloco.com.sv/areas.xml",
+    "https://www.tecoloco.com.sv/areaDepartamento.xml"
+   ]
+  }
+ },
+ {
+  "c": "HN",
+  "n": "Tecoloco HN",
+  "origin": "https://www.tecoloco.com.hn",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://www.tecoloco.com.hn/sitemap.xml",
+   "index": false,
+   "entries": 13,
+   "note": " sin URL de oferta reconocible",
+   "sample": [
+    "https://www.tecoloco.com.hn/general.xml",
+    "https://www.tecoloco.com.hn/areas.xml",
+    "https://www.tecoloco.com.hn/areaDepartamento.xml"
+   ]
+  }
+ },
+ {
+  "c": "PY",
+  "n": "Buscojobs PY",
+  "origin": "https://www.buscojobs.com.py",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/ofertas/*fechainicio=",
+    "/jobs/*fechainicio=",
+    "/vagas/*fechainicio=",
+    "/offerte/*fechainicio="
+   ]
+  },
+  "sitemap": {
+   "status": 403,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "Get on Board",
+  "origin": "https://www.getonbrd.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 0,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "status": 404,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "Workana LATAM",
+  "origin": "https://www.workana.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/job/insight/",
+    "/*/job/insight/",
+    "/job/get-insight/",
+    "/*/job/get-insight/"
+   ]
+  },
+  "sitemap": {
+   "url": "https://www.workana.com/sitemap_index.xml",
+   "index": true,
+   "entries": 5,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://www.workana.com/workana-sitemap/69504ca3eb437cd6893c8069abef5d32.SitemapIndex.810.xml",
+    "https://www.workana.com/workana-sitemap/69504ca3eb437cd6893c8069abef5d32.SitemapIndex.811.xml",
+    "https://www.workana.com/workana-sitemap/69504ca3eb437cd6893c8069abef5d32.SitemapIndex.812.xml",
+    "https://blog.workana.com/sitemap.xml",
+    "https://i.workana.com/sitemap.xml"
+   ]
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "Torre",
+  "origin": "https://torre.ai",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 7,
+   "jobDisallows": [
+    "/search/jobs?*",
+    "/*/search/jobs?*",
+    "/jobalerts",
+    "/jobalerts/*",
+    "/*/jobalerts",
+    "/*/jobalerts/*"
+   ]
+  },
+  "sitemap": {
+   "status": 400,
+   "note": "sin sitemap legible"
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "Himalayas",
+  "origin": "https://himalayas.app",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 28,
+   "jobDisallows": [
+    "/jobs?page=",
+    "/jobs*&page=",
+    "/jobs/*?page=",
+    "/career-guides?page=",
+    "/career-guides*&page=",
+    "/career-guides/*?page="
+   ]
+  },
+  "sitemap": {
+   "note": "gz (no se abre)"
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "Wellfound",
+  "origin": "https://wellfound.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 3,
+   "jobDisallows": [
+    "/_jobs/",
+    "/*?jobId=*",
+    "/*?jobSlug=*",
+    "/*&jobId=*",
+    "/*&jobSlug=*",
+    "/job_listings/report_company"
+   ]
+  },
+  "sitemap": {
+   "note": "gz (no se abre)"
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "Arc.dev",
+  "origin": "https://arc.dev",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://arc.dev/sitemap.xml",
+   "index": true,
+   "entries": 3,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://arc.dev/sitemap0.xml",
+    "https://arc.dev/talent-blog/sitemap_index.xml",
+    "https://arc.dev/employer-blog/sitemap_index.xml"
+   ]
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "Jobgether",
+  "origin": "https://jobgether.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/offer/{*}",
+    "/offer/%7B*%7D",
+    "/active-offers"
+   ]
+  },
+  "sitemap": {
+   "url": "https://jobgether.com/sitemap.xml",
+   "index": true,
+   "entries": 8,
+   "child": "https://jobgether.com/sitemap/index-pages.xml",
+   "childEntries": 40
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://jobgether.com/search-offers",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "Remote OK",
+  "origin": "https://remoteok.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://remoteok.com/sitemap.xml",
+   "index": true,
+   "entries": 81,
+   "child": "https://remoteok.com/sitemap-jobs-1.xml",
+   "childEntries": 5000
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://remoteok.com/remote-jobs/remote-appointment-setter-convertros-1138257",
+   "status": 200,
+   "jsonld": true,
+   "jsonldFields": {
+    "title": true,
+    "company": true,
+    "desc": true,
+    "validThrough": true,
+    "datePosted": true,
+    "location": true,
+    "salary": true
+   },
+   "nextData": false
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "Adzuna",
+  "origin": "https://www.adzuna.com",
+  "robots": {
+   "blocked": true,
+   "reason": "https://www.adzuna.com no deja leer su robots.txt (HTTP 405): se interpreta como que no quiere robots"
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "WeWorkRemotely",
+  "origin": "https://weworkremotely.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/job-seekers/account/",
+    "/job-seekers/profile/"
+   ]
+  },
+  "sitemap": {
+   "url": "https://weworkremotely.com/sitemap.xml",
+   "index": false,
+   "entries": 308
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://weworkremotely.com/company/rubrik-job-board",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "Jooble",
+  "origin": "https://jooble.org",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/*?closedJob=True",
+    "/m/JobDesc"
+   ]
+  },
+  "sitemap": {
+   "url": "https://jooble.org/sitemap.xml",
+   "index": true,
+   "entries": 9466,
+   "note": "índice sin hijo de ofertas (o solo .gz)",
+   "children": [
+    "https://jooble.org/sitemap_tree_jdp_en_US_42.xml",
+    "https://jooble.org/sitemap_tree_jdp_en_US_41.xml",
+    "https://jooble.org/sitemap_tree_jdp_en_US_40.xml",
+    "https://jooble.org/sitemap_tree_jdp_en_US_39.xml",
+    "https://jooble.org/sitemap_tree_jdp_en_US_38.xml"
+   ]
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "Remotive",
+  "origin": "https://remotive.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": [
+    "/job/apply/*",
+    "/job/track/*",
+    "/job/application/*",
+    "/job/detail/*",
+    "/jobs/*",
+    "/job/report/*"
+   ]
+  },
+  "sitemap": {
+   "url": "https://remotive.com/sitemap.xml",
+   "index": true,
+   "entries": 11,
+   "child": "https://remotive.com/sitemap-job-categories.xml",
+   "childEntries": 5599
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://remotive.com/remote-jobs/cl-student",
+   "status": 200,
+   "jsonld": false,
+   "nextData": false
+  }
+ },
+ {
+  "c": "LATAM",
+  "n": "Jobicy",
+  "origin": "https://jobicy.com",
+  "robots": {
+   "blocked": false,
+   "rootAllowed": true,
+   "sitemaps": 1,
+   "jobDisallows": []
+  },
+  "sitemap": {
+   "url": "https://jobicy.com/sitemap.xml",
+   "index": true,
+   "entries": 17,
+   "child": "https://jobicy.com/sitemap-careers.xml",
+   "childEntries": 1000
+  },
+  "page": {
+   "allowed": true,
+   "url": "https://jobicy.com/careers/3d-animator",
+   "status": 403,
+   "jsonld": false,
+   "nextData": false
+  }
+ }
+]
