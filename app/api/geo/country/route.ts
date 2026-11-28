@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   if (!c) return NextResponse.json({ error: "Coordenadas no válidas." }, { status: 400 })
   try {
     const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&addressdetails=1&lat=${c.lat}&lon=${c.lon}`, {
-      headers: { "User-Agent": "Sooosh/1.0 (detección de país)", "Accept-Language": "es" },
+      headers: { "User-Agent": "Sooosh/1.0 (deteccion de pais)", "Accept-Language": "es" },
       signal: AbortSignal.timeout(6000),
     })
     if (!r.ok) throw new Error(`nominatim ${r.status}`)

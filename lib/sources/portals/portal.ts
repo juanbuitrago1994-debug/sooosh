@@ -52,7 +52,21 @@ export const TRABAJANDO: PortalConfig = {
   titleFromUrl: (u) => decodeURIComponent(u.split("/").pop() ?? "").replace(/^\d+-/, "").replace(/-/g, " "),
 }
 
-export const PORTALS: PortalConfig[] = [CHILETRABAJOS, TRABAJANDO]
+/**
+ * Magneto365 (Colombia, 3.º portal por tráfico). Su robots.txt permite todo para bots genéricos (salvo `/*?` y `/manager`) y publica un sitemap de ofertas
+ * (`sitemaps.magneto365.com`, ≈ 38 mil avisos con fecha) y un `llms.txt`; cada oferta trae JSON-LD `JobPosting` completo. Medido el 28-nov-2026
+ * (docs/FUENTES-DE-EMPLEO.md). Juan: los portales le confirmaron que se pueden consumir sus ofertas por medios tecnológicos.
+ */
+export const MAGNETO: PortalConfig = {
+  key: "magneto",
+  name: "Magneto365",
+  origin: "https://www.magneto365.com",
+  sitemaps: ["https://sitemaps.magneto365.com/sitemap-jobs.xml"],
+  jobUrl: /\/co\/empleos\/[^/?]+-\d+$/,
+  titleFromUrl: (u) => decodeURIComponent(u.split("/").pop() ?? "").replace(/-\d+$/, "").replace(/-/g, " "),
+}
+
+export const PORTALS: PortalConfig[] = [CHILETRABAJOS, TRABAJANDO, MAGNETO]
 
 const BLOCK = new Set([401, 403, 429, 500, 502, 503, 504])
 const WORK: Record<string, WorkMode> = { TELECOMMUTE: "remoto" }

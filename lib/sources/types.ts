@@ -64,7 +64,7 @@ export type SyncReport = {
 }
 
 /** Cabeceras de todas las lecturas a fuentes: identifican a Sooosh y no fingen ser un navegador. */
-export const SOURCE_HEADERS = { "User-Agent": "SoooshBot/0.1 (buscador de ofertas; lectura de APIs públicas)", Accept: "application/json" }
+export const SOURCE_HEADERS = { "User-Agent": "SoooshBot/0.1 (buscador de ofertas; lectura de APIs publicas)", Accept: "application/json" }
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 

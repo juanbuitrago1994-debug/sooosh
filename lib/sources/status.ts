@@ -89,6 +89,7 @@ const INFO: Record<string, { description: string; home: string | null }> = {
   companies: { description: "Tableros de empleo que las propias empresas publican (Greenhouse, Lever, Ashby y otros): la oferta original, tal como la escribió la empresa.", home: null },
   "portal:chiletrabajos": { description: "Portal chileno de empleo. Traemos solo cargos de tecnología.", home: "https://www.chiletrabajos.cl" },
   "portal:trabajando": { description: "Portal chileno de empleo. Traemos solo cargos de tecnología.", home: "https://www.trabajando.cl" },
+  "portal:magneto": { description: "Portal colombiano de empleo. Traemos solo cargos de tecnología.", home: "https://www.magneto365.com" },
   "remote:remotive": { description: "Ofertas remotas de empresas de todo el mundo; solo las abiertas a Latinoamérica.", home: "https://remotive.com" },
   "remote:jobicy": { description: "Ofertas remotas de todo el mundo; solo las abiertas a Latinoamérica.", home: "https://jobicy.com" },
   "remote:himalayas": { description: "Ofertas remotas de todo el mundo; solo las abiertas a Latinoamérica.", home: "https://himalayas.app" },

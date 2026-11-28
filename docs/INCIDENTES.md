@@ -35,6 +35,22 @@ Un hallazgo previo del mismo día: al llegar un CV leído **sin** las listas nue
 
 ---
 
+## 2026-11-28 (3) · El User-Agent de las fuentes llevaba tildes y Magneto365 respondía 502
+
+**Síntoma.** Al conectar Magneto365 con el lector de portales, `robots.txt` daba **502** de forma constante desde Node, aunque `curl` recibía 200. Por la regla «ante la duda, no se entra», el lector se detenía.
+
+**Causa.** `SOURCE_HEADERS` (`lib/sources/types.ts`) enviaba `User-Agent: SoooshBot/0.1 (buscador de ofertas; lectura de APIs públicas)`, con «ú». Un valor de cabecera HTTP debe ser ASCII; el balanceador de Magneto (`awselb`) rechaza los bytes no ASCII con 502. Mi `curl` usó la misma frase sin tilde y por eso funcionaba: la diferencia se halló comparando una petición Node real contra `curl`, variando solo las cabeceras.
+
+**Por qué lo generamos.** El texto se escribió en español, como todo, sin pensar que una cabecera no es texto de interfaz. Ninguna prueba lo detectaba porque las pruebas usan `fetch` simulado.
+
+**Arreglo.** UA en ASCII («lectura de APIs publicas»). También en `app/api/geo/country/route.ts` («deteccion de pais»). Repetí la sonda de los 39 sitios que habían salido bloqueados: solo cambió Magneto (los 403 de Computrabajo, OCC, Tecnoempleo, Randstad… son reales).
+
+**Efecto posible en otras fuentes.** Si alguna fuente en producción respondía 502/403 por esto, volverá a funcionar tras desplegar. No se verificó en producción.
+
+**Regla.** Toda cabecera HTTP que enviemos es ASCII puro. Una prueba que compare los bytes de las cabeceras de `SOURCE_HEADERS` con `/^[\x20-\x7E]*$/` sería suficiente (pendiente, por pedido de Juan de dejar las pruebas para una fase posterior).
+
+---
+
 ## 2026-11-28 (2) · Páginas en latin-1 o windows-1252 salían con «�» y una oferta cerrada se veía viva
 
 **Síntoma.** Ninguno reportado: se detectó al comparar con `tools/page_decode.py` de ai-job-search-dev/ai-job-search (MIT). Un portal antiguo que sirve `charset=iso-8859-1` se descargaba y se leía siempre como UTF-8: cada tilde y la «ñ» salían como «�».
