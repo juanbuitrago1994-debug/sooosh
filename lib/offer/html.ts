@@ -1,6 +1,15 @@
 import { dropHiddenHtml, stripInvisible } from "./integrity"
 
+/** Entidades con nombre de Latin-1 (U+00A0–U+00FF, en orden de código): cubre español, portugués, francés, italiano y alemán. `nbsp` sigue siendo un espacio normal. */
+const LATIN1 =
+  "nbsp iexcl cent pound curren yen brvbar sect uml copy ordf laquo not shy reg macr deg plusmn sup2 sup3 acute micro para middot cedil sup1 ordm raquo frac14 frac12 frac34 iquest " +
+  "Agrave Aacute Acirc Atilde Auml Aring AElig Ccedil Egrave Eacute Ecirc Euml Igrave Iacute Icirc Iuml ETH Ntilde Ograve Oacute Ocirc Otilde Ouml times Oslash Ugrave Uacute Ucirc Uuml Yacute THORN szlig " +
+  "agrave aacute acirc atilde auml aring aelig ccedil egrave eacute ecirc euml igrave iacute icirc iuml eth ntilde ograve oacute ocirc otilde ouml divide oslash ugrave uacute ucirc uuml yacute thorn yuml"
+const LATIN1_ENTITIES: Record<string, string> = Object.fromEntries(LATIN1.split(" ").map((n, i) => [n, n === "nbsp" ? " " : n === "shy" ? "" : String.fromCodePoint(160 + i)]))
+
 const ENTITIES: Record<string, string> = {
+  ...LATIN1_ENTITIES,
+  euro: "€", trade: "™", sbquo: "‚", bdquo: "„", dagger: "†", permil: "‰", lsaquo: "‹", rsaquo: "›", oelig: "œ", OElig: "Œ", zwnj: "", zwj: "", ensp: " ", emsp: " ", thinsp: " ",
   amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", ndash: "–", mdash: "—", hellip: "…",
   bull: "•", middot: "·", aacute: "á", eacute: "é", iacute: "í", oacute: "ó", uacute: "ú", ntilde: "ñ",
   Aacute: "Á", Eacute: "É", Iacute: "Í", Oacute: "Ó", Uacute: "Ú", Ntilde: "Ñ", uuml: "ü", iexcl: "¡", iquest: "¿",
