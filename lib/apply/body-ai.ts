@@ -83,6 +83,34 @@ export function ungroundedTerms(text: string, corpus: string): string[] {
 
 const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length
 
+/** Palabras seguidas copiadas de la oferta a partir de las cuales el correo deja de ser propio y pasa a ser un eco (la oferta no es el CV de nadie). */
+export const ECHO_WORDS = 7
+/** Solo se miran los requisitos largos: uno corto («3 años de experiencia en Python y SQL») lo puede decir igual quien de verdad lo tiene. */
+const ECHO_MIN_REQUIREMENT_WORDS = 10
+
+const tokens = (s: string) => fold(s).replace(/[^\p{L}\p{N}+#]+/gu, " ").split(" ").filter(Boolean)
+
+/**
+ * «Trampa de eco»: devuelve las tiradas de `ECHO_WORDS` o más palabras seguidas que el texto copia tal cual de los requisitos de la oferta (sin tildes, mayúsculas
+ * ni signos). Un correo que repite los requisitos de corrido suena a plantilla y no dice nada de la persona. Solo salta con copia literal de 7 palabras o más de un requisito largo (10 o más):
+ * no con términos sueltos ni con un requisito corto que la persona cumple y dice igual. La idea sale de `10-echo-traps.md` de ai-job-search-dev/ai-job-search (MIT).
+ */
+export function echoedPhrases(text: string, requirements: string[]): string[] {
+  const mine = tokens(text)
+  if (mine.length < ECHO_WORDS) return []
+  const grams = new Set<string>()
+  for (const r of requirements) {
+    const t = tokens(r)
+    if (t.length < ECHO_MIN_REQUIREMENT_WORDS) continue
+    for (let i = 0; i + ECHO_WORDS <= t.length; i++) grams.add(t.slice(i, i + ECHO_WORDS).join(" "))
+  }
+  const hits: string[] = []
+  for (let i = 0; i + ECHO_WORDS <= mine.length; i++) {
+    if (grams.has(mine.slice(i, i + ECHO_WORDS).join(" "))) hits.push(mine.slice(i, i + ECHO_WORDS).join(" "))
+  }
+  return hits
+}
+
 /** `style`: además de los datos, el texto debe cumplir la guía de estilo (sin exclamaciones, relleno ni gerundios de posterioridad…). */
 export function isGroundedMiddle(text: string, input: BodyInput, length: BodySettings["length"], style = true): boolean {
   const t = text.trim()
@@ -91,6 +119,7 @@ export function isGroundedMiddle(text: string, input: BodyInput, length: BodySet
   if (n < Math.floor(min * 0.4) || n > Math.ceil(max * 1.5)) return false
   if (/^(hola|estimad|buen|hello|dear|hi\b)/i.test(t) || /(saludos|atentamente|cordialmente|gracias|thanks|thank you|regards|sincerely)[\s.,!]*$/i.test(t)) return false
   if (style && styleIssues(t, input.lang ?? "es").length > 0) return false
+  if (style && echoedPhrases(t, input.requirements).length > 0) return false
   return ungroundedTerms(t, corpusOf(input)).length === 0
 }
 

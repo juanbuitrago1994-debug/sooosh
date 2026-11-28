@@ -17,7 +17,11 @@ Origen: Juan pidió investigar `ai-job-search-dev/ai-job-search` (MIT, ~73 mil e
 - Con `dropHiddenHtml`, un elemento sin cierre solo pierde su etiqueta de apertura (nunca el resto de la página).
 - No se probó contra ofertas reales de producción, solo contra los fixtures de `tests/fixtures/offers`.
 
-**Pendiente (decisión de Juan)**: puertas de idioma y elegibilidad como veto o aviso en la tarjeta; trampa de eco (frases copiadas de la oferta en el correo de postulación); probar si los lectores de ATS pierden fechas con el guion largo `–` (hoy `ATS-E3` lo exige).
+- **Trampa de eco** (`echoedPhrases` en `lib/apply/body-ai.ts`, vía `isGroundedMiddle`): una propuesta de la IA para el correo de postulación se descarta si copia 7 o más palabras seguidas de un requisito largo (10 o más palabras) de la oferta; entonces se pide otra o se usa la plantilla. Un requisito corto que la persona cumple («3 años de experiencia en Python y SQL») puede decirse igual: eso se descubrió probando y por eso el umbral. No cambia el prompt (cada token cuesta en el modelo local). Idea de `10-echo-traps.md` de ai-job-search. `tests/body-echo.test.ts`.
+
+**Pendiente**
+- **Guion largo `–` en fechas de ATS** (`ATS-E3` lo exige hoy). Evidencia de ai-job-search: UNA importación real en Workday perdió la fecha final de un rol y toda la educación, pero mezclaba dos causas (guion largo y años sueltos sin rango) y no la aislaron. No basta para cambiar la regla. Se preparó un experimento controlado (ver abajo); falta que Juan lo pruebe en el lector de Enhancv, como en la prueba de C6. No cambiar `ATS-E3` hasta ver el resultado.
+- Puertas de idioma y elegibilidad como veto o aviso en la tarjeta (decisión de producto de Juan).
 
 **Para revisar por Juan**: nada visual. Si al pegar una oferta aparece el aviso «Se quitaron N líneas que parecían órdenes para una IA», es lo nuevo.
 
