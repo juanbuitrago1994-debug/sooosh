@@ -1,6 +1,7 @@
 import { classifyRole } from "@/lib/jobs/classify"
 import type { WorkMode } from "@/lib/jobs/draft"
 import { detectEmploymentType } from "@/lib/jobs/draft"
+import { namesForeignCountry } from "@/lib/jobs/geo"
 import { normalizeSourceUrl } from "@/lib/jobs/url"
 import { decodePage } from "@/lib/offer/decode"
 import { jobPostingFromJsonLd } from "@/lib/offer/html"
@@ -23,6 +24,8 @@ export type PortalConfig = {
   key: string
   name: string
   origin: string
+  /** país del portal (ISO): lugar por defecto cuando la oferta no declara uno, para que el detector no lo adivine del texto («empresa mexicana» en una oferta de España) */
+  country: string
   /** sitemaps de las ofertas (si el robots.txt lista otros, se ignoran: aquí se elige cuáles) */
   sitemaps: string[]
   /** índice de sitemaps: solo se siguen los hijos cuyo nombre cumpla esto */
@@ -37,6 +40,7 @@ export const CHILETRABAJOS: PortalConfig = {
   key: "chiletrabajos",
   name: "Chiletrabajos",
   origin: "https://www.chiletrabajos.cl",
+  country: "CL",
   sitemaps: ["https://www.chiletrabajos.cl/sitemap.xml"],
   jobUrl: /\/trabajo\/[^/]+-\d+$/,
   titleFromUrl: (u) => decodeURIComponent(u.split("/").pop() ?? "").replace(/-\d+$/, "").replace(/-/g, " "),
@@ -46,6 +50,7 @@ export const TRABAJANDO: PortalConfig = {
   key: "trabajando",
   name: "Trabajando.cl",
   origin: "https://www.trabajando.cl",
+  country: "CL",
   sitemaps: ["https://www.trabajando.cl/sitemap.xml"],
   childFilter: /sitemap-ofertas/i,
   jobUrl: /\/trabajo\/\d+-[^/]+$/,
@@ -61,6 +66,7 @@ export const MAGNETO: PortalConfig = {
   key: "magneto",
   name: "Magneto365",
   origin: "https://www.magneto365.com",
+  country: "CO",
   sitemaps: ["https://sitemaps.magneto365.com/sitemap-jobs.xml"],
   jobUrl: /\/co\/empleos\/[^/?]+-\d+$/,
   titleFromUrl: (u) => decodeURIComponent(u.split("/").pop() ?? "").replace(/-\d+$/, "").replace(/-/g, " "),
@@ -71,12 +77,29 @@ export const GALLITO: PortalConfig = {
   key: "gallito",
   name: "Gallito Trabajo",
   origin: "https://trabajo.gallito.com.uy",
+  country: "UY",
   sitemaps: ["https://trabajo.gallito.com.uy/sitemap.xml"],
   jobUrl: /\/anuncio\/[^/?]+$/,
   titleFromUrl: (u) => decodeURIComponent(u.split("/").pop() ?? "").replace(/-[a-z0-9]{5}$/, "").replace(/-/g, " "),
 }
 
-export const PORTALS: PortalConfig[] = [CHILETRABAJOS, TRABAJANDO, MAGNETO, GALLITO]
+/**
+ * Infoempleo (España). Su robots.txt solo prohíbe filtros y áreas privadas; el sitemap `sitemap-ofertas-activas.xml` lista ~8.800 avisos y cada oferta trae JSON-LD
+ * completo (medido el 28-nov-2026). Su aviso legal exige autorización para reproducir los contenidos: **Juan la obtuvo el 28-nov-2026** (confirmación de la plataforma,
+ * dicha por él; conviene archivar el mensaje en docs/).
+ */
+export const INFOEMPLEO: PortalConfig = {
+  key: "infoempleo",
+  name: "Infoempleo",
+  origin: "https://www.infoempleo.com",
+  country: "ES",
+  sitemaps: ["https://www.infoempleo.com/sitemap-index.xml"],
+  childFilter: /sitemap-ofertas-activas/i,
+  jobUrl: /\/ofertasdetrabajo\/[^/]+\/[^/]+\/\d+\/?$/,
+  titleFromUrl: (u) => decodeURIComponent(u.split("/ofertasdetrabajo/")[1]?.split("/")[0] ?? "").replace(/-/g, " "),
+}
+
+export const PORTALS: PortalConfig[] = [CHILETRABAJOS, TRABAJANDO, MAGNETO, GALLITO, INFOEMPLEO]
 
 const BLOCK = new Set([401, 403, 429, 500, 502, 503, 504])
 const WORK: Record<string, WorkMode> = { TELECOMMUTE: "remoto" }
@@ -110,17 +133,19 @@ async function getText(url: string, f: typeof fetch, accept: string): Promise<{ 
 export function jobFromPage(cfg: PortalConfig, url: string, html: string): ExternalJob | null {
   const jp = jobPostingFromJsonLd(html)
   if (!jp?.title) return null
+  // «… en Alemania»: aviso de reclutamiento internacional; el trabajo no es en un país que atendemos aunque el portal liste provincias españolas.
+  if (namesForeignCountry(jp.title)) return null
   const ld = jp.ld
   const lines = htmlToLines(jp.description)
   return {
     sourceKey: `portal:${cfg.key}`,
     sourceName: cfg.key,
-    externalId: url.split("/").pop() ?? url,
+    externalId: url.split("/").filter(Boolean).pop() ?? url,
     url,
     title: jp.title.trim(),
     company: jp.company,
     locationText: ld.location,
-    countries: ld.location ? [ld.location.split(",").at(-1)!.trim()] : undefined,
+    countries: [ld.location ? ld.location.split(",").at(-1)!.trim() : cfg.country],
     workMode: ld.remote ? WORK.TELECOMMUTE : undefined,
     remote: ld.remote,
     employmentType: detectEmploymentType("", ld),

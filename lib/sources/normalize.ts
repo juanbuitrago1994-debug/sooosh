@@ -47,7 +47,8 @@ export function externalToDraft(e: ExternalJob): { draft: JobDraft; dedupe: stri
   // («con presencia en México y Perú» no abre una oferta de Bogotá a esos países).
   const named = (e.countries ?? []).map((c) => countryFromName(c)).filter((c): c is string => !!c)
   const fromLocation = e.locationText ? detectGeo(e.locationText).countries : []
-  const structured = [...new Set([...named, ...fromLocation])]
+  // Si la fuente declara el país, ese manda: «Marchamalo, Guadalajara, ES» es España, no México (la ciudad de México también se llama Guadalajara).
+  const structured = named.length ? [...new Set(named)] : [...new Set(fromLocation)]
   const geo = detectGeo([e.locationText, e.countries?.join(" "), text.slice(0, 1200)].filter(Boolean).join("\n"))
   const countries = structured.length ? structured : geo.countries
   const workMode: WorkMode | undefined = e.workMode ?? detectWorkMode(`${e.locationText ?? ""}\n${text}`)

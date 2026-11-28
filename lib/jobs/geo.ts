@@ -39,6 +39,15 @@ export const COUNTRIES: Country[] = [
 export const COUNTRY_NAME = new Map(COUNTRIES.map((x) => [x.code, x.name]))
 export const LATAM_CODES = new Set(COUNTRIES.filter((x) => x.latam).map((x) => x.code))
 /** Países cuyas ofertas entran al buscador: Latinoamérica y España (decisión de Juan, 28-nov-2026: México, Colombia y España son el foco). El resto se descarta al importar. */
+/**
+ * Países que NO atendemos, citados en un TÍTULO («10 plazas para fisioterapeutas en Alemania»). Los portales de reclutamiento internacional (Infoempleo…) publican
+ * esos avisos con las provincias españolas como lugar de los candidatos aunque el trabajo sea en otro país. Solo sirve para descartar ofertas; no entra en `COUNTRIES`
+ * porque de esa lista sale el selector de regiones de la interfaz.
+ */
+const FOREIGN =
+  /\b(alemania|francia|italia|paises bajos|holanda|suiza|noruega|suecia|dinamarca|irlanda|belgica|austria|luxemburgo|finlandia|polonia|rumania|grecia|germany|france|italy|netherlands|switzerland|norway|sweden|denmark|ireland|belgium|luxembourg|finland|poland)\b/
+export const namesForeignCountry = (title: string) => FOREIGN.test(fold(title)) && detectGeo(title).countries.length === 0
+
 export const SERVED_CODES = new Set<string>([...LATAM_CODES, "ES"])
 const LATAM_WORDS = /\b(latam|latinoamerica|latin america|america latina|latinoamericano|latin-america)\b/
 
