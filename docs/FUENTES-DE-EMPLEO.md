@@ -120,3 +120,16 @@ No se agregó ningún portal al código. Antes de hacerlo hay que decidir, por f
   2. **Ciudades homónimas**: «Marchamalo, Guadalajara, ES» se clasificaba también como México. Ahora el país que declara la fuente manda sobre las ciudades inferidas del texto (`externalToDraft`).
   3. **País por defecto**: cada portal declara su país (`PortalConfig.country`) para no adivinarlo del texto cuando la oferta no trae lugar.
 - **Límite**: la muestra fue de 12 ofertas de ~8.800; no se midió la tasa real de errores de clasificación.
+
+## 10. Empresas de Colombia (neobancos, tecnología, startups) por tablero de ATS (28-nov-2026)
+
+Pedido de Juan: seguir sumando ofertas con datos estructurados de empresas colombianas. Método: ~250 empresas del ecosistema colombiano y de multinacionales que contratan allí; para cada una, sus posibles nombres probados contra las APIs públicas de Greenhouse, Lever, Ashby, Workable, Recruitee y SmartRecruiters (1 petición cada 450 ms por proveedor); los 121 tableros que existen se pasaron por **nuestros adaptadores reales y `externalToDraft`** para contar ofertas que sí atendemos. Datos: `docs/fuentes-empresas-2026-11-28.json`.
+
+**Resultado, sin adornos:** 121 tableros existen, 75 eran nuevos y **solo 6 tienen ofertas en Colombia** (Experian 11, Cobre 2, Cloudflare 2, Tether 2, Yuno 1, Simetrik 1). 45 de los 75 no tienen ninguna oferta atendible. **Se registraron 13 empresas** con ≥ 1 oferta en CO o ≥ 5 en MX/ES: Experian, Cobre, Cloudflare, Tether, Yuno, Simetrik (CO); Samsara, Kueski, Nelo (MX); Alan (ES 118), N26, Bitpanda, Monzo (ES). Se dejaron fuera las de Brasil (Inter, Gympass, Neon…) por estar en portugués.
+
+**Por qué es poco:** las empresas colombianas grandes **no usan estos 7 sistemas**:
+- **Nequi** publica en **Buk** (`lapipolnequi.buk.co`), cuyo `robots.txt` dice `User-agent: * / Disallow: /` (solo deja pasar a Twitterbot y LinkedInBot). No se lee. Buk lo usan muchas empresas de la región: si Buk habilitara a SoooshBot, sería un solo adaptador para muchas.
+- **Rappi** envía a LinkedIn y a su sitio; **Bancolombia, Davivienda, Lulo, Habi** tienen portales propios y no se pudo confirmar su sistema (una comprobación de sus `robots.txt` resultó poco fiable y no se usa).
+- Empresas probadas sin tablero en estos sistemas: Mercado Libre, Platzi (ya estaba), Wompi, Treinta, Siigo, Alegra, Truora, Globant, entre otras.
+
+**Siguientes caminos reales:** (1) pedir a Buk que habilite el identificador SoooshBot; (2) revisar otros ATS con JSON-LD público (Teamtailor, BambooHR, Comeet, Pinpoint, Workday) en las empresas que sí interesan; (3) Magneto365 (ya conectada) ya cubre a muchas empresas colombianas grandes que publican allí.
