@@ -24,8 +24,8 @@ export type PortalConfig = {
   key: string
   name: string
   origin: string
-  /** país del portal (ISO): lugar por defecto cuando la oferta no declara uno, para que el detector no lo adivine del texto («empresa mexicana» en una oferta de España) */
-  country: string
+  /** país del portal (ISO; omitido si el portal es de varios países): lugar por defecto cuando la oferta no declara uno, para que el detector no lo adivine del texto («empresa mexicana» en una oferta de España) */
+  country?: string
   /** sitemaps de las ofertas (si el robots.txt lista otros, se ignoran: aquí se elige cuáles) */
   sitemaps: string[]
   /** índice de sitemaps: solo se siguen los hijos cuyo nombre cumpla esto */
@@ -99,7 +99,21 @@ export const INFOEMPLEO: PortalConfig = {
   titleFromUrl: (u) => decodeURIComponent(u.split("/ofertasdetrabajo/")[1]?.split("/")[0] ?? "").replace(/-/g, " "),
 }
 
-export const PORTALS: PortalConfig[] = [CHILETRABAJOS, TRABAJANDO, MAGNETO, GALLITO, INFOEMPLEO]
+/**
+ * Luk (takealuk.com), el portal de empleos de Buk para Colombia, México, Chile, Perú y Brasil. Su robots.txt permite a los bots genéricos todo salvo áreas privadas;
+ * el sitemap lista ~4.360 ofertas con fecha y cada una trae JSON-LD completo con país, vigencia y descripción (10 de 10 comprobadas el 28-nov-2026). Es de varios
+ * países, así que NO declara país por defecto: lo da el JSON-LD de cada oferta. Buk además confirmó a Juan (28-nov-2026) que SoooshBot puede leer ofertas.
+ */
+export const LUK: PortalConfig = {
+  key: "luk",
+  name: "Luk (Buk)",
+  origin: "https://www.takealuk.com",
+  sitemaps: ["https://www.takealuk.com/sitemap.xml"],
+  jobUrl: /\/job_offers\/[^/?]+$/,
+  titleFromUrl: (u) => decodeURIComponent(u.split("/").pop() ?? "").replace(/-/g, " "),
+}
+
+export const PORTALS: PortalConfig[] = [CHILETRABAJOS, TRABAJANDO, MAGNETO, GALLITO, INFOEMPLEO, LUK]
 
 const BLOCK = new Set([401, 403, 429, 500, 502, 503, 504])
 const WORK: Record<string, WorkMode> = { TELECOMMUTE: "remoto" }
@@ -145,7 +159,7 @@ export function jobFromPage(cfg: PortalConfig, url: string, html: string): Exter
     title: jp.title.trim(),
     company: jp.company,
     locationText: ld.location,
-    countries: [ld.location ? ld.location.split(",").at(-1)!.trim() : cfg.country],
+    countries: ld.location ? [ld.location.split(",").at(-1)!.trim()] : cfg.country ? [cfg.country] : undefined,
     workMode: ld.remote ? WORK.TELECOMMUTE : undefined,
     remote: ld.remote,
     employmentType: detectEmploymentType("", ld),

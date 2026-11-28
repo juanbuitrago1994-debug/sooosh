@@ -133,3 +133,9 @@ Pedido de Juan: seguir sumando ofertas con datos estructurados de empresas colom
 - Empresas probadas sin tablero en estos sistemas: Mercado Libre, Platzi (ya estaba), Wompi, Treinta, Siigo, Alegra, Truora, Globant, entre otras.
 
 **Siguientes caminos reales:** (1) pedir a Buk que habilite el identificador SoooshBot; (2) revisar otros ATS con JSON-LD público (Teamtailor, BambooHR, Comeet, Pinpoint, Workday) en las empresas que sí interesan; (3) Magneto365 (ya conectada) ya cubre a muchas empresas colombianas grandes que publican allí.
+
+## 11. Buk: Luk conectada; los tableros por empresa de Buk siguen cerrados (28-nov-2026)
+
+- **Juan informó** que Buk habilitó a SoooshBot para leer ofertas. **Pero el `robots.txt` de `*.buk.co` no cambió** (comprobado: `User-agent: * / Disallow: /`; solo Twitterbot y LinkedInBot tienen reglas). Nuestro lector se rige por ese archivo, así que **los tableros por empresa (`nequi.buk.co`, `cotrafa.buk.co`…) siguen sin leerse**. Lo que hay que pedirle a Buk: un grupo `User-agent: SoooshBot` con las mismas líneas `Allow` que ya tiene Twitterbot (`/s/*`, `/trabaja-con-nosotros`, `/seleccions/*/public_url_preview`). Nuestro lector prefiere el grupo propio sobre `*`. Hasta entonces no se pide ninguna página de esos dominios (al investigar se pidió una por error el mismo día).
+- **Luk (`takealuk.com`) sí está conectada** (`LUK` en `portal.ts`, migración `0025_source_luk.sql`): es el portal de empleos de Buk para CO, MX, CL, PE y BR. Su `robots.txt` abre a los bots genéricos; el sitemap trae **4.362 ofertas** con fecha de hoy y las 10 comprobadas traían JSON-LD completo con país. Corrida real de prueba: 12 ofertas de CO, CL, PE y MX bien clasificadas. Solo tecnología, como los demás; Luk es de varios países, así que no declara país por defecto.
+- Las ofertas de Nequi **no** aparecen en Luk (no la usa); siguen dependiendo del `robots.txt` de su tablero Buk.
